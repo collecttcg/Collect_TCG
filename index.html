@@ -3166,21 +3166,19 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     await loadCards();
     router();
     showToast("Owner login successful");
+  }
+
+  // Hidden owner shortcut: Ctrl + Shift + L
+  document.addEventListener("keydown", e=>{
+    if(e.ctrlKey && e.shiftKey && !e.altKey && e.key.toLowerCase() === "l"){
+      e.preventDefault();
+      openOwnerAccess();
+    }
   });
 
   supabaseClient.auth.onAuthStateChange((_event, session)=>{
     ownerSession = session;
     applyOwnerMode();
-  }
-
-  // Hidden owner shortcut: Ctrl + L.
-  // Browsers normally use Ctrl+L for the address bar, so preventDefault()
-  // while the site is focused to open Owner Access instead.
-  document.addEventListener("keydown", e=>{
-    if(e.ctrlKey && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "l"){
-      e.preventDefault();
-      openOwnerAccess();
-    }
   });
 
   // ---------------- Theme ----------------
