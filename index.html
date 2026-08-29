@@ -908,6 +908,144 @@
   .modal{background:var(--surface-2); border:1px solid var(--border); border-radius:16px; padding:26px; width:100%; max-width:480px; max-height:88vh; overflow-y:auto; box-shadow:var(--shadow-pop); animation: viewIn 0.22s ease;}
   .modal h2{font-size:22px; margin-bottom:16px;}
 
+  /* ---------- Stacked card details: gallery first, info below ---------- */
+  .modal.card-details-modal{
+    width:min(94vw,900px);
+    max-width:min(94vw,900px);
+    max-height:92vh;
+    overflow-y:auto;
+    overflow-x:hidden;
+  }
+  .modal.card-details-modal .detail-layout{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:16px !important;
+    width:100%;
+  }
+  .modal.card-details-modal .detail-layout > *{
+    min-width:0;
+    width:100%;
+  }
+  .modal.card-details-modal .detail-slider{
+    width:100%;
+    max-width:760px;
+    margin:0 auto;
+  }
+  .modal.card-details-modal .detail-slider-stage{
+    width:100%;
+    aspect-ratio:4 / 5;
+    max-height:72vh;
+  }
+  .modal.card-details-modal .detail-info{
+    width:100%;
+    max-width:760px;
+    margin:0 auto;
+  }
+  .modal.card-details-modal .detail-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+  @media(max-width:760px){
+    .modal.card-details-modal{
+      width:100%;
+      max-width:100%;
+      padding:14px;
+    }
+    .modal.card-details-modal .detail-slider-stage{
+      max-height:62vh;
+    }
+    .modal.card-details-modal .detail-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+  }
+  @media(max-width:460px){
+    .modal.card-details-modal .detail-grid{
+      grid-template-columns:1fr 1fr;
+    }
+  }
+
+  /* ---------- Responsive card details modal ---------- */
+  .modal.card-details-modal{
+    width:min(94vw,1080px);
+    max-width:min(94vw,1080px);
+    max-height:92vh;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding:22px;
+  }
+  .modal.card-details-modal .detail-layout{
+    display:grid;
+    grid-template-columns:minmax(0,1.35fr) minmax(0,.9fr);
+    gap:20px;
+    width:100%;
+    min-width:0;
+    align-items:start;
+  }
+  .modal.card-details-modal .detail-layout > *{
+    min-width:0;
+  }
+  .modal.card-details-modal .detail-slider-stage{
+    width:100%;
+    max-height:68vh;
+    aspect-ratio:4 / 5;
+  }
+  .modal.card-details-modal .detail-info{
+    min-width:0;
+  }
+  .modal.card-details-modal .detail-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  @media(max-width:980px){
+    .modal.card-details-modal{
+      width:min(96vw,820px);
+      max-width:min(96vw,820px);
+      padding:18px;
+    }
+    .modal.card-details-modal .detail-layout{
+      grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);
+      gap:14px;
+    }
+    .modal.card-details-modal .detail-slider-stage{
+      max-height:60vh;
+    }
+  }
+
+  @media(max-width:760px){
+    .modal-overlay{
+      padding:10px;
+      align-items:flex-start;
+    }
+    .modal.card-details-modal{
+      width:100%;
+      max-width:100%;
+      max-height:calc(100vh - 20px);
+      margin-top:0;
+      padding:14px;
+      border-radius:12px;
+    }
+    .modal.card-details-modal .detail-layout{
+      grid-template-columns:1fr;
+      gap:14px;
+    }
+    .modal.card-details-modal .detail-slider-stage{
+      max-height:58vh;
+      aspect-ratio:4 / 5;
+    }
+    .modal.card-details-modal .detail-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+  }
+
+  @media(max-width:460px){
+    .modal.card-details-modal .detail-grid{
+      grid-template-columns:1fr 1fr;
+      gap:6px;
+    }
+    .modal.card-details-modal .detail-item{
+      padding:8px;
+    }
+  }
+
   .toast{
     position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--surface-2); border:1px solid var(--border);
     color:var(--text); padding:11px 18px; border-radius:9px; font-size:13px; z-index:60; box-shadow:var(--shadow-pop);
@@ -929,6 +1067,13 @@
   }
 
   @media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important;} }
+  .modal.card-details-modal .detail-info{
+    gap:8px;
+  }
+  .modal.card-details-modal .detail-section{
+    margin-top:2px;
+  }
+
 </style>
 </head>
 <body>
@@ -1879,7 +2024,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     const hasGrade = Array.isArray(card.grading) && card.grading.some(g=>g && g.company);
     const condition = CONDITION_LABEL[card.condition] || card.condition || "—";
-    const totalValue = Number(card.qty || 0) * Number(card.price || 0);
     const cost = card.cost == null ? "—" : fmtMoney(card.cost);
 
     detailsMount.innerHTML = `
@@ -1897,9 +2041,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           <div class="detail-grid">
             ${hasGrade ? "" : `<div class="detail-item"><div class="detail-label">Condition</div><div class="detail-value">${escapeHtml(condition)}</div></div>`}
             <div class="detail-item"><div class="detail-label">Quantity</div><div class="detail-value">${escapeHtml(card.qty ?? "0")}</div></div>
-            <div class="detail-item"><div class="detail-label">Sale price</div><div class="detail-value">${fmtMoney(Number(card.price || 0))}</div></div>
-            <div class="detail-item"><div class="detail-label">Total value</div><div class="detail-value">${fmtMoney(totalValue)}</div></div>
-            <div class="detail-item"><div class="detail-label">Cost</div><div class="detail-value">${cost}</div></div>
+            <div class="detail-item"><div class="detail-label">Price</div><div class="detail-value">${fmtMoney(Number(card.price || 0))}</div></div>
             <div class="detail-item"><div class="detail-label">Pictures</div><div class="detail-value">${images.length}</div></div>
           </div>
           ${gradingDetailsHTML(card)}
