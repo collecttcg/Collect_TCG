@@ -1240,7 +1240,7 @@
       <a href="#/contact" data-route="contact"><span class="ic">✉</span> Contact</a>
     </nav>
     <div class="sidebar-footer">
-      <div><b id="sfCount">0</b> cards · <b id="sfValue">$0.00</b> value</div>
+      <div><b id="sfCount">0</b> cards</div>
       <div style="margin-top:6px;">Collect TCG MY &amp; SG</div>
       <div class="owner-status">● Owner mode</div>
       <button class="theme-toggle" id="themeToggle" type="button">☀ Light mode</button>
@@ -1590,9 +1590,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   function updateSidebarFooter(){
-    const totalValue = cards.reduce((s,c)=>s+Number(c.qty||0)*Number(c.price||0),0);
     $("sfCount").textContent = cards.reduce((s,c)=>s+Number(c.qty||0),0);
-    $("sfValue").textContent = fmtMoney(totalValue);
   }
 
   // ---------------- Image helpers ----------------
