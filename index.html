@@ -1401,8 +1401,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     clearTimeout(showToast._t);
     showToast._t = setTimeout(()=>{ toastEl.hidden = true; }, 2200);
   }
-  function fmtMoney(n){ return "$" + (Math.round(Number(n || 0) * 100) / 100).toFixed(2); }
-  function fmtMYR(n){ return "RM " + (Math.round(Number(n || 0) * 100) / 100).toFixed(2); }
+  function fmtMoney(n){
+    return "$" + Number(n || 0).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+  function fmtMYR(n){
+    return "RM " + Number(n || 0).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
   function escapeHtml(str){ const d = document.createElement("div"); d.textContent = str == null ? "" : str; return d.innerHTML; }
   function uid(){ return "c_" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
   const EMPTY_ICON = `<svg width="56" height="56" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1415,7 +1425,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function dbToCard(row){
     return {
       id: row.id,
-      name: row.name || "",
+      name: (row.name || "").toUpperCase(),
       game: row.game === "One Piece" ? "One Piece Card Game" : (row.game || ""),
       set: row.set_name || "",
       rarity: row.rarity || "Common",
@@ -1435,7 +1445,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function cardToDb(card){
     return {
-      name: card.name,
+      name: (card.name || "").toUpperCase(),
       game: card.game,
       set_name: card.set || "",
       rarity: card.rarity || "Common",
@@ -1858,7 +1868,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function collectFields(p, id, formState){
     return {
       id: id || uid(),
-      name: $(p + "Name").value.trim(),
+      name: $(p + "Name").value.trim().toUpperCase(),
       game: $(p + "Game").value.trim(),
       set: $(p + "Set").value.trim(),
       rarity: $(p + "Rarity").value,
@@ -1991,7 +2001,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           </div>
           <div class="card-top" style="margin-top:10px;">
             <div style="min-width:0;">
-              <div class="card-name">${escapeHtml(c.name)}</div>
+              <div class="card-name">${escapeHtml(c.name).toUpperCase()}</div>
               <div class="card-meta card-meta-one-line">
                 <span>${escapeHtml(c.game)}</span>
                 ${c.set ? `<span>· ${escapeHtml(c.set)}</span>` : ""}
@@ -2459,7 +2469,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       <div class="detail-header">
         <div class="detail-title">
           <div class="eyebrow">Card details</div>
-          <h2 id="detailsTitle">${escapeHtml(card.name)}</h2>
+          <h2 id="detailsTitle">${escapeHtml(card.name).toUpperCase()}</h2>
           <div class="detail-meta">${escapeHtml(card.game || "—")}${card.set ? " · " + escapeHtml(card.set) : ""}</div>
         </div>
         <span class="badge">${escapeHtml(card.rarity || "—")}</span>
