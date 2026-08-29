@@ -2009,10 +2009,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           <input type="text" id="${p}Game" list="gameOptions" required placeholder="e.g. Pokémon">
         </div>
         <div class="field">
-          <label for="${p}Set">Set</label>
-          <input type="text" id="${p}Set" placeholder="e.g. OP01">
-        </div>
-        <div class="field">
           <label for="${p}Series">Series / Collection</label>
           <input type="text" id="${p}Series" placeholder="e.g. Hyper Battle, Visual Adventure, Championship">
         </div>
@@ -2035,7 +2031,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         </div>
       </div>
       <div class="field-row">
-        <div class="field"><label for="${p}Qty">Quantity</label><input type="number" id="${p}Qty" min="0" step="1" required value="1"></div>
         <div class="field"><label for="${p}PriceUSD">Price (USD)</label><input type="number" id="${p}PriceUSD" min="0" step="0.01" required value="0.00"></div>
         <div class="field"><label for="${p}PriceMYR">Price (MYR)</label><input type="number" id="${p}PriceMYR" min="0" step="0.01" required value="0.00"></div>
       </div>
@@ -2170,11 +2165,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function populateFields(p, card){
     $(p + "Name").value = card ? card.name : "";
     $(p + "Game").value = card ? card.game : "";
-    $(p + "Set").value = card ? (card.set || "") : "";
     $(p + "Series").value = card ? (card.series || "") : "";
     $(p + "Format").value = card ? (card.format || (Array.isArray(card.grading) && card.grading.length ? "Graded" : (card.condition === "SEALED" ? "Sealed" : "Raw"))) : "Raw";
     $(p + "Condition").value = card ? card.condition : "NM";
-    $(p + "Qty").value = card ? card.qty : 1;
     $(p + "PriceUSD").value = card ? (card.price_usd ?? card.price ?? 0) : "0.00";
     $(p + "PriceMYR").value = card ? (card.price_myr ?? 0) : "0.00";
     $(p + "Notes").value = card ? (card.notes || "") : "";
@@ -2185,12 +2178,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       id: id || uid(),
       name: $(p + "Name").value.trim().toUpperCase(),
       game: $(p + "Game").value.trim(),
-      set: $(p + "Set").value.trim(),
       series: $(p + "Series").value.trim(),
       format: $(p + "Format").value,
       rarity: "Common",
       condition: $(p + "Condition").value,
-      qty: Math.max(0, parseInt($(p + "Qty").value || "0", 10)),
+      qty: 1,
       price: Math.max(0, parseFloat($(p + "PriceUSD").value || "0")), // legacy compatibility
       price_usd: Math.max(0, parseFloat($(p + "PriceUSD").value || "0")),
       price_myr: Math.max(0, parseFloat($(p + "PriceMYR").value || "0")),
@@ -2290,7 +2282,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     let list = cards.filter(c=>{
       const format = effectiveFormat(c);
-      const haystack = [c.name,c.set,c.series,c.game].filter(Boolean).join(" ").toLowerCase();
+      const haystack = [c.name,c.series,c.game].filter(Boolean).join(" ").toLowerCase();
       if(gameF && c.game !== gameF) return false;
       if(formatF && format !== formatF) return false;
       if(seriesF && (c.series || "") !== seriesF) return false;
@@ -2307,7 +2299,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       switch(sortBy){
         case "price-low": return (a.price_usd ?? a.price ?? 0) - (b.price_usd ?? b.price ?? 0);
         case "price-high": return (b.price_usd ?? b.price ?? 0) - (a.price_usd ?? a.price ?? 0);
-        case "qty": return b.qty - a.qty;
         default: return a.name.localeCompare(b.name);
       }
     });
@@ -2339,7 +2330,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
               <div class="card-name">${escapeHtml(c.name).toUpperCase()}</div>
               <div class="card-meta card-meta-one-line">
                 <span>${escapeHtml(c.game)}</span>
-                ${c.set ? `<span>· ${escapeHtml(c.set)}</span>` : ""}
                 ${c.series ? `<span>· ${escapeHtml(c.series)}</span>` : ""}
                 <span>· ${escapeHtml(effectiveFormat(c))}</span>
                 ${Array.isArray(c.grading) && c.grading.some(g=>g && g.company)
@@ -2411,7 +2401,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       </div>
 
       <div class="filter-row">
-        <input type="text" id="search" placeholder="Search card name, set, or series…">
+        <input type="text" id="search" placeholder="Search card name or series…">
         <select id="filterGame"><option value="">All Games</option></select>
         <select id="filterFormat">
           <option value="">All Formats</option>
@@ -2424,7 +2414,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           <option value="name">Sort: Name</option>
           <option value="price-low">Price: Lowest to Highest</option>
           <option value="price-high">Price: Highest to Lowest</option>
-          <option value="qty">Sort: Quantity</option>
         </select>
         <a href="#/add" class="btn-primary owner-only" style="display:inline-block;">+ Add card</a>
       </div>
@@ -2996,7 +2985,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         <div class="detail-info">
           <div class="detail-grid">
             ${hasGrade ? "" : `<div class="detail-item"><div class="detail-label">Condition</div><div class="detail-value">${escapeHtml(condition)}</div></div>`}
-            <div class="detail-item"><div class="detail-label">Quantity</div><div class="detail-value">${escapeHtml(card.qty ?? "0")}</div></div>
             <div class="detail-item detail-price-item">
               <div class="detail-label">Price</div>
               <div class="detail-value detail-price-values">
