@@ -2340,6 +2340,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             <button class="icon-btn" data-action="delete" data-id="${c.id}" title="Delete" aria-label="Delete ${escapeHtml(c.name)}">✕</button>
           </div>
           <div class="card-row">
+            <div class="qty-price">
+              <span class="price dual-price">
+                <span>${fmtMoney(c.price_usd ?? c.price)}</span>
+                <span class="price-myr">${fmtMYR(c.price_myr)}</span>
+                <span class="price-myr">${fmtSGD(c.price_sgd)}</span>
+              </span>
+            </div>
           </div>
           <div class="card-top" style="margin-top:10px;">
             <div style="min-width:0;">
