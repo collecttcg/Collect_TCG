@@ -871,6 +871,160 @@
     margin-top:12px;
   }
 
+
+  /* ---------- Owner Insights ---------- */
+  .insights-controls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+    margin-bottom:16px;
+  }
+  .insights-controls select,
+  .insights-controls input{
+    background:var(--surface);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:9px 10px;
+    border-radius:8px;
+    font-size:12px;
+  }
+  .insights-range-custom{
+    display:none;
+    gap:8px;
+    align-items:center;
+  }
+  .insights-range-custom.show{display:flex;}
+  .insights-stats{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:12px;
+    margin-bottom:16px;
+  }
+  .insights-stat{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:14px;
+  }
+  .insights-stat .k{
+    color:var(--text-muted);
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    margin-bottom:5px;
+  }
+  .insights-stat .v{
+    font-family:'JetBrains Mono',monospace;
+    font-size:20px;
+    font-weight:700;
+  }
+  .insights-panel{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px;
+    margin-bottom:16px;
+  }
+  .insights-panel h3{
+    font-size:16px;
+    margin-bottom:12px;
+  }
+  .insights-chart{
+    display:grid;
+    grid-auto-flow:column;
+    grid-auto-columns:minmax(26px,1fr);
+    align-items:end;
+    gap:6px;
+    min-height:180px;
+    overflow-x:auto;
+    padding:10px 0 2px;
+  }
+  .insights-bar-wrap{
+    min-width:26px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-end;
+    gap:6px;
+    height:170px;
+  }
+  .insights-bar{
+    width:100%;
+    min-height:2px;
+    background:var(--accent-gold);
+    border-radius:5px 5px 2px 2px;
+  }
+  .insights-bar-label{
+    color:var(--text-muted);
+    font-size:8px;
+    white-space:nowrap;
+    transform:rotate(-45deg);
+    transform-origin:center;
+    margin-top:7px;
+  }
+  .insights-table-wrap{
+    overflow-x:auto;
+  }
+  .insights-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12px;
+  }
+  .insights-table th,
+  .insights-table td{
+    padding:9px 8px;
+    border-bottom:1px solid var(--border-soft);
+    text-align:left;
+    white-space:nowrap;
+  }
+  .insights-table th{
+    color:var(--text-muted);
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    font-weight:600;
+  }
+  .insights-rank{
+    color:var(--accent-gold);
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+  }
+  .insights-card-name{
+    font-weight:700;
+    max-width:240px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .trend-tag{
+    display:inline-block;
+    padding:2px 6px;
+    border-radius:999px;
+    font-size:8px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    border:1px solid var(--border);
+    color:var(--text-muted);
+  }
+  .trend-tag.hot{
+    border-color:var(--accent-gold);
+    color:var(--accent-gold);
+  }
+  .trend-tag.low{
+    border-color:var(--danger);
+    color:var(--danger);
+  }
+  @media(max-width:900px){
+    .insights-stats{grid-template-columns:repeat(2,minmax(0,1fr));}
+  }
+  @media(max-width:560px){
+    .insights-stats{grid-template-columns:1fr;}
+    .insights-controls{align-items:stretch;}
+    .insights-controls > *{width:100%;}
+    .insights-range-custom.show{display:grid;grid-template-columns:1fr 1fr;}
+  }
+
   /* ---------- By-game groups ---------- */
   .game-group{margin-bottom:32px;}
   .game-group-head{display:flex; align-items:center; gap:10px; margin-bottom:13px;}
@@ -1304,6 +1458,7 @@
       <a href="#/inventory" data-route="inventory"><span class="ic">▦</span> Inventory</a>
       <a href="#/by-game" data-route="by-game"><span class="ic">▥</span> By Game</a>
       <a href="#/giveaway" data-route="giveaway"><span class="ic">★</span> Giveaway</a>
+      <a href="#/insights" data-route="insights" class="owner-only"><span class="ic">◔</span> Insights</a>
       <a href="#/add" data-route="add" class="owner-only"><span class="ic">+</span> Add Card</a>
       <a href="#/about" data-route="about"><span class="ic">◎</span> About Us</a>
       <a href="#/contact" data-route="contact"><span class="ic">✉</span> Contact</a>
@@ -1433,6 +1588,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   let cards = [];
   let giveaways = [];
+  let insightsCache = null;
   const $ = (id) => document.getElementById(id);
   const view = $("view");
   const toastEl = $("toast");
@@ -1653,6 +1809,86 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
   }
 
+  // ---------------- Analytics / view events ----------------
+  const VISITOR_ID_KEY = "collect-tcg-visitor-id";
+
+  function getVisitorId(){
+    let id = localStorage.getItem(VISITOR_ID_KEY);
+    if(!id){
+      id = (crypto && crypto.randomUUID) ? crypto.randomUUID() :
+        "v_" + Date.now().toString(36) + Math.random().toString(36).slice(2);
+      localStorage.setItem(VISITOR_ID_KEY, id);
+    }
+    return id;
+  }
+
+  async function recordCardViewEvent(card){
+    try{
+      const visitorId = getVisitorId();
+      const { error } = await supabaseClient.rpc("record_card_view_event", {
+        p_card_id: card.id,
+        p_visitor_id: visitorId
+      });
+      if(error) console.error("Record view event error:", error);
+      if(isOwnerMode()) card.view_count = Number(card.view_count || 0) + 1;
+    }catch(e){
+      console.error("Record view event error:", e);
+    }
+  }
+
+  function dateRangeForPreset(preset){
+    const now = new Date();
+    const end = new Date(now);
+    let start = new Date(now);
+
+    if(preset === "today"){
+      start.setHours(0,0,0,0);
+    }else if(preset === "7d"){
+      start.setDate(start.getDate() - 6);
+      start.setHours(0,0,0,0);
+    }else if(preset === "30d"){
+      start.setDate(start.getDate() - 29);
+      start.setHours(0,0,0,0);
+    }else if(preset === "month"){
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+    }else if(preset === "all"){
+      start = new Date("2000-01-01T00:00:00");
+    }
+    return { start, end };
+  }
+
+  async function fetchInsights(start, end){
+    const { data, error } = await supabaseClient.rpc("get_card_insights", {
+      p_start: start.toISOString(),
+      p_end: end.toISOString()
+    });
+    if(error){
+      console.error("Insights error:", error);
+      showToast("Could not load insights");
+      return [];
+    }
+    return Array.isArray(data) ? data : [];
+  }
+
+  async function fetchViewSeries(start, end){
+    const { data, error } = await supabaseClient.rpc("get_card_view_series", {
+      p_start: start.toISOString(),
+      p_end: end.toISOString()
+    });
+    if(error){
+      console.error("Series error:", error);
+      return [];
+    }
+    return Array.isArray(data) ? data : [];
+  }
+
+  function insightTrend(row, avg){
+    const views = Number(row.views || 0);
+    if(views >= Math.max(5, avg * 1.5)) return "hot";
+    if(views === 0 || views < Math.max(1, avg * 0.25)) return "low";
+    return "";
+  }
+
   // ---------------- Router ----------------
   function currentRoute(){
     const h = location.hash.replace(/^#\/?/, "");
@@ -1668,6 +1904,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(route === "inventory") renderInventoryPage();
     else if(route === "by-game") renderByGamePage();
     else if(route === "giveaway") renderGiveawayPage();
+    else if(route === "insights"){ if(isOwnerMode()) renderInsightsPage(); else { location.hash="#/inventory"; return; } }
     else if(route === "add"){
       if(isOwnerMode()) renderAddPage();
       else { location.hash = "#/inventory"; return; }
@@ -2324,6 +2561,156 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     showToast(id ? "Giveaway updated" : "Giveaway added");
   });
 
+  // ---------------- Insights ----------------
+  async function renderInsightsPage(){
+    if(!isOwnerMode()){ location.hash="#/inventory"; return; }
+
+    view.innerHTML = `
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Owner analytics</div>
+          <h2>Insights</h2>
+          <p>See which cards attract the most interest over time.</p>
+        </div>
+      </div>
+
+      <div class="insights-controls">
+        <select id="insightsRange">
+          <option value="today">Today</option>
+          <option value="7d" selected>Last 7 Days</option>
+          <option value="30d">Last 30 Days</option>
+          <option value="month">This Month</option>
+          <option value="all">All Time</option>
+          <option value="custom">Custom Date</option>
+        </select>
+
+        <div class="insights-range-custom" id="insightsCustom">
+          <input type="date" id="insightsStart">
+          <input type="date" id="insightsEnd">
+        </div>
+
+        <select id="insightsSort">
+          <option value="views-desc">Views: Highest to Lowest</option>
+          <option value="views-asc">Views: Lowest to Highest</option>
+          <option value="unique-desc">Unique Views: Highest to Lowest</option>
+          <option value="price-high">Price: Highest to Lowest</option>
+          <option value="price-low">Price: Lowest to Highest</option>
+          <option value="name">Name</option>
+        </select>
+      </div>
+
+      <div class="insights-stats" id="insightsStats"></div>
+
+      <div class="insights-panel">
+        <h3>Views Over Time</h3>
+        <div id="insightsChart" class="insights-chart"></div>
+      </div>
+
+      <div class="insights-panel">
+        <h3>Card Performance</h3>
+        <div class="insights-table-wrap">
+          <table class="insights-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Card</th>
+                <th>Game</th>
+                <th>Price</th>
+                <th>Views</th>
+                <th>Unique</th>
+                <th>Trend</th>
+              </tr>
+            </thead>
+            <tbody id="insightsRows"></tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    const rangeSel = $("insightsRange");
+    const custom = $("insightsCustom");
+    const sortSel = $("insightsSort");
+    const startInput = $("insightsStart");
+    const endInput = $("insightsEnd");
+
+    const now = new Date();
+    const seven = dateRangeForPreset("7d");
+    startInput.value = seven.start.toISOString().slice(0,10);
+    endInput.value = now.toISOString().slice(0,10);
+
+    async function refresh(){
+      let start, end;
+      if(rangeSel.value === "custom"){
+        const s = startInput.value ? new Date(startInput.value + "T00:00:00") : new Date();
+        const e = endInput.value ? new Date(endInput.value + "T23:59:59.999") : new Date();
+        start = s; end = e;
+      }else{
+        ({start,end} = dateRangeForPreset(rangeSel.value));
+      }
+
+      const [rows, series] = await Promise.all([
+        fetchInsights(start,end),
+        fetchViewSeries(start,end)
+      ]);
+
+      const totalViews = rows.reduce((s,r)=>s+Number(r.views||0),0);
+      const totalUnique = rows.reduce((s,r)=>s+Number(r.unique_views||0),0);
+      const viewedCards = rows.filter(r=>Number(r.views||0)>0).length;
+      const top = rows.slice().sort((a,b)=>Number(b.views||0)-Number(a.views||0))[0];
+      const avg = rows.length ? totalViews / rows.length : 0;
+
+      $("insightsStats").innerHTML = `
+        <div class="insights-stat"><div class="k">Total Views</div><div class="v">${totalViews.toLocaleString()}</div></div>
+        <div class="insights-stat"><div class="k">Unique Views</div><div class="v">${totalUnique.toLocaleString()}</div></div>
+        <div class="insights-stat"><div class="k">Cards Viewed</div><div class="v">${viewedCards.toLocaleString()}</div></div>
+        <div class="insights-stat"><div class="k">Most Viewed Card</div><div class="v" style="font-size:15px">${top ? escapeHtml(top.name) : "—"}</div></div>
+      `;
+
+      const maxSeries = Math.max(1,...series.map(x=>Number(x.views||0)));
+      $("insightsChart").innerHTML = series.length ? series.map(x=>{
+        const pct = Math.max(2, Number(x.views||0)/maxSeries*100);
+        return `<div class="insights-bar-wrap" title="${escapeHtml(String(x.bucket))}: ${Number(x.views||0)} views">
+          <div class="insights-bar" style="height:${pct}%"></div>
+          <div class="insights-bar-label">${escapeHtml(String(x.label || x.bucket))}</div>
+        </div>`;
+      }).join("") : `<div class="hint">No views recorded for this period.</div>`;
+
+      let sorted = rows.slice();
+      switch(sortSel.value){
+        case "views-asc": sorted.sort((a,b)=>Number(a.views||0)-Number(b.views||0)); break;
+        case "unique-desc": sorted.sort((a,b)=>Number(b.unique_views||0)-Number(a.unique_views||0)); break;
+        case "price-high": sorted.sort((a,b)=>Number(b.price_usd||0)-Number(a.price_usd||0)); break;
+        case "price-low": sorted.sort((a,b)=>Number(a.price_usd||0)-Number(b.price_usd||0)); break;
+        case "name": sorted.sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""))); break;
+        default: sorted.sort((a,b)=>Number(b.views||0)-Number(a.views||0));
+      }
+
+      $("insightsRows").innerHTML = sorted.map((r,i)=>{
+        const trend = insightTrend(r, avg);
+        const trendText = trend === "hot" ? "Trending" : trend === "low" ? "Low Interest" : "Normal";
+        return `<tr>
+          <td class="insights-rank">${i+1}</td>
+          <td class="insights-card-name">${escapeHtml(r.name || "")}</td>
+          <td>${escapeHtml(r.game || "")}</td>
+          <td>${fmtMoney(r.price_usd || 0)} / ${fmtMYR(r.price_myr || 0)}</td>
+          <td>${Number(r.views||0).toLocaleString()}</td>
+          <td>${Number(r.unique_views||0).toLocaleString()}</td>
+          <td><span class="trend-tag ${trend}">${trendText}</span></td>
+        </tr>`;
+      }).join("");
+    }
+
+    rangeSel.addEventListener("change", ()=>{
+      custom.classList.toggle("show", rangeSel.value === "custom");
+      refresh();
+    });
+    sortSel.addEventListener("change", refresh);
+    startInput.addEventListener("change", ()=>{ if(rangeSel.value==="custom") refresh(); });
+    endInput.addEventListener("change", ()=>{ if(rangeSel.value==="custom") refresh(); });
+
+    refresh();
+  }
+
   // ---------------- About ----------------
   function renderAboutPage(){
     view.innerHTML = `
@@ -2500,7 +2887,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function openDetailsModal(card){
     detailsCardId = card.id;
-    recordCardView(card);
+    recordCardViewEvent(card);
     const images = getImages(card);
     const imageHTML = images.length
       ? `<div class="detail-slider" data-card-slider>
