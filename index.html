@@ -1025,6 +1025,15 @@
     .insights-range-custom.show{display:grid;grid-template-columns:1fr 1fr;}
   }
 
+
+  /* ---------- Simple buyer filters ---------- */
+  .quick-filters{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;}
+  .quick-filter{border:1px solid var(--border);background:var(--surface);color:var(--text-muted);padding:7px 10px;border-radius:999px;font-size:11px;font-weight:600;cursor:pointer;}
+  .quick-filter:hover{color:var(--text);border-color:var(--accent-gold);}
+  .quick-filter.active{color:#17130a;background:var(--accent-gold);border-color:var(--accent-gold);}
+  .filter-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px;}
+  .filter-row input,.filter-row select{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:8px;font-size:12px;}
+  .filter-row input{flex:1;min-width:190px;}
   /* ---------- By-game groups ---------- */
   .game-group{margin-bottom:32px;}
   .game-group-head{display:flex; align-items:center; gap:10px; margin-bottom:13px;}
@@ -1640,6 +1649,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       name: (row.name || "").toUpperCase(),
       game: row.game === "One Piece" ? "One Piece Card Game" : (row.game || ""),
       set: row.set_name || "",
+      series: row.series || "",
+      format: row.format || "",
       rarity: row.rarity || "Common",
       condition: row.condition || "NM",
       qty: Number(row.quantity || 0),
@@ -1660,6 +1671,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       name: (card.name || "").toUpperCase(),
       game: card.game,
       set_name: card.set || "",
+      series: card.series || "",
+      format: card.format || "",
       rarity: card.rarity || "Common",
       condition: card.condition || "NM",
       quantity: Number(card.qty || 0),
@@ -1997,10 +2010,22 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         </div>
         <div class="field">
           <label for="${p}Set">Set</label>
-          <input type="text" id="${p}Set" placeholder="e.g. Obsidian Flames">
+          <input type="text" id="${p}Set" placeholder="e.g. OP01">
+        </div>
+        <div class="field">
+          <label for="${p}Series">Series / Collection</label>
+          <input type="text" id="${p}Series" placeholder="e.g. Hyper Battle, Visual Adventure, Championship">
         </div>
       </div>
       <div class="field-row">
+        <div class="field">
+          <label for="${p}Format">Format</label>
+          <select id="${p}Format">
+            <option value="Raw">Raw Card</option>
+            <option value="Graded">Graded / Slab</option>
+            <option value="Sealed">Sealed</option>
+          </select>
+        </div>
         <div class="field">
           <label for="${p}Condition">Condition</label>
           <select id="${p}Condition">
@@ -2146,6 +2171,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     $(p + "Name").value = card ? card.name : "";
     $(p + "Game").value = card ? card.game : "";
     $(p + "Set").value = card ? (card.set || "") : "";
+    $(p + "Series").value = card ? (card.series || "") : "";
+    $(p + "Format").value = card ? (card.format || (Array.isArray(card.grading) && card.grading.length ? "Graded" : (card.condition === "SEALED" ? "Sealed" : "Raw"))) : "Raw";
     $(p + "Condition").value = card ? card.condition : "NM";
     $(p + "Qty").value = card ? card.qty : 1;
     $(p + "PriceUSD").value = card ? (card.price_usd ?? card.price ?? 0) : "0.00";
@@ -2159,6 +2186,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       name: $(p + "Name").value.trim().toUpperCase(),
       game: $(p + "Game").value.trim(),
       set: $(p + "Set").value.trim(),
+      series: $(p + "Series").value.trim(),
+      format: $(p + "Format").value,
       rarity: "Common",
       condition: $(p + "Condition").value,
       qty: Math.max(0, parseInt($(p + "Qty").value || "0", 10)),
@@ -2243,16 +2272,37 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   // ---------------- Inventory ----------------
+  let activeQuickFilter = "all";
+
+  function effectiveFormat(c){
+    if(c.format) return c.format;
+    if(Array.isArray(c.grading) && c.grading.some(g=>g && g.company)) return "Graded";
+    if(c.condition === "SEALED") return "Sealed";
+    return "Raw";
+  }
+
   function getFiltered(){
     const q = ($("search") && $("search").value.trim().toLowerCase()) || "";
     const gameF = ($("filterGame") && $("filterGame").value) || "";
+    const formatF = ($("filterFormat") && $("filterFormat").value) || "";
+    const seriesF = ($("filterSeries") && $("filterSeries").value) || "";
     const sortBy = ($("sortBy") && $("sortBy").value) || "name";
 
     let list = cards.filter(c=>{
+      const format = effectiveFormat(c);
+      const haystack = [c.name,c.set,c.series,c.game].filter(Boolean).join(" ").toLowerCase();
       if(gameF && c.game !== gameF) return false;
-      if(q && !(c.name.toLowerCase().includes(q) || (c.set||"").toLowerCase().includes(q))) return false;
+      if(formatF && format !== formatF) return false;
+      if(seriesF && (c.series || "") !== seriesF) return false;
+      if(q && !haystack.includes(q)) return false;
+      if(activeQuickFilter === "graded" && format !== "Graded") return false;
+      if(activeQuickFilter === "raw" && format !== "Raw") return false;
+      if(activeQuickFilter === "sealed" && format !== "Sealed") return false;
+      if(activeQuickFilter === "championship" && !(c.series || "").toLowerCase().includes("championship")) return false;
+      if(activeQuickFilter === "vintage" && !(c.game === "One Piece Vintage" || (c.series || "").toLowerCase().includes("vintage"))) return false;
       return true;
     });
+
     list.sort((a,b)=>{
       switch(sortBy){
         case "price-low": return (a.price_usd ?? a.price ?? 0) - (b.price_usd ?? b.price ?? 0);
@@ -2290,6 +2340,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
               <div class="card-meta card-meta-one-line">
                 <span>${escapeHtml(c.game)}</span>
                 ${c.set ? `<span>· ${escapeHtml(c.set)}</span>` : ""}
+                ${c.series ? `<span>· ${escapeHtml(c.series)}</span>` : ""}
+                <span>· ${escapeHtml(effectiveFormat(c))}</span>
                 ${Array.isArray(c.grading) && c.grading.some(g=>g && g.company)
                   ? ""
                   : `<span>· ${escapeHtml(CONDITION_LABEL[c.condition] || c.condition)}</span>`}
@@ -2348,25 +2400,48 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function renderInventoryPage(){
     view.innerHTML = `
       <div class="page-head"><div><div class="eyebrow">Collect. Trade. Connect.</div><h2>Collect TCG MY &amp; SG Inventory</h2><p>Browse our current trading card inventory.</p></div></div>
-      <div class="toolbar">
-        <input type="text" id="search" placeholder="Search by name or set…">
-        <select id="filterGame"><option value="">All games</option></select>
+
+      <div class="quick-filters" id="quickFilters">
+        <button type="button" class="quick-filter active" data-quick="all">All</button>
+        <button type="button" class="quick-filter" data-quick="graded">Slabs</button>
+        <button type="button" class="quick-filter" data-quick="raw">Raw</button>
+        <button type="button" class="quick-filter" data-quick="sealed">Sealed</button>
+        <button type="button" class="quick-filter" data-quick="championship">Championship</button>
+        <button type="button" class="quick-filter" data-quick="vintage">Vintage</button>
+      </div>
+
+      <div class="filter-row">
+        <input type="text" id="search" placeholder="Search card name, set, or series…">
+        <select id="filterGame"><option value="">All Games</option></select>
+        <select id="filterFormat">
+          <option value="">All Formats</option>
+          <option value="Raw">Raw Card</option>
+          <option value="Graded">Graded / Slab</option>
+          <option value="Sealed">Sealed</option>
+        </select>
+        <select id="filterSeries"><option value="">All Series</option></select>
         <select id="sortBy">
           <option value="name">Sort: Name</option>
           <option value="price-low">Price: Lowest to Highest</option>
-          <option value="price-high">Price: Highest to Lowest</option><option value="qty">Sort: Quantity</option>
+          <option value="price-high">Price: Highest to Lowest</option>
+          <option value="qty">Sort: Quantity</option>
         </select>
         <a href="#/add" class="btn-primary owner-only" style="display:inline-block;">+ Add card</a>
       </div>
+
       <div id="invGrid"></div>
     `;
+
     const games = Array.from(new Set(cards.map(c=>c.game).filter(Boolean))).sort();
-    $("filterGame").innerHTML = '<option value="">All games</option>' + games.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join("");
+    $("filterGame").innerHTML = '<option value="">All Games</option>' + games.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join("");
+
+    const series = Array.from(new Set(cards.map(c=>c.series).filter(Boolean))).sort();
+    $("filterSeries").innerHTML = '<option value="">All Series</option>' + series.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
 
     function draw(){
       const grid = $("invGrid");
       if(cards.length === 0){
-        grid.innerHTML = `<div class="empty-state">${EMPTY_ICON}<h2>Your inventory is empty</h2><p>Add your first card to start tracking stock and value.</p><a href="#/add" class="btn-primary" style="display:inline-block;">+ Add a card</a></div>`;
+        grid.innerHTML = `<div class="empty-state">${EMPTY_ICON}<h2>Your inventory is empty</h2><p>Add your first card to start building the inventory.</p></div>`;
         return;
       }
       const list = getFiltered();
@@ -2378,11 +2453,22 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       grid.innerHTML = list.map(cardTileHTML).join("");
       wireShimmer(grid);
     }
-    ["search","filterGame","sortBy"].forEach(id=>{
+
+    ["search","filterGame","filterFormat","filterSeries","sortBy"].forEach(id=>{
       $(id).addEventListener("input", draw);
       $(id).addEventListener("change", draw);
     });
+
+    $("quickFilters").querySelectorAll(".quick-filter").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        activeQuickFilter = btn.dataset.quick;
+        $("quickFilters").querySelectorAll(".quick-filter").forEach(b=>b.classList.toggle("active", b===btn));
+        draw();
+      });
+    });
+
     draw();
+
     $("invGrid").addEventListener("keydown", e=>{
       if(e.key !== "Enter" && e.key !== " ") return;
       const tile = e.target.closest(".card[data-card-id]");
@@ -2918,6 +3004,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
                 <span>${fmtMYR(card.price_myr)}</span>
               </div>
             </div>
+            <div class="detail-item"><div class="detail-label">Format</div><div class="detail-value">${escapeHtml(effectiveFormat(card))}</div></div>
+            ${card.series ? `<div class="detail-item"><div class="detail-label">Series</div><div class="detail-value">${escapeHtml(card.series)}</div></div>` : ""}
             <div class="detail-item"><div class="detail-label">Pictures</div><div class="detail-value">${images.length}</div></div>
             <div class="detail-item owner-only"><div class="detail-label">Views</div><div class="detail-value">${Number(card.view_count || 0).toLocaleString()}</div></div>
           </div>
