@@ -1188,6 +1188,36 @@
     border-color:var(--accent-gold);
   }
 
+
+  /* ---------- Dual currency prices ---------- */
+  .dual-price{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    align-items:flex-start;
+  }
+  .dual-price .price-myr{
+    color:var(--text);
+    font-size:.78em;
+    font-weight:600;
+    opacity:.86;
+  }
+  .detail-price-values{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+  .detail-price-values span:first-child{
+    color:var(--accent-gold);
+    font-size:16px;
+    font-weight:700;
+  }
+  .detail-price-values span:last-child{
+    color:var(--text);
+    font-size:13px;
+    font-weight:600;
+  }
+
 </style>
 </head>
 <body>
@@ -1369,7 +1399,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     clearTimeout(showToast._t);
     showToast._t = setTimeout(()=>{ toastEl.hidden = true; }, 2200);
   }
-  function fmtMoney(n){ return "$" + (Math.round(n * 100) / 100).toFixed(2); }
+  function fmtMoney(n){ return "$" + (Math.round(Number(n || 0) * 100) / 100).toFixed(2); }
+  function fmtMYR(n){ return "RM " + (Math.round(Number(n || 0) * 100) / 100).toFixed(2); }
   function escapeHtml(str){ const d = document.createElement("div"); d.textContent = str == null ? "" : str; return d.innerHTML; }
   function uid(){ return "c_" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
   const EMPTY_ICON = `<svg width="56" height="56" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1388,7 +1419,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       rarity: row.rarity || "Common",
       condition: row.condition || "NM",
       qty: Number(row.quantity || 0),
-      price: Number(row.price || 0),
+      price: Number(row.price_usd ?? row.price ?? 0),
+      price_usd: Number(row.price_usd ?? row.price ?? 0),
+      price_myr: Number(row.price_myr || 0),
       cost: row.cost == null ? null : Number(row.cost),
       notes: row.notes || "",
       images: Array.isArray(row.images) ? row.images : [],
@@ -1405,7 +1438,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       rarity: card.rarity || "Common",
       condition: card.condition || "NM",
       quantity: Number(card.qty || 0),
-      price: Number(card.price || 0),
+      price: Number(card.price_usd ?? card.price ?? 0), // legacy compatibility
+      price_usd: Number(card.price_usd ?? card.price ?? 0),
+      price_myr: Number(card.price_myr || 0),
       cost: card.cost == null ? null : Number(card.cost),
       notes: card.notes || "",
       images: Array.isArray(card.images) ? card.images : [],
@@ -1658,8 +1693,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       </div>
       <div class="field-row">
         <div class="field"><label for="${p}Qty">Quantity</label><input type="number" id="${p}Qty" min="0" step="1" required value="1"></div>
-        <div class="field"><label for="${p}Price">Sale price ($)</label><input type="number" id="${p}Price" min="0" step="0.01" required value="0.00"></div>
-        <div class="field"><label for="${p}Cost">Cost ($, optional)</label><input type="number" id="${p}Cost" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="field"><label for="${p}PriceUSD">Price (USD)</label><input type="number" id="${p}PriceUSD" min="0" step="0.01" required value="0.00"></div>
+        <div class="field"><label for="${p}PriceMYR">Price (MYR)</label><input type="number" id="${p}PriceMYR" min="0" step="0.01" required value="0.00"></div>
       </div>
       <div class="grading-section">
         <div class="grading-head">
@@ -1796,8 +1831,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     $(p + "Rarity").value = card ? card.rarity : "Common";
     $(p + "Condition").value = card ? card.condition : "NM";
     $(p + "Qty").value = card ? card.qty : 1;
-    $(p + "Price").value = card ? card.price : "0.00";
-    $(p + "Cost").value = card && card.cost != null ? card.cost : "";
+    $(p + "PriceUSD").value = card ? (card.price_usd ?? card.price ?? 0) : "0.00";
+    $(p + "PriceMYR").value = card ? (card.price_myr ?? 0) : "0.00";
     $(p + "Notes").value = card ? (card.notes || "") : "";
   }
 
@@ -1810,8 +1845,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       rarity: $(p + "Rarity").value,
       condition: $(p + "Condition").value,
       qty: Math.max(0, parseInt($(p + "Qty").value || "0", 10)),
-      price: Math.max(0, parseFloat($(p + "Price").value || "0")),
-      cost: $(p + "Cost").value === "" ? null : Math.max(0, parseFloat($(p + "Cost").value)),
+      price: Math.max(0, parseFloat($(p + "PriceUSD").value || "0")), // legacy compatibility
+      price_usd: Math.max(0, parseFloat($(p + "PriceUSD").value || "0")),
+      price_myr: Math.max(0, parseFloat($(p + "PriceMYR").value || "0")),
+      cost: null,
       notes: $(p + "Notes").value.trim(),
       images: formState.images.slice(),
       image: formState.images[0] || null, // keeps compatibility with older code/data
@@ -1903,8 +1940,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     });
     list.sort((a,b)=>{
       switch(sortBy){
-        case "value": return (b.qty*b.price) - (a.qty*a.price);
-        case "price": return b.price - a.price;
+        case "value": return (b.qty*(b.price_usd ?? b.price ?? 0)) - (a.qty*(a.price_usd ?? a.price ?? 0));
+        case "price": return (b.price_usd ?? b.price ?? 0) - (a.price_usd ?? a.price ?? 0);
         case "qty": return b.qty - a.qty;
         case "rarity": return RARITY_LIST.indexOf(b.rarity) - RARITY_LIST.indexOf(a.rarity);
         default: return a.name.localeCompare(b.name);
@@ -1926,7 +1963,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           </div>
           <div class="card-row">
             <div class="qty-price">
-              <span class="price">${fmtMoney(c.price)}</span>
+              <span class="price dual-price">
+                <span>${fmtMoney(c.price_usd ?? c.price)}</span>
+                <span class="price-myr">${fmtMYR(c.price_myr)}</span>
+              </span>
               <span class="qty">Qty <b>${c.qty}</b></span>
             </div>
           </div>
@@ -2408,7 +2448,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           <div class="detail-grid">
             ${hasGrade ? "" : `<div class="detail-item"><div class="detail-label">Condition</div><div class="detail-value">${escapeHtml(condition)}</div></div>`}
             <div class="detail-item"><div class="detail-label">Quantity</div><div class="detail-value">${escapeHtml(card.qty ?? "0")}</div></div>
-            <div class="detail-item"><div class="detail-label">Price</div><div class="detail-value">${fmtMoney(Number(card.price || 0))}</div></div>
+            <div class="detail-item detail-price-item">
+              <div class="detail-label">Price</div>
+              <div class="detail-value detail-price-values">
+                <span>${fmtMoney(card.price_usd ?? card.price)}</span>
+                <span>${fmtMYR(card.price_myr)}</span>
+              </div>
+            </div>
             <div class="detail-item"><div class="detail-label">Pictures</div><div class="detail-value">${images.length}</div></div>
           </div>
           ${gradingDetailsHTML(card)}
