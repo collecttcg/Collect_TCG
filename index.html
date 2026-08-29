@@ -1065,6 +1065,54 @@
   .empty-state h2{font-size:24px; color:var(--text); margin-bottom:6px;}
   .empty-state p{margin:0 0 18px; font-size:13.5px; max-width:320px;}
 
+
+  /* ---------- Editable dropdown / combobox ---------- */
+  .combo{position:relative;display:flex;align-items:stretch;}
+  .combo input{padding-right:38px !important;}
+  .combo-toggle{
+    position:absolute;
+    right:1px;
+    top:1px;
+    bottom:1px;
+    width:34px;
+    border:0;
+    border-left:1px solid var(--border);
+    border-radius:0 8px 8px 0;
+    background:var(--surface-2);
+    color:var(--text-muted);
+    cursor:pointer;
+    font-size:17px;
+    line-height:1;
+  }
+  .combo-toggle:hover{color:var(--text);background:var(--surface);}
+  .combo-menu{
+    position:absolute;
+    z-index:120;
+    top:calc(100% + 5px);
+    left:0;
+    right:0;
+    max-height:220px;
+    overflow-y:auto;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:9px;
+    box-shadow:var(--shadow-pop);
+    padding:5px;
+  }
+  .combo-menu[hidden]{display:none !important;}
+  .combo-option{
+    width:100%;
+    display:block;
+    padding:8px 9px;
+    border:0;
+    border-radius:6px;
+    background:transparent;
+    color:var(--text);
+    text-align:left;
+    font-size:12px;
+    cursor:pointer;
+  }
+  .combo-option:hover,.combo-option:focus{background:var(--surface);outline:none;}
   /* ---------- Form / Add page & Modal ---------- */
   .form-card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:26px; max-width:640px;}
   .field{margin-bottom:13px;}
@@ -1499,10 +1547,6 @@
   </div>
 </div>
 
-<datalist id="gameOptions">
-  <option value="Pokémon"><option value="Magic: The Gathering"><option value="Yu-Gi-Oh!">
-  <option value="One Piece Card Game"><option value="One Piece Vintage"><option value="Digimon"><option value="Disney Lorcana"><option value="Flesh and Blood">
-</datalist>
 
 <div class="modal-overlay" id="modalOverlay" hidden>
   <form class="modal" id="editForm">
@@ -2004,6 +2048,82 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   // ---------------- Card form (shared by Add page + Edit modal) ----------------
+  const GAME_CHOICES = [
+    "Pokémon",
+    "Magic: The Gathering",
+    "Yu-Gi-Oh!",
+    "One Piece Card Game",
+    "One Piece Vintage",
+    "Digimon",
+    "Disney Lorcana",
+    "Flesh and Blood"
+  ];
+
+  function wireGameCombobox(p){
+    const input = $(p + "Game");
+    const toggle = $(p + "GameToggle");
+    const menu = $(p + "GameMenu");
+    if(!input || !toggle || !menu) return;
+
+    function renderOptions(){
+      menu.innerHTML = GAME_CHOICES.map(choice =>
+        `<button type="button" class="combo-option" data-value="${escapeHtml(choice)}">${escapeHtml(choice)}</button>`
+      ).join("");
+    }
+
+    function openMenu(){
+      renderOptions();
+      menu.hidden = false;
+    }
+
+    function closeMenu(){ menu.hidden = true; }
+
+    toggle.addEventListener("click", e=>{
+      e.stopPropagation();
+      if(menu.hidden) openMenu();
+      else closeMenu();
+    });
+
+    // Clicking/focusing the field never removes the ability to use the dropdown.
+    input.addEventListener("keydown", e=>{
+      if(e.key === "ArrowDown" && menu.hidden){
+        e.preventDefault();
+        openMenu();
+        const first = menu.querySelector(".combo-option");
+        if(first) first.focus();
+      }
+    });
+
+    menu.addEventListener("click", e=>{
+      const option = e.target.closest(".combo-option");
+      if(!option) return;
+      input.value = option.dataset.value || "";
+      closeMenu();
+      input.focus();
+      input.dispatchEvent(new Event("change", {bubbles:true}));
+    });
+
+    menu.addEventListener("keydown", e=>{
+      const options = Array.from(menu.querySelectorAll(".combo-option"));
+      const i = options.indexOf(document.activeElement);
+      if(e.key === "ArrowDown"){
+        e.preventDefault();
+        (options[i + 1] || options[0])?.focus();
+      }else if(e.key === "ArrowUp"){
+        e.preventDefault();
+        (options[i - 1] || options[options.length - 1])?.focus();
+      }else if(e.key === "Escape"){
+        closeMenu();
+        input.focus();
+      }
+    });
+
+    document.addEventListener("click", e=>{
+      const combo = $(p + "GameCombo");
+      if(combo && !combo.contains(e.target)) closeMenu();
+    });
+  }
+
   function fieldsTemplate(p){
     return `
       <div class="image-field">
@@ -2024,7 +2144,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       <div class="field-row">
         <div class="field">
           <label for="${p}Game">Game</label>
-          <input type="text" id="${p}Game" list="gameOptions" required placeholder="e.g. Pokémon">
+          <div class="combo" id="${p}GameCombo">
+            <input type="text" id="${p}Game" required placeholder="e.g. Pokémon" autocomplete="off">
+            <button type="button" class="combo-toggle" id="${p}GameToggle" aria-label="Show game choices">⌄</button>
+            <div class="combo-menu" id="${p}GameMenu" hidden></div>
+          </div>
         </div>
         <div class="field">
           <label for="${p}Series">Series / Collection</label>
@@ -2901,6 +3025,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       </form>
     `;
     const formState = { images: [], grading: [] };
+    wireGameCombobox("add");
     wireImageControls("add", formState);
     wireGradingControls("add", formState);
     $("addForm").addEventListener("submit", async (e)=>{
@@ -3134,6 +3259,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         company:g.company || "PSA", grade:String(g.grade || "10"), cert:g.cert || ""
       })) : []
     };
+    wireGameCombobox("edit");
     wireImageControls("edit", editFormState);
     wireGradingControls("edit", editFormState);
     overlay.hidden = false;
