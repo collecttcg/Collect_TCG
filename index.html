@@ -1933,8 +1933,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     });
     list.sort((a,b)=>{
       switch(sortBy){
-        case "value": return (b.qty*(b.price_usd ?? b.price ?? 0)) - (a.qty*(a.price_usd ?? a.price ?? 0));
-        case "price": return (b.price_usd ?? b.price ?? 0) - (a.price_usd ?? a.price ?? 0);
+        case "price-low": return (a.price_usd ?? a.price ?? 0) - (b.price_usd ?? b.price ?? 0);
+        case "price-high": return (b.price_usd ?? b.price ?? 0) - (a.price_usd ?? a.price ?? 0);
         case "qty": return b.qty - a.qty;
         case "rarity": return RARITY_LIST.indexOf(b.rarity) - RARITY_LIST.indexOf(a.rarity);
         default: return a.name.localeCompare(b.name);
@@ -2033,8 +2033,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         <select id="filterGame"><option value="">All games</option></select>
         <select id="filterRarity"><option value="">All rarities</option>${RARITY_LIST.map(r=>`<option>${r}</option>`).join("")}</select>
         <select id="sortBy">
-          <option value="name">Sort: Name</option><option value="value">Sort: Total value</option>
-          <option value="price">Sort: Price</option><option value="qty">Sort: Quantity</option><option value="rarity">Sort: Rarity</option>
+          <option value="name">Sort: Name</option>
+          <option value="price-low">Price: Lowest to Highest</option>
+          <option value="price-high">Price: Highest to Lowest</option><option value="qty">Sort: Quantity</option><option value="rarity">Sort: Rarity</option>
         </select>
         <a href="#/add" class="btn-primary owner-only" style="display:inline-block;">+ Add card</a>
       </div>
