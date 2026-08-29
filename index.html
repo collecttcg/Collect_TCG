@@ -1213,6 +1213,13 @@
     font-weight:700;
   }
 
+  .owner-view-count{
+    margin-top:4px;
+    color:var(--accent-gold);
+    font-size:9px;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:600;
+  }
 </style>
 </head>
 <body>
@@ -1421,7 +1428,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       notes: row.notes || "",
       images: Array.isArray(row.images) ? row.images : [],
       image: Array.isArray(row.images) && row.images.length ? row.images[0] : null,
-      grading: Array.isArray(row.grading) ? row.grading : []
+      grading: Array.isArray(row.grading) ? row.grading : [],
+      view_count: Number(row.view_count || 0)
     };
   }
 
@@ -1444,9 +1452,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function loadCards(){
+    const publicColumns = "id,name,game,set_name,rarity,condition,quantity,price,price_usd,price_myr,notes,images,grading,created_at,updated_at";
+    const columns = isOwnerMode() ? "*" : publicColumns;
+
     const { data, error } = await supabaseClient
       .from("cards")
-      .select("*")
+      .select(columns)
       .order("created_at", { ascending: true });
 
     if(error){
@@ -1559,6 +1570,21 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       .from("giveaways")
       .delete()
       .eq("id", id);
+  }
+
+  async function recordCardView(card){
+    try{
+      const { error } = await supabaseClient.rpc("increment_card_view", { p_card_id: card.id });
+      if(error){
+        console.error("Record card view error:", error);
+        return;
+      }
+      if(isOwnerMode()){
+        card.view_count = Number(card.view_count || 0) + 1;
+      }
+    }catch(e){
+      console.error("Record card view error:", e);
+    }
   }
 
   // ---------------- Router ----------------
@@ -1975,6 +2001,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
                 <span>· ${escapeHtml(c.rarity)}</span>
               </div>
               ${gradingSummaryHTML(c)}
+              <div class="owner-only owner-view-count">Views: ${Number(c.view_count || 0).toLocaleString()}</div>
             </div>
           </div>
           ${Number(c.qty) <= 1 ? '<div class="low-stock">Low stock</div>' : ""}
@@ -2407,6 +2434,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function openDetailsModal(card){
     detailsCardId = card.id;
+    recordCardView(card);
     const images = getImages(card);
     const imageHTML = images.length
       ? `<div class="detail-slider" data-card-slider>
@@ -2450,6 +2478,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
               </div>
             </div>
             <div class="detail-item"><div class="detail-label">Pictures</div><div class="detail-value">${images.length}</div></div>
+            <div class="detail-item owner-only"><div class="detail-label">Views</div><div class="detail-value">${Number(card.view_count || 0).toLocaleString()}</div></div>
           </div>
           ${gradingDetailsHTML(card)}
           ${card.notes ? `<div class="detail-section"><h3>Notes</h3><div class="detail-notes">${escapeHtml(card.notes)}</div></div>` : ""}
@@ -2593,6 +2622,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       await supabaseClient.auth.signOut();
       ownerSession = null;
       applyOwnerMode();
+      await loadCards();
       if(currentRoute() === "add") location.hash = "#/inventory";
       else router();
       showToast("Logged out");
@@ -2617,6 +2647,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     ownerSession = data.session;
     applyOwnerMode();
+    await loadCards();
     router();
     showToast("Owner login successful");
   });
