@@ -1789,6 +1789,25 @@
     }
   }
 
+
+  /* ---------- PSA population display ---------- */
+  .pop-summary{
+    display:inline-flex;
+    gap:6px;
+    align-items:center;
+    margin-left:5px;
+    color:var(--accent-gold);
+    font-weight:700;
+  }
+  .pop-owner-status{
+    margin-top:6px;
+    color:var(--text-muted);
+    font-size:10px;
+    line-height:1.4;
+  }
+  .pop-owner-status strong{color:var(--text);}
+  .pop-syncing{color:var(--accent-teal);}
+
 </style>
 </head>
 <body>
@@ -2004,7 +2023,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       notes: row.notes || "",
       images: Array.isArray(row.images) ? row.images : [],
       image: Array.isArray(row.images) && row.images.length ? row.images[0] : null,
-      grading: Array.isArray(row.grading) ? row.grading : [],
+      grading: (() => {
+        const publicGrades = Array.isArray(row.grading) ? row.grading : [];
+        const privateGrades = Array.isArray(row.grading_private) ? row.grading_private : [];
+        return publicGrades.map((g,i)=>({
+          ...g,
+          cert: (privateGrades[i] && privateGrades[i].cert) ? privateGrades[i].cert : ""
+        }));
+      })(),
       view_count: Number(row.view_count || 0)
     };
   }
@@ -2026,7 +2052,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       cost: card.cost == null ? null : Number(card.cost),
       notes: card.notes || "",
       images: Array.isArray(card.images) ? card.images : [],
-      grading: Array.isArray(card.grading) ? card.grading : []
+      grading: Array.isArray(card.grading) ? card.grading.map(g=>({
+        company: g.company || "",
+        grade: g.grade || "",
+        pop_count: g.pop_count == null ? null : Number(g.pop_count),
+        pop_higher: g.pop_higher == null ? null : Number(g.pop_higher),
+        pop_updated_at: g.pop_updated_at || null
+      })) : [],
+      grading_private: Array.isArray(card.grading) ? card.grading.map(g=>({
+        company: g.company || "",
+        grade: g.grade || "",
+        cert: g.cert || ""
+      })) : []
     };
   }
 
@@ -2246,6 +2283,33 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return "";
   }
 
+  // ---------------- PSA POP sync ----------------
+  function hasPsaCert(card){
+    return Array.isArray(card.grading) && card.grading.some(g =>
+      g && String(g.company || "").toUpperCase() === "PSA" && String(g.cert || "").trim()
+    );
+  }
+
+  async function refreshPsaPopForCard(cardId, silent=false){
+    try{
+      const { data, error } = await supabaseClient.functions.invoke("refresh-psa-pop", {
+        body: { card_id: cardId }
+      });
+      if(error) throw error;
+      if(data && data.card){
+        const refreshed = dbToCard(data.card);
+        const idx = cards.findIndex(c=>c.id === refreshed.id);
+        if(idx > -1) cards[idx] = refreshed;
+        return refreshed;
+      }
+      if(!silent && data && data.message) showToast(data.message);
+    }catch(e){
+      console.error("PSA POP sync error:", e);
+      if(!silent) showToast("Saved, but PSA POP sync was unavailable");
+    }
+    return null;
+  }
+
   // ---------------- Router ----------------
   function currentRoute(){
     const h = location.hash.replace(/^#\/?/, "");
@@ -2324,9 +2388,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function gradingSummaryHTML(c){
     const grades = Array.isArray(c.grading) ? c.grading.filter(g=>g && g.company) : [];
     if(!grades.length) return "";
-    return `<div class="grade-summary">Graded: ${grades.map(g =>
-      `${escapeHtml(g.company)} ${escapeHtml(g.grade || "")}${g.cert ? " · #"+escapeHtml(g.cert) : ""}`
-    ).join(" · ")}</div>`;
+    return `<div class="grade-summary">Graded: ${grades.map(g =>{
+      const pop = g.company === "PSA" && g.pop_count != null
+        ? `<span class="pop-summary">POP ${Number(g.pop_count).toLocaleString()}${g.pop_higher != null && Number(g.pop_higher) > 0 ? ` · ${Number(g.pop_higher).toLocaleString()} Higher` : ""}</span>`
+        : "";
+      return `${escapeHtml(g.company)} ${escapeHtml(g.grade || "")}${pop}`;
+    }).join(" · ")}</div>`;
   }
 
   // ---------------- Card form (shared by Add page + Edit modal) ----------------
@@ -2634,7 +2701,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   ];
 
   function gradingRowHTML(p, grade, index){
-    const g = grade || {company:"PSA", grade:"10", cert:""};
+    const g = grade || {company:"PSA", grade:"10", cert:"", pop_count:null, pop_higher:null, pop_updated_at:null};
+    const hasPop = g.pop_count != null && g.pop_count !== "";
+    const updated = g.pop_updated_at ? new Date(g.pop_updated_at).toLocaleString() : "";
     return `<div class="grading-row" data-grade-index="${index}">
       <div class="field">
         <label>Company</label>
@@ -2649,8 +2718,15 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         </select>
       </div>
       <div class="field cert-field">
-        <label>Cert. No. (optional)</label>
+        <label>Cert. No. (owner only)</label>
         <input class="${p}GradeCert" type="text" value="${escapeHtml(g.cert || "")}" placeholder="e.g. 12345678">
+        <div class="pop-owner-status">
+          ${g.company === "PSA"
+            ? (hasPop
+                ? `<strong>Auto POP:</strong> ${Number(g.pop_count).toLocaleString()}${g.pop_higher != null ? ` · ${Number(g.pop_higher).toLocaleString()} higher` : ""}${updated ? ` · updated ${escapeHtml(updated)}` : ""}`
+                : `PSA POP will sync automatically after saving when a cert number is present.`)
+            : `Automatic POP currently applies to PSA certs.`}
+        </div>
       </div>
       <button type="button" class="grading-remove" title="Remove grading">×</button>
     </div>`;
@@ -2674,7 +2750,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
 
     addBtn.addEventListener("click", ()=>{
-      formState.grading.push({company:"PSA", grade:"10", cert:""});
+      formState.grading.push({company:"PSA", grade:"10", cert:"", pop_count:null, pop_higher:null, pop_updated_at:null});
       refresh();
     });
 
@@ -2713,7 +2789,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       grading: formState.grading.map(g=>({
         company: g.company,
         grade: g.grade,
-        cert: g.cert || ""
+        cert: g.cert || "",
+        pop_count: g.pop_count == null ? null : Number(g.pop_count),
+        pop_higher: g.pop_higher == null ? null : Number(g.pop_higher),
+        pop_updated_at: g.pop_updated_at || null
       }))
     };
   }
@@ -3466,7 +3545,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       const saved = await createCardStorage(data);
       if(saved){
         cards.push(saved);
-        showToast("Card added");
+        if(hasPsaCert(data)){
+          showToast("Card added · syncing PSA POP…");
+          await refreshPsaPopForCard(saved.id, true);
+        }else{
+          showToast("Card added");
+        }
         location.hash = "#/inventory";
       }
     });
@@ -3483,10 +3567,15 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       return `<div class="detail-section"><h3>Grading</h3><div class="hint">Raw / ungraded card — no grading entry recorded.</div></div>`;
     }
     return `<div class="detail-section"><h3>Grading</h3>${
-      grades.map(g=>`<div class="grade-entry">
-        <div><span class="grade-main">${escapeHtml(g.company)} ${escapeHtml(g.grade || "")}</span></div>
-        <div class="grade-cert">${g.cert ? "Cert. #"+escapeHtml(g.cert) : "No cert. number"}</div>
-      </div>`).join("")
+      grades.map(g=>{
+        const popLine = g.company === "PSA" && g.pop_count != null
+          ? `<div class="grade-cert">POP ${Number(g.pop_count).toLocaleString()}${g.pop_higher != null && Number(g.pop_higher) > 0 ? ` · ${Number(g.pop_higher).toLocaleString()} Higher` : ""}</div>`
+          : "";
+        return `<div class="grade-entry">
+          <div><span class="grade-main">${escapeHtml(g.company)} ${escapeHtml(g.grade || "")}</span></div>
+          ${popLine}
+        </div>`;
+      }).join("")
     }</div>`;
   }
 
@@ -3685,7 +3774,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     editFormState = {
       images: getImages(card).slice(),
       grading: Array.isArray(card.grading) ? card.grading.map(g=>({
-        company:g.company || "PSA", grade:String(g.grade || "10"), cert:g.cert || ""
+        company:g.company || "PSA",
+        grade:String(g.grade || "10"),
+        cert:g.cert || "",
+        pop_count:g.pop_count == null ? null : Number(g.pop_count),
+        pop_higher:g.pop_higher == null ? null : Number(g.pop_higher),
+        pop_updated_at:g.pop_updated_at || null
       })) : []
     };
     wireGameCombobox("edit");
@@ -3709,7 +3803,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(saved){
       const idx = cards.findIndex(c=>c.id === id);
       if(idx > -1) cards[idx] = saved;
-      showToast("Card updated");
+      if(hasPsaCert(data)){
+        showToast("Card updated · syncing PSA POP…");
+        await refreshPsaPopForCard(id, true);
+      }else{
+        showToast("Card updated");
+      }
       closeEditModal();
       router();
     }
