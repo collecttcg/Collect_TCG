@@ -1144,6 +1144,50 @@
     margin-top:2px;
   }
 
+
+  /* ---------- Theme toggle (default: dark) ---------- */
+  body.light-mode{
+    --bg:#f4f5f7;
+    --sidebar:#ffffff;
+    --surface:#ffffff;
+    --surface-2:#f7f8fa;
+    --surface-3:#eceff3;
+    --border:#d8dce3;
+    --border-soft:#e8ebef;
+    --text:#15171b;
+    --text-muted:#626975;
+    --text-dim:#8b929c;
+    color-scheme:light;
+  }
+  body.light-mode::before{
+    opacity:.018;
+  }
+  body.light-mode .sidebar{
+    box-shadow:1px 0 0 rgba(0,0,0,.04);
+  }
+  body.light-mode .modal-overlay,
+  body.light-mode .lightbox{
+    background:rgba(30,34,40,.64);
+  }
+  .theme-toggle{
+    width:100%;
+    margin-top:8px;
+    padding:9px 11px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:transparent;
+    color:var(--text-muted);
+    font:inherit;
+    font-size:11px;
+    font-weight:600;
+    cursor:pointer;
+    text-align:left;
+  }
+  .theme-toggle:hover{
+    color:var(--text);
+    border-color:var(--accent-gold);
+  }
+
 </style>
 </head>
 <body>
@@ -1174,6 +1218,7 @@
       <div><b id="sfCount">0</b> cards · <b id="sfValue">$0.00</b> value</div>
       <div style="margin-top:6px;">Collect TCG MY &amp; SG</div>
       <div class="owner-status">● Owner mode</div>
+      <button class="theme-toggle" id="themeToggle" type="button">☀ Light mode</button>
       <button class="owner-toggle" id="ownerToggle">Owner login</button>
     </div>
   </aside>
@@ -2540,6 +2585,30 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     ownerSession = session;
     applyOwnerMode();
   });
+
+  // ---------------- Theme ----------------
+  const THEME_KEY = "collect-tcg-theme";
+
+  function applyTheme(theme){
+    const light = theme === "light";
+    document.body.classList.toggle("light-mode", light);
+    const btn = $("themeToggle");
+    if(btn) btn.textContent = light ? "☾ Dark mode" : "☀ Light mode";
+  }
+
+  function loadTheme(){
+    // Dark is the default unless the visitor explicitly chose light.
+    const saved = localStorage.getItem(THEME_KEY);
+    applyTheme(saved === "light" ? "light" : "dark");
+  }
+
+  $("themeToggle").addEventListener("click", ()=>{
+    const next = document.body.classList.contains("light-mode") ? "dark" : "light";
+    localStorage.setItem(THEME_KEY, next);
+    applyTheme(next);
+  });
+
+  loadTheme();
 
   async function startApp(){
     await refreshOwnerSession();
