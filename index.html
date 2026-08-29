@@ -1633,6 +1633,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function fmtMYR(n){
     return "RM " + Math.round(Number(n || 0)).toLocaleString("en-US");
   }
+  function fmtSGD(n){
+    return "SGD " + Math.round(Number(n || 0)).toLocaleString("en-US");
+  }
   function escapeHtml(str){ const d = document.createElement("div"); d.textContent = str == null ? "" : str; return d.innerHTML; }
   function uid(){ return "c_" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
   const EMPTY_ICON = `<svg width="56" height="56" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1656,6 +1659,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       price: Number(row.price_usd ?? row.price ?? 0),
       price_usd: Number(row.price_usd ?? row.price ?? 0),
       price_myr: Number(row.price_myr || 0),
+      price_sgd: Number(row.price_sgd || 0),
       cost: row.cost == null ? null : Number(row.cost),
       notes: row.notes || "",
       images: Array.isArray(row.images) ? row.images : [],
@@ -1678,6 +1682,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       price: Number(card.price_usd ?? card.price ?? 0), // legacy compatibility
       price_usd: Number(card.price_usd ?? card.price ?? 0),
       price_myr: Number(card.price_myr || 0),
+      price_sgd: Number(card.price_sgd || 0),
       cost: card.cost == null ? null : Number(card.cost),
       notes: card.notes || "",
       images: Array.isArray(card.images) ? card.images : [],
@@ -1686,7 +1691,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function loadCards(){
-    const publicColumns = "id,name,game,set_name,rarity,condition,quantity,price,price_usd,price_myr,notes,images,grading,created_at,updated_at";
+    const publicColumns = "id,name,game,set_name,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,images,grading,created_at,updated_at";
     const columns = isOwnerMode() ? "*" : publicColumns;
 
     const { data, error } = await supabaseClient
@@ -2032,6 +2037,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       <div class="field-row">
         <div class="field"><label for="${p}PriceUSD">Price (USD)</label><input type="number" id="${p}PriceUSD" min="0" step="0.01" required value="0.00"></div>
         <div class="field"><label for="${p}PriceMYR">Price (MYR)</label><input type="number" id="${p}PriceMYR" min="0" step="0.01" required value="0.00"></div>
+        <div class="field">
+          <label for="${p}PriceSGD">Price (SGD)</label>
+          <input type="number" id="${p}PriceSGD" min="0" step="1" placeholder="0">
+        </div>
       </div>
       <div class="grading-section">
         <div class="grading-head">
@@ -2185,6 +2194,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       price: Math.max(0, parseFloat($(p + "PriceUSD").value || "0")), // legacy compatibility
       price_usd: Math.max(0, parseFloat($(p + "PriceUSD").value || "0")),
       price_myr: Math.max(0, parseFloat($(p + "PriceMYR").value || "0")),
+      price_sgd: Math.max(0, parseFloat($(p + "PriceSGD").value || "0")),
       cost: null,
       notes: $(p + "Notes").value.trim(),
       images: formState.images.slice(),
@@ -2320,6 +2330,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
               <span class="price dual-price">
                 <span>${fmtMoney(c.price_usd ?? c.price)}</span>
                 <span class="price-myr">${fmtMYR(c.price_myr)}</span>
+                <span class="price-myr">${fmtSGD(c.price_sgd)}</span>
               </span>
               <span class="qty">Qty <b>${c.qty}</b></span>
             </div>
@@ -2989,6 +3000,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
               <div class="detail-value detail-price-values">
                 <span>${fmtMoney(card.price_usd ?? card.price)}</span>
                 <span>${fmtMYR(card.price_myr)}</span>
+              <span>${fmtSGD(card.price_sgd)}</span>
               </div>
             </div>
             <div class="detail-item"><div class="detail-label">Format</div><div class="detail-value">${escapeHtml(effectiveFormat(card))}</div></div>
