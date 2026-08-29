@@ -1418,16 +1418,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     showToast._t = setTimeout(()=>{ toastEl.hidden = true; }, 2200);
   }
   function fmtMoney(n){
-    return "$" + Number(n || 0).toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+    return "$" + Math.round(Number(n || 0)).toLocaleString("en-US");
   }
   function fmtMYR(n){
-    return "RM " + Number(n || 0).toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+    return "RM " + Math.round(Number(n || 0)).toLocaleString("en-US");
   }
   function escapeHtml(str){ const d = document.createElement("div"); d.textContent = str == null ? "" : str; return d.innerHTML; }
   function uid(){ return "c_" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
