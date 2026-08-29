@@ -2313,7 +2313,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(activeQuickFilter === "graded" && format !== "Graded") return false;
       if(activeQuickFilter === "raw" && format !== "Raw") return false;
       if(activeQuickFilter === "sealed" && format !== "Sealed") return false;
-      if(activeQuickFilter === "championship" && !(c.series || "").toLowerCase().includes("championship")) return false;
+      if(activeQuickFilter === "championship"){
+        const s = (c.series || "").toLowerCase();
+        if(!(s.includes("championship") || s.includes("champion") || s.includes("treasure cup"))) return false;
+      }
       if(activeQuickFilter === "vintage" && !(c.game === "One Piece Vintage" || (c.series || "").toLowerCase().includes("vintage"))) return false;
       return true;
     });
