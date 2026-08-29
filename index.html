@@ -674,6 +674,133 @@
   .contact-link:hover{border-color:var(--accent-gold);transform:translateY(-1px);}
   .contact-arrow{color:var(--accent-gold);font-size:15px;}
 
+  /* ---------- Larger card detail view + full gallery lightbox ---------- */
+  .card-details-modal{
+    max-width:1120px;
+    width:min(96vw,1120px);
+    padding:24px;
+  }
+  .detail-layout{
+    grid-template-columns:minmax(430px,1.35fr) minmax(300px,.8fr);
+    gap:24px;
+    align-items:start;
+  }
+  .detail-slider-stage{
+    aspect-ratio:4 / 5;
+    max-height:72vh;
+    background:#111216;
+  }
+  .detail-slider-stage img{
+    object-fit:contain;
+    padding:6px;
+  }
+  .detail-slider-btn{
+    width:42px;
+    height:42px;
+    font-size:25px;
+    background:rgba(10,10,12,.82);
+  }
+  .detail-slider-btn.prev{left:12px;}
+  .detail-slider-btn.next{right:12px;}
+  .detail-slider-count{
+    right:12px;
+    bottom:12px;
+    font-size:10px;
+    padding:4px 7px;
+  }
+  .detail-slider-dots{margin-top:10px;}
+
+  .image-lightbox{
+    flex-direction:column;
+    gap:12px;
+    padding:22px 76px 18px;
+  }
+  .image-lightbox-main{
+    position:relative;
+    width:100%;
+    height:calc(100vh - 150px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .image-lightbox img#imageLightboxImg{
+    max-width:100%;
+    max-height:100%;
+    width:auto;
+    height:auto;
+    object-fit:contain;
+    border-radius:10px;
+  }
+  .image-lightbox-nav{
+    position:fixed;
+    top:50%;
+    transform:translateY(-50%);
+    width:52px;
+    height:52px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.25);
+    background:rgba(20,20,24,.82);
+    color:#fff;
+    font-size:31px;
+    cursor:pointer;
+    z-index:102;
+  }
+  .image-lightbox-prev{left:18px;}
+  .image-lightbox-next{right:18px;}
+  .image-lightbox-nav:hover{border-color:var(--accent-gold);color:var(--accent-gold);}
+  .image-lightbox-count{
+    position:fixed;
+    top:22px;
+    left:24px;
+    color:#fff;
+    font:12px 'JetBrains Mono',monospace;
+    z-index:102;
+    background:rgba(20,20,24,.68);
+    padding:5px 8px;
+    border-radius:7px;
+  }
+  .image-lightbox-thumbs{
+    width:min(760px,90vw);
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    overflow-x:auto;
+    padding:4px 2px 7px;
+  }
+  .image-lightbox-thumb{
+    width:58px;
+    height:76px;
+    flex:0 0 auto;
+    object-fit:cover;
+    padding:0 !important;
+    border-radius:7px !important;
+    border:1px solid var(--border) !important;
+    opacity:.55;
+    cursor:pointer;
+    box-shadow:none !important;
+  }
+  .image-lightbox-thumb.active{
+    opacity:1;
+    border-color:var(--accent-gold) !important;
+    box-shadow:0 0 0 1px var(--accent-gold) !important;
+  }
+  .image-lightbox-hint{
+    color:rgba(255,255,255,.65);
+    font-size:11px;
+    text-align:center;
+  }
+  @media(max-width:800px){
+    .card-details-modal{width:96vw;max-width:720px;padding:18px;}
+    .detail-layout{grid-template-columns:1fr;gap:16px;}
+    .detail-slider-stage{aspect-ratio:4/5;max-height:68vh;}
+    .image-lightbox{padding:18px 48px 14px;}
+    .image-lightbox-main{height:calc(100vh - 130px);}
+    .image-lightbox-nav{width:42px;height:42px;font-size:25px;}
+    .image-lightbox-prev{left:6px;}
+    .image-lightbox-next{right:6px;}
+    .image-lightbox-thumb{width:48px;height:64px;}
+  }
+
   /* ---------- By-game groups ---------- */
   .game-group{margin-bottom:32px;}
   .game-group-head{display:flex; align-items:center; gap:10px; margin-bottom:13px;}
@@ -869,7 +996,14 @@
 
 <div class="image-lightbox" id="imageLightbox" hidden>
   <button type="button" class="image-lightbox-close" id="imageLightboxClose" aria-label="Close image">×</button>
-  <img id="imageLightboxImg" alt="Card image preview">
+  <div class="image-lightbox-count" id="imageLightboxCount">1 / 1</div>
+  <button type="button" class="image-lightbox-nav image-lightbox-prev" id="imageLightboxPrev" aria-label="Previous image">‹</button>
+  <div class="image-lightbox-main" id="imageLightboxMain">
+    <img id="imageLightboxImg" alt="Card image preview">
+  </div>
+  <button type="button" class="image-lightbox-nav image-lightbox-next" id="imageLightboxNext" aria-label="Next image">›</button>
+  <div class="image-lightbox-thumbs" id="imageLightboxThumbs"></div>
+  <div class="image-lightbox-hint">Swipe or use the arrows to view more photos</div>
 </div>
 
 <div class="toast" id="toast" hidden></div>
@@ -1686,6 +1820,45 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }</div>`;
   }
 
+  let lightboxImages = [];
+  let lightboxIndex = 0;
+
+  function renderLightboxImage(index){
+    if(!lightboxImages.length) return;
+    lightboxIndex = (index + lightboxImages.length) % lightboxImages.length;
+    $("imageLightboxImg").src = lightboxImages[lightboxIndex];
+    $("imageLightboxCount").textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+    $("imageLightboxPrev").hidden = lightboxImages.length <= 1;
+    $("imageLightboxNext").hidden = lightboxImages.length <= 1;
+    Array.from($("imageLightboxThumbs").querySelectorAll(".image-lightbox-thumb")).forEach((thumb,i)=>{
+      thumb.classList.toggle("active", i === lightboxIndex);
+      if(i === lightboxIndex) thumb.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
+    });
+  }
+
+  function openImageLightbox(images, startIndex){
+    lightboxImages = (images || []).filter(Boolean);
+    if(!lightboxImages.length) return;
+    $("imageLightboxThumbs").innerHTML = lightboxImages.map((img,i)=>
+      `<img class="image-lightbox-thumb ${i===startIndex?"active":""}" src="${escapeHtml(img)}" data-lightbox-index="${i}" alt="Thumbnail ${i+1}">`
+    ).join("");
+    $("imageLightboxThumbs").querySelectorAll("[data-lightbox-index]").forEach(thumb=>{
+      thumb.addEventListener("click", ()=>renderLightboxImage(Number(thumb.dataset.lightboxIndex)));
+    });
+    $("imageLightbox").hidden = false;
+    document.body.style.overflow = "hidden";
+    renderLightboxImage(startIndex || 0);
+  }
+
+  function closeImageLightbox(){
+    $("imageLightbox").hidden = true;
+    $("imageLightboxImg").src = "";
+    $("imageLightboxThumbs").innerHTML = "";
+    lightboxImages = [];
+    lightboxIndex = 0;
+    document.body.style.overflow = "";
+  }
+
   function openDetailsModal(card){
     detailsCardId = card.id;
     const images = getImages(card);
@@ -1761,8 +1934,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       }));
 
       slideImg.addEventListener("click", ()=>{
-        $("imageLightboxImg").src = images[slideIndex];
-        $("imageLightbox").hidden = false;
+        openImageLightbox(images, slideIndex);
       });
 
       let touchStartX = null;
@@ -1786,16 +1958,25 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     detailsCardId = null;
   }
 
-  $("imageLightboxClose").addEventListener("click", ()=>{
-    $("imageLightbox").hidden = true;
-    $("imageLightboxImg").src = "";
-  });
+  $("imageLightboxClose").addEventListener("click", closeImageLightbox);
+  $("imageLightboxPrev").addEventListener("click", e=>{ e.stopPropagation(); renderLightboxImage(lightboxIndex - 1); });
+  $("imageLightboxNext").addEventListener("click", e=>{ e.stopPropagation(); renderLightboxImage(lightboxIndex + 1); });
   $("imageLightbox").addEventListener("click", e=>{
-    if(e.target === $("imageLightbox")){
-      $("imageLightbox").hidden = true;
-      $("imageLightboxImg").src = "";
-    }
+    if(e.target === $("imageLightbox")) closeImageLightbox();
   });
+
+  let lightboxTouchStartX = null;
+  $("imageLightboxMain").addEventListener("touchstart", e=>{
+    lightboxTouchStartX = e.changedTouches[0].clientX;
+  }, {passive:true});
+  $("imageLightboxMain").addEventListener("touchend", e=>{
+    if(lightboxTouchStartX == null) return;
+    const dx = e.changedTouches[0].clientX - lightboxTouchStartX;
+    if(Math.abs(dx) > 35 && lightboxImages.length > 1){
+      renderLightboxImage(lightboxIndex + (dx < 0 ? 1 : -1));
+    }
+    lightboxTouchStartX = null;
+  }, {passive:true});
   $("detailsCloseBtn").addEventListener("click", closeDetailsModal);
   $("detailsEditBtn").addEventListener("click", ()=>{
     const card = cards.find(c=>c.id === detailsCardId);
@@ -1808,10 +1989,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(e.target === detailsOverlay) closeDetailsModal();
   });
   document.addEventListener("keydown", e=>{
-    if(e.key === "Escape" && !$("imageLightbox").hidden){
-      $("imageLightbox").hidden = true;
-      $("imageLightboxImg").src = "";
-      return;
+    if(!$("imageLightbox").hidden){
+      if(e.key === "Escape"){ closeImageLightbox(); return; }
+      if(e.key === "ArrowLeft" && lightboxImages.length > 1){ renderLightboxImage(lightboxIndex - 1); return; }
+      if(e.key === "ArrowRight" && lightboxImages.length > 1){ renderLightboxImage(lightboxIndex + 1); return; }
     }
     if(e.key === "Escape" && !detailsOverlay.hidden) closeDetailsModal();
   });
