@@ -1657,6 +1657,138 @@
     }
   }
 
+
+  /* ---------- Overview filter dropdown readability fix ---------- */
+  .filter-row > select{
+    min-width:175px !important;
+    padding-left:11px !important;
+    padding-right:42px !important;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  #filterGame{min-width:185px !important;}
+  #filterFormat{min-width:175px !important;}
+  #filterSeries{min-width:190px !important;}
+  #sortBy{min-width:205px !important;}
+
+  /* Keep the dropdown arrow area separate from the selected text */
+  .filter-row select{
+    background-position:
+      calc(100% - 17px) 50%,
+      calc(100% - 12px) 50%,
+      100% 0 !important;
+    background-size:
+      5px 5px,
+      5px 5px,
+      34px 100% !important;
+  }
+
+  @media (max-width:700px){
+    .filter-row > select{
+      min-width:0 !important;
+      width:auto !important;
+      flex:1 1 calc(50% - 8px) !important;
+    }
+    #filterGame,#filterFormat,#filterSeries,#sortBy{
+      min-width:0 !important;
+    }
+  }
+
+
+  /* ---------- Custom overview dropdowns ----------
+     Replaces browser-native select popups so the opened menu visually belongs
+     to the control instead of appearing as a floating OS block over the page. */
+  .filter-row > .overview-select{
+    position:relative;
+    flex:0 0 auto;
+    min-width:175px;
+  }
+  #filterGameWrap{min-width:185px;}
+  #filterFormatWrap{min-width:175px;}
+  #filterSeriesWrap{min-width:190px;}
+  #sortByWrap{min-width:205px;}
+
+  .overview-select-btn{
+    width:100%;
+    min-height:38px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:9px 11px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:12px;
+    text-align:left;
+    cursor:pointer;
+  }
+  .overview-select-btn:hover{border-color:var(--text-muted);}
+  .overview-select-btn:focus{
+    outline:2px solid var(--accent-teal);
+    outline-offset:1px;
+    border-color:var(--accent-teal);
+  }
+  .overview-select-btn i{
+    width:8px;
+    height:8px;
+    flex:0 0 auto;
+    border-right:2px solid var(--text-muted);
+    border-bottom:2px solid var(--text-muted);
+    transform:rotate(45deg) translateY(-2px);
+  }
+  .overview-select-menu{
+    position:absolute;
+    z-index:500;
+    top:calc(100% + 6px);
+    left:0;
+    min-width:100%;
+    width:max-content;
+    max-width:320px;
+    max-height:260px;
+    overflow-y:auto;
+    padding:5px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:var(--surface-2);
+    box-shadow:0 12px 30px rgba(0,0,0,.38);
+  }
+  .overview-select-menu[hidden]{display:none !important;}
+  .overview-select-option{
+    display:block;
+    width:100%;
+    padding:8px 10px;
+    border:0;
+    border-radius:6px;
+    background:transparent;
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:12px;
+    text-align:left;
+    white-space:nowrap;
+    cursor:pointer;
+  }
+  .overview-select-option:hover,
+  .overview-select-option:focus{
+    background:var(--surface);
+    color:var(--text);
+    outline:none;
+  }
+
+  @media (max-width:700px){
+    .filter-row > .overview-select{
+      flex:1 1 calc(50% - 8px);
+      min-width:0 !important;
+    }
+    .overview-select-menu{
+      width:100%;
+      max-width:none;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -2793,19 +2925,26 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
       <div class="filter-row">
         <input type="text" id="search" placeholder="Search card name or series…">
-        <select id="filterGame"><option value="">All Games</option></select>
-        <select id="filterFormat">
-          <option value="">All Formats</option>
-          <option value="Raw">Raw Card</option>
-          <option value="Graded">Graded / Slab</option>
-          <option value="Sealed">Sealed</option>
-        </select>
-        <select id="filterSeries"><option value="">All Series</option></select>
-        <select id="sortBy">
-          <option value="name">Sort: Name</option>
-          <option value="price-low">Price: Lowest to Highest</option>
-          <option value="price-high">Price: Highest to Lowest</option>
-        </select>
+        <div class="overview-select" id="filterGameWrap">
+  <button type="button" class="overview-select-btn" id="filterGameBtn"><span>All Games</span><i></i></button>
+  <div class="overview-select-menu" id="filterGameMenu" hidden></div>
+  <input type="hidden" id="filterGame" value="">
+</div>
+        <div class="overview-select" id="filterFormatWrap">
+  <button type="button" class="overview-select-btn" id="filterFormatBtn"><span>All Formats</span><i></i></button>
+  <div class="overview-select-menu" id="filterFormatMenu" hidden></div>
+  <input type="hidden" id="filterFormat" value="">
+</div>
+        <div class="overview-select" id="filterSeriesWrap">
+  <button type="button" class="overview-select-btn" id="filterSeriesBtn"><span>All Series</span><i></i></button>
+  <div class="overview-select-menu" id="filterSeriesMenu" hidden></div>
+  <input type="hidden" id="filterSeries" value="">
+</div>
+        <div class="overview-select" id="sortByWrap">
+  <button type="button" class="overview-select-btn" id="sortByBtn"><span>Sort: Name</span><i></i></button>
+  <div class="overview-select-menu" id="sortByMenu" hidden></div>
+  <input type="hidden" id="sortBy" value="name">
+</div>
         <a href="#/add" class="btn-primary owner-only" style="display:inline-block;">+ Add card</a>
       </div>
 
@@ -2813,10 +2952,59 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     `;
 
     const games = Array.from(new Set(cards.map(c=>c.game).filter(Boolean))).sort();
-    $("filterGame").innerHTML = '<option value="">All Games</option>' + games.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join("");
-
     const series = Array.from(new Set(cards.map(c=>c.series).filter(Boolean))).sort();
-    $("filterSeries").innerHTML = '<option value="">All Series</option>' + series.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+
+    function setupOverviewSelect(id, options){
+      const hidden = $(id);
+      const btn = $(id + "Btn");
+      const menu = $(id + "Menu");
+      const wrap = $(id + "Wrap");
+
+      menu.innerHTML = options.map(o =>
+        `<button type="button" class="overview-select-option" data-value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</button>`
+      ).join("");
+
+      btn.addEventListener("click", e=>{
+        e.stopPropagation();
+        document.querySelectorAll(".overview-select-menu").forEach(m=>{
+          if(m !== menu) m.hidden = true;
+        });
+        menu.hidden = !menu.hidden;
+      });
+
+      menu.addEventListener("click", e=>{
+        const option = e.target.closest(".overview-select-option");
+        if(!option) return;
+        hidden.value = option.dataset.value;
+        btn.querySelector("span").textContent = option.textContent;
+        menu.hidden = true;
+        hidden.dispatchEvent(new Event("change", {bubbles:true}));
+      });
+
+      document.addEventListener("click", e=>{
+        if(!wrap.contains(e.target)) menu.hidden = true;
+      });
+    }
+
+    setupOverviewSelect("filterGame", [
+      {value:"",label:"All Games"},
+      ...games.map(g=>({value:g,label:g}))
+    ]);
+    setupOverviewSelect("filterFormat", [
+      {value:"",label:"All Formats"},
+      {value:"Raw",label:"Raw Card"},
+      {value:"Graded",label:"Graded / Slab"},
+      {value:"Sealed",label:"Sealed"}
+    ]);
+    setupOverviewSelect("filterSeries", [
+      {value:"",label:"All Series"},
+      ...series.map(s=>({value:s,label:s}))
+    ]);
+    setupOverviewSelect("sortBy", [
+      {value:"name",label:"Sort: Name"},
+      {value:"price-low",label:"Price: Lowest to Highest"},
+      {value:"price-high",label:"Price: Highest to Lowest"}
+    ]);
 
     function draw(){
       const grid = $("invGrid");
