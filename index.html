@@ -1640,6 +1640,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       name: (row.name || "").toUpperCase(),
       game: row.game === "One Piece" ? "One Piece Card Game" : (row.game || ""),
       set: row.set_name || "",
+      rarity: row.rarity || "Common",
       condition: row.condition || "NM",
       qty: Number(row.quantity || 0),
       price: Number(row.price_usd ?? row.price ?? 0),
@@ -1659,6 +1660,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       name: (card.name || "").toUpperCase(),
       game: card.game,
       set_name: card.set || "",
+      rarity: card.rarity || "Common",
       condition: card.condition || "NM",
       quantity: Number(card.qty || 0),
       price: Number(card.price_usd ?? card.price ?? 0), // legacy compatibility
@@ -1672,7 +1674,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function loadCards(){
-    const publicColumns = "id,name,game,set_name,condition,quantity,price,price_usd,price_myr,notes,images,grading,created_at,updated_at";
+    const publicColumns = "id,name,game,set_name,rarity,condition,quantity,price,price_usd,price_myr,notes,images,grading,created_at,updated_at";
     const columns = isOwnerMode() ? "*" : publicColumns;
 
     const { data, error } = await supabaseClient
@@ -2157,6 +2159,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       name: $(p + "Name").value.trim().toUpperCase(),
       game: $(p + "Game").value.trim(),
       set: $(p + "Set").value.trim(),
+      rarity: "Common",
       condition: $(p + "Condition").value,
       qty: Math.max(0, parseInt($(p + "Qty").value || "0", 10)),
       price: Math.max(0, parseFloat($(p + "PriceUSD").value || "0")), // legacy compatibility
@@ -2189,6 +2192,15 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const gameRows = Object.entries(byGame).sort((a,b)=>b[1].value - a[1].value);
     const maxGameVal = Math.max(1, ...gameRows.map(r=>r[1].value));
 
+    const byRarity = {};
+    cards.forEach(c=>{
+      byRarity[c.rarity] = byRarity[c.rarity] || {count:0, value:0};
+      byRarity[c.rarity].count += Number(c.qty||0);
+      byRarity[c.rarity].value += Number(c.qty||0)*Number(c.price||0);
+    });
+    const rarityRows = RARITY_LIST.filter(r=>byRarity[r]).map(r=>[r, byRarity[r]]);
+    const maxRarityVal = Math.max(1, ...rarityRows.map(r=>r[1].value));
+
     const recent = cards.slice(-5).reverse();
 
     view.innerHTML = `
@@ -2209,7 +2221,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
               <div class="bar-val">${fmtMoney(d.value)}</div>
             </div>`).join("") : `<div class="hint">No cards yet.</div>`}
         </div>
-      </div>
+        <div class="panel">
+          <h3>Value by rarity</h3>
+          ${rarityRows.length ? rarityRows.map(([r,d])=>`
+            <div class="bar-row">
+              <div class="lbl">${r}</div>
+              <div class="bar-track"><div class="bar-fill" style="width:${(d.value/maxRarityVal*100).toFixed(1)}%; background:${RARITY_COLOR[r]}"></div></div>
               <div class="bar-val">${fmtMoney(d.value)}</div>
             </div>`).join("") : `<div class="hint">No cards yet.</div>`}
         </div>
