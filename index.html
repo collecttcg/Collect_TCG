@@ -1255,7 +1255,7 @@
 
 <datalist id="gameOptions">
   <option value="Pokémon"><option value="Magic: The Gathering"><option value="Yu-Gi-Oh!">
-  <option value="One Piece"><option value="Digimon"><option value="Disney Lorcana"><option value="Flesh and Blood">
+  <option value="One Piece Card Game"><option value="One Piece Vintage"><option value="Digimon"><option value="Disney Lorcana"><option value="Flesh and Blood">
 </datalist>
 
 <div class="modal-overlay" id="modalOverlay" hidden>
@@ -1409,7 +1409,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return {
       id: row.id,
       name: row.name || "",
-      game: row.game || "",
+      game: row.game === "One Piece" ? "One Piece Card Game" : (row.game || ""),
       set: row.set_name || "",
       rarity: row.rarity || "Common",
       condition: row.condition || "NM",
