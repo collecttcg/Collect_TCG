@@ -1220,6 +1220,22 @@
     font-family:'JetBrains Mono',monospace;
     font-weight:600;
   }
+  .details-top-actions{
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:8px;
+    margin-bottom:12px;
+    position:sticky;
+    top:0;
+    z-index:8;
+    padding:2px 0 8px;
+    background:var(--surface);
+  }
+  .details-top-actions button{
+    white-space:nowrap;
+  }
+
 </style>
 </head>
 <body>
@@ -1279,11 +1295,11 @@
 
 <div class="modal-overlay" id="detailsOverlay" hidden>
   <div class="modal card-details-modal" id="detailsModal" role="dialog" aria-modal="true" aria-labelledby="detailsTitle">
-    <div id="detailsMount"></div>
-    <div class="modal-actions">
+    <div class="details-top-actions">
       <button type="button" id="detailsCloseBtn">Close</button>
       <button type="button" class="btn-primary owner-only" id="detailsEditBtn">Edit card</button>
     </div>
+    <div id="detailsMount"></div>
   </div>
 </div>
 
