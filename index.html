@@ -2296,13 +2296,23 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         body: { card_id: cardId }
       });
       if(error) throw error;
+
       if(data && data.card){
         const refreshed = dbToCard(data.card);
         const idx = cards.findIndex(c=>c.id === refreshed.id);
         if(idx > -1) cards[idx] = refreshed;
+
+        const synced = Array.isArray(refreshed.grading) && refreshed.grading.some(g =>
+          String(g.company || "").toUpperCase() === "PSA" && g.pop_count != null
+        );
+
+        if(!silent){
+          showToast(synced ? "PSA POP updated" : "PSA cert saved, but POP was not returned");
+        }
         return refreshed;
       }
-      if(!silent && data && data.message) showToast(data.message);
+
+      if(!silent) showToast(data?.message || "PSA POP was not returned");
     }catch(e){
       console.error("PSA POP sync error:", e);
       if(!silent) showToast("Saved, but PSA POP sync was unavailable");
@@ -2765,6 +2775,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     $(p + "Condition").value = card ? card.condition : "NM";
     $(p + "PriceUSD").value = card ? (card.price_usd ?? card.price ?? 0) : "0.00";
     $(p + "PriceMYR").value = card ? (card.price_myr ?? 0) : "0.00";
+    $(p + "PriceSGD").value = card ? (card.price_sgd ?? 0) : "0";
     $(p + "Notes").value = card ? (card.notes || "") : "";
   }
 
@@ -3547,7 +3558,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         cards.push(saved);
         if(hasPsaCert(data)){
           showToast("Card added · syncing PSA POP…");
-          await refreshPsaPopForCard(saved.id, true);
+          await refreshPsaPopForCard(saved.id, false);
         }else{
           showToast("Card added");
         }
@@ -3805,7 +3816,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(idx > -1) cards[idx] = saved;
       if(hasPsaCert(data)){
         showToast("Card updated · syncing PSA POP…");
-        await refreshPsaPopForCard(id, true);
+        await refreshPsaPopForCard(id, false);
       }else{
         showToast("Card updated");
       }
