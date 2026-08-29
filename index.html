@@ -1582,7 +1582,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     "Rare Holo":"var(--r-holo)", "Ultra Rare":"var(--r-ultra)", "Secret Rare":"var(--r-ultra)", "Promo":"var(--r-holo)"
   };
   const SHIMMER_RARITIES = new Set(["Rare Holo","Ultra Rare","Secret Rare","Promo"]);
-  const CONDITION_LABEL = {NM:"Near Mint", M:"Mint", LP:"Lightly Played", MP:"Moderately Played", HP:"Heavily Played", DMG:"Damaged", SEALED:"Sealed"};
+  const CONDITION_LABEL = {NM:"Near Mint", M:"Mint", LP:"Lightly Played", MP:"Moderately Played", HP:"Heavily Played", DMG:"Damaged", SEALED:"Sealed", NA:"Not Applicable"};
   const RARITY_LIST = ["Common","Uncommon","Rare","Rare Holo","Ultra Rare","Secret Rare","Promo"];
   const INDEX_KEY = "card-index";
 
@@ -2005,7 +2005,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           <label for="${p}Condition">Condition</label>
           <select id="${p}Condition">
             <option value="NM">Near Mint</option><option value="M">Mint</option><option value="LP">Lightly Played</option>
-            <option value="MP">Moderately Played</option><option value="HP">Heavily Played</option><option value="DMG">Damaged</option><option value="SEALED">Sealed</option>
+            <option value="MP">Moderately Played</option><option value="HP">Heavily Played</option><option value="DMG">Damaged</option><option value="SEALED">Sealed</option><option value="NA">Not Applicable</option>
           </select>
         </div>
       </div>
@@ -2298,7 +2298,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
               <div class="owner-only owner-view-count">Views: ${Number(c.view_count || 0).toLocaleString()}</div>
             </div>
           </div>
-          ${Number(c.qty) <= 1 ? '<div class="low-stock">Low stock</div>' : ""}
           ${c.notes ? `<div class="notes">${escapeHtml(c.notes)}</div>` : ""}
         </div>
       </div>
