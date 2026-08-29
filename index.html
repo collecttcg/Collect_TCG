@@ -1620,7 +1620,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     showToast._t = setTimeout(()=>{ toastEl.hidden = true; }, 2200);
   }
   function fmtMoney(n){
-    return "$" + Math.round(Number(n || 0)).toLocaleString("en-US");
+    return "USD " + Math.round(Number(n || 0)).toLocaleString("en-US");
   }
   function fmtMYR(n){
     return "RM " + Math.round(Number(n || 0)).toLocaleString("en-US");
