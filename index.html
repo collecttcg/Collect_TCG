@@ -1666,6 +1666,20 @@
     text-transform:capitalize;
   }
 
+
+  /* Canonical pill casing */
+  .filter-pill-btn,
+  .clean-meta-pill,
+  .clean-grade-badge,
+  .active-pill-filter{
+    text-transform:capitalize !important;
+  }
+
+  .clean-language-pill,
+  [data-pill-filter="language"]{
+    text-transform:uppercase !important;
+  }
+
 </style>
 </head>
 <body>
@@ -2055,11 +2069,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       year: row.year == null ? null : Number(row.year),
       game: row.game === "One Piece" ? "One Piece Card Game" : (row.game || ""),
       language: row.language || "",
-      era: row.era || "",
-      availability: row.availability || "Available",
+      era: normalizeStoredLabel(row.era || ""),
+      availability: normalizeStoredLabel(row.availability || "Available"),
       set: row.set_name || "",
-      series: row.series || "",
-      format: row.format || "",
+      series: normalizeStoredLabel(row.series || ""),
+      format: normalizeStoredLabel(row.format || ""),
       rarity: row.rarity || "Common",
       condition: row.condition || "NM",
       qty: Number(row.quantity || 0),
@@ -2090,11 +2104,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       year: card.year == null || card.year === "" ? null : Number(card.year),
       game: card.game,
       language: card.language || "",
-      era: card.era || "",
-      availability: card.availability || "Available",
+      era: normalizeStoredLabel(card.era || ""),
+      availability: normalizeStoredLabel(card.availability || "Available"),
       set_name: card.set || "",
-      series: card.series || "",
-      format: card.format || "",
+      series: normalizeStoredLabel(card.series || ""),
+      format: normalizeStoredLabel(card.format || ""),
       rarity: card.rarity || "Common",
       condition: card.condition || "NM",
       quantity: Number(card.qty || 0),
@@ -2977,7 +2991,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     refresh();
   }
 
+  function wireAutoCapitalization(p){
+    const seriesInput = $(p + "Series");
+    if(seriesInput && !seriesInput.dataset.autoCapsWired){
+      seriesInput.dataset.autoCapsWired = "1";
+      seriesInput.addEventListener("blur", ()=>{
+        seriesInput.value = normalizeStoredLabel(seriesInput.value);
+      });
+    }
+  }
+
   function populateFields(p, card){
+    wireAutoCapitalization(p);
     $(p + "Name").value = card ? card.name : "";
     $(p + "CardCode").value = card ? (card.card_code || "") : "";
     $(p + "Year").value = card && card.year ? card.year : "";
@@ -3002,7 +3027,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       year: $(p + "Year").value ? Number($(p + "Year").value) : null,
       game: $(p + "Game").value.trim(),
       language: $(p + "Language").value,
-      series: $(p + "Series").value.trim(),
+      series: normalizeStoredLabel($(p + "Series").value),
       era: $(p + "Era").value,
       availability: $(p + "Availability").value,
       format: $(p + "Format").value,
@@ -3247,6 +3272,17 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return String(value ?? "").trim().toLowerCase();
   }
 
+  function titleCaseWords(value){
+    return String(value ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/\b([a-z])/g, m=>m.toUpperCase());
+  }
+
+  function normalizeStoredLabel(value){
+    return titleCaseWords(value);
+  }
+
   function selectedSetMatches(set, values){
     if(!set || set.size === 0) return true;
     const normalizedValues = new Set(
@@ -3307,7 +3343,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     let list = cards.filter(c=>{
       const format = effectiveFormat(c);
       const haystack = [c.name,c.card_code,c.year,c.series,c.game,c.availability].filter(v=>v !== null && v !== undefined && v !== "").join(" ").toLowerCase();
-      if(gameF && c.game !== gameF) return false;
+      if(gameF && normalizeFilterValue(c.game) !== normalizeFilterValue(gameF)) return false;
       if(gradeF){
         const hasGrade = Array.isArray(c.grading) && c.grading.some(g=>{
           if(!g || !g.company) return false;
@@ -3329,10 +3365,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         if(!hasNormalizedGrade &&
            normalizeFilterValue(conditionLabel) !== normalizeFilterValue(gradeF)) return false;
       }
-      if(languageF && (c.language || "") !== languageF) return false;
-      if(eraF && (c.era || "") !== eraF) return false;
-      if(availabilityF && (c.availability || "Available") !== availabilityF) return false;
-      if(seriesF && (c.series || "") !== seriesF) return false;
+      if(languageF && normalizeFilterValue(c.language || "") !== normalizeFilterValue(languageF)) return false;
+      if(eraF && normalizeFilterValue(c.era || "") !== normalizeFilterValue(eraF)) return false;
+      if(availabilityF && normalizeFilterValue(c.availability || "Available") !== normalizeFilterValue(availabilityF)) return false;
+      if(seriesF && normalizeFilterValue(c.series || "") !== normalizeFilterValue(seriesF)) return false;
 
       if(pillFilterState.grade.size){
         const cardGrades = new Set(
@@ -3351,10 +3387,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
         if(!selectedSetMatches(pillFilterState.grade, Array.from(cardGrades))) return false;
       }
-      if(pillFilterState.language.size && !pillFilterState.language.has(c.language || "")) return false;
-      if(pillFilterState.era.size && !pillFilterState.era.has(c.era || "")) return false;
-      if(pillFilterState.availability.size && !pillFilterState.availability.has(c.availability || "Available")) return false;
-      if(pillFilterState.series.size && !pillFilterState.series.has(c.series || "")) return false;
+      if(pillFilterState.language.size && !selectedSetMatches(pillFilterState.language, c.language || "")) return false;
+      if(pillFilterState.era.size && !selectedSetMatches(pillFilterState.era, c.era || "")) return false;
+      if(pillFilterState.availability.size && !selectedSetMatches(pillFilterState.availability, c.availability || "Available")) return false;
+      if(pillFilterState.series.size && !selectedSetMatches(pillFilterState.series, c.series || "")) return false;
       if(q && !haystack.includes(q)) return false;
       if(activeQuickFilter === "graded" && format !== "Graded") return false;
       if(activeQuickFilter === "raw" && format !== "Raw") return false;
@@ -3387,7 +3423,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const gradeText = grades.length
       ? `${grades[0].company} ${grades[0].grade || ""}`.trim()
       : (format === "Sealed" ? "Sealed" : (CONDITION_LABEL[c.condition] || c.condition || "—"));
-    const seriesText = c.series || "";
+    const seriesText = normalizeStoredLabel(c.series || "");
     return `
       <div class="card ${shimmer ? "shimmer" : ""}" style="--stripe:${color}" data-shimmer="${shimmer}" data-card-id="${escapeHtml(c.id)}" tabindex="0" role="button" aria-label="View details for ${escapeHtml(c.name)}">
         ${cardThumbHTML(c)}
@@ -3408,10 +3444,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
               ${(grades.length || format === "Raw" || format === "Sealed")
                 ? `<button type="button" class="clean-grade-badge filter-pill-btn ${pillFilterState.grade.has(gradeText) ? "pill-selected" : ""}" data-pill-filter="grade" data-pill-value="${escapeHtml(gradeText)}" title="Filter by ${escapeHtml(gradeText)}">${escapeHtml(gradeText)}</button>`
                 : `<span class="clean-grade-badge">${escapeHtml(gradeText)}</span>`}
-              ${c.availability ? `<button type="button" class="clean-meta-pill clean-availability-pill filter-pill-btn ${pillFilterState.availability.has(c.availability) ? "pill-selected" : ""}" data-pill-filter="availability" data-pill-value="${escapeHtml(c.availability)}" title="Filter by ${escapeHtml(c.availability)}">${escapeHtml(c.availability)}</button>` : ""}
-              ${c.language ? `<button type="button" class="clean-meta-pill clean-language-pill filter-pill-btn ${pillFilterState.language.has(c.language) ? "pill-selected" : ""}" data-pill-filter="language" data-pill-value="${escapeHtml(c.language)}" title="Filter by ${escapeHtml(c.language)}">${escapeHtml(c.language)}</button>` : ""}
-              ${c.era ? `<button type="button" class="clean-meta-pill clean-era-pill filter-pill-btn ${pillFilterState.era.has(c.era) ? "pill-selected" : ""}" data-pill-filter="era" data-pill-value="${escapeHtml(c.era)}" title="Filter by ${escapeHtml(c.era)}">${escapeHtml(c.era)}</button>` : ""}
-              ${seriesText ? `<button type="button" class="clean-meta-pill clean-series-pill filter-pill-btn ${pillFilterState.series.has(seriesText) ? "pill-selected" : ""}" data-pill-filter="series" data-pill-value="${escapeHtml(seriesText)}" title="Filter by ${escapeHtml(seriesText)}">${escapeHtml(seriesText)}</button>` : ""}
+              ${c.availability ? `<button type="button" class="clean-meta-pill clean-availability-pill filter-pill-btn ${selectedSetMatches(pillFilterState.availability, c.availability) && pillFilterState.availability.size ? "pill-selected" : ""}" data-pill-filter="availability" data-pill-value="${escapeHtml(normalizeStoredLabel(c.availability))}" title="Filter by ${escapeHtml(normalizeStoredLabel(c.availability))}">${escapeHtml(normalizeStoredLabel(c.availability))}</button>` : ""}
+              ${c.language ? `<button type="button" class="clean-meta-pill clean-language-pill filter-pill-btn ${selectedSetMatches(pillFilterState.language, c.language) && pillFilterState.language.size ? "pill-selected" : ""}" data-pill-filter="language" data-pill-value="${escapeHtml(String(c.language).toUpperCase())}" title="Filter by ${escapeHtml(String(c.language).toUpperCase())}">${escapeHtml(String(c.language).toUpperCase())}</button>` : ""}
+              ${c.era ? `<button type="button" class="clean-meta-pill clean-era-pill filter-pill-btn ${selectedSetMatches(pillFilterState.era, c.era) && pillFilterState.era.size ? "pill-selected" : ""}" data-pill-filter="era" data-pill-value="${escapeHtml(normalizeStoredLabel(c.era))}" title="Filter by ${escapeHtml(normalizeStoredLabel(c.era))}">${escapeHtml(normalizeStoredLabel(c.era))}</button>` : ""}
+              ${seriesText ? `<button type="button" class="clean-meta-pill clean-series-pill filter-pill-btn ${selectedSetMatches(pillFilterState.series, seriesText) && pillFilterState.series.size ? "pill-selected" : ""}" data-pill-filter="series" data-pill-value="${escapeHtml(seriesText)}" title="Filter by ${escapeHtml(seriesText)}">${escapeHtml(seriesText)}</button>` : ""}
             </div>
           </div>
 
