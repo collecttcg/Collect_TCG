@@ -2407,6 +2407,50 @@
     }
   }
 
+
+  /* Showcase category filtering */
+  .showcase-category-bar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+    margin:0 0 18px;
+  }
+  .showcase-category-btn{
+    appearance:none;
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--text-muted);
+    border-radius:999px;
+    padding:7px 11px;
+    font:inherit;
+    font-size:10.5px;
+    font-weight:650;
+    cursor:pointer;
+    transition:border-color .12s ease,background .12s ease,color .12s ease;
+  }
+  .showcase-category-btn:hover{
+    color:var(--text);
+    border-color:#3a3d47;
+  }
+  .showcase-category-btn.active{
+    color:var(--accent-gold);
+    border-color:rgba(227,179,65,.45);
+    background:rgba(227,179,65,.08);
+  }
+  .showcase-category-label{
+    display:inline-flex;
+    align-items:center;
+    margin-top:8px;
+    padding:3px 7px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    color:var(--text-muted);
+    background:var(--surface-2);
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:.2px;
+  }
+
 </style>
 </head>
 <body>
@@ -2547,9 +2591,21 @@
       <input id="showcaseTitle" required placeholder="e.g. One Piece Championship Collection">
     </div>
 
-    <div class="field">
-      <label for="showcaseSeries">Series / Collection (optional)</label>
-      <input id="showcaseSeries" placeholder="e.g. Online Champion, Hyper Battle">
+    <div class="field-row">
+      <div class="field">
+        <label for="showcaseCategory">Category</label>
+        <select id="showcaseCategory">
+          <option value="PSA Returns">PSA Returns</option>
+          <option value="Collection Showcase" selected>Collection Showcase</option>
+          <option value="Championship & Trophy">Championship &amp; Trophy</option>
+          <option value="New Arrivals">New Arrivals</option>
+          <option value="Special Features">Special Features</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="showcaseSeries">Series / Collection (optional)</label>
+        <input id="showcaseSeries" placeholder="e.g. One Piece Vintage, Hyper Battle">
+      </div>
     </div>
 
     <div class="field">
@@ -2624,6 +2680,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   let cards = [];
   let giveaways = [];
   let showcases = [];
+  let activeShowcaseCategory = "All";
   let insightsCache = null;
   const $ = (id) => document.getElementById(id);
   const view = $("view");
@@ -2862,6 +2919,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return {
       id: row.id,
       title: row.title || "",
+      category: row.category || "Collection Showcase",
       series: row.series || "",
       video_url: row.video_url || "",
       thumbnail_url: row.thumbnail_url || "",
@@ -4169,6 +4227,11 @@ function wireShimmer(container){
   }
 
   function renderShowcasePage(){
+    const categories = ["All","PSA Returns","Collection Showcase","Championship & Trophy","New Arrivals","Special Features"];
+    const filteredShowcases = activeShowcaseCategory === "All"
+      ? showcases
+      : showcases.filter(v => (v.category || "Collection Showcase") === activeShowcaseCategory);
+
     view.innerHTML = `
       <div class="page-head">
         <div>
@@ -4178,26 +4241,37 @@ function wireShimmer(container){
         </div>
         <button type="button" class="btn-primary owner-only" id="addShowcaseBtn">+ Add Video</button>
       </div>
+
+      <div class="showcase-category-bar" id="showcaseCategoryBar">
+        ${categories.map(cat=>`
+          <button type="button"
+            class="showcase-category-btn ${activeShowcaseCategory===cat ? "active" : ""}"
+            data-showcase-category="${escapeHtml(cat)}">${escapeHtml(cat)}</button>
+        `).join("")}
+      </div>
+
       <div id="showcaseMount"></div>
     `;
 
     const mount = $("showcaseMount");
-    if(!showcases.length){
-      mount.innerHTML = `<div class="empty-state">${EMPTY_ICON}<h2>No showcase videos yet</h2><p>Check back again for new collection videos.</p></div>`;
+    if(!filteredShowcases.length){
+      mount.innerHTML = `<div class="empty-state">${EMPTY_ICON}<h2>No showcase videos</h2><p>There are no videos in this category yet.</p></div>`;
     }else{
       mount.innerHTML = `<div class="showcase-grid">${
-        showcases.map(v=>{
+        filteredShowcases.map(v=>{
           const thumb = showcaseThumbnail(v);
+          const category = v.category || "Collection Showcase";
           return `<article class="showcase-card">
             <div class="showcase-media" data-showcase-watch="${v.id}">
               ${v.featured ? `<span class="showcase-featured">Featured</span>` : ""}
               ${thumb
                 ? `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(v.title)} thumbnail">`
-                : `<div class="showcase-media-placeholder">${isFacebookEmbeddableVideoUrl(v.video_url) ? "Facebook Video" : (isFacebookVideoUrl(v.video_url) ? "Facebook Video · Click to watch ↗" : "Video showcase")}</div>`}
+                : `<div class="showcase-media-placeholder">${youtubeVideoId(v.video_url) ? "YouTube Video" : "Video showcase"}</div>`}
               <div class="showcase-play">▶</div>
             </div>
             <div class="showcase-body">
               <div class="showcase-title">${escapeHtml(v.title)}</div>
+              <div class="showcase-category-label">${escapeHtml(category)}</div>
               ${v.series ? `<div class="showcase-series">${escapeHtml(v.series)}</div>` : ""}
               ${v.description ? `<div class="showcase-description">${escapeHtml(v.description)}</div>` : ""}
               <div class="showcase-actions">
@@ -4212,6 +4286,13 @@ function wireShimmer(container){
         }).join("")
       }</div>`;
     }
+
+    $("showcaseCategoryBar").querySelectorAll("[data-showcase-category]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        activeShowcaseCategory = btn.dataset.showcaseCategory;
+        renderShowcasePage();
+      });
+    });
 
     const addBtn = $("addShowcaseBtn");
     if(addBtn) addBtn.addEventListener("click", ()=>openShowcaseForm());
@@ -4254,6 +4335,7 @@ function wireShimmer(container){
     $("showcaseFormTitle").textContent = v ? "Edit Showcase Video" : "Add Showcase Video";
     $("showcaseId").value = v ? v.id : "";
     $("showcaseTitle").value = v ? v.title : "";
+    $("showcaseCategory").value = v ? (v.category || "Collection Showcase") : "Collection Showcase";
     $("showcaseSeries").value = v ? v.series : "";
     $("showcaseVideoUrl").value = v ? v.video_url : "";
     $("showcaseThumbnail").value = v ? v.thumbnail_url : "";
@@ -4305,6 +4387,7 @@ function wireShimmer(container){
 
     const payload = {
       title: $("showcaseTitle").value.trim(),
+      category: $("showcaseCategory").value,
       series: $("showcaseSeries").value.trim(),
       video_url: $("showcaseVideoUrl").value.trim(),
       thumbnail_url: thumbnailUrl,
