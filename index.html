@@ -2342,6 +2342,17 @@
     .video-overlay{padding:8px;}
   }
 
+
+  /* Facebook showcase links: reliable external playback */
+  .showcase-watch{
+    white-space:nowrap;
+  }
+  .showcase-media-placeholder{
+    text-align:center;
+    padding:18px;
+    box-sizing:border-box;
+  }
+
 </style>
 </head>
 <body>
@@ -2490,13 +2501,13 @@
     <div class="field">
       <label for="showcaseVideoUrl">Facebook video / post URL</label>
       <input id="showcaseVideoUrl" required placeholder="https://www.facebook.com/...">
-      <div class="hint">Paste the public Facebook video/post link. Facebook hosts the video, so it does not use your Supabase video storage or streaming bandwidth.</div>
+      <div class="hint">Paste the public Facebook video/post link. Visitors will open the video directly on Facebook, so Facebook hosts the video and your Supabase storage/bandwidth is not used.</div>
     </div>
 
     <div class="field">
       <label for="showcaseThumbnail">Thumbnail URL (optional)</label>
       <input id="showcaseThumbnail" placeholder="https://...">
-      <div class="hint">Recommended for Facebook showcase cards. If left blank, a clean Facebook video placeholder is shown.</div>
+      <div class="hint">Recommended. This image becomes the video preview in your Showcase. If left blank, a clean Facebook video placeholder is shown.</div>
     </div>
 
     <div class="field">
@@ -3993,6 +4004,11 @@ function wireShimmer(container){
   }
 
   function openShowcaseVideo(v){
+    if(isFacebookVideoUrl(v.video_url)){
+      window.open(v.video_url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
     const overlay = $("videoOverlay");
     const mount = $("videoPlayerMount");
     const title = $("videoModalTitle");
@@ -4005,16 +4021,7 @@ function wireShimmer(container){
       ${v.description ? `<p>${escapeHtml(v.description)}</p>` : ""}
     `;
 
-    if(isFacebookVideoUrl(v.video_url)){
-      mount.innerHTML = `<iframe
-        src="${escapeHtml(facebookEmbedUrl(v.video_url))}"
-        title="${escapeHtml(v.title)}"
-        scrolling="no"
-        frameborder="0"
-        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-        allowfullscreen></iframe>`;
-      copy.innerHTML += `<p><a href="${escapeHtml(v.video_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent-gold);font-weight:700;">Open on Facebook ↗</a></p>`;
-    }else if(yt){
+    if(yt){
       mount.innerHTML = `<iframe
         src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(yt)}?autoplay=1&rel=0"
         title="${escapeHtml(v.title)}"
@@ -4023,11 +4030,8 @@ function wireShimmer(container){
     }else if(/\.(mp4|webm|ogg)(\?|#|$)/i.test(v.video_url)){
       mount.innerHTML = `<video controls autoplay playsinline src="${escapeHtml(v.video_url)}"></video>`;
     }else{
-      mount.innerHTML = `
-        <div style="height:100%;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--text-muted);font-size:12px;">
-          This video URL cannot be embedded directly.
-          <a href="${escapeHtml(v.video_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent-gold);margin-left:6px;">Open video</a>
-        </div>`;
+      window.open(v.video_url, "_blank", "noopener,noreferrer");
+      return;
     }
     overlay.hidden = false;
   }
@@ -4062,7 +4066,7 @@ function wireShimmer(container){
               ${v.featured ? `<span class="showcase-featured">Featured</span>` : ""}
               ${thumb
                 ? `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(v.title)} thumbnail">`
-                : `<div class="showcase-media-placeholder">${isFacebookVideoUrl(v.video_url) ? "Facebook Video" : "Video showcase"}</div>`}
+                : `<div class="showcase-media-placeholder">${isFacebookVideoUrl(v.video_url) ? "Facebook Video · Click to watch ↗" : "Video showcase"}</div>`}
               <div class="showcase-play">▶</div>
             </div>
             <div class="showcase-body">
@@ -4070,7 +4074,7 @@ function wireShimmer(container){
               ${v.series ? `<div class="showcase-series">${escapeHtml(v.series)}</div>` : ""}
               ${v.description ? `<div class="showcase-description">${escapeHtml(v.description)}</div>` : ""}
               <div class="showcase-actions">
-                <button type="button" class="btn-ghost showcase-watch" data-showcase-watch="${v.id}">▶ Watch</button>
+                <button type="button" class="btn-ghost showcase-watch" data-showcase-watch="${v.id}">${isFacebookVideoUrl(v.video_url) ? "▶ Watch on Facebook ↗" : "▶ Watch"}</button>
                 <div class="showcase-owner-actions owner-only">
                   <button type="button" class="btn-ghost" data-showcase-edit="${v.id}">Edit</button>
                   <button type="button" class="btn-ghost" data-showcase-delete="${v.id}" style="color:var(--danger)">Delete</button>
