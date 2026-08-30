@@ -3390,6 +3390,12 @@
     }
   }
 
+
+  /* Raw condition pills share the same interactive treatment as slab grades. */
+  .clean-grade-badge.filter-pill-btn{
+    cursor:pointer;
+  }
+
 </style>
 </head>
 <body>
@@ -4785,7 +4791,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           const key = `${String(g.company).trim().toUpperCase()} ${String(g.grade ?? "").trim()}`.trim();
           return key === gradeF;
         });
-        if(!hasGrade) return false;
+        const rawCondition = effectiveFormat(c) === "Raw"
+          ? (CONDITION_LABEL[c.condition] || c.condition || "")
+          : "";
+        if(!hasGrade && rawCondition !== gradeF) return false;
       }
       if(languageF && (c.language || "") !== languageF) return false;
       if(seriesF && (c.series || "") !== seriesF) return false;
@@ -4796,6 +4805,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             .filter(g=>g && g.company && String(g.grade ?? "").trim())
             .map(g=>`${String(g.company).trim().toUpperCase()} ${String(g.grade).trim()}`)
         );
+        if(effectiveFormat(c) === "Raw"){
+          const rawCondition = CONDITION_LABEL[c.condition] || c.condition || "";
+          if(rawCondition) cardGrades.add(rawCondition);
+        }
         if(!Array.from(pillFilterState.grade).some(v=>cardGrades.has(v))) return false;
       }
       if(pillFilterState.language.size && !pillFilterState.language.has(c.language || "")) return false;
@@ -4840,7 +4853,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           <div class="clean-card-main">
             <div class="card-name clean-card-name">${escapeHtml(c.name).toUpperCase()}</div>
             <div class="clean-card-subrow clean-all-pills">
-              ${grades.length
+              ${(grades.length || format === "Raw")
                 ? `<button type="button" class="clean-grade-badge filter-pill-btn ${pillFilterState.grade.has(gradeText) ? "pill-selected" : ""}" data-pill-filter="grade" data-pill-value="${escapeHtml(gradeText)}" title="Filter by ${escapeHtml(gradeText)}">${escapeHtml(gradeText)}</button>`
                 : `<span class="clean-grade-badge">${escapeHtml(gradeText)}</span>`}
               ${c.language ? `<button type="button" class="clean-meta-pill clean-language-pill filter-pill-btn ${pillFilterState.language.has(c.language) ? "pill-selected" : ""}" data-pill-filter="language" data-pill-value="${escapeHtml(c.language)}" title="Filter by ${escapeHtml(c.language)}">${escapeHtml(c.language)}</button>` : ""}
@@ -4954,7 +4967,7 @@ function wireShimmer(container){
   <input type="hidden" id="filterGame" value="">
 </div>
         <div class="overview-select" id="filterGradeWrap">
-  <button type="button" class="overview-select-btn" id="filterGradeBtn"><span>All Grades</span><i></i></button>
+  <button type="button" class="overview-select-btn" id="filterGradeBtn"><span>All Grades / Conditions</span><i></i></button>
   <div class="overview-select-menu" id="filterGradeMenu" hidden></div>
   <input type="hidden" id="filterGrade" value="">
 </div>
@@ -5028,7 +5041,7 @@ function wireShimmer(container){
       {value:"",label:"All Games"},
       ...games.map(g=>({value:g,label:g}))
     ]);
-    const gradeOptions = Array.from(new Set(
+    const slabGradeOptions = Array.from(new Set(
       cards.flatMap(c => Array.isArray(c.grading) ? c.grading : [])
         .filter(g => g && g.company && String(g.grade ?? "").trim())
         .map(g => `${String(g.company).trim().toUpperCase()} ${String(g.grade).trim()}`)
@@ -5042,8 +5055,15 @@ function wireShimmer(container){
       return a.localeCompare(b);
     });
 
+    const rawConditionOrder = ["Mint","Near Mint","Lightly Played","Moderately Played","Heavily Played","Damaged","Not Applicable"];
+    const rawConditionOptions = rawConditionOrder.filter(label =>
+      cards.some(c => effectiveFormat(c) === "Raw" && (CONDITION_LABEL[c.condition] || c.condition || "") === label)
+    );
+
+    const gradeOptions = [...slabGradeOptions, ...rawConditionOptions];
+
     setupOverviewSelect("filterGrade", [
-      {value:"",label:"All Grades"},
+      {value:"",label:"All Grades / Conditions"},
       ...gradeOptions.map(g=>({value:g,label:g}))
     ]);
     setupOverviewSelect("filterLanguage", [
@@ -5131,7 +5151,7 @@ function wireShimmer(container){
 
       // Keep dropdown labels informative while pills are active.
       const maps = [
-        ["grade","filterGrade","Grades"],
+        ["grade","filterGrade","Grades / Conditions"],
         ["language","filterLanguage","Languages"],
         ["series","filterSeries","Series"]
       ];
