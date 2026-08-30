@@ -2548,32 +2548,24 @@
   }
 
 
-  /* FINAL OVERRIDE: Home Collection Overview cards
-     Kept at the end of the stylesheet so desktop home rules cannot flatten them. */
+  /* Collection Overview — original blue/teal compact aesthetic */
   #view .home-collection-stats-section{
-    display:block !important;
-    margin:22px 0 28px !important;
-    padding:20px !important;
-    border:1px solid var(--border) !important;
-    border-radius:18px !important;
-    background:
-      radial-gradient(circle at 8% 0%, rgba(227,179,65,.08), transparent 30%),
-      var(--surface) !important;
-    box-shadow:0 12px 30px rgba(0,0,0,.14) !important;
+    margin:18px 0 26px !important;
+    padding:0 !important;
+    border:0 !important;
+    background:none !important;
+    box-shadow:none !important;
   }
 
   #view .home-collection-stats-section .home-section-head{
-    display:flex !important;
-    margin:0 0 16px !important;
+    margin-bottom:12px !important;
   }
 
   #view .home-collection-stats{
     display:grid !important;
     grid-template-columns:repeat(6,minmax(0,1fr)) !important;
-    gap:12px !important;
+    gap:10px !important;
     width:100% !important;
-    margin:0 !important;
-    padding:0 !important;
   }
 
   #view .home-collection-stats .home-stat-card{
@@ -2581,18 +2573,17 @@
     display:flex !important;
     flex-direction:column !important;
     justify-content:center !important;
-    align-items:flex-start !important;
     min-width:0 !important;
-    min-height:104px !important;
-    margin:0 !important;
-    padding:17px 16px !important;
-    gap:8px !important;
-    border:1px solid rgba(255,255,255,.09) !important;
-    border-radius:14px !important;
-    background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018)) !important;
+    min-height:88px !important;
+    padding:14px 13px !important;
+    gap:6px !important;
+    border:1px solid rgba(78,210,199,.24) !important;
+    border-radius:12px !important;
+    background:
+      linear-gradient(145deg, rgba(50,155,181,.18), rgba(25,96,124,.10)) !important;
     box-shadow:
-      inset 0 1px 0 rgba(255,255,255,.04),
-      0 8px 18px rgba(0,0,0,.14) !important;
+      inset 0 1px 0 rgba(255,255,255,.035),
+      0 6px 16px rgba(0,0,0,.12) !important;
     color:var(--text) !important;
     text-decoration:none !important;
     overflow:hidden !important;
@@ -2603,53 +2594,50 @@
     position:absolute !important;
     top:0 !important;
     left:0 !important;
-    width:100% !important;
+    right:0 !important;
     height:3px !important;
-    background:linear-gradient(90deg,var(--accent-gold),rgba(227,179,65,.12)) !important;
+    background:linear-gradient(90deg,#63d9ff,#4ed2c7) !important;
+    opacity:.9 !important;
   }
 
   #view .home-collection-stats .home-stat-card::after{
     content:"" !important;
     position:absolute !important;
-    width:78px !important;
-    height:78px !important;
-    top:-40px !important;
-    right:-30px !important;
+    width:64px !important;
+    height:64px !important;
+    top:-34px !important;
+    right:-24px !important;
     border-radius:50% !important;
-    background:rgba(227,179,65,.06) !important;
+    background:rgba(83,205,232,.08) !important;
     pointer-events:none !important;
   }
 
   #view .home-collection-stats a.home-stat-card:hover{
-    transform:translateY(-3px) !important;
-    border-color:rgba(227,179,65,.32) !important;
-    background:linear-gradient(145deg,rgba(227,179,65,.08),rgba(255,255,255,.022)) !important;
-    box-shadow:0 13px 25px rgba(0,0,0,.20) !important;
+    transform:translateY(-2px) !important;
+    border-color:rgba(99,217,255,.42) !important;
+    background:linear-gradient(145deg, rgba(62,178,202,.24), rgba(28,108,137,.13)) !important;
   }
 
   #view .home-collection-stats .home-stat-value{
     position:relative !important;
     z-index:1 !important;
-    display:block !important;
-    margin:0 !important;
-    color:var(--accent-gold) !important;
+    color:#6fdcff !important;
     font-family:'JetBrains Mono',monospace !important;
-    font-size:30px !important;
+    font-size:24px !important;
     font-weight:800 !important;
     line-height:1 !important;
-    letter-spacing:-1px !important;
+    font-variant-numeric:tabular-nums !important;
+    letter-spacing:-.5px !important;
   }
 
   #view .home-collection-stats .home-stat-label{
     position:relative !important;
     z-index:1 !important;
-    display:block !important;
-    margin:0 !important;
-    color:var(--text-muted) !important;
-    font-size:10px !important;
+    color:rgba(220,244,250,.72) !important;
+    font-size:9.5px !important;
     font-weight:800 !important;
     line-height:1.15 !important;
-    letter-spacing:1px !important;
+    letter-spacing:.7px !important;
     text-transform:uppercase !important;
   }
 
@@ -2660,185 +2648,22 @@
   }
 
   @media(max-width:700px){
-    #view .home-collection-stats-section{
-      margin:16px 0 22px !important;
-      padding:14px !important;
-      border-radius:14px !important;
-    }
-
     #view .home-collection-stats{
       grid-template-columns:repeat(2,minmax(0,1fr)) !important;
       gap:8px !important;
     }
 
     #view .home-collection-stats .home-stat-card{
-      min-height:78px !important;
-      padding:13px 12px !important;
-      border-radius:11px !important;
+      min-height:74px !important;
+      padding:12px 11px !important;
+      border-radius:10px !important;
     }
 
     #view .home-collection-stats .home-stat-value{
-      font-size:22px !important;
+      font-size:20px !important;
     }
 
     #view .home-collection-stats .home-stat-label{
-      font-size:9px !important;
-      letter-spacing:.7px !important;
-    }
-  }
-
-
-  /* Home Collection Overview: same visual language as Featured Collections */
-  #view .home-collection-overview-section{
-    margin-top:22px !important;
-    margin-bottom:28px !important;
-  }
-
-  #view .home-overview-feature-grid{
-    display:grid !important;
-    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-    gap:12px !important;
-  }
-
-  #view .home-overview-feature{
-    display:block !important;
-    min-height:118px !important;
-    padding:18px 19px !important;
-    border:1px solid var(--border) !important;
-    border-radius:15px !important;
-    background:var(--surface) !important;
-    color:var(--text) !important;
-    text-align:left !important;
-    text-decoration:none !important;
-    box-shadow:none !important;
-    transition:transform .15s ease,border-color .15s ease,background .15s ease !important;
-  }
-
-  #view a.home-overview-feature:hover{
-    transform:translateY(-2px) !important;
-    border-color:rgba(227,179,65,.28) !important;
-    background:var(--surface-2) !important;
-  }
-
-  #view .home-overview-feature .kicker{
-    margin-bottom:7px !important;
-    color:var(--accent-gold) !important;
-    font-size:10px !important;
-    font-weight:800 !important;
-    letter-spacing:.85px !important;
-    text-transform:uppercase !important;
-  }
-
-  #view .home-overview-feature .title{
-    margin-bottom:7px !important;
-    color:var(--text) !important;
-    font-size:18px !important;
-    font-weight:800 !important;
-    line-height:1.12 !important;
-  }
-
-  #view .home-overview-feature .desc{
-    color:var(--text-muted) !important;
-    font-size:11px !important;
-    line-height:1.45 !important;
-  }
-
-  @media(max-width:1000px){
-    #view .home-overview-feature-grid{
-      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-    }
-  }
-
-  @media(max-width:560px){
-    #view .home-overview-feature-grid{
-      grid-template-columns:1fr !important;
-    }
-
-    #view .home-overview-feature{
-      min-height:0 !important;
-      padding:15px !important;
-    }
-  }
-
-
-  /* Mobile Collection Overview: retain the compact stat-card style */
-  @media(max-width:700px){
-    #view .home-collection-overview-section{
-      margin-top:16px !important;
-      margin-bottom:22px !important;
-    }
-
-    #view .home-collection-overview-section .home-section-head{
-      margin-bottom:10px !important;
-    }
-
-    #view .home-overview-feature-grid{
-      display:grid !important;
-      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-      gap:8px !important;
-    }
-
-    #view .home-overview-feature{
-      min-height:78px !important;
-      padding:13px 12px !important;
-      display:flex !important;
-      flex-direction:column !important;
-      justify-content:center !important;
-      gap:5px !important;
-      border:1px solid var(--border) !important;
-      border-radius:11px !important;
-      background:var(--surface) !important;
-      box-shadow:none !important;
-    }
-
-    #view .home-overview-feature .title{
-      order:1 !important;
-      margin:0 !important;
-      color:var(--accent-gold) !important;
-      font-family:'JetBrains Mono',monospace !important;
-      font-size:20px !important;
-      font-weight:800 !important;
-      line-height:1 !important;
-      letter-spacing:-.4px !important;
-    }
-
-    #view .home-overview-feature .kicker{
-      order:2 !important;
-      margin:0 !important;
-      color:var(--text-muted) !important;
-      font-family:inherit !important;
-      font-size:9.5px !important;
-      font-weight:800 !important;
-      line-height:1.1 !important;
-      letter-spacing:.65px !important;
-      text-transform:uppercase !important;
-    }
-
-    #view .home-overview-feature .desc{
-      display:none !important;
-    }
-
-    #view a.home-overview-feature:active{
-      background:var(--surface-2) !important;
-    }
-  }
-
-  @media(max-width:370px){
-    #view .home-overview-feature-grid{
-      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-      gap:7px !important;
-    }
-
-    #view .home-overview-feature{
-      min-height:72px !important;
-      padding:11px 10px !important;
-    }
-
-    #view .home-overview-feature .title{
-      font-size:18px !important;
-    }
-
-    #view .home-overview-feature .kicker{
       font-size:9px !important;
     }
   }
@@ -4406,49 +4231,39 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       ${(()=>{
         const stats = getCollectionStats();
         return `
-          <section class="home-section home-collection-overview-section">
+          <section class="home-section home-collection-stats-section">
             <div class="home-section-head">
               <div>
-                <h3>Collection Overview</h3>
+                <div class="eyebrow">Collection Overview</div>
+                <h3>Collection at a Glance</h3>
                 <p>Live counts from the current catalogue.</p>
               </div>
             </div>
 
-            <div class="home-feature-grid home-overview-feature-grid">
-              <a href="#/inventory" class="home-feature home-overview-feature">
-                <div class="kicker">Current</div>
-                <div class="title">${stats.inventory.toLocaleString()} Inventory</div>
-                <div class="desc">Cards currently listed in the main inventory.</div>
+            <div class="home-collection-stats">
+              <a href="#/inventory" class="home-stat-card">
+                <span class="home-stat-value">${stats.inventory.toLocaleString()}</span>
+                <span class="home-stat-label">Inventory</span>
               </a>
-
-              <a href="#/reserved" class="home-feature home-overview-feature">
-                <div class="kicker">On Hold</div>
-                <div class="title">${stats.reserved.toLocaleString()} Reserved</div>
-                <div class="desc">Cards currently reserved for buyers.</div>
+              <a href="#/reserved" class="home-stat-card">
+                <span class="home-stat-value">${stats.reserved.toLocaleString()}</span>
+                <span class="home-stat-label">Reserved</span>
               </a>
-
-              <a href="#/sold" class="home-feature home-overview-feature">
-                <div class="kicker">Archive</div>
-                <div class="title">${stats.sold.toLocaleString()} Sold</div>
-                <div class="desc">Previously listed cards that have been sold.</div>
+              <a href="#/sold" class="home-stat-card">
+                <span class="home-stat-value">${stats.sold.toLocaleString()}</span>
+                <span class="home-stat-label">Sold</span>
               </a>
-
-              <div class="home-feature home-overview-feature">
-                <div class="kicker">Slabs</div>
-                <div class="title">${stats.graded.toLocaleString()} Graded</div>
-                <div class="desc">Professionally graded cards in the catalogue.</div>
+              <div class="home-stat-card">
+                <span class="home-stat-value">${stats.graded.toLocaleString()}</span>
+                <span class="home-stat-label">Graded</span>
               </div>
-
-              <div class="home-feature home-overview-feature">
-                <div class="kicker">Classic</div>
-                <div class="title">${stats.vintage.toLocaleString()} Vintage</div>
-                <div class="desc">Older collectible cards and vintage releases.</div>
+              <div class="home-stat-card">
+                <span class="home-stat-value">${stats.vintage.toLocaleString()}</span>
+                <span class="home-stat-label">Vintage</span>
               </div>
-
-              <div class="home-feature home-overview-feature">
-                <div class="kicker">Unopened</div>
-                <div class="title">${stats.sealed.toLocaleString()} Sealed</div>
-                <div class="desc">Sealed products and unopened collectibles.</div>
+              <div class="home-stat-card">
+                <span class="home-stat-value">${stats.sealed.toLocaleString()}</span>
+                <span class="home-stat-label">Sealed</span>
               </div>
             </div>
           </section>
