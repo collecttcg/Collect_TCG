@@ -1908,6 +1908,134 @@
     display:none !important;
   }
 
+
+  /* ---------- Home ---------- */
+  .home-hero{
+    background:linear-gradient(180deg,rgba(227,179,65,.06),rgba(255,255,255,.01));
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:28px;
+    margin-bottom:18px;
+  }
+  .home-hero h2{
+    font-size:34px;
+    line-height:1.05;
+    margin-bottom:10px;
+  }
+  .home-hero p{
+    max-width:720px;
+    color:var(--text-muted);
+    font-size:13px;
+    line-height:1.65;
+    margin:0;
+  }
+  .home-hero-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:9px;
+    margin-top:18px;
+  }
+  .home-section{
+    margin-top:20px;
+  }
+  .home-section-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:end;
+    gap:12px;
+    margin-bottom:10px;
+  }
+  .home-section-head h3{
+    font-size:18px;
+  }
+  .home-section-head p{
+    margin:0;
+    color:var(--text-muted);
+    font-size:11px;
+  }
+  .home-feature-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:10px;
+  }
+  .home-feature{
+    border:1px solid var(--border);
+    background:var(--surface);
+    border-radius:12px;
+    padding:15px;
+    cursor:pointer;
+    text-align:left;
+    transition:transform .12s ease,border-color .12s ease,background .12s ease;
+  }
+  .home-feature:hover{
+    transform:translateY(-1px);
+    border-color:var(--accent-gold);
+    background:var(--surface-2);
+  }
+  .home-feature .kicker{
+    color:var(--accent-gold);
+    font-size:9px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.7px;
+  }
+  .home-feature .title{
+    margin-top:4px;
+    font-size:15px;
+    font-weight:700;
+  }
+  .home-feature .desc{
+    margin-top:5px;
+    color:var(--text-muted);
+    font-size:10.5px;
+    line-height:1.4;
+  }
+  .home-recent-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+    gap:12px;
+  }
+  .home-shipping{
+    margin-top:20px;
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+  }
+  .home-shipping-item{
+    border:1px solid var(--border);
+    background:var(--surface);
+    border-radius:12px;
+    padding:14px;
+  }
+  .home-shipping-item strong{
+    display:block;
+    font-size:12px;
+    margin-bottom:4px;
+  }
+  .home-shipping-item span{
+    color:var(--text-muted);
+    font-size:10.5px;
+    line-height:1.45;
+  }
+  @media(max-width:850px){
+    .home-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .home-shipping{grid-template-columns:1fr;}
+  }
+  @media(max-width:520px){
+    .home-hero{padding:20px;}
+    .home-hero h2{font-size:28px;}
+    .home-feature-grid{grid-template-columns:1fr;}
+  }
+
+
+  /* Home featured collection titles: readable in both light and dark mode */
+  .home-feature .title{
+    color:var(--text) !important;
+  }
+  .home-feature{
+    color:var(--text);
+  }
+
 </style>
 </head>
 <body>
@@ -1927,6 +2055,7 @@
 
     </div>
     <nav class="mainnav" id="mainnav">
+      <a href="#/home" data-route="home"><span class="ic">⌂</span> Home</a>
       <a href="#/inventory" data-route="inventory"><span class="ic">▦</span> Inventory</a>
       <a href="#/by-game" data-route="by-game"><span class="ic">▥</span> By Game</a>
       <a href="#/giveaway" data-route="giveaway"><span class="ic">★</span> Giveaway</a>
@@ -2432,7 +2561,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     document.querySelectorAll("#mainnav a").forEach(a=>{
       a.classList.toggle("active", a.dataset.route === route);
     });
-    if(route === "inventory") renderInventoryPage();
+    if(route === "home") renderHomePage();
+    else if(route === "inventory") renderInventoryPage();
     else if(route === "by-game") renderByGamePage();
     else if(route === "giveaway") renderGiveawayPage();
     else if(route === "insights"){ if(isOwnerMode()) renderInsightsPage(); else { location.hash="#/inventory"; return; } }
@@ -2973,6 +3103,108 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     `;
   }
 
+  // ---------------- Home ----------------
+  function renderHomePage(){
+    const recent = cards
+      .slice()
+      .sort((a,b)=>String(b.created_at || "").localeCompare(String(a.created_at || "")))
+      .slice(0,6);
+
+    view.innerHTML = `
+      <div class="home-hero">
+        <div class="eyebrow">Collect TCG MY &amp; SG</div>
+        <h2>Curated cards from our collection.</h2>
+        <p>
+          Specializing in One Piece modern, vintage, championship and graded cards,
+          with selected collectibles from other TCGs. Browse what is currently available
+          and open any listing for full card details and uploaded photos.
+        </p>
+        <div class="home-hero-actions">
+          <a href="#/inventory" class="btn-primary" style="display:inline-flex;align-items:center;">Browse Collection</a>
+          <a href="#/giveaway" class="btn-ghost" style="display:inline-flex;align-items:center;text-decoration:none;">View Giveaways</a>
+        </div>
+      </div>
+
+      <section class="home-section">
+        <div class="home-section-head">
+          <div>
+            <h3>Featured Collections</h3>
+            <p>Quick ways to jump into the most common browsing categories.</p>
+          </div>
+        </div>
+
+        <div class="home-feature-grid">
+          <button type="button" class="home-feature" data-home-filter="championship">
+            <div class="kicker">Tournament</div>
+            <div class="title">Championship</div>
+            <div class="desc">Champion, Championship, Treasure Cup, 3on3 Cup, 2on2 Cup and similar tournament series.</div>
+          </button>
+
+          <button type="button" class="home-feature" data-home-filter="vintage">
+            <div class="kicker">Classic</div>
+            <div class="title">One Piece Vintage</div>
+            <div class="desc">Older One Piece collectibles including Hyper Battle, Visual Adventure and related vintage releases.</div>
+          </button>
+
+          <button type="button" class="home-feature" data-home-filter="graded">
+            <div class="kicker">Slabs</div>
+            <div class="title">Graded</div>
+            <div class="desc">PSA, BGS, CGC and other professionally graded cards.</div>
+          </button>
+
+          <button type="button" class="home-feature" data-home-filter="sealed">
+            <div class="kicker">Unopened</div>
+            <div class="title">Sealed</div>
+            <div class="desc">Sealed products and unopened collectibles from the collection.</div>
+          </button>
+        </div>
+      </section>
+
+      <section class="home-section">
+        <div class="home-section-head">
+          <div>
+            <h3>Recently Added</h3>
+            <p>The newest listings currently in the inventory.</p>
+          </div>
+          <a href="#/inventory" class="btn-ghost" style="text-decoration:none;">View all</a>
+        </div>
+
+        <div class="home-recent-grid" id="homeRecentGrid">
+          ${recent.length
+            ? recent.map(cardTileHTML).join("")
+            : `<div class="hint">No listings yet.</div>`}
+        </div>
+      </section>
+
+      <section class="home-shipping">
+        <div class="home-shipping-item">
+          <strong>🌏 International Shipping</strong>
+          <span>International shipping is available. Shipping and insurance are borne by the buyer.</span>
+        </div>
+        <div class="home-shipping-item">
+          <strong>📦 Secure Packing</strong>
+          <span>Cards are packed securely, and a packing video can be provided for peace of mind.</span>
+        </div>
+        <div class="home-shipping-item">
+          <strong>🔎 Tracking Available</strong>
+          <span>A tracking number is provided once the package has been shipped.</span>
+        </div>
+      </section>
+    `;
+
+    const recentGrid = $("homeRecentGrid");
+    if(recentGrid && recent.length){
+      wireShimmer(recentGrid);
+    }
+
+    view.querySelectorAll("[data-home-filter]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        activeQuickFilter = btn.dataset.homeFilter || "all";
+        location.hash = "#/inventory";
+      });
+    });
+  }
+
   // ---------------- Inventory ----------------
   let activeQuickFilter = "all";
 
@@ -3116,12 +3348,20 @@ function wireShimmer(container){
     });
   }
 
+  function syncQuickFilterUI(){
+    const wrap = $("quickFilters");
+    if(!wrap) return;
+    wrap.querySelectorAll(".quick-filter").forEach(btn=>{
+      btn.classList.toggle("active", btn.dataset.quick === activeQuickFilter);
+    });
+  }
+
   function renderInventoryPage(){
     view.innerHTML = `
       <div class="page-head"><div><div class="eyebrow">Collect. Trade. Connect.</div><h2>Collect TCG MY &amp; SG Inventory</h2><p>Browse our current trading card inventory.</p></div></div>
 
       <div class="quick-filters" id="quickFilters">
-        <button type="button" class="quick-filter active" data-quick="all">All</button>
+        <button type="button" class="quick-filter" data-quick="all">All</button>
         <button type="button" class="quick-filter" data-quick="graded">Slabs</button>
         <button type="button" class="quick-filter" data-quick="raw">Raw</button>
         <button type="button" class="quick-filter" data-quick="sealed">Sealed</button>
@@ -3236,11 +3476,12 @@ function wireShimmer(container){
     $("quickFilters").querySelectorAll(".quick-filter").forEach(btn=>{
       btn.addEventListener("click", ()=>{
         activeQuickFilter = btn.dataset.quick;
-        $("quickFilters").querySelectorAll(".quick-filter").forEach(b=>b.classList.toggle("active", b===btn));
+        syncQuickFilterUI();
         draw();
       });
     });
 
+    syncQuickFilterUI();
     draw();
 
     $("invGrid").addEventListener("keydown", e=>{
