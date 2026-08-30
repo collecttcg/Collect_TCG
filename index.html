@@ -2132,6 +2132,216 @@
     clip-path:none !important;
   }
 
+
+  /* ---------- Video Showcase ---------- */
+  .showcase-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(290px,1fr));
+    gap:18px;
+  }
+  .showcase-card{
+    position:relative;
+    overflow:hidden;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;
+  }
+  .showcase-card:hover{
+    transform:translateY(-2px);
+    border-color:#3a3d47;
+    box-shadow:var(--shadow-card);
+  }
+  .showcase-media{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/9;
+    background:#08090b;
+    overflow:hidden;
+    cursor:pointer;
+  }
+  .showcase-media img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .showcase-media-placeholder{
+    width:100%;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--text-muted);
+    font-size:12px;
+    background:
+      radial-gradient(circle at center,rgba(227,179,65,.09),transparent 55%),
+      var(--bg);
+  }
+  .showcase-play{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    width:54px;
+    height:54px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.22);
+    background:rgba(10,10,12,.76);
+    backdrop-filter:blur(5px);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:21px;
+    padding-left:3px;
+    pointer-events:none;
+    box-shadow:0 8px 30px rgba(0,0,0,.35);
+  }
+  .showcase-featured{
+    position:absolute;
+    top:10px;
+    left:10px;
+    z-index:2;
+    padding:4px 8px;
+    border-radius:999px;
+    background:var(--accent-gold);
+    color:#17130a;
+    font-size:9px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.45px;
+  }
+  .showcase-body{padding:14px;}
+  .showcase-title{
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:19px;
+    line-height:1.15;
+    font-weight:700;
+    color:var(--text);
+  }
+  .showcase-series{
+    margin-top:5px;
+    color:var(--accent-teal);
+    font-size:10.5px;
+    font-weight:600;
+  }
+  .showcase-description{
+    margin-top:8px;
+    color:var(--text-muted);
+    font-size:11px;
+    line-height:1.55;
+    display:-webkit-box;
+    -webkit-line-clamp:3;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .showcase-actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    margin-top:12px;
+  }
+  .showcase-watch{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    color:var(--accent-gold);
+    font-size:11px;
+    font-weight:700;
+  }
+  .showcase-owner-actions{
+    gap:6px;
+  }
+
+  .video-overlay{
+    position:fixed;
+    inset:0;
+    z-index:90;
+    background:rgba(4,4,6,.86);
+    backdrop-filter:blur(5px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .video-overlay[hidden]{display:none !important;}
+  .video-modal{
+    width:min(94vw,980px);
+    max-height:92vh;
+    overflow:auto;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:16px;
+    box-shadow:var(--shadow-pop);
+  }
+  .video-modal-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    padding:12px 14px;
+    border-bottom:1px solid var(--border);
+  }
+  .video-modal-head strong{
+    color:var(--text);
+    font-size:13px;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .video-close{
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--text-muted);
+    border-radius:8px;
+    padding:7px 11px;
+    cursor:pointer;
+  }
+  .video-close:hover{color:var(--text);}
+  .video-player-wrap{
+    background:#000;
+    width:100%;
+    aspect-ratio:16/9;
+  }
+  .video-player-wrap iframe,
+  .video-player-wrap video{
+    width:100%;
+    height:100%;
+    display:block;
+    border:0;
+    background:#000;
+  }
+  .video-modal-copy{
+    padding:14px 16px 18px;
+  }
+  .video-modal-copy p{
+    color:var(--text-muted);
+    font-size:11.5px;
+    line-height:1.55;
+    margin:7px 0 0;
+  }
+
+  .showcase-form-check{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:var(--text);
+    font-size:12px;
+    min-height:38px;
+  }
+  .showcase-form-check input{
+    width:16px;
+    height:16px;
+  }
+
+  @media(max-width:600px){
+    .showcase-grid{grid-template-columns:1fr;}
+    .video-overlay{padding:8px;}
+  }
+
 </style>
 </head>
 <body>
@@ -2154,6 +2364,7 @@
       <a href="#/home" data-route="home"><span class="ic">⌂</span> Home</a>
       <a href="#/inventory" data-route="inventory"><span class="ic">▦</span> Inventory</a>
       <a href="#/by-game" data-route="by-game"><span class="ic">▥</span> By Game</a>
+      <a href="#/showcase" data-route="showcase"><span class="ic">▶</span> Showcase</a>
       <a href="#/giveaway" data-route="giveaway"><span class="ic">★</span> Giveaway</a>
       <a href="#/insights" data-route="insights" class="owner-only"><span class="ic">◔</span> Insights</a>
       <a href="#/add" data-route="add" class="owner-only"><span class="ic">+</span> Add Card</a>
@@ -2260,6 +2471,71 @@
   </form>
 </div>
 
+
+<div class="modal-overlay" id="showcaseOverlay" hidden>
+  <form class="modal" id="showcaseForm">
+    <h2 id="showcaseFormTitle">Add Showcase Video</h2>
+    <input type="hidden" id="showcaseId">
+
+    <div class="field">
+      <label for="showcaseTitle">Video title</label>
+      <input id="showcaseTitle" required placeholder="e.g. One Piece Championship Collection">
+    </div>
+
+    <div class="field">
+      <label for="showcaseSeries">Series / Collection (optional)</label>
+      <input id="showcaseSeries" placeholder="e.g. Online Champion, Hyper Battle">
+    </div>
+
+    <div class="field">
+      <label for="showcaseVideoUrl">Video URL</label>
+      <input id="showcaseVideoUrl" required placeholder="YouTube URL or direct .mp4/.webm URL">
+      <div class="hint">YouTube and direct MP4/WebM links can play inside the website.</div>
+    </div>
+
+    <div class="field">
+      <label for="showcaseThumbnail">Thumbnail URL (optional)</label>
+      <input id="showcaseThumbnail" placeholder="https://...">
+      <div class="hint">For YouTube, the thumbnail can be detected automatically if left blank.</div>
+    </div>
+
+    <div class="field">
+      <label for="showcaseDescription">Description (optional)</label>
+      <textarea id="showcaseDescription" placeholder="A short description of the cards shown in the video."></textarea>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="showcaseSortOrder">Display order</label>
+        <input id="showcaseSortOrder" type="number" step="1" value="0">
+      </div>
+      <div class="field">
+        <label>Featured</label>
+        <label class="showcase-form-check">
+          <input id="showcaseFeatured" type="checkbox">
+          Show as featured
+        </label>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" id="showcaseCancelBtn">Cancel</button>
+      <button type="submit" class="btn-primary">Save Video</button>
+    </div>
+  </form>
+</div>
+
+<div class="video-overlay" id="videoOverlay" hidden>
+  <div class="video-modal" role="dialog" aria-modal="true" aria-labelledby="videoModalTitle">
+    <div class="video-modal-head">
+      <strong id="videoModalTitle">Showcase</strong>
+      <button type="button" class="video-close" id="videoCloseBtn">Close</button>
+    </div>
+    <div class="video-player-wrap" id="videoPlayerMount"></div>
+    <div class="video-modal-copy" id="videoModalCopy"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2280,6 +2556,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   let cards = [];
   let giveaways = [];
+  let showcases = [];
   let insightsCache = null;
   const $ = (id) => document.getElementById(id);
   const view = $("view");
@@ -2513,6 +2790,61 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       .eq("id", id);
   }
 
+  // ---------------- Supabase showcase videos ----------------
+  function showcaseFromDb(row){
+    return {
+      id: row.id,
+      title: row.title || "",
+      series: row.series || "",
+      video_url: row.video_url || "",
+      thumbnail_url: row.thumbnail_url || "",
+      description: row.description || "",
+      featured: !!row.featured,
+      sort_order: Number(row.sort_order || 0),
+      created_at: row.created_at || ""
+    };
+  }
+
+  async function loadShowcases(){
+    const { data, error } = await supabaseClient
+      .from("showcases")
+      .select("*")
+      .order("featured", { ascending:false })
+      .order("sort_order", { ascending:true })
+      .order("created_at", { ascending:false });
+
+    if(error){
+      console.error("Load showcases error:", error);
+      showcases = [];
+      return false;
+    }
+    showcases = (data || []).map(showcaseFromDb);
+    return true;
+  }
+
+  async function saveShowcase(payload, id){
+    if(id){
+      return await supabaseClient
+        .from("showcases")
+        .update(payload)
+        .eq("id", id)
+        .select()
+        .single();
+    }
+    return await supabaseClient
+      .from("showcases")
+      .insert(payload)
+      .select()
+      .single();
+  }
+
+  async function deleteShowcase(id){
+    return await supabaseClient
+      .from("showcases")
+      .delete()
+      .eq("id", id);
+  }
+
   async function recordCardView(card){
     try{
       const { error } = await supabaseClient.rpc("increment_card_view", { p_card_id: card.id });
@@ -2660,7 +2992,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(route === "home") renderHomePage();
     else if(route === "inventory") renderInventoryPage();
     else if(route === "by-game") renderByGamePage();
-    else if(route === "giveaway") renderGiveawayPage();
+    else if(route === "showcase") renderShowcasePage();
+        else if(route === "giveaway") renderGiveawayPage();
     else if(route === "insights"){ if(isOwnerMode()) renderInsightsPage(); else { location.hash="#/inventory"; return; } }
     else if(route === "add"){
       if(isOwnerMode()) renderAddPage();
@@ -3621,6 +3954,205 @@ function wireShimmer(container){
     return d.toLocaleString();
   }
 
+  // ---------------- Showcase ----------------
+  function youtubeVideoId(url){
+    try{
+      const u = new URL(url);
+      if(u.hostname.includes("youtu.be")){
+        return u.pathname.replace("/","").split("/")[0] || "";
+      }
+      if(u.hostname.includes("youtube.com")){
+        if(u.pathname.startsWith("/shorts/")) return u.pathname.split("/")[2] || "";
+        if(u.pathname.startsWith("/embed/")) return u.pathname.split("/")[2] || "";
+        return u.searchParams.get("v") || "";
+      }
+    }catch(_){}
+    return "";
+  }
+
+  function showcaseThumbnail(v){
+    if(v.thumbnail_url) return v.thumbnail_url;
+    const yt = youtubeVideoId(v.video_url);
+    return yt ? `https://img.youtube.com/vi/${yt}/hqdefault.jpg` : "";
+  }
+
+  function openShowcaseVideo(v){
+    const overlay = $("videoOverlay");
+    const mount = $("videoPlayerMount");
+    const title = $("videoModalTitle");
+    const copy = $("videoModalCopy");
+    const yt = youtubeVideoId(v.video_url);
+
+    title.textContent = v.title || "Showcase";
+    copy.innerHTML = `
+      ${v.series ? `<div class="showcase-series">${escapeHtml(v.series)}</div>` : ""}
+      ${v.description ? `<p>${escapeHtml(v.description)}</p>` : ""}
+    `;
+
+    if(yt){
+      mount.innerHTML = `<iframe
+        src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(yt)}?autoplay=1&rel=0"
+        title="${escapeHtml(v.title)}"
+        allow="autoplay; encrypted-media; picture-in-picture"
+        allowfullscreen></iframe>`;
+    }else if(/\.(mp4|webm|ogg)(\?|#|$)/i.test(v.video_url)){
+      mount.innerHTML = `<video controls autoplay playsinline src="${escapeHtml(v.video_url)}"></video>`;
+    }else{
+      mount.innerHTML = `
+        <div style="height:100%;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--text-muted);font-size:12px;">
+          This video URL cannot be embedded directly.
+          <a href="${escapeHtml(v.video_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent-gold);margin-left:6px;">Open video</a>
+        </div>`;
+    }
+    overlay.hidden = false;
+  }
+
+  function closeShowcaseVideo(){
+    $("videoOverlay").hidden = true;
+    $("videoPlayerMount").innerHTML = "";
+  }
+
+  function renderShowcasePage(){
+    view.innerHTML = `
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Showcase</div>
+          <h2>Collection Showcase</h2>
+          <p>Short videos featuring cards and collectibles from our collection.</p>
+        </div>
+        <button type="button" class="btn-primary owner-only" id="addShowcaseBtn">+ Add Video</button>
+      </div>
+      <div id="showcaseMount"></div>
+    `;
+
+    const mount = $("showcaseMount");
+    if(!showcases.length){
+      mount.innerHTML = `<div class="empty-state">${EMPTY_ICON}<h2>No showcase videos yet</h2><p>Check back again for new collection videos.</p></div>`;
+    }else{
+      mount.innerHTML = `<div class="showcase-grid">${
+        showcases.map(v=>{
+          const thumb = showcaseThumbnail(v);
+          return `<article class="showcase-card">
+            <div class="showcase-media" data-showcase-watch="${v.id}">
+              ${v.featured ? `<span class="showcase-featured">Featured</span>` : ""}
+              ${thumb
+                ? `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(v.title)} thumbnail">`
+                : `<div class="showcase-media-placeholder">Video showcase</div>`}
+              <div class="showcase-play">▶</div>
+            </div>
+            <div class="showcase-body">
+              <div class="showcase-title">${escapeHtml(v.title)}</div>
+              ${v.series ? `<div class="showcase-series">${escapeHtml(v.series)}</div>` : ""}
+              ${v.description ? `<div class="showcase-description">${escapeHtml(v.description)}</div>` : ""}
+              <div class="showcase-actions">
+                <button type="button" class="btn-ghost showcase-watch" data-showcase-watch="${v.id}">▶ Watch</button>
+                <div class="showcase-owner-actions owner-only">
+                  <button type="button" class="btn-ghost" data-showcase-edit="${v.id}">Edit</button>
+                  <button type="button" class="btn-ghost" data-showcase-delete="${v.id}" style="color:var(--danger)">Delete</button>
+                </div>
+              </div>
+            </div>
+          </article>`;
+        }).join("")
+      }</div>`;
+    }
+
+    const addBtn = $("addShowcaseBtn");
+    if(addBtn) addBtn.addEventListener("click", ()=>openShowcaseForm());
+
+    mount.querySelectorAll("[data-showcase-watch]").forEach(el=>{
+      el.addEventListener("click", e=>{
+        e.stopPropagation();
+        const v = showcases.find(x=>x.id===el.dataset.showcaseWatch);
+        if(v) openShowcaseVideo(v);
+      });
+    });
+
+    mount.querySelectorAll("[data-showcase-edit]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const v = showcases.find(x=>x.id===btn.dataset.showcaseEdit);
+        if(v) openShowcaseForm(v);
+      });
+    });
+
+    mount.querySelectorAll("[data-showcase-delete]").forEach(btn=>{
+      btn.addEventListener("click", async ()=>{
+        if(!isOwnerMode()){ showToast("Owner login required"); return; }
+        const v = showcases.find(x=>x.id===btn.dataset.showcaseDelete);
+        if(!v) return;
+        if(!confirm(`Delete showcase "${v.title}"?`)) return;
+        const { error } = await deleteShowcase(v.id);
+        if(error){ console.error(error); showToast("Could not delete showcase"); return; }
+        await loadShowcases();
+        renderShowcasePage();
+        showToast("Showcase deleted");
+      });
+    });
+  }
+
+  const showcaseOverlay = $("showcaseOverlay");
+  const showcaseForm = $("showcaseForm");
+
+  function openShowcaseForm(v=null){
+    if(!isOwnerMode()){ showToast("Owner login required"); return; }
+    $("showcaseFormTitle").textContent = v ? "Edit Showcase Video" : "Add Showcase Video";
+    $("showcaseId").value = v ? v.id : "";
+    $("showcaseTitle").value = v ? v.title : "";
+    $("showcaseSeries").value = v ? v.series : "";
+    $("showcaseVideoUrl").value = v ? v.video_url : "";
+    $("showcaseThumbnail").value = v ? v.thumbnail_url : "";
+    $("showcaseDescription").value = v ? v.description : "";
+    $("showcaseSortOrder").value = v ? v.sort_order : 0;
+    $("showcaseFeatured").checked = v ? !!v.featured : false;
+    showcaseOverlay.hidden = false;
+  }
+
+  function closeShowcaseForm(){
+    showcaseOverlay.hidden = true;
+    showcaseForm.reset();
+    $("showcaseId").value = "";
+  }
+
+  $("showcaseCancelBtn").addEventListener("click", closeShowcaseForm);
+  showcaseOverlay.addEventListener("click", e=>{
+    if(e.target === showcaseOverlay) closeShowcaseForm();
+  });
+
+  showcaseForm.addEventListener("submit", async e=>{
+    e.preventDefault();
+    if(!isOwnerMode()){ showToast("Owner login required"); return; }
+
+    const id = $("showcaseId").value || null;
+    const payload = {
+      title: $("showcaseTitle").value.trim(),
+      series: $("showcaseSeries").value.trim(),
+      video_url: $("showcaseVideoUrl").value.trim(),
+      thumbnail_url: $("showcaseThumbnail").value.trim(),
+      description: $("showcaseDescription").value.trim(),
+      sort_order: parseInt($("showcaseSortOrder").value || "0",10) || 0,
+      featured: $("showcaseFeatured").checked
+    };
+
+    if(!payload.title || !payload.video_url) return;
+
+    const { error } = await saveShowcase(payload, id);
+    if(error){
+      console.error("Save showcase error:", error);
+      showToast("Could not save showcase");
+      return;
+    }
+
+    closeShowcaseForm();
+    await loadShowcases();
+    renderShowcasePage();
+    showToast(id ? "Showcase updated" : "Showcase added");
+  });
+
+  $("videoCloseBtn").addEventListener("click", closeShowcaseVideo);
+  $("videoOverlay").addEventListener("click", e=>{
+    if(e.target === $("videoOverlay")) closeShowcaseVideo();
+  });
+
   function renderGiveawayPage(){
     view.innerHTML = `
       <div class="page-head">
@@ -4355,6 +4887,7 @@ function wireShimmer(container){
     await refreshOwnerSession();
     await loadCards();
     await loadGiveaways();
+    await loadShowcases();
     router();
   }
 
