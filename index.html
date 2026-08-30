@@ -1422,7 +1422,7 @@
   @media(max-width:700px){#filterAvailabilityWrap{min-width:0 !important;}}
 
 
-  /* Automatic status corners — visual overlays only; original images are untouched. */
+  /* Automatic status corners — responsive visual overlays only. */
   .thumb-wrap,
   .detail-slider-stage{
     position:relative !important;
@@ -1434,29 +1434,28 @@
     top:0;
     left:0;
     z-index:8;
-    width:52%;
-    max-width:220px;
+    width:48%;
+    max-width:210px;
     aspect-ratio:1 / 1;
     pointer-events:none;
-    clip-path:polygon(0 0,75% 0,0 75%);
-    -webkit-clip-path:polygon(0 0,75% 0,0 75%);
+    clip-path:polygon(0 0,100% 0,0 100%);
+    -webkit-clip-path:polygon(0 0,100% 0,0 100%);
   }
 
   .status-corner::before{
     position:absolute;
-    top:22%;
-    left:-2%;
-    width:64%;
+    top:31%;
+    left:7%;
+    width:58%;
     transform:rotate(-45deg);
     transform-origin:center;
     font-family:'Barlow Condensed','Inter',sans-serif;
     font-weight:900;
     line-height:1;
     text-align:center;
+    white-space:nowrap;
   }
 
-  /* SOLD: matches the supplied reference — bright solid red corner,
-     large white diagonal lettering and a pronounced dark shadow. */
   .status-corner-sold{
     background:#f52b22;
   }
@@ -1464,18 +1463,13 @@
   .status-corner-sold::before{
     content:"SOLD";
     color:#fff;
-    top:24%;
-    left:2%;
-    width:58%;
-    font-size:clamp(16px,2.55vw,30px);
+    font-size:clamp(19px,2.8vw,34px);
     letter-spacing:.8px;
-    white-space:nowrap;
     text-shadow:
-      0 5px 5px rgba(0,0,0,.48),
-      0 2px 2px rgba(0,0,0,.38);
+      0 4px 5px rgba(0,0,0,.48),
+      0 1px 2px rgba(0,0,0,.36);
   }
 
-  /* RESERVED keeps the same corner geometry while retaining its bright gold status colour. */
   .status-corner-reserved{
     background:#ffc928;
   }
@@ -1483,62 +1477,92 @@
   .status-corner-reserved::before{
     content:"RESERVED";
     color:#171717;
-    top:23%;
-    left:-3%;
-    width:67%;
-    font-size:clamp(11px,1.75vw,21px);
-    letter-spacing:.3px;
+    top:32%;
+    left:5%;
+    width:62%;
+    font-size:clamp(10px,1.45vw,17px);
+    letter-spacing:.2px;
     text-shadow:0 1px 1px rgba(255,255,255,.35);
   }
 
-  /* Opened card image: same exact proportions, scaled up with the image. */
+  /* Full detail image scales with the image size but keeps the label comfortably inside. */
   .detail-slider-stage .status-corner{
-    width:52%;
-    max-width:390px;
+    width:46%;
+    max-width:360px;
   }
 
   .detail-slider-stage .status-corner-sold::before{
-    top:24%;
-    left:2%;
+    top:31%;
+    left:7%;
     width:58%;
-    font-size:clamp(28px,4vw,58px);
+    font-size:clamp(34px,4.2vw,62px);
   }
 
   .detail-slider-stage .status-corner-reserved::before{
-    font-size:clamp(20px,3vw,42px);
+    top:32%;
+    left:5%;
+    width:62%;
+    font-size:clamp(16px,2.2vw,30px);
   }
 
   @media(max-width:800px){
     .status-corner{
-      width:52%;
-      max-width:180px;
+      width:50%;
+      max-width:170px;
     }
 
     .status-corner-sold::before{
-      top:24%;
-      left:2%;
+      top:31%;
+      left:7%;
       width:58%;
-      font-size:clamp(15px,4.8vw,24px);
+      font-size:clamp(18px,5.2vw,28px);
     }
 
     .status-corner-reserved::before{
-      font-size:clamp(10px,3.2vw,17px);
+      top:32%;
+      left:5%;
+      width:62%;
+      font-size:clamp(9px,2.8vw,14px);
     }
 
     .detail-slider-stage .status-corner{
-      width:52%;
-      max-width:280px;
+      width:48%;
+      max-width:260px;
     }
 
     .detail-slider-stage .status-corner-sold::before{
-      top:24%;
-      left:2%;
+      top:31%;
+      left:7%;
       width:58%;
-      font-size:clamp(24px,6.4vw,42px);
+      font-size:clamp(28px,7.2vw,46px);
     }
 
     .detail-slider-stage .status-corner-reserved::before{
-      font-size:clamp(17px,4.6vw,30px);
+      top:32%;
+      left:5%;
+      width:62%;
+      font-size:clamp(14px,4vw,23px);
+    }
+  }
+
+  @media(max-width:390px){
+    .status-corner{
+      width:52%;
+      max-width:150px;
+    }
+
+    .status-corner-sold::before{
+      top:32%;
+      left:8%;
+      width:56%;
+      font-size:clamp(17px,5.4vw,24px);
+    }
+
+    .status-corner-reserved::before{
+      top:33%;
+      left:6%;
+      width:60%;
+      font-size:clamp(8.5px,2.7vw,12px);
     }
   }
 </style>
