@@ -2687,6 +2687,162 @@
     }
   }
 
+
+  /* Home Collection Overview: same visual language as Featured Collections */
+  #view .home-collection-overview-section{
+    margin-top:22px !important;
+    margin-bottom:28px !important;
+  }
+
+  #view .home-overview-feature-grid{
+    display:grid !important;
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:12px !important;
+  }
+
+  #view .home-overview-feature{
+    display:block !important;
+    min-height:118px !important;
+    padding:18px 19px !important;
+    border:1px solid var(--border) !important;
+    border-radius:15px !important;
+    background:var(--surface) !important;
+    color:var(--text) !important;
+    text-align:left !important;
+    text-decoration:none !important;
+    box-shadow:none !important;
+    transition:transform .15s ease,border-color .15s ease,background .15s ease !important;
+  }
+
+  #view a.home-overview-feature:hover{
+    transform:translateY(-2px) !important;
+    border-color:rgba(227,179,65,.28) !important;
+    background:var(--surface-2) !important;
+  }
+
+  #view .home-overview-feature .kicker{
+    margin-bottom:7px !important;
+    color:var(--accent-gold) !important;
+    font-size:10px !important;
+    font-weight:800 !important;
+    letter-spacing:.85px !important;
+    text-transform:uppercase !important;
+  }
+
+  #view .home-overview-feature .title{
+    margin-bottom:7px !important;
+    color:var(--text) !important;
+    font-size:18px !important;
+    font-weight:800 !important;
+    line-height:1.12 !important;
+  }
+
+  #view .home-overview-feature .desc{
+    color:var(--text-muted) !important;
+    font-size:11px !important;
+    line-height:1.45 !important;
+  }
+
+  @media(max-width:1000px){
+    #view .home-overview-feature-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    }
+  }
+
+  @media(max-width:560px){
+    #view .home-overview-feature-grid{
+      grid-template-columns:1fr !important;
+    }
+
+    #view .home-overview-feature{
+      min-height:0 !important;
+      padding:15px !important;
+    }
+  }
+
+
+  /* Mobile Collection Overview: retain the compact stat-card style */
+  @media(max-width:700px){
+    #view .home-collection-overview-section{
+      margin-top:16px !important;
+      margin-bottom:22px !important;
+    }
+
+    #view .home-collection-overview-section .home-section-head{
+      margin-bottom:10px !important;
+    }
+
+    #view .home-overview-feature-grid{
+      display:grid !important;
+      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+      gap:8px !important;
+    }
+
+    #view .home-overview-feature{
+      min-height:78px !important;
+      padding:13px 12px !important;
+      display:flex !important;
+      flex-direction:column !important;
+      justify-content:center !important;
+      gap:5px !important;
+      border:1px solid var(--border) !important;
+      border-radius:11px !important;
+      background:var(--surface) !important;
+      box-shadow:none !important;
+    }
+
+    #view .home-overview-feature .title{
+      order:1 !important;
+      margin:0 !important;
+      color:var(--accent-gold) !important;
+      font-family:'JetBrains Mono',monospace !important;
+      font-size:20px !important;
+      font-weight:800 !important;
+      line-height:1 !important;
+      letter-spacing:-.4px !important;
+    }
+
+    #view .home-overview-feature .kicker{
+      order:2 !important;
+      margin:0 !important;
+      color:var(--text-muted) !important;
+      font-family:inherit !important;
+      font-size:9.5px !important;
+      font-weight:800 !important;
+      line-height:1.1 !important;
+      letter-spacing:.65px !important;
+      text-transform:uppercase !important;
+    }
+
+    #view .home-overview-feature .desc{
+      display:none !important;
+    }
+
+    #view a.home-overview-feature:active{
+      background:var(--surface-2) !important;
+    }
+  }
+
+  @media(max-width:370px){
+    #view .home-overview-feature-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+      gap:7px !important;
+    }
+
+    #view .home-overview-feature{
+      min-height:72px !important;
+      padding:11px 10px !important;
+    }
+
+    #view .home-overview-feature .title{
+      font-size:18px !important;
+    }
+
+    #view .home-overview-feature .kicker{
+      font-size:9px !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -4250,39 +4406,49 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       ${(()=>{
         const stats = getCollectionStats();
         return `
-          <section class="home-section home-collection-stats-section">
+          <section class="home-section home-collection-overview-section">
             <div class="home-section-head">
               <div>
-                <div class="eyebrow">Collection Overview</div>
-                <h3>Collection at a Glance</h3>
+                <h3>Collection Overview</h3>
                 <p>Live counts from the current catalogue.</p>
               </div>
             </div>
 
-            <div class="home-collection-stats">
-              <a href="#/inventory" class="home-stat-card">
-                <span class="home-stat-value">${stats.inventory.toLocaleString()}</span>
-                <span class="home-stat-label">Inventory</span>
+            <div class="home-feature-grid home-overview-feature-grid">
+              <a href="#/inventory" class="home-feature home-overview-feature">
+                <div class="kicker">Current</div>
+                <div class="title">${stats.inventory.toLocaleString()} Inventory</div>
+                <div class="desc">Cards currently listed in the main inventory.</div>
               </a>
-              <a href="#/reserved" class="home-stat-card">
-                <span class="home-stat-value">${stats.reserved.toLocaleString()}</span>
-                <span class="home-stat-label">Reserved</span>
+
+              <a href="#/reserved" class="home-feature home-overview-feature">
+                <div class="kicker">On Hold</div>
+                <div class="title">${stats.reserved.toLocaleString()} Reserved</div>
+                <div class="desc">Cards currently reserved for buyers.</div>
               </a>
-              <a href="#/sold" class="home-stat-card">
-                <span class="home-stat-value">${stats.sold.toLocaleString()}</span>
-                <span class="home-stat-label">Sold</span>
+
+              <a href="#/sold" class="home-feature home-overview-feature">
+                <div class="kicker">Archive</div>
+                <div class="title">${stats.sold.toLocaleString()} Sold</div>
+                <div class="desc">Previously listed cards that have been sold.</div>
               </a>
-              <div class="home-stat-card">
-                <span class="home-stat-value">${stats.graded.toLocaleString()}</span>
-                <span class="home-stat-label">Graded</span>
+
+              <div class="home-feature home-overview-feature">
+                <div class="kicker">Slabs</div>
+                <div class="title">${stats.graded.toLocaleString()} Graded</div>
+                <div class="desc">Professionally graded cards in the catalogue.</div>
               </div>
-              <div class="home-stat-card">
-                <span class="home-stat-value">${stats.vintage.toLocaleString()}</span>
-                <span class="home-stat-label">Vintage</span>
+
+              <div class="home-feature home-overview-feature">
+                <div class="kicker">Classic</div>
+                <div class="title">${stats.vintage.toLocaleString()} Vintage</div>
+                <div class="desc">Older collectible cards and vintage releases.</div>
               </div>
-              <div class="home-stat-card">
-                <span class="home-stat-value">${stats.sealed.toLocaleString()}</span>
-                <span class="home-stat-label">Sealed</span>
+
+              <div class="home-feature home-overview-feature">
+                <div class="kicker">Unopened</div>
+                <div class="title">${stats.sealed.toLocaleString()} Sealed</div>
+                <div class="desc">Sealed products and unopened collectibles.</div>
               </div>
             </div>
           </section>
@@ -4774,47 +4940,6 @@ function wireShimmer(container){
     activeQuickFilter = "all";
     view.innerHTML = `
       <div class="page-head"><div><div class="eyebrow">${escapeHtml(scopeMeta.eyebrow)}</div><h2>${escapeHtml(scopeMeta.title)}</h2><p>${escapeHtml(scopeMeta.description)}</p></div></div>
-
-      ${(()=>{
-        const overview = getListingOverview(listingAvailabilityScope);
-        return `
-          <section class="listing-overview-panel">
-            <div class="listing-overview-head">
-              <div>
-                <div class="eyebrow">Overview</div>
-                <h3>${escapeHtml(scopeMeta.title)} at a Glance</h3>
-              </div>
-            </div>
-
-            <div class="listing-overview-grid">
-              <div class="listing-overview-card">
-                <span class="listing-overview-value">${overview.total.toLocaleString()}</span>
-                <span class="listing-overview-label">Total</span>
-              </div>
-              <div class="listing-overview-card listing-overview-new">
-                <span class="listing-overview-value">${overview.new.toLocaleString()}</span>
-                <span class="listing-overview-label">New This Week</span>
-              </div>
-              <div class="listing-overview-card">
-                <span class="listing-overview-value">${overview.graded.toLocaleString()}</span>
-                <span class="listing-overview-label">Graded</span>
-              </div>
-              <div class="listing-overview-card">
-                <span class="listing-overview-value">${overview.raw.toLocaleString()}</span>
-                <span class="listing-overview-label">Raw</span>
-              </div>
-              <div class="listing-overview-card">
-                <span class="listing-overview-value">${overview.sealed.toLocaleString()}</span>
-                <span class="listing-overview-label">Sealed</span>
-              </div>
-              <div class="listing-overview-card">
-                <span class="listing-overview-value">${overview.vintage.toLocaleString()}</span>
-                <span class="listing-overview-label">Vintage</span>
-              </div>
-            </div>
-          </section>
-        `;
-      })()}
 
       <div class="quick-filters" id="quickFilters">
         <button type="button" class="quick-filter" data-quick="all">All</button>
