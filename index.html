@@ -3234,42 +3234,6 @@
   }
 
 
-  .fb-post-active-list{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    margin-bottom:9px;
-    padding:8px 10px;
-    border:1px solid rgba(78,210,199,.18);
-    border-radius:9px;
-    background:rgba(78,210,199,.045);
-    font-size:9.5px;
-  }
-
-  .fb-post-active-list[hidden]{
-    display:none !important;
-  }
-
-  .fb-post-active-list span{
-    color:var(--text-muted);
-    font-size:8px;
-    font-weight:800;
-    letter-spacing:.7px;
-  }
-
-  .fb-post-active-list strong{
-    color:var(--accent-teal);
-    font-size:10px;
-  }
-
-  .fb-post-active-list a{
-    margin-left:auto;
-    color:var(--accent-gold);
-    font-size:9px;
-    font-weight:700;
-    text-decoration:none;
-    white-space:nowrap;
-  }
 
   @media(max-width:700px){
     .fb-post-active-list{
@@ -3283,36 +3247,6 @@
   }
 
 
-  .fb-post-website-link-note{
-    margin:0 0 14px;
-    padding:9px 10px;
-    border:1px solid var(--border);
-    border-radius:9px;
-    background:var(--surface-2);
-  }
-
-  .fb-post-website-link-note[hidden]{
-    display:none !important;
-  }
-
-  .fb-post-website-link-note span{
-    display:block;
-    margin-bottom:4px;
-    color:var(--text-muted);
-    font-size:8px;
-    font-weight:800;
-    letter-spacing:.6px;
-    text-transform:uppercase;
-  }
-
-  .fb-post-website-link-note a{
-    display:block;
-    color:var(--accent-teal);
-    font-size:9.5px;
-    line-height:1.4;
-    text-decoration:none;
-    overflow-wrap:anywhere;
-  }
 
 </style>
 </head>
@@ -6968,31 +6902,7 @@ function wireShimmer(container){
   const FB_POST_PREFS_KEY = "collect_tcg_fb_post_prefs_v1";
   const FB_POST_CARD_META_KEY = "collect_tcg_fb_post_card_meta_v1";
 
-  const FB_CARD_LISTS = Object.freeze({
-    championship:{
-      label:"Championship",
-      url:"https://www.facebook.com/share/p/1C886w7YJC/?mibextid=wwXIfr"
-    },
-    vintage:{
-      label:"Vintage",
-      url:"https://www.facebook.com/share/p/1E2v2daUcb/?mibextid=wwXIfr"
-    },
-    anniversaries:{
-      label:"Anniversaries",
-      url:"https://www.facebook.com/share/p/1DDwuBRvrt/?mibextid=wwXIfr"
-    },
-    onlineRegionalChampion:{
-      label:"Online Regional Champion",
-      url:"https://www.facebook.com/share/p/1ENthmhe6X/?mibextid=wwXIfr"
-    },
-    assorted:{
-      label:"Assorted",
-      url:"https://www.facebook.com/share/p/1Ceo2zm4ms/"
-    }
-  });
-
   const FB_POST_DEFAULTS = Object.freeze({
-    cardListKey:"assorted",
     carousellShopUrl:"https://www.carousell.com.my/u/collect_tcg_my_sg/",
     instagramUrl:"https://www.instagram.com/collecttcg.mysg",
     hashtags:"#tcg #onepiece #onepiecetcg #onepiececardgame #TCGCollector"
@@ -7001,11 +6911,7 @@ function wireShimmer(container){
   function getFbPostPrefs(){
     try{
       const parsed = JSON.parse(localStorage.getItem(FB_POST_PREFS_KEY) || "{}");
-      const cardListKey = Object.prototype.hasOwnProperty.call(FB_CARD_LISTS, parsed.cardListKey)
-        ? parsed.cardListKey
-        : FB_POST_DEFAULTS.cardListKey;
       return {
-        cardListKey,
         carousellShopUrl: safeHttpUrl(parsed.carousellShopUrl) || FB_POST_DEFAULTS.carousellShopUrl,
         instagramUrl: safeHttpUrl(parsed.instagramUrl) || FB_POST_DEFAULTS.instagramUrl,
         hashtags: String(parsed.hashtags || FB_POST_DEFAULTS.hashtags).trim().slice(0,500)
@@ -7018,9 +6924,6 @@ function wireShimmer(container){
   function saveFbPostPrefs(prefs){
     try{
       localStorage.setItem(FB_POST_PREFS_KEY, JSON.stringify({
-        cardListKey:Object.prototype.hasOwnProperty.call(FB_CARD_LISTS, prefs.cardListKey)
-          ? prefs.cardListKey
-          : FB_POST_DEFAULTS.cardListKey,
         carousellShopUrl:safeHttpUrl(prefs.carousellShopUrl) || FB_POST_DEFAULTS.carousellShopUrl,
         instagramUrl:safeHttpUrl(prefs.instagramUrl) || FB_POST_DEFAULTS.instagramUrl,
         hashtags:String(prefs.hashtags || "").trim().slice(0,500)
@@ -7050,23 +6953,6 @@ function wireShimmer(container){
     }catch{
       return "";
     }
-  }
-
-  function getFbCardListEntry(key){
-    return Object.prototype.hasOwnProperty.call(FB_CARD_LISTS, key)
-      ? FB_CARD_LISTS[key]
-      : FB_CARD_LISTS[FB_POST_DEFAULTS.cardListKey];
-  }
-
-  function suggestFbCardListKey(card){
-    const series = normalizeFilterValue(card?.series || "");
-    const era = normalizeFilterValue(card?.era || "");
-
-    if(series.includes("championship") || series.includes("trophy")) return "championship";
-    if(series.includes("anniversary")) return "anniversaries";
-    if(series.includes("online regional") || series.includes("regional champion")) return "onlineRegionalChampion";
-    if(era === "vintage") return "vintage";
-    return "assorted";
   }
 
   function fbFormatLabel(card){
@@ -7119,8 +7005,6 @@ function wireShimmer(container){
 
     const divider = "━━━━━━━━━━━━━━━━━━━━━━━━";
     const title = String(values.title || defaultFbPostTitle(card)).trim();
-    const cardList = getFbCardListEntry(values.cardListKey);
-    const cardListUrl = safeHttpUrl(cardList.url);
     const websiteCardUrl = getCardShareUrl(card.id);
     const carousellShopUrl = safeHttpUrl(values.carousellShopUrl);
     const instagramUrl = safeHttpUrl(values.instagramUrl);
@@ -7129,9 +7013,9 @@ function wireShimmer(container){
     const lines = [
       title,
       "",
-      "PRICE : PLEASE REFER TO OUR CARD-LIST",
+      "PRICE : PLEASE REFER TO OUR WEBSITE",
       "",
-      cardListUrl,
+      websiteCardUrl,
       "",
       divider,
       "",
@@ -7157,15 +7041,6 @@ function wireShimmer(container){
       "",
       divider
     ];
-
-    lines.push(
-      "",
-      "FURTHER DETAILS ON OUR WEBSITE :",
-      "",
-      websiteCardUrl,
-      "",
-      divider
-    );
 
     lines.push(
       "",
@@ -7256,17 +7131,7 @@ function wireShimmer(container){
 
           <div id="fbPostSelectedCard" class="fb-post-selected-card" hidden></div>
 
-          <div class="field">
-            <label for="fbPostCardList">Card list</label>
-            <select id="fbPostCardList">
-              ${Object.entries(FB_CARD_LISTS).map(([key,item])=>`
-                <option value="${escapeHtml(key)}" ${key===prefs.cardListKey ? "selected" : ""}>${escapeHtml(item.label)}</option>
-              `).join("")}
-            </select>
-            <div class="hint">The PRICE section will automatically use the Facebook link for the selected card list.</div>
-          </div>
-
-          <div class="fb-post-website-link-note" id="fbPostWebsiteLinkNote" hidden></div>
+<div class="fb-post-website-link-note" id="fbPostWebsiteLinkNote" hidden></div>
 
           <div class="field">
             <label for="fbPostTitle">Facebook title</label>
@@ -7305,7 +7170,6 @@ function wireShimmer(container){
             </div>
           </div>
 
-          <div class="fb-post-active-list" id="fbPostActiveList" hidden></div>
           <textarea id="fbPostOutput" class="fb-post-output" readonly placeholder="Select a card to generate the Facebook post…"></textarea>
 
           <div class="fb-post-bottom-actions">
@@ -7318,13 +7182,10 @@ function wireShimmer(container){
 
     const select = $("fbPostCardSelect");
     const titleInput = $("fbPostTitle");
-    const cardListSelect = $("fbPostCardList");
     const shopInput = $("fbPostCarousellShop");
     const instagramInput = $("fbPostInstagram");
     const hashtagsInput = $("fbPostHashtags");
     const output = $("fbPostOutput");
-    const websiteLinkNote = $("fbPostWebsiteLinkNote");
-    const activeListMount = $("fbPostActiveList");
     const selectedCardMount = $("fbPostSelectedCard");
     const copyTitleBtn = $("fbCopyTitleBtn");
     const copyPostBtn = $("fbCopyPostBtn");
@@ -7336,7 +7197,6 @@ function wireShimmer(container){
     function currentValues(){
       return {
         title:titleInput.value,
-        cardListKey:cardListSelect.value,
         carousellShopUrl:shopInput.value,
         instagramUrl:instagramInput.value,
         hashtags:hashtagsInput.value
@@ -7351,9 +7211,6 @@ function wireShimmer(container){
         const meta = getFbCardMeta();
         meta[selectedCard.id] = {
           title:String(titleInput.value || "").trim().slice(0,300),
-          cardListKey:Object.prototype.hasOwnProperty.call(FB_CARD_LISTS, cardListSelect.value)
-            ? cardListSelect.value
-            : FB_POST_DEFAULTS.cardListKey
         };
         saveFbCardMeta(meta);
       }
@@ -7362,10 +7219,6 @@ function wireShimmer(container){
     function updateOutput(){
       if(!selectedCard){
         output.value = "";
-        websiteLinkNote.hidden = true;
-        websiteLinkNote.innerHTML = "";
-        activeListMount.hidden = true;
-        activeListMount.innerHTML = "";
         copyTitleBtn.disabled = true;
         copyPostBtn.disabled = true;
         downloadBtn.disabled = true;
@@ -7373,21 +7226,6 @@ function wireShimmer(container){
       }
 
       const values = currentValues();
-      const listEntry = getFbCardListEntry(values.cardListKey);
-      const websiteCardUrl = getCardShareUrl(selectedCard.id);
-
-      websiteLinkNote.hidden = false;
-      websiteLinkNote.innerHTML = `
-        <span>Website details link</span>
-        <a href="${escapeHtml(cardShareHash(selectedCard.id))}">${escapeHtml(websiteCardUrl)}</a>
-      `;
-      activeListMount.hidden = false;
-      activeListMount.innerHTML = `
-        <span>PRICE CARD LIST</span>
-        <strong>${escapeHtml(listEntry.label)}</strong>
-        <a href="${escapeHtml(listEntry.url)}" target="_blank" rel="noopener noreferrer">Open link ↗</a>
-      `;
-
       output.value = buildFbPostText(selectedCard, values);
       copyTitleBtn.disabled = !titleInput.value.trim();
       copyPostBtn.disabled = !output.value.trim();
@@ -7435,10 +7273,6 @@ function wireShimmer(container){
       const meta = perCardMeta[selectedCard.id] || {};
       titleInput.value = String(meta.title || defaultFbPostTitle(selectedCard)).slice(0,300);
 
-      const suggestedCardListKey = Object.prototype.hasOwnProperty.call(FB_CARD_LISTS, meta.cardListKey)
-        ? meta.cardListKey
-        : suggestFbCardListKey(selectedCard);
-      cardListSelect.value = suggestedCardListKey;
 
       hashtagsInput.value = prefs.hashtags === FB_POST_DEFAULTS.hashtags
         ? defaultFbHashtags(selectedCard)
@@ -7452,7 +7286,7 @@ function wireShimmer(container){
 
     select.addEventListener("change", ()=>selectCard(select.value));
 
-    [titleInput,cardListSelect,shopInput,instagramInput,hashtagsInput].forEach(input=>{
+    [titleInput,shopInput,instagramInput,hashtagsInput].forEach(input=>{
       input.addEventListener("input", ()=>{
         persistCurrent();
         updateOutput();
