@@ -1422,84 +1422,75 @@
   @media(max-width:700px){#filterAvailabilityWrap{min-width:0 !important;}}
 
 
-  /* Automatic SOLD image ribbon — visual overlay only; original images are untouched. */
+  /* Automatic SOLD corner — visual overlay only; original images are untouched. */
   .thumb-wrap,
   .detail-slider-stage{
     position:relative !important;
+    overflow:hidden !important;
   }
 
   .sold-ribbon{
     position:absolute;
     top:0;
     left:0;
-    z-index:6;
-    width:92px;
-    height:92px;
-    overflow:hidden;
+    z-index:8;
+    width:min(42%, 145px);
+    aspect-ratio:1 / 1;
     pointer-events:none;
-    border-radius:inherit;
+    background:linear-gradient(135deg,#f52b24 0%,#e51f19 68%,#cc1713 100%);
+    clip-path:polygon(0 0,100% 0,0 100%);
+    -webkit-clip-path:polygon(0 0,100% 0,0 100%);
+    filter:drop-shadow(2px 3px 4px rgba(0,0,0,.28));
   }
 
   .sold-ribbon::before{
     content:"SOLD";
     position:absolute;
-    top:17px;
-    left:-31px;
-    width:135px;
-    padding:7px 0;
+    top:27%;
+    left:2%;
+    width:76%;
     transform:rotate(-45deg);
     transform-origin:center;
-    background:#e3261f;
     color:#fff;
-    border-top:1px solid rgba(255,255,255,.35);
-    border-bottom:1px solid rgba(0,0,0,.22);
-    box-shadow:0 3px 10px rgba(0,0,0,.34);
     font-family:'Barlow Condensed','Inter',sans-serif;
-    font-size:18px;
+    font-size:clamp(15px,2.2vw,25px);
     font-weight:900;
     letter-spacing:1.5px;
     line-height:1;
     text-align:center;
-    text-shadow:0 1px 2px rgba(0,0,0,.35);
+    text-shadow:
+      0 2px 3px rgba(0,0,0,.45),
+      0 0 1px rgba(0,0,0,.35);
   }
 
+  /* Larger corner treatment in the opened card window. */
   .detail-slider-stage .sold-ribbon{
-    width:145px;
-    height:145px;
+    width:min(38%, 250px);
   }
 
   .detail-slider-stage .sold-ribbon::before{
-    top:27px;
-    left:-43px;
-    width:195px;
-    padding:10px 0;
-    font-size:27px;
+    top:28%;
+    left:2%;
+    width:76%;
+    font-size:clamp(24px,3vw,42px);
     letter-spacing:2px;
   }
 
   @media(max-width:800px){
     .sold-ribbon{
-      width:82px;
-      height:82px;
+      width:min(43%, 120px);
     }
+
     .sold-ribbon::before{
-      top:15px;
-      left:-29px;
-      width:122px;
-      padding:6px 0;
-      font-size:16px;
+      font-size:clamp(14px,4.2vw,21px);
     }
 
     .detail-slider-stage .sold-ribbon{
-      width:120px;
-      height:120px;
+      width:min(42%, 190px);
     }
+
     .detail-slider-stage .sold-ribbon::before{
-      top:23px;
-      left:-38px;
-      width:165px;
-      padding:8px 0;
-      font-size:22px;
+      font-size:clamp(21px,6vw,34px);
     }
   }
 
@@ -2274,7 +2265,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function soldRibbonHTML(card){
     return (card && card.availability === "Sold")
-      ? `<span class="sold-ribbon" aria-label="Sold">SOLD</span>`
+      ? `<span class="sold-ribbon" aria-label="Sold"></span>`
       : "";
   }
 
