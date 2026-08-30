@@ -3396,6 +3396,13 @@
     cursor:pointer;
   }
 
+
+  .clean-era-pill{
+    color:var(--accent-teal) !important;
+    border-color:rgba(78,210,199,.18) !important;
+    background:rgba(78,210,199,.045) !important;
+  }
+
 </style>
 </head>
 <body>
@@ -3627,6 +3634,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   const SHIMMER_RARITIES = new Set(["Rare Holo","Ultra Rare","Secret Rare","Promo"]);
   const CONDITION_LABEL = {NM:"Near Mint", M:"Mint", LP:"Lightly Played", MP:"Moderately Played", HP:"Heavily Played", DMG:"Damaged", SEALED:"Sealed", NA:"Not Applicable"};
   const LANGUAGE_OPTIONS = ["JP","ENG","KR","CN"];
+  const ERA_OPTIONS = ["Modern","Mid-Era","Vintage"];
   const RARITY_LIST = ["Common","Uncommon","Rare","Rare Holo","Ultra Rare","Secret Rare","Promo"];
   const INDEX_KEY = "card-index";
 
@@ -3689,6 +3697,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       name: (row.name || "").toUpperCase(),
       game: row.game === "One Piece" ? "One Piece Card Game" : (row.game || ""),
       language: row.language || "",
+      era: row.era || "",
       set: row.set_name || "",
       series: row.series || "",
       format: row.format || "",
@@ -3720,6 +3729,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       name: (card.name || "").toUpperCase(),
       game: card.game,
       language: card.language || "",
+      era: card.era || "",
       set_name: card.set || "",
       series: card.series || "",
       format: card.format || "",
@@ -3749,7 +3759,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function loadCards(){
-    const publicColumns = "id,name,game,language,set_name,series,format,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,images,grading,created_at,updated_at";
+    const publicColumns = "id,name,game,language,era,set_name,series,format,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,images,grading,created_at,updated_at";
     const columns = isOwnerMode() ? "*" : publicColumns;
 
     const { data, error } = await supabaseClient
@@ -4269,9 +4279,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           </select>
         </div>
       </div>
-      <div class="field">
-        <label for="${p}Series">Series / Collection</label>
-        <input type="text" id="${p}Series" placeholder="e.g. Hyper Battle, Visual Adventure, Championship">
+      <div class="field-row">
+        <div class="field">
+          <label for="${p}Series">Series / Collection</label>
+          <input type="text" id="${p}Series" placeholder="e.g. Hyper Battle, Visual Adventure, Championship">
+        </div>
+        <div class="field">
+          <label for="${p}Era">Era</label>
+          <select id="${p}Era" required>
+            <option value="">Select era</option>
+            ${ERA_OPTIONS.map(v=>`<option value="${v}">${v}</option>`).join("")}
+          </select>
+        </div>
       </div>
       <div class="field-row">
         <div class="field">
@@ -4531,6 +4550,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     $(p + "Game").value = card ? card.game : "";
     $(p + "Language").value = card ? (card.language || "") : "";
     $(p + "Series").value = card ? (card.series || "") : "";
+    $(p + "Era").value = card ? (card.era || "") : "";
     $(p + "Format").value = card ? (card.format || (Array.isArray(card.grading) && card.grading.length ? "Graded" : (card.condition === "SEALED" ? "Sealed" : "Raw"))) : "Raw";
     $(p + "Condition").value = card ? card.condition : "NM";
     $(p + "PriceUSD").value = card ? (card.price_usd ?? card.price ?? 0) : "0.00";
@@ -4546,6 +4566,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       game: $(p + "Game").value.trim(),
       language: $(p + "Language").value,
       series: $(p + "Series").value.trim(),
+      era: $(p + "Era").value,
       format: $(p + "Format").value,
       rarity: "Common",
       condition: $(p + "Condition").value,
@@ -4818,7 +4839,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(activeQuickFilter === "raw" && format !== "Raw") return false;
       if(activeQuickFilter === "sealed" && format !== "Sealed") return false;
       if(activeQuickFilter === "championship" && !isChampionshipSeries(c.series)) return false;
-      if(activeQuickFilter === "vintage" && !(c.game === "One Piece Vintage" || (c.series || "").toLowerCase().includes("vintage"))) return false;
+      if(activeQuickFilter === "vintage" && !(
+        c.era === "Vintage" ||
+        c.game === "One Piece Vintage" ||
+        (c.series || "").toLowerCase().includes("vintage")
+      )) return false;
       return true;
     });
 
@@ -4857,6 +4882,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
                 ? `<button type="button" class="clean-grade-badge filter-pill-btn ${pillFilterState.grade.has(gradeText) ? "pill-selected" : ""}" data-pill-filter="grade" data-pill-value="${escapeHtml(gradeText)}" title="Filter by ${escapeHtml(gradeText)}">${escapeHtml(gradeText)}</button>`
                 : `<span class="clean-grade-badge">${escapeHtml(gradeText)}</span>`}
               ${c.language ? `<button type="button" class="clean-meta-pill clean-language-pill filter-pill-btn ${pillFilterState.language.has(c.language) ? "pill-selected" : ""}" data-pill-filter="language" data-pill-value="${escapeHtml(c.language)}" title="Filter by ${escapeHtml(c.language)}">${escapeHtml(c.language)}</button>` : ""}
+              ${c.era ? `<span class="clean-meta-pill clean-era-pill">${escapeHtml(c.era)}</span>` : ""}
               ${seriesText ? `<button type="button" class="clean-meta-pill clean-series-pill filter-pill-btn ${pillFilterState.series.has(seriesText) ? "pill-selected" : ""}" data-pill-filter="series" data-pill-value="${escapeHtml(seriesText)}" title="Filter by ${escapeHtml(seriesText)}">${escapeHtml(seriesText)}</button>` : ""}
             </div>
           </div>
@@ -6050,6 +6076,7 @@ function wireShimmer(container){
             </div>
             <div class="detail-item"><div class="detail-label">Format</div><div class="detail-value">${escapeHtml(effectiveFormat(card))}</div></div>
             ${card.language ? `<div class="detail-item"><div class="detail-label">Language</div><div class="detail-value">${escapeHtml(card.language)}</div></div>` : ""}
+            ${card.era ? `<div class="detail-item"><div class="detail-label">Era</div><div class="detail-value">${escapeHtml(card.era)}</div></div>` : ""}
             ${card.series ? `<div class="detail-item"><div class="detail-label">Series</div><div class="detail-value">${escapeHtml(card.series)}</div></div>` : ""}
             <div class="detail-item"><div class="detail-label">Pictures</div><div class="detail-value">${images.length}</div></div>
             <div class="detail-item owner-only"><div class="detail-label">Views</div><div class="detail-value">${Number(card.view_count || 0).toLocaleString()}</div></div>
