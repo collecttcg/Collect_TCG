@@ -3818,6 +3818,141 @@
   }
 }
 
+
+  /* ===== Cleaner card-detail information ===== */
+  .details-info-grid{
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:10px !important;
+  }
+
+  .details-info-grid .detail-item{
+    min-width:0;
+    padding:13px 15px !important;
+    border:1px solid var(--border) !important;
+    border-radius:12px !important;
+    background:var(--surface) !important;
+  }
+
+  .details-info-grid .detail-label{
+    margin-bottom:6px !important;
+    color:var(--text-muted) !important;
+    font-size:9px !important;
+    font-weight:700 !important;
+    letter-spacing:.85px !important;
+    text-transform:uppercase !important;
+    line-height:1 !important;
+  }
+
+  .details-info-grid .detail-value{
+    color:var(--text) !important;
+    font-size:15px !important;
+    font-weight:700 !important;
+    line-height:1.25 !important;
+    overflow-wrap:anywhere;
+  }
+
+  /* Price gets one strong primary value and quieter secondary currencies. */
+  .detail-price-item{
+    background:
+      linear-gradient(180deg,rgba(227,179,65,.075),rgba(227,179,65,.018)),
+      var(--surface) !important;
+    border-color:rgba(227,179,65,.28) !important;
+  }
+
+  .detail-price-stack{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+  }
+
+  .detail-price-primary{
+    color:var(--accent-gold) !important;
+    font-family:'JetBrains Mono',monospace !important;
+    font-size:20px !important;
+    font-weight:800 !important;
+    line-height:1.1 !important;
+    letter-spacing:-.25px;
+  }
+
+  .detail-price-secondary{
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px 14px;
+    color:var(--text-muted) !important;
+    font-family:'JetBrains Mono',monospace !important;
+    font-size:11px !important;
+    font-weight:600 !important;
+    line-height:1.35 !important;
+  }
+
+  .detail-price-secondary span{
+    white-space:nowrap;
+  }
+
+  /* Make Grading compact and visually consistent. */
+  .detail-section{
+    margin-top:12px !important;
+    padding:14px 15px !important;
+    border:1px solid var(--border) !important;
+    border-radius:12px !important;
+    background:var(--surface) !important;
+  }
+
+  .detail-section h3{
+    margin:0 0 10px !important;
+    font-size:13px !important;
+  }
+
+  .grade-entry{
+    padding:0 !important;
+    border-bottom:0 !important;
+  }
+
+  .grade-main{
+    display:inline-flex !important;
+    align-items:center;
+    width:max-content;
+    padding:5px 9px !important;
+    border:1px solid rgba(78,210,199,.20) !important;
+    border-radius:999px !important;
+    background:rgba(78,210,199,.055) !important;
+    color:var(--accent-teal) !important;
+    font-size:10.5px !important;
+    font-weight:800 !important;
+    line-height:1 !important;
+  }
+
+  @media(max-width:700px){
+    .details-info-grid{
+      grid-template-columns:1fr 1fr !important;
+      gap:8px !important;
+    }
+
+    .details-info-grid .detail-item{
+      padding:11px 12px !important;
+    }
+
+    .details-info-grid .detail-value{
+      font-size:13.5px !important;
+    }
+
+    .detail-price-primary{
+      font-size:17px !important;
+    }
+
+    .detail-price-secondary{
+      font-size:9.5px !important;
+      gap:4px 9px;
+    }
+  }
+
+  @media(max-width:430px){
+    .details-info-grid{
+      grid-template-columns:1fr !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -6496,14 +6631,16 @@ function wireShimmer(container){
       <div class="detail-layout">
         <div>${imageHTML}</div>
         <div class="detail-info">
-          <div class="detail-grid">
+          <div class="detail-grid details-info-grid">
             ${hasGrade ? "" : `<div class="detail-item"><div class="detail-label">Condition</div><div class="detail-value">${escapeHtml(condition)}</div></div>`}
             <div class="detail-item detail-price-item">
               <div class="detail-label">Price</div>
-              <div class="detail-value detail-price-values">
-                <span>${fmtMoney(card.price_usd ?? card.price)}</span>
-                <span>${fmtMYR(card.price_myr)}</span>
-              <span>${fmtSGD(card.price_sgd)}</span>
+              <div class="detail-price-stack">
+                <div class="detail-price-primary">${fmtMoney(card.price_usd ?? card.price)}</div>
+                <div class="detail-price-secondary">
+                  <span>${fmtMYR(card.price_myr)}</span>
+                  <span>${fmtSGD(card.price_sgd)}</span>
+                </div>
               </div>
             </div>
             <div class="detail-item"><div class="detail-label">Format</div><div class="detail-value">${escapeHtml(effectiveFormat(card))}</div></div>
