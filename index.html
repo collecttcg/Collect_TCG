@@ -2981,6 +2981,258 @@
     }
   }
 
+
+  /* Owner-only Facebook Post Generator */
+  .fb-post-layout{
+    display:grid;
+    grid-template-columns:minmax(330px,.78fr) minmax(460px,1.22fr);
+    gap:16px;
+    align-items:start;
+  }
+
+  .fb-post-builder,
+  .fb-post-output-panel{
+    margin-bottom:0;
+  }
+
+  .fb-post-output-panel{
+    position:sticky;
+    top:20px;
+  }
+
+  .fb-post-section-title{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:15px;
+  }
+
+  .fb-post-section-title h3{
+    margin:2px 0 0;
+  }
+
+  .fb-post-copy-actions,
+  .fb-post-bottom-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+  }
+
+  .fb-post-copy-actions button:disabled,
+  .fb-post-bottom-actions button:disabled{
+    opacity:.45;
+    cursor:not-allowed;
+  }
+
+  .fb-post-selected-card{
+    display:grid;
+    grid-template-columns:86px minmax(0,1fr);
+    gap:12px;
+    align-items:center;
+    margin:0 0 15px;
+    padding:10px;
+    border:1px solid var(--border);
+    border-radius:11px;
+    background:var(--surface-2);
+  }
+
+  .fb-post-selected-card[hidden]{
+    display:none !important;
+  }
+
+  .fb-post-card-image{
+    width:86px;
+    aspect-ratio:4/5;
+    overflow:hidden;
+    border-radius:8px;
+    background:var(--bg);
+  }
+
+  .fb-post-card-image img{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:cover;
+  }
+
+  .fb-post-no-image{
+    width:100%;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--text-muted);
+    font-size:9px;
+  }
+
+  .fb-post-card-copy{
+    min-width:0;
+  }
+
+  .fb-post-card-copy strong{
+    display:block;
+    color:var(--text);
+    font-family:'Barlow Condensed','Inter',sans-serif;
+    font-size:17px;
+    line-height:1.05;
+    text-transform:uppercase;
+  }
+
+  .fb-post-card-copy span{
+    display:block;
+    margin-top:5px;
+    color:var(--text-muted);
+    font-size:10px;
+    line-height:1.45;
+  }
+
+  .fb-post-card-copy small{
+    display:inline-block;
+    margin-top:7px;
+    padding:3px 6px;
+    border:1px solid rgba(78,210,199,.2);
+    border-radius:999px;
+    color:var(--accent-teal);
+    font-size:8.5px;
+    font-weight:700;
+    text-transform:uppercase;
+  }
+
+  .fb-post-settings{
+    margin-top:12px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--surface-2);
+    overflow:hidden;
+  }
+
+  .fb-post-settings summary{
+    padding:10px 12px;
+    color:var(--text-muted);
+    font-size:10.5px;
+    font-weight:700;
+    cursor:pointer;
+    user-select:none;
+  }
+
+  .fb-post-settings-body{
+    padding:4px 12px 12px;
+    border-top:1px solid var(--border-soft);
+  }
+
+  .fb-post-output{
+    width:100%;
+    min-height:620px;
+    resize:vertical;
+    padding:15px;
+    border:1px solid var(--border);
+    border-radius:11px;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:12px;
+    line-height:1.55;
+    white-space:pre-wrap;
+  }
+
+  .fb-post-output:focus{
+    outline:2px solid var(--accent-teal);
+    outline-offset:1px;
+  }
+
+  .fb-post-bottom-actions{
+    margin-top:10px;
+  }
+
+  .fb-post-bottom-actions a[aria-disabled="true"]{
+    opacity:.45;
+    pointer-events:none;
+  }
+
+  @media(max-width:1050px){
+    .fb-post-layout{
+      grid-template-columns:1fr;
+    }
+
+    .fb-post-output-panel{
+      position:static;
+    }
+
+    .fb-post-output{
+      min-height:520px;
+    }
+  }
+
+  @media(max-width:700px){
+    .fb-post-page-head p{
+      max-width:290px;
+    }
+
+    .fb-post-layout{
+      gap:12px;
+    }
+
+    .fb-post-builder,
+    .fb-post-output-panel{
+      padding:14px;
+    }
+
+    .fb-post-section-title{
+      display:block;
+      margin-bottom:12px;
+    }
+
+    .fb-post-copy-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      margin-top:10px;
+    }
+
+    .fb-post-copy-actions button,
+    .fb-post-bottom-actions button,
+    .fb-post-bottom-actions a{
+      justify-content:center;
+      min-height:38px;
+    }
+
+    .fb-post-selected-card{
+      grid-template-columns:70px minmax(0,1fr);
+      gap:10px;
+    }
+
+    .fb-post-card-image{
+      width:70px;
+    }
+
+    .fb-post-card-copy strong{
+      font-size:15px;
+    }
+
+    .fb-post-output{
+      min-height:500px;
+      padding:12px;
+      font-size:11px;
+    }
+
+    .fb-post-bottom-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+    }
+  }
+
+  @media(max-width:390px){
+    .fb-post-copy-actions,
+    .fb-post-bottom-actions{
+      grid-template-columns:1fr;
+    }
+
+    .fb-post-output{
+      min-height:460px;
+      font-size:10.5px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -3019,6 +3271,7 @@
       <a href="#/favorites" data-route="favorites" class="mobile-secondary-nav"><span class="ic">♡</span> Favorites</a>
       <a href="#/giveaway" data-route="giveaway" class="mobile-secondary-nav"><span class="ic">★</span> Giveaway</a>
       <a href="#/insights" data-route="insights" class="owner-only"><span class="ic">◔</span> Insights</a>
+      <a href="#/fb-posts" data-route="fb-posts" class="owner-only"><span class="ic">ƒ</span> FB Posts</a>
       <a href="#/add" data-route="add" class="owner-only"><span class="ic">+</span> Add Card</a>
       <a href="#/about" data-route="about" class="mobile-secondary-nav"><span class="ic">◎</span> About Us</a>
       <a href="#/contact" data-route="contact" class="mobile-secondary-nav"><span class="ic">✉</span> Contact</a>
@@ -4034,6 +4287,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     else if(route === "showcase") renderShowcasePage();
         else if(route === "giveaway") renderGiveawayPage();
     else if(route === "insights"){ if(isOwnerMode()) renderInsightsPage(); else { location.hash="#/inventory"; return; } }
+    else if(route === "fb-posts"){ if(isOwnerMode()) renderFbPostGeneratorPage(); else { location.hash="#/inventory"; return; } }
     else if(route === "add"){
       if(isOwnerMode()) renderAddPage();
       else { location.hash = "#/inventory"; return; }
@@ -6627,6 +6881,450 @@ function wireShimmer(container){
           </a>
         </div>
       </div>`;
+  }
+
+  // ---------------- Owner FB Post Generator ----------------
+  const FB_POST_PREFS_KEY = "collect_tcg_fb_post_prefs_v1";
+  const FB_POST_CARD_META_KEY = "collect_tcg_fb_post_card_meta_v1";
+
+  const FB_POST_DEFAULTS = Object.freeze({
+    cardListUrl:"https://www.facebook.com/share/p/1HkPkubQfa/",
+    carousellShopUrl:"https://www.carousell.com.my/u/collect_tcg_my_sg/",
+    instagramUrl:"https://www.instagram.com/collecttcg.mysg",
+    hashtags:"#tcg #onepiece #onepiecetcg #onepiececardgame #TCGCollector"
+  });
+
+  function getFbPostPrefs(){
+    try{
+      const parsed = JSON.parse(localStorage.getItem(FB_POST_PREFS_KEY) || "{}");
+      return {
+        cardListUrl: safeHttpUrl(parsed.cardListUrl) || FB_POST_DEFAULTS.cardListUrl,
+        carousellShopUrl: safeHttpUrl(parsed.carousellShopUrl) || FB_POST_DEFAULTS.carousellShopUrl,
+        instagramUrl: safeHttpUrl(parsed.instagramUrl) || FB_POST_DEFAULTS.instagramUrl,
+        hashtags: String(parsed.hashtags || FB_POST_DEFAULTS.hashtags).trim().slice(0,500)
+      };
+    }catch{
+      return {...FB_POST_DEFAULTS};
+    }
+  }
+
+  function saveFbPostPrefs(prefs){
+    try{
+      localStorage.setItem(FB_POST_PREFS_KEY, JSON.stringify({
+        cardListUrl:safeHttpUrl(prefs.cardListUrl) || FB_POST_DEFAULTS.cardListUrl,
+        carousellShopUrl:safeHttpUrl(prefs.carousellShopUrl) || FB_POST_DEFAULTS.carousellShopUrl,
+        instagramUrl:safeHttpUrl(prefs.instagramUrl) || FB_POST_DEFAULTS.instagramUrl,
+        hashtags:String(prefs.hashtags || "").trim().slice(0,500)
+      }));
+    }catch{}
+  }
+
+  function getFbCardMeta(){
+    try{
+      const parsed = JSON.parse(localStorage.getItem(FB_POST_CARD_META_KEY) || "{}");
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    }catch{
+      return {};
+    }
+  }
+
+  function saveFbCardMeta(meta){
+    try{ localStorage.setItem(FB_POST_CARD_META_KEY, JSON.stringify(meta)); }catch{}
+  }
+
+  function safeHttpUrl(value){
+    const raw = String(value || "").trim().slice(0,1000);
+    if(!raw) return "";
+    try{
+      const u = new URL(raw);
+      return ["http:","https:"].includes(u.protocol) ? u.toString() : "";
+    }catch{
+      return "";
+    }
+  }
+
+  function fbFormatLabel(card){
+    const grades = Array.isArray(card?.grading) ? card.grading.filter(g=>g && g.company) : [];
+    if(grades.length){
+      return `${String(grades[0].company || "").toUpperCase()} ${String(grades[0].grade || "").trim()}`.trim();
+    }
+    const format = effectiveFormat(card || {});
+    if(normalizeFilterValue(format) === "sealed") return "SEALED";
+    if(normalizeFilterValue(format) === "graded") return "GRADED";
+    return "RAW";
+  }
+
+  function fbGameLabel(card){
+    const game = String(card?.game || "").trim();
+    if(normalizeFilterValue(game) === "one piece card game") return "ONE PIECE";
+    return game.toUpperCase();
+  }
+
+  function defaultFbPostTitle(card){
+    if(!card) return "";
+    const parts = [
+      card.year || "",
+      fbGameLabel(card),
+      normalizeFilterValue(card.era) === "vintage" && normalizeFilterValue(card.game).includes("one piece") ? "CARDDASS" : "",
+      card.series || "",
+      card.name || "",
+      card.card_code || ""
+    ].filter(Boolean);
+
+    return `WTS【${fbFormatLabel(card)}】${parts.join(" ")}`.replace(/\s+/g," ").trim().toUpperCase();
+  }
+
+  function defaultFbHashtags(card){
+    const game = normalizeFilterValue(card?.game || "");
+    if(game.includes("one piece")){
+      return "#tcg #onepiece #onepiecetcg #onepiececardgame #TCGCollector";
+    }
+    if(game.includes("zatch") || game.includes("gash")){
+      return "#tcg #zatchbell #gashbell #carddass #TCGCollector";
+    }
+    if(game.includes("gundam")){
+      return "#tcg #gundam #gundamcardgame #carddass #TCGCollector";
+    }
+    return "#tcg #TCGCollector";
+  }
+
+  function buildFbPostText(card, values){
+    if(!card) return "";
+
+    const divider = "━━━━━━━━━━━━━━━━━━━━━━━━";
+    const title = String(values.title || defaultFbPostTitle(card)).trim();
+    const cardListUrl = safeHttpUrl(values.cardListUrl);
+    const carousellListingUrl = safeHttpUrl(values.carousellListingUrl);
+    const carousellShopUrl = safeHttpUrl(values.carousellShopUrl);
+    const instagramUrl = safeHttpUrl(values.instagramUrl);
+    const hashtags = String(values.hashtags || defaultFbHashtags(card)).trim();
+
+    const lines = [
+      title,
+      "",
+      "PRICE : PLEASE REFER TO OUR CARD-LIST",
+      "",
+      cardListUrl,
+      "",
+      divider,
+      "",
+      "📍 COD KL/SG",
+      "",
+      "🌏 INTERNATIONAL SHIPPING IS AVAILABLE",
+      "",
+      "Shipping costs and insurance fees will be borne by the buyer. We will pack the cards securely and are happy to provide a video of the packing process for your peace of mind. Please note that we cannot be held responsible for any loss, damage, or issues that may occur during transit once the package has been shipped.",
+      "",
+      "📦 FOR COURIER DELIVERIES",
+      "",
+      "Please record a clear, continuous unboxing video from the sealed parcel through to the cards themselves. Any claims regarding missing, damaged, or incorrect items will require an unboxing video for verification.",
+      "",
+      "📩 DM your offer if interested",
+      "",
+      "💰 Serious buyers only",
+      "",
+      "👥 Can discuss meetup location",
+      "",
+      "📍 Located in KL 🇲🇾 / SG 🇲🇨",
+      "",
+      "❌ No lowball offers",
+      "",
+      divider
+    ];
+
+    if(carousellListingUrl){
+      lines.push(
+        "",
+        "FURTHER DETAILS ON OUR CAROUSELL PAGE :",
+        "",
+        carousellListingUrl,
+        "",
+        divider
+      );
+    }
+
+    lines.push(
+      "",
+      "VIEW MORE OF OUR PRODUCTS :",
+      "",
+      "(CAROUSELL)",
+      "",
+      carousellShopUrl,
+      "",
+      "(INSTAGRAM)",
+      "",
+      instagramUrl,
+      "",
+      divider,
+      "",
+      "HASHTAG :",
+      "",
+      hashtags
+    );
+
+    return lines.join("\n");
+  }
+
+  async function copyPlainText(text, successMessage){
+    const value = String(text || "");
+    if(!value) return false;
+    try{
+      await navigator.clipboard.writeText(value);
+      showToast(successMessage || "Copied");
+      return true;
+    }catch{
+      const ta = document.createElement("textarea");
+      ta.value = value;
+      ta.setAttribute("readonly","");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      ta.remove();
+      showToast(ok ? (successMessage || "Copied") : "Could not copy");
+      return ok;
+    }
+  }
+
+  function renderFbPostGeneratorPage(){
+    if(!requireOwner("open FB post generator")) return;
+
+    const prefs = getFbPostPrefs();
+    const perCardMeta = getFbCardMeta();
+    const selectableCards = cards
+      .slice()
+      .sort((a,b)=>{
+        const aSold = normalizeFilterValue(a.availability) === "sold" ? 1 : 0;
+        const bSold = normalizeFilterValue(b.availability) === "sold" ? 1 : 0;
+        return aSold - bSold || String(a.name || "").localeCompare(String(b.name || ""));
+      });
+
+    view.innerHTML = `
+      <div class="page-head fb-post-page-head">
+        <div>
+          <div class="eyebrow">Owner Tool</div>
+          <h2>Facebook Post Generator</h2>
+          <p>Select a card and copy a ready-to-post Facebook sales template.</p>
+        </div>
+      </div>
+
+      <div class="fb-post-layout">
+        <section class="panel fb-post-builder">
+          <div class="fb-post-section-title">
+            <div>
+              <div class="eyebrow">1 · Select Card</div>
+              <h3>Card Details</h3>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="fbPostCardSelect">Card</label>
+            <select id="fbPostCardSelect">
+              <option value="">Select a card…</option>
+              ${selectableCards.map(card=>`
+                <option value="${escapeHtml(card.id)}">
+                  ${escapeHtml(`${card.card_code ? card.card_code + " · " : ""}${card.name} · ${card.availability || "Available"}`)}
+                </option>
+              `).join("")}
+            </select>
+          </div>
+
+          <div id="fbPostSelectedCard" class="fb-post-selected-card" hidden></div>
+
+          <div class="field">
+            <label for="fbPostTitle">Facebook title</label>
+            <input id="fbPostTitle" type="text" maxlength="300" placeholder="Generated automatically after selecting a card">
+            <div class="hint">The title is generated from the card data, but you can edit it for terms such as FOIL or a specific Carddass series.</div>
+          </div>
+
+          <div class="field">
+            <label for="fbPostCarousellListing">Carousell listing URL <span class="field-optional">(optional)</span></label>
+            <input id="fbPostCarousellListing" type="url" maxlength="1000" placeholder="https://www.carousell.com.my/...">
+            <div class="hint">Saved only in this browser for the selected card. If blank, the “Further Details” section is omitted.</div>
+          </div>
+
+          <details class="fb-post-settings">
+            <summary>Template links & hashtags</summary>
+            <div class="fb-post-settings-body">
+              <div class="field">
+                <label for="fbPostCardListUrl">Card-list Facebook URL</label>
+                <input id="fbPostCardListUrl" type="url" maxlength="1000" value="${escapeHtml(prefs.cardListUrl)}">
+              </div>
+              <div class="field">
+                <label for="fbPostCarousellShop">Carousell shop URL</label>
+                <input id="fbPostCarousellShop" type="url" maxlength="1000" value="${escapeHtml(prefs.carousellShopUrl)}">
+              </div>
+              <div class="field">
+                <label for="fbPostInstagram">Instagram URL</label>
+                <input id="fbPostInstagram" type="url" maxlength="1000" value="${escapeHtml(prefs.instagramUrl)}">
+              </div>
+              <div class="field">
+                <label for="fbPostHashtags">Hashtags</label>
+                <textarea id="fbPostHashtags" rows="3" maxlength="500">${escapeHtml(prefs.hashtags)}</textarea>
+              </div>
+            </div>
+          </details>
+        </section>
+
+        <section class="panel fb-post-output-panel">
+          <div class="fb-post-section-title">
+            <div>
+              <div class="eyebrow">2 · Copy & Post</div>
+              <h3>Post Preview</h3>
+            </div>
+            <div class="fb-post-copy-actions">
+              <button type="button" class="btn-ghost" id="fbCopyTitleBtn" disabled>Copy Title</button>
+              <button type="button" class="btn-primary" id="fbCopyPostBtn" disabled>Copy Full Post</button>
+            </div>
+          </div>
+
+          <textarea id="fbPostOutput" class="fb-post-output" readonly placeholder="Select a card to generate the Facebook post…"></textarea>
+
+          <div class="fb-post-bottom-actions">
+            <button type="button" class="btn-ghost" id="fbDownloadImageBtn" disabled>Download Card Image</button>
+            <a class="btn-ghost" id="fbOpenCardBtn" href="#/inventory" aria-disabled="true">Open Card</a>
+          </div>
+        </section>
+      </div>
+    `;
+
+    const select = $("fbPostCardSelect");
+    const titleInput = $("fbPostTitle");
+    const listingInput = $("fbPostCarousellListing");
+    const cardListInput = $("fbPostCardListUrl");
+    const shopInput = $("fbPostCarousellShop");
+    const instagramInput = $("fbPostInstagram");
+    const hashtagsInput = $("fbPostHashtags");
+    const output = $("fbPostOutput");
+    const selectedCardMount = $("fbPostSelectedCard");
+    const copyTitleBtn = $("fbCopyTitleBtn");
+    const copyPostBtn = $("fbCopyPostBtn");
+    const downloadBtn = $("fbDownloadImageBtn");
+    const openCardBtn = $("fbOpenCardBtn");
+
+    let selectedCard = null;
+
+    function currentValues(){
+      return {
+        title:titleInput.value,
+        carousellListingUrl:listingInput.value,
+        cardListUrl:cardListInput.value,
+        carousellShopUrl:shopInput.value,
+        instagramUrl:instagramInput.value,
+        hashtags:hashtagsInput.value
+      };
+    }
+
+    function persistCurrent(){
+      const prefsNow = currentValues();
+      saveFbPostPrefs(prefsNow);
+
+      if(selectedCard){
+        const meta = getFbCardMeta();
+        meta[selectedCard.id] = {
+          title:String(titleInput.value || "").trim().slice(0,300),
+          carousellListingUrl:safeHttpUrl(listingInput.value)
+        };
+        saveFbCardMeta(meta);
+      }
+    }
+
+    function updateOutput(){
+      if(!selectedCard){
+        output.value = "";
+        copyTitleBtn.disabled = true;
+        copyPostBtn.disabled = true;
+        downloadBtn.disabled = true;
+        return;
+      }
+
+      output.value = buildFbPostText(selectedCard, currentValues());
+      copyTitleBtn.disabled = !titleInput.value.trim();
+      copyPostBtn.disabled = !output.value.trim();
+      downloadBtn.disabled = getImages(selectedCard).length === 0;
+    }
+
+    function renderSelectedCard(){
+      if(!selectedCard){
+        selectedCardMount.hidden = true;
+        selectedCardMount.innerHTML = "";
+        return;
+      }
+      const image = getImages(selectedCard)[0] || "";
+      selectedCardMount.hidden = false;
+      selectedCardMount.innerHTML = `
+        <div class="fb-post-card-image">
+          ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(selectedCard.name)}">` : `<div class="fb-post-no-image">No image</div>`}
+        </div>
+        <div class="fb-post-card-copy">
+          <strong>${escapeHtml(selectedCard.name)}</strong>
+          <span>${escapeHtml([
+            selectedCard.card_code,
+            selectedCard.year,
+            selectedCard.game,
+            selectedCard.series
+          ].filter(Boolean).join(" · "))}</span>
+          <small>${escapeHtml(selectedCard.availability || "Available")}</small>
+        </div>
+      `;
+    }
+
+    function selectCard(cardId){
+      selectedCard = cards.find(c=>String(c.id) === String(cardId)) || null;
+
+      if(!selectedCard){
+        titleInput.value = "";
+        listingInput.value = "";
+        openCardBtn.href = "#/inventory";
+        openCardBtn.setAttribute("aria-disabled","true");
+        renderSelectedCard();
+        updateOutput();
+        return;
+      }
+
+      const meta = perCardMeta[selectedCard.id] || {};
+      titleInput.value = String(meta.title || defaultFbPostTitle(selectedCard)).slice(0,300);
+      listingInput.value = safeHttpUrl(meta.carousellListingUrl) || "";
+      hashtagsInput.value = prefs.hashtags === FB_POST_DEFAULTS.hashtags
+        ? defaultFbHashtags(selectedCard)
+        : prefs.hashtags;
+
+      openCardBtn.href = cardShareHash(selectedCard.id);
+      openCardBtn.removeAttribute("aria-disabled");
+      renderSelectedCard();
+      updateOutput();
+    }
+
+    select.addEventListener("change", ()=>selectCard(select.value));
+
+    [titleInput,listingInput,cardListInput,shopInput,instagramInput,hashtagsInput].forEach(input=>{
+      input.addEventListener("input", ()=>{
+        persistCurrent();
+        updateOutput();
+      });
+      input.addEventListener("change", ()=>{
+        persistCurrent();
+        updateOutput();
+      });
+    });
+
+    copyTitleBtn.addEventListener("click", ()=>{
+      copyPlainText(titleInput.value, "Facebook title copied");
+    });
+
+    copyPostBtn.addEventListener("click", ()=>{
+      copyPlainText(output.value, "Facebook post copied");
+    });
+
+    downloadBtn.addEventListener("click", ()=>{
+      if(!selectedCard) return;
+      const images = getImages(selectedCard);
+      if(!images.length){
+        showToast("No card image available");
+        return;
+      }
+      downloadImageSource(images[0], selectedCard.name || selectedCard.card_code || "card", 1);
+    });
   }
 
   // ---------------- Add page ----------------
