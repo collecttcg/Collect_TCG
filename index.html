@@ -1657,6 +1657,15 @@
     }
   }
 
+
+  /* Automatically capitalize visible pill labels without changing stored/filter values. */
+  .filter-pill-btn,
+  .clean-meta-pill,
+  .clean-grade-badge,
+  .active-pill-filter{
+    text-transform:capitalize;
+  }
+
 </style>
 </head>
 <body>
@@ -2014,6 +2023,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     clearTimeout(showToast._t);
     showToast._t = setTimeout(()=>{ toastEl.hidden = true; }, 2200);
   }
+  function hasListedPrice(value){
+    if(value === null || value === undefined || value === "") return false;
+    const n = Number(value);
+    return Number.isFinite(n) && n > 0;
+  }
+
   function fmtMoney(n){
     return "USD " + Math.round(Number(n || 0)).toLocaleString("en-US");
   }
@@ -2048,10 +2063,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       rarity: row.rarity || "Common",
       condition: row.condition || "NM",
       qty: Number(row.quantity || 0),
-      price: Number(row.price_usd ?? row.price ?? 0),
-      price_usd: Number(row.price_usd ?? row.price ?? 0),
-      price_myr: Number(row.price_myr || 0),
-      price_sgd: Number(row.price_sgd || 0),
+      price: row.price_usd != null ? Number(row.price_usd) : (row.price != null ? Number(row.price) : null),
+      price_usd: row.price_usd != null ? Number(row.price_usd) : null,
+      price_myr: row.price_myr != null ? Number(row.price_myr) : null,
+      price_sgd: row.price_sgd != null ? Number(row.price_sgd) : null,
       cost: row.cost == null ? null : Number(row.cost),
       notes: row.notes || "",
       images: Array.isArray(row.images) ? row.images : [],
@@ -2083,10 +2098,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       rarity: card.rarity || "Common",
       condition: card.condition || "NM",
       quantity: Number(card.qty || 0),
-      price: Number(card.price_usd ?? card.price ?? 0), // legacy compatibility
-      price_usd: Number(card.price_usd ?? card.price ?? 0),
-      price_myr: Number(card.price_myr || 0),
-      price_sgd: Number(card.price_sgd || 0),
+      price: card.price_usd == null ? null : Number(card.price_usd), // legacy compatibility
+      price_usd: card.price_usd == null ? null : Number(card.price_usd),
+      price_myr: card.price_myr == null ? null : Number(card.price_myr),
+      price_sgd: card.price_sgd == null ? null : Number(card.price_sgd),
       cost: card.cost == null ? null : Number(card.cost),
       notes: card.notes || "",
       images: Array.isArray(card.images) ? card.images : [],
@@ -2973,9 +2988,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     $(p + "Availability").value = card ? (card.availability || "Available") : "Available";
     $(p + "Format").value = card ? (card.format || (Array.isArray(card.grading) && card.grading.length ? "Graded" : (card.condition === "SEALED" ? "Sealed" : "Raw"))) : "Raw";
     $(p + "Condition").value = card ? card.condition : "NM";
-    $(p + "PriceUSD").value = card ? (card.price_usd ?? card.price ?? 0) : "0.00";
-    $(p + "PriceMYR").value = card ? (card.price_myr ?? 0) : "0.00";
-    $(p + "PriceSGD").value = card ? (card.price_sgd ?? 0) : "0";
+    $(p + "PriceUSD").value = card && card.price_usd != null ? card.price_usd : "";
+    $(p + "PriceMYR").value = card && card.price_myr != null ? card.price_myr : "";
+    $(p + "PriceSGD").value = card && card.price_sgd != null ? card.price_sgd : "";
     $(p + "Notes").value = card ? (card.notes || "") : "";
   }
 
@@ -2994,10 +3009,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       rarity: "Common",
       condition: $(p + "Condition").value,
       qty: 1,
-      price: Math.max(0, parseFloat($(p + "PriceUSD").value || "0")), // legacy compatibility
-      price_usd: Math.max(0, parseFloat($(p + "PriceUSD").value || "0")),
-      price_myr: Math.max(0, parseFloat($(p + "PriceMYR").value || "0")),
-      price_sgd: Math.max(0, parseFloat($(p + "PriceSGD").value || "0")),
+      price: $(p + "PriceUSD").value.trim() === "" ? null : Math.max(0, parseFloat($(p + "PriceUSD").value)),
+      price_usd: $(p + "PriceUSD").value.trim() === "" ? null : Math.max(0, parseFloat($(p + "PriceUSD").value)),
+      price_myr: $(p + "PriceMYR").value.trim() === "" ? null : Math.max(0, parseFloat($(p + "PriceMYR").value)),
+      price_sgd: $(p + "PriceSGD").value.trim() === "" ? null : Math.max(0, parseFloat($(p + "PriceSGD").value)),
       cost: null,
       notes: $(p + "Notes").value.trim(),
       images: formState.images.slice(),
@@ -3400,10 +3415,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             </div>
           </div>
 
+          ${(hasListedPrice(c.price_usd) || hasListedPrice(c.price_myr) || hasListedPrice(c.price_sgd)) ? `
           <div class="clean-price-block">
-            <div class="clean-price-primary">${fmtMoney(c.price_usd ?? c.price ?? 0)}</div>
-            <div class="clean-price-secondary">${fmtMYR(c.price_myr)} <span>·</span> ${fmtSGD(c.price_sgd)}</div>
-          </div>
+            ${hasListedPrice(c.price_usd) ? `<div class="clean-price-primary">${fmtMoney(c.price_usd)}</div>` : ""}
+            ${(hasListedPrice(c.price_myr) || hasListedPrice(c.price_sgd)) ? `<div class="${hasListedPrice(c.price_usd) ? "clean-price-secondary" : "clean-price-primary"}">${[
+              hasListedPrice(c.price_myr) ? fmtMYR(c.price_myr) : "",
+              hasListedPrice(c.price_sgd) ? fmtSGD(c.price_sgd) : ""
+            ].filter(Boolean).join(' <span>·</span> ')}</div>` : ""}
+          </div>` : ""}
 
           ${c.notes ? `<div class="notes clean-notes">${escapeHtml(c.notes)}</div>` : ""}
           <div class="owner-only clean-owner-views">👁 ${Number(c.view_count || 0).toLocaleString()}</div>
