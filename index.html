@@ -3403,6 +3403,168 @@
     background:rgba(78,210,199,.045) !important;
   }
 
+
+  #filterEraWrap{min-width:140px;}
+  .clean-era-pill.filter-pill-btn{cursor:pointer;}
+  @media(max-width:700px){#filterEraWrap{min-width:0 !important;}}
+
+  /* ===== Integrated card-detail close button ===== */
+  .modal-card{
+    position:relative !important;
+  }
+
+  .modal-close{
+    position:sticky !important;
+    top:10px !important;
+    z-index:30 !important;
+    margin:10px 10px -48px auto !important;
+    width:38px !important;
+    height:38px !important;
+    min-width:38px !important;
+    padding:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    border:1px solid var(--border) !important;
+    border-radius:999px !important;
+    background:rgba(15,17,21,.88) !important;
+    color:var(--text) !important;
+    box-shadow:0 5px 18px rgba(0,0,0,.22) !important;
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    font-size:0 !important;
+    line-height:1 !important;
+    cursor:pointer !important;
+    transition:background .16s ease, transform .16s ease, border-color .16s ease !important;
+  }
+
+  .modal-close::before{
+    content:"×";
+    display:block;
+    font-family:Arial,sans-serif;
+    font-size:25px;
+    font-weight:300;
+    line-height:1;
+    transform:translateY(-1px);
+  }
+
+  .modal-close:hover{
+    background:rgba(35,38,45,.96) !important;
+    border-color:rgba(255,255,255,.20) !important;
+    transform:scale(1.04);
+  }
+
+  .modal-close:active{
+    transform:scale(.96);
+  }
+
+  @media(max-width:800px){
+    .modal-close{
+      top:8px !important;
+      margin:8px 8px -46px auto !important;
+      width:36px !important;
+      height:36px !important;
+      min-width:36px !important;
+    }
+    .modal-close::before{
+      font-size:23px;
+    }
+  }
+
+
+  /* ===== Desktop sticky navigation =====
+     Keep the left navigation visible while the user scrolls the page. */
+  @media(min-width:801px){
+    .sidebar{
+      position:sticky !important;
+      top:0 !important;
+      align-self:flex-start !important;
+      height:100vh !important;
+      max-height:100vh !important;
+      overflow-y:auto !important;
+      overscroll-behavior:contain;
+    }
+
+    nav.mainnav{
+      position:sticky !important;
+      top:0 !important;
+      z-index:5;
+    }
+
+    .sidebar-footer{
+      margin-top:auto;
+    }
+  }
+
+
+  /* ===== Consistent active-tab highlighting =====
+     Inventory and Showcase now use the exact same active treatment as Home. */
+  nav.mainnav > a[data-route]{
+    border:1px solid transparent !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    opacity:.72;
+  }
+
+  nav.mainnav > a[data-route].active,
+  nav.mainnav > a[data-route][aria-current="page"]{
+    opacity:1 !important;
+    background:var(--surface-2, rgba(255,255,255,.045)) !important;
+    border-color:var(--border) !important;
+    box-shadow:none !important;
+  }
+
+  nav.mainnav > a[data-route].active::before,
+  nav.mainnav > a[data-route][aria-current="page"]::before{
+    opacity:1 !important;
+  }
+
+  /* Prevent route-specific icon backgrounds from making Inventory or
+     Showcase appear darker/lighter than the other active tabs. */
+  nav.mainnav > a[data-route] .ic{
+    background:transparent !important;
+    box-shadow:none !important;
+  }
+
+  nav.mainnav > a[data-route].active .ic,
+  nav.mainnav > a[data-route][aria-current="page"] .ic{
+    background:transparent !important;
+    box-shadow:none !important;
+  }
+
+  nav.mainnav > a[data-route]:active{
+    background:var(--surface-2, rgba(255,255,255,.045)) !important;
+  }
+
+
+  /* ===== Consistent Inventory + Showcase FILTER highlights =====
+     Selected filter = solid gold, dark text.
+     Unselected filter = neutral surface/border. */
+
+  .quick-filter,
+  .showcase-filter,
+  .showcase-category-filter,
+  .video-filter{
+    border:1px solid var(--border) !important;
+    background:var(--surface) !important;
+    color:var(--text-muted) !important;
+    box-shadow:none !important;
+  }
+
+  .quick-filter.active,
+  .showcase-filter.active,
+  .showcase-category-filter.active,
+  .video-filter.active,
+  .quick-filter[aria-pressed="true"],
+  .showcase-filter[aria-pressed="true"],
+  .showcase-category-filter[aria-pressed="true"],
+  .video-filter[aria-pressed="true"]{
+    background:var(--accent-gold) !important;
+    border-color:var(--accent-gold) !important;
+    color:#111318 !important;
+    box-shadow:none !important;
+  }
+
 </style>
 </head>
 <body>
@@ -4762,6 +4924,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   const pillFilterState = {
     grade: new Set(),
     language: new Set(),
+    era: new Set(),
     series: new Set()
   };
 
@@ -4799,6 +4962,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const gameF = ($("filterGame") && $("filterGame").value) || "";
     const gradeF = ($("filterGrade") && $("filterGrade").value) || "";
     const languageF = ($("filterLanguage") && $("filterLanguage").value) || "";
+    const eraF = ($("filterEra") && $("filterEra").value) || "";
     const seriesF = ($("filterSeries") && $("filterSeries").value) || "";
     const sortBy = ($("sortBy") && $("sortBy").value) || "name";
 
@@ -4818,6 +4982,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         if(!hasGrade && rawCondition !== gradeF) return false;
       }
       if(languageF && (c.language || "") !== languageF) return false;
+      if(eraF && (c.era || "") !== eraF) return false;
       if(seriesF && (c.series || "") !== seriesF) return false;
 
       if(pillFilterState.grade.size){
@@ -4833,6 +4998,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         if(!Array.from(pillFilterState.grade).some(v=>cardGrades.has(v))) return false;
       }
       if(pillFilterState.language.size && !pillFilterState.language.has(c.language || "")) return false;
+      if(pillFilterState.era.size && !pillFilterState.era.has(c.era || "")) return false;
       if(pillFilterState.series.size && !pillFilterState.series.has(c.series || "")) return false;
       if(q && !haystack.includes(q)) return false;
       if(activeQuickFilter === "graded" && format !== "Graded") return false;
@@ -4882,7 +5048,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
                 ? `<button type="button" class="clean-grade-badge filter-pill-btn ${pillFilterState.grade.has(gradeText) ? "pill-selected" : ""}" data-pill-filter="grade" data-pill-value="${escapeHtml(gradeText)}" title="Filter by ${escapeHtml(gradeText)}">${escapeHtml(gradeText)}</button>`
                 : `<span class="clean-grade-badge">${escapeHtml(gradeText)}</span>`}
               ${c.language ? `<button type="button" class="clean-meta-pill clean-language-pill filter-pill-btn ${pillFilterState.language.has(c.language) ? "pill-selected" : ""}" data-pill-filter="language" data-pill-value="${escapeHtml(c.language)}" title="Filter by ${escapeHtml(c.language)}">${escapeHtml(c.language)}</button>` : ""}
-              ${c.era ? `<span class="clean-meta-pill clean-era-pill">${escapeHtml(c.era)}</span>` : ""}
+              ${c.era ? `<button type="button" class="clean-meta-pill clean-era-pill filter-pill-btn ${pillFilterState.era.has(c.era) ? "pill-selected" : ""}" data-pill-filter="era" data-pill-value="${escapeHtml(c.era)}" title="Filter by ${escapeHtml(c.era)}">${escapeHtml(c.era)}</button>` : ""}
               ${seriesText ? `<button type="button" class="clean-meta-pill clean-series-pill filter-pill-btn ${pillFilterState.series.has(seriesText) ? "pill-selected" : ""}" data-pill-filter="series" data-pill-value="${escapeHtml(seriesText)}" title="Filter by ${escapeHtml(seriesText)}">${escapeHtml(seriesText)}</button>` : ""}
             </div>
           </div>
@@ -5002,6 +5168,11 @@ function wireShimmer(container){
   <div class="overview-select-menu" id="filterLanguageMenu" hidden></div>
   <input type="hidden" id="filterLanguage" value="">
 </div>
+        <div class="overview-select" id="filterEraWrap">
+  <button type="button" class="overview-select-btn" id="filterEraBtn"><span>All Eras</span><i></i></button>
+  <div class="overview-select-menu" id="filterEraMenu" hidden></div>
+  <input type="hidden" id="filterEra" value="">
+</div>
         <div class="overview-select" id="filterSeriesWrap">
   <button type="button" class="overview-select-btn" id="filterSeriesBtn"><span>All Series</span><i></i></button>
   <div class="overview-select-menu" id="filterSeriesMenu" hidden></div>
@@ -5020,6 +5191,7 @@ function wireShimmer(container){
 
     const games = Array.from(new Set(cards.map(c=>c.game).filter(Boolean))).sort();
     const languages = ["JP","ENG","KR","CN"].filter(lang=>cards.some(c=>c.language===lang));
+    const eras = ERA_OPTIONS.filter(era=>cards.some(c=>c.era===era));
     const series = Array.from(new Set(cards.map(c=>c.series).filter(Boolean))).sort();
 
     function setupOverviewSelect(id, options){
@@ -5049,6 +5221,7 @@ function wireShimmer(container){
         const pillTypeByFilter = {
           filterGrade:"grade",
           filterLanguage:"language",
+          filterEra:"era",
           filterSeries:"series"
         };
         const pillType = pillTypeByFilter[id];
@@ -5096,6 +5269,10 @@ function wireShimmer(container){
       {value:"",label:"All Languages"},
       ...languages.map(l=>({value:l,label:l}))
     ]);
+    setupOverviewSelect("filterEra", [
+      {value:"",label:"All Eras"},
+      ...eras.map(e=>({value:e,label:e}))
+    ]);
     setupOverviewSelect("filterSeries", [
       {value:"",label:"All Series"},
       ...series.map(s=>({value:s,label:s}))
@@ -5122,7 +5299,7 @@ function wireShimmer(container){
       wireShimmer(grid);
     }
 
-    ["search","filterGame","filterGrade","filterLanguage","filterSeries","sortBy"].forEach(id=>{
+    ["search","filterGame","filterGrade","filterLanguage","filterEra","filterSeries","sortBy"].forEach(id=>{
       $(id).addEventListener("input", draw);
       $(id).addEventListener("change", draw);
     });
@@ -5142,6 +5319,7 @@ function wireShimmer(container){
       const selections = [
         ...Array.from(pillFilterState.grade).map(value=>({type:"grade", value})),
         ...Array.from(pillFilterState.language).map(value=>({type:"language", value})),
+        ...Array.from(pillFilterState.era).map(value=>({type:"era", value})),
         ...Array.from(pillFilterState.series).map(value=>({type:"series", value}))
       ];
 
@@ -5179,6 +5357,7 @@ function wireShimmer(container){
       const maps = [
         ["grade","filterGrade","Grades / Conditions"],
         ["language","filterLanguage","Languages"],
+        ["era","filterEra","Eras"],
         ["series","filterSeries","Series"]
       ];
       maps.forEach(([type,id,plural])=>{
