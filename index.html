@@ -1758,6 +1758,132 @@
     }
   }
 
+
+  /* Reserved / Sold are true navigation tabs on every device. */
+  nav.mainnav > .status-primary-nav{
+    display:flex !important;
+  }
+
+  nav.mainnav > a[data-route="reserved"].active .ic{
+    color:#ffc928 !important;
+  }
+
+  nav.mainnav > a[data-route="sold"].active .ic{
+    color:#f87171 !important;
+  }
+
+  /* Mobile: six primary controls in two rows, no horizontal scrolling. */
+  @media(max-width:800px){
+    nav.mainnav{
+      display:grid !important;
+      grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+      gap:4px !important;
+    }
+
+    nav.mainnav > a[data-route="home"],
+    nav.mainnav > a[data-route="inventory"],
+    nav.mainnav > a[data-route="reserved"],
+    nav.mainnav > a[data-route="sold"],
+    nav.mainnav > a[data-route="showcase"],
+    .mobile-more-toggle{
+      display:flex !important;
+      min-width:0 !important;
+      min-height:46px !important;
+      padding:7px 4px !important;
+      justify-content:center !important;
+      font-size:clamp(10px,2.8vw,12px) !important;
+      border-radius:10px !important;
+    }
+  }
+
+  @media(max-width:360px){
+    nav.mainnav > a[data-route="home"],
+    nav.mainnav > a[data-route="inventory"],
+    nav.mainnav > a[data-route="reserved"],
+    nav.mainnav > a[data-route="sold"],
+    nav.mainnav > a[data-route="showcase"],
+    .mobile-more-toggle{
+      min-height:48px !important;
+      padding:6px 2px !important;
+      font-size:9.5px !important;
+      flex-direction:column !important;
+      gap:2px !important;
+    }
+
+    .mobile-more-caret{display:none !important;}
+  }
+
+
+  /* Favorite button beside title — keeps card photography unobstructed. */
+  .clean-card-title-row{
+    display:flex !important;
+    align-items:flex-start !important;
+    gap:7px !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  .clean-card-title-row .clean-card-name{
+    flex:1 1 auto !important;
+    min-width:0 !important;
+  }
+
+  .title-favorite-btn{
+    appearance:none !important;
+    -webkit-appearance:none !important;
+    flex:0 0 auto !important;
+    width:27px !important;
+    height:27px !important;
+    min-width:27px !important;
+    min-height:27px !important;
+    margin:-2px 0 0 2px !important;
+    padding:0 !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    border:0 !important;
+    border-radius:7px !important;
+    background:transparent !important;
+    color:var(--text-muted) !important;
+    font-family:Arial,sans-serif !important;
+    font-size:20px !important;
+    font-weight:400 !important;
+    line-height:1 !important;
+    cursor:pointer !important;
+    box-shadow:none !important;
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+    transition:color .15s ease, background .15s ease, transform .15s ease !important;
+  }
+
+  .title-favorite-btn:hover{
+    color:var(--text) !important;
+    background:rgba(255,255,255,.05) !important;
+    transform:scale(1.06) !important;
+  }
+
+  .title-favorite-btn.active{
+    color:#ff667d !important;
+    border-color:transparent !important;
+    background:rgba(255,102,125,.07) !important;
+  }
+
+  .title-favorite-btn:focus-visible{
+    outline:2px solid var(--accent-gold) !important;
+    outline-offset:2px !important;
+  }
+
+  @media(max-width:800px){
+    .title-favorite-btn{
+      width:25px !important;
+      height:25px !important;
+      min-width:25px !important;
+      min-height:25px !important;
+      font-size:18px !important;
+      margin:-1px 0 0 1px !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -1778,13 +1904,15 @@
     <nav class="mainnav" id="mainnav">
       <a href="#/home" data-route="home"><span class="ic">⌂</span> Home</a>
       <a href="#/inventory" data-route="inventory"><span class="ic">▦</span> Inventory</a>
+      <a href="#/reserved" data-route="reserved" class="status-primary-nav"><span class="ic">◷</span> Reserved</a>
+      <a href="#/sold" data-route="sold" class="status-primary-nav"><span class="ic">✓</span> Sold</a>
       <a href="#/by-game" data-route="by-game" class="owner-only"><span class="ic">▥</span> By Game</a>
       <a href="#/showcase" data-route="showcase"><span class="ic">▶</span> Showcase</a>
       <button type="button" class="mobile-more-toggle" id="mobileMoreToggle" aria-expanded="false">
         <span class="ic">⋯</span> More <span class="mobile-more-caret">⌄</span>
       </button>
       <div class="mobile-more-menu" id="mobileMoreMenu" hidden>
-        <a href="#/favorites" data-route="favorites"><span class="ic">♡</span> Favorites</a>
+<a href="#/favorites" data-route="favorites"><span class="ic">♡</span> Favorites</a>
         <a href="#/giveaway" data-route="giveaway"><span class="ic">★</span> Giveaway</a>
         <a href="#/about" data-route="about"><span class="ic">◎</span> About Us</a>
         <a href="#/contact" data-route="contact"><span class="ic">✉</span> Contact</a>
@@ -2558,12 +2686,17 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function router(){
     const route = currentRoute();
     const isCardRoute = route.startsWith("card/");
+    const routedCard = isCardRoute ? cards.find(c=>c.id === decodeURIComponent(route.slice(5))) : null;
+    const cardParentRoute = routedCard && normalizeFilterValue(routedCard.availability) === "reserved"
+      ? "reserved"
+      : (routedCard && normalizeFilterValue(routedCard.availability) === "sold" ? "sold" : "inventory");
+
     document.querySelectorAll("#mainnav a").forEach(a=>{
-      a.classList.toggle("active", isCardRoute ? a.dataset.route === "inventory" : a.dataset.route === route);
+      a.classList.toggle("active", isCardRoute ? a.dataset.route === cardParentRoute : a.dataset.route === route);
     });
     const moreToggle = $("mobileMoreToggle");
     if(moreToggle){
-      moreToggle.classList.toggle("active", ["giveaway","about","contact"].includes(route));
+      moreToggle.classList.toggle("active", ["favorites","giveaway","about","contact"].includes(route));
     }
     const moreMenu = $("mobileMoreMenu");
     if(moreMenu){
@@ -2574,7 +2707,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(isCardRoute){
       const cardId = decodeURIComponent(route.slice(5));
       const card = cards.find(c=>c.id === cardId);
-      renderInventoryPage();
+      const cardScope = card && normalizeFilterValue(card.availability) === "reserved"
+        ? "reserved"
+        : (card && normalizeFilterValue(card.availability) === "sold" ? "sold" : "inventory");
+      renderInventoryPage(cardScope);
       if(card){
         openDetailsModal(card);
       }else{
@@ -2583,7 +2719,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       }
     }
     else if(route === "home") renderHomePage();
-    else if(route === "inventory") renderInventoryPage();
+    else if(route === "inventory") renderInventoryPage("inventory");
+    else if(route === "reserved") renderInventoryPage("reserved");
+    else if(route === "sold") renderInventoryPage("sold");
     else if(route === "favorites") renderFavoritesPage();
     else if(route === "by-game"){
       if(isOwnerMode()) renderByGamePage();
@@ -3245,6 +3383,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   // ---------------- Home ----------------
   function renderHomePage(){
     const recent = cards
+      .filter(c=>cardMatchesListingScope(c, "inventory"))
       .slice()
       .sort((a,b)=>String(b.created_at || "").localeCompare(String(a.created_at || "")))
       .slice(0,6);
@@ -3344,8 +3483,40 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     });
   }
 
-  // ---------------- Inventory ----------------
+  // ---------------- Inventory / Reserved / Sold ----------------
   let activeQuickFilter = "all";
+  let listingAvailabilityScope = "inventory";
+
+  function cardMatchesListingScope(card, scope = listingAvailabilityScope){
+    const availability = normalizeFilterValue(card && card.availability ? card.availability : "Available");
+    if(scope === "reserved") return availability === "reserved";
+    if(scope === "sold") return availability === "sold";
+    // Main Inventory contains everything still in the collection except
+    // cards that have moved to the dedicated Reserved or Sold tabs.
+    return availability !== "reserved" && availability !== "sold";
+  }
+
+  function listingScopeMeta(scope){
+    if(scope === "reserved"){
+      return {
+        title:"Reserved Cards",
+        description:"Cards currently reserved for buyers.",
+        eyebrow:"Reserved"
+      };
+    }
+    if(scope === "sold"){
+      return {
+        title:"Sold Cards",
+        description:"Previously listed cards that have been sold.",
+        eyebrow:"Sold Archive"
+      };
+    }
+    return {
+      title:"Collect TCG MY & SG Inventory",
+      description:"Browse our current trading card inventory.",
+      eyebrow:"Collect. Trade. Connect."
+    };
+  }
   function normalizeFilterValue(value){
     return String(value ?? "").trim().toLowerCase();
   }
@@ -3419,6 +3590,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const sortBy = ($("sortBy") && $("sortBy").value) || "name";
 
     let list = cards.filter(c=>{
+      if(!cardMatchesListingScope(c)) return false;
       const format = effectiveFormat(c);
       const haystack = [c.name,c.card_code,c.year,c.series,c.game,c.availability].filter(v=>v !== null && v !== undefined && v !== "").join(" ").toLowerCase();
       if(gameF && normalizeFilterValue(c.game) !== normalizeFilterValue(gameF)) return false;
@@ -3479,7 +3651,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         c.game === "Vintages" ||
         (c.series || "").toLowerCase().includes("vintage")
       )) return false;
-      if(activeQuickFilter === "sold" && (c.availability || "Available") !== "Sold") return false;
       return true;
     });
 
@@ -3506,17 +3677,20 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       <div class="card ${shimmer ? "shimmer" : ""}" style="--stripe:${color}" data-shimmer="${shimmer}" data-card-id="${escapeHtml(c.id)}" tabindex="0" role="button" aria-label="View details for ${escapeHtml(c.name)}">
         ${cardThumbHTML(c)}
         <div class="card-body clean-card-body">
-          <div class="public-card-actions">
-            <button type="button" class="favorite-btn ${isFavorite(c.id) ? "active" : ""}" data-favorite-id="${escapeHtml(c.id)}" title="${isFavorite(c.id) ? "Remove from favorites" : "Add to favorites"}" aria-label="${isFavorite(c.id) ? "Remove from favorites" : "Add to favorites"}">${isFavorite(c.id) ? "♥" : "♡"}</button>
-          </div>
-
           <div class="card-actions owner-only">
             <button class="icon-btn" data-action="edit" data-id="${c.id}" title="Edit" aria-label="Edit ${escapeHtml(c.name)}">✎</button>
             <button class="icon-btn" data-action="delete" data-id="${c.id}" title="Delete" aria-label="Delete ${escapeHtml(c.name)}">✕</button>
           </div>
 
           <div class="clean-card-main">
-            <div class="card-name clean-card-name">${escapeHtml(c.name).toUpperCase()}</div>
+            <div class="clean-card-title-row">
+              <div class="card-name clean-card-name">${escapeHtml(c.name).toUpperCase()}</div>
+              <button type="button"
+                class="favorite-btn title-favorite-btn ${isFavorite(c.id) ? "active" : ""}"
+                data-favorite-id="${escapeHtml(c.id)}"
+                title="${isFavorite(c.id) ? "Remove from favorites" : "Add to favorites"}"
+                aria-label="${isFavorite(c.id) ? "Remove from favorites" : "Add to favorites"}">${isFavorite(c.id) ? "♥" : "♡"}</button>
+            </div>
             ${(c.card_code || c.year) ? `<div class="clean-card-reference">${c.card_code ? `<span>${escapeHtml(c.card_code)}</span>` : ""}${c.card_code && c.year ? `<span class="clean-card-reference-dot">·</span>` : ""}${c.year ? `<span>${escapeHtml(c.year)}</span>` : ""}</div>` : ""}
             <div class="clean-card-subrow clean-all-pills">
               ${(grades.length || format === "Raw" || format === "Sealed")
@@ -3632,9 +3806,12 @@ function wireShimmer(container){
     });
   }
 
-  function renderInventoryPage(){
+  function renderInventoryPage(scope = "inventory"){
+    listingAvailabilityScope = ["inventory","reserved","sold"].includes(scope) ? scope : "inventory";
+    const scopeMeta = listingScopeMeta(listingAvailabilityScope);
+    activeQuickFilter = "all";
     view.innerHTML = `
-      <div class="page-head"><div><div class="eyebrow">Collect. Trade. Connect.</div><h2>Collect TCG MY &amp; SG Inventory</h2><p>Browse our current trading card inventory.</p></div></div>
+      <div class="page-head"><div><div class="eyebrow">${escapeHtml(scopeMeta.eyebrow)}</div><h2>${escapeHtml(scopeMeta.title)}</h2><p>${escapeHtml(scopeMeta.description)}</p></div></div>
 
       <div class="quick-filters" id="quickFilters">
         <button type="button" class="quick-filter" data-quick="all">All</button>
@@ -3643,7 +3820,6 @@ function wireShimmer(container){
         <button type="button" class="quick-filter" data-quick="sealed">Sealed</button>
         <button type="button" class="quick-filter" data-quick="championship">Championship</button>
         <button type="button" class="quick-filter" data-quick="vintage">Vintage</button>
-        <button type="button" class="quick-filter" data-quick="sold">Sold</button>
       </div>
 
       <div class="pill-filter-summary" id="pillFilterSummary" hidden></div>
@@ -3670,11 +3846,11 @@ function wireShimmer(container){
   <div class="overview-select-menu" id="filterEraMenu" hidden></div>
   <input type="hidden" id="filterEra" value="">
 </div>
-        <div class="overview-select" id="filterAvailabilityWrap">
+        ${listingAvailabilityScope === "inventory" ? `<div class="overview-select" id="filterAvailabilityWrap">
   <button type="button" class="overview-select-btn" id="filterAvailabilityBtn"><span>All Availability</span><i></i></button>
   <div class="overview-select-menu" id="filterAvailabilityMenu" hidden></div>
   <input type="hidden" id="filterAvailability" value="">
-</div>
+</div>` : `<input type="hidden" id="filterAvailability" value="">`}
         <div class="overview-select" id="filterSeriesWrap">
   <button type="button" class="overview-select-btn" id="filterSeriesBtn"><span>All Series</span><i></i></button>
   <div class="overview-select-menu" id="filterSeriesMenu" hidden></div>
@@ -3691,7 +3867,8 @@ function wireShimmer(container){
       <div id="invGrid"></div>
     `;
 
-    const games = Array.from(new Set(cards.map(c=>c.game).filter(Boolean))).sort();
+    const scopedCards = cards.filter(c=>cardMatchesListingScope(c, listingAvailabilityScope));
+    const games = Array.from(new Set(scopedCards.map(c=>c.game).filter(Boolean))).sort();
     const languages = ["JP","ENG","KR","CN"].filter(lang=>cards.some(c=>c.language===lang));
     const eras = ERA_OPTIONS.filter(era=>cards.some(c=>c.era===era));
     const series = Array.from(new Set(cards.map(c=>c.series).filter(Boolean))).sort();
@@ -3777,10 +3954,15 @@ function wireShimmer(container){
       {value:"",label:"All Eras"},
       ...eras.map(e=>({value:e,label:e}))
     ]);
-    setupOverviewSelect("filterAvailability", [
-      {value:"",label:"All Availability"},
-      ...AVAILABILITY_OPTIONS.map(v=>({value:v,label:v}))
-    ]);
+    if($("filterAvailabilityWrap")){
+      const availabilityOptions = listingAvailabilityScope === "inventory"
+        ? AVAILABILITY_OPTIONS.filter(v=>!["Reserved","Sold"].includes(v))
+        : [];
+      setupOverviewSelect("filterAvailability", [
+        {value:"",label:"All Availability"},
+        ...availabilityOptions.map(v=>({value:v,label:v}))
+      ]);
+    }
     setupOverviewSelect("filterSeries", [
       {value:"",label:"All Series"},
       ...series.map(s=>({value:s,label:s}))
@@ -3799,7 +3981,12 @@ function wireShimmer(container){
       }
       const list = getFiltered();
       if(list.length === 0){
-        grid.innerHTML = `<div style="color:var(--text-muted); padding:30px 0; text-align:center; font-size:13.5px;">No cards match your filters.</div>`;
+        const emptyText = listingAvailabilityScope === "reserved"
+          ? "There are currently no reserved cards."
+          : (listingAvailabilityScope === "sold"
+              ? "There are currently no sold cards."
+              : "No cards match your filters.");
+        grid.innerHTML = `<div style="color:var(--text-muted); padding:30px 0; text-align:center; font-size:13.5px;">${emptyText}</div>`;
         return;
       }
       grid.className = "grid";
