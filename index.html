@@ -2068,7 +2068,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function loadCards(){
-    const publicColumns = "id,name,game,set_name,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,images,grading,created_at,updated_at";
+    const publicColumns = "id,name,game,set_name,series,format,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,images,grading,created_at,updated_at";
     const columns = isOwnerMode() ? "*" : publicColumns;
 
     const { data, error } = await supabaseClient
