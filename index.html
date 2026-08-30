@@ -3303,6 +3303,66 @@
     box-shadow:0 0 0 1px rgba(95,212,196,.08);
   }
 
+
+  /* ===== Mobile scroll boundary fix =====
+     Use a viewport-bounded scroll container on phones so Safari/Chrome cannot
+     create a very large blank document area after the final section. */
+  @media(max-width:800px){
+    html{
+      height:100%;
+      min-height:100%;
+      overflow:hidden !important;
+      overscroll-behavior-y:none;
+    }
+
+    body{
+      height:100%;
+      min-height:100%;
+      overflow:hidden !important;
+      overscroll-behavior-y:none;
+    }
+
+    .shell{
+      height:100vh !important;          /* fallback */
+      height:100dvh !important;         /* modern mobile browser viewport */
+      min-height:0 !important;
+      max-height:100dvh !important;
+      overflow-x:hidden !important;
+      overflow-y:auto !important;
+      overscroll-behavior-y:contain;
+      -webkit-overflow-scrolling:touch;
+      position:relative;
+    }
+
+    .main{
+      min-height:0 !important;
+      height:auto !important;
+      padding-bottom:32px !important;
+    }
+
+    #view{
+      min-height:0 !important;
+      height:auto !important;
+    }
+
+    /* Never let the final Home section manufacture extra page height. */
+    .home-shipping,
+    .home-section:last-child{
+      margin-bottom:0 !important;
+      padding-bottom:0 !important;
+    }
+  }
+
+  /* Older iOS versions without dynamic viewport units. */
+  @supports not (height:100dvh){
+    @media(max-width:800px){
+      .shell{
+        height:-webkit-fill-available !important;
+        max-height:-webkit-fill-available !important;
+      }
+    }
+  }
+
 </style>
 </head>
 <body>
