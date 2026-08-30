@@ -5560,7 +5560,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           ? (CONDITION_LABEL[c.condition] || c.condition || "")
           : (format === "Sealed" ? "Sealed" : "");
 
-        if(!hasGrade && conditionLabel !== gradeF) return false;
+        const normalizedGradeF = String(gradeF).trim().toLowerCase();
+        const normalizedCondition = String(conditionLabel).trim().toLowerCase();
+
+        const hasNormalizedGrade = Array.isArray(c.grading) && c.grading.some(g=>{
+          if(!g || !g.company) return false;
+          const key = `${String(g.company).trim().toUpperCase()} ${String(g.grade ?? "").trim()}`.trim();
+          return key.toLowerCase() === normalizedGradeF;
+        });
+
+        if(!hasNormalizedGrade && normalizedCondition !== normalizedGradeF) return false;
       }
       if(languageF && (c.language || "") !== languageF) return false;
       if(eraF && (c.era || "") !== eraF) return false;
@@ -5581,7 +5590,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           cardGrades.add("Sealed");
         }
 
-        if(!Array.from(pillFilterState.grade).some(v=>cardGrades.has(v))) return false;
+        const normalizedCardGrades = new Set(
+          Array.from(cardGrades).map(v=>String(v).trim().toLowerCase())
+        );
+        const matchesSelectedGrade = Array.from(pillFilterState.grade)
+          .some(v=>normalizedCardGrades.has(String(v).trim().toLowerCase()));
+
+        if(!matchesSelectedGrade) return false;
       }
       if(pillFilterState.language.size && !pillFilterState.language.has(c.language || "")) return false;
       if(pillFilterState.era.size && !pillFilterState.era.has(c.era || "")) return false;
@@ -5616,7 +5631,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const grades = Array.isArray(c.grading) ? c.grading.filter(g=>g && g.company) : [];
     const gradeText = grades.length
       ? `${grades[0].company} ${grades[0].grade || ""}`.trim()
-      : (format === "Sealed" ? "SEALED" : (CONDITION_LABEL[c.condition] || c.condition || "—"));
+      : (format === "Sealed" ? "Sealed" : (CONDITION_LABEL[c.condition] || c.condition || "—"));
     const seriesText = c.series || "";
     return `
       <div class="card ${shimmer ? "shimmer" : ""}" style="--stripe:${color}" data-shimmer="${shimmer}" data-card-id="${escapeHtml(c.id)}" tabindex="0" role="button" aria-label="View details for ${escapeHtml(c.name)}">
