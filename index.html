@@ -4116,6 +4116,22 @@
     }
   }
 
+
+  .giveaway-image-preview{
+    width:180px;
+    aspect-ratio:4/3;
+    border-radius:10px;
+    overflow:hidden;
+    border:1px solid var(--border);
+    background:var(--surface-2);
+  }
+  .giveaway-image-preview img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+
 </style>
 </head>
 <body>
@@ -4216,19 +4232,12 @@
     </div>
 
     <div class="field">
-      <label for="giveawayImage">Image URL</label>
-      <input id="giveawayImage" placeholder="https://...">
-      <div class="hint">For now, use an image URL. We can connect this to Supabase Storage later.</div>
+      <label for="giveawayImageFile">Giveaway image</label>
+      <input id="giveawayImageFile" type="file" accept="image/*">
+      <input id="giveawayImage" type="hidden">
+      <div id="giveawayImagePreview" style="margin-top:8px;"></div>
+      <div class="hint">Choose an image from your device. The image will be uploaded to Supabase Storage.</div>
     </div>
-
-    <div class="field-row">
-      <div class="field">
-        <label for="giveawayStatus">Status</label>
-        <select id="giveawayStatus">
-          <option value="active">Active</option>
-          <option value="closed">Closed</option>
-        </select>
-      </div>
       <div class="field">
         <label for="giveawayEndsAt">End date/time</label>
         <input id="giveawayEndsAt" type="datetime-local">
@@ -5973,6 +5982,46 @@ function wireShimmer(container){
     return d.toLocaleString();
   }
 
+  async function uploadGiveawayImage(file){
+    if(!file) return null;
+    if(!isOwnerMode()){
+      showToast("Owner login required");
+      return null;
+    }
+
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const safeExt = ["jpg","jpeg","png","webp","gif"].includes(ext) ? ext : "jpg";
+    const path = `${ownerSession.user.id}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${safeExt}`;
+
+    const { error: uploadError } = await supabaseClient.storage
+      .from("giveaway-images")
+      .upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type || undefined
+      });
+
+    if(uploadError){
+      console.error("Giveaway image upload error:", uploadError);
+      showToast("Could not upload giveaway image");
+      return null;
+    }
+
+    const { data } = supabaseClient.storage
+      .from("giveaway-images")
+      .getPublicUrl(path);
+
+    return data?.publicUrl || null;
+  }
+
+  function renderGiveawayImagePreview(url){
+    const mount = $("giveawayImagePreview");
+    if(!mount) return;
+    mount.innerHTML = url
+      ? `<div class="showcase-thumb-preview"><img src="${escapeHtml(url)}" alt="Giveaway image preview"></div>`
+      : "";
+  }
+
   async function uploadShowcaseThumbnail(file){
     if(!file) return null;
     if(!isOwnerMode()){
@@ -6399,6 +6448,16 @@ function wireShimmer(container){
   }
 
   $("giveawayCancelBtn").addEventListener("click", closeGiveawayForm);
+
+  $("giveawayImageFile").addEventListener("change", ()=>{
+    const file = $("giveawayImageFile").files?.[0];
+    if(!file){
+      renderGiveawayImagePreview($("giveawayImage").value);
+      return;
+    }
+    renderGiveawayImagePreview(URL.createObjectURL(file));
+  });
+
   giveawayOverlay.addEventListener("click", e=>{
     if(e.target === giveawayOverlay) closeGiveawayForm();
   });
@@ -6410,10 +6469,21 @@ function wireShimmer(container){
     const id = $("giveawayId").value || null;
     const endsValue = $("giveawayEndsAt").value;
 
+    if(!isOwnerMode()){ showToast("Owner login required"); return; }
+
+    let giveawayImageUrl = $("giveawayImage").value.trim();
+    const giveawayImageFile = $("giveawayImageFile").files?.[0];
+    if(giveawayImageFile){
+      showToast("Uploading giveaway image…");
+      const uploaded = await uploadGiveawayImage(giveawayImageFile);
+      if(!uploaded) return;
+      giveawayImageUrl = uploaded;
+    }
+
     const payload = {
       title: $("giveawayTitle").value.trim(),
       card_name: $("giveawayCardName").value.trim(),
-      image_url: $("giveawayImage").value.trim(),
+      image_url: giveawayImageUrl,
       status: $("giveawayStatus").value,
       ends_at: endsValue ? new Date(endsValue).toISOString() : null,
       how_to_enter: $("giveawayHowToEnter").value.trim(),
