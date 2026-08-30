@@ -3978,7 +3978,7 @@
       </div>
       <div class="field">
         <label for="showcaseSeries">Series / Collection (optional)</label>
-        <input id="showcaseSeries" placeholder="e.g. One Piece Vintage, Hyper Battle">
+        <input id="showcaseSeries" placeholder="e.g. Vintages, Hyper Battle">
       </div>
     </div>
 
@@ -4589,7 +4589,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     "Magic: The Gathering",
     "Yu-Gi-Oh!",
     "One Piece Card Game",
-    "One Piece Vintage",
+    "Vintages",
     "Digimon",
     "Disney Lorcana",
     "Flesh and Blood"
@@ -5109,8 +5109,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
           <button type="button" class="home-feature" data-home-filter="vintage">
             <div class="kicker">Classic</div>
-            <div class="title">One Piece Vintage</div>
-            <div class="desc">Older One Piece collectibles including Hyper Battle, Visual Adventure and related vintage releases.</div>
+            <div class="title">Vintages</div>
+            <div class="desc">Older collectible cards and releases from past eras, including classic and hard-to-find series.</div>
           </button>
 
           <button type="button" class="home-feature" data-home-filter="graded">
@@ -5260,7 +5260,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(activeQuickFilter === "championship" && !isChampionshipSeries(c.series)) return false;
       if(activeQuickFilter === "vintage" && !(
         c.era === "Vintage" ||
-        c.game === "One Piece Vintage" ||
+        c.game === "Vintages" ||
         (c.series || "").toLowerCase().includes("vintage")
       )) return false;
       return true;
