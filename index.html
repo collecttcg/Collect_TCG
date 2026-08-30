@@ -1969,6 +1969,125 @@
     }
   }
 
+
+/* ===== Mobile navigation cleanup ===== */
+@media(max-width:800px){
+  nav.mainnav{
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:7px !important;
+    align-items:stretch !important;
+  }
+
+  /* Keep only the four most useful destinations visible on mobile. */
+  nav.mainnav > a[data-route="home"],
+  nav.mainnav > a[data-route="inventory"],
+  nav.mainnav > a[data-route="reserved"],
+  nav.mainnav > a[data-route="sold"]{
+    display:flex !important;
+    min-width:0 !important;
+    min-height:46px !important;
+    padding:9px 10px !important;
+    justify-content:flex-start !important;
+    align-items:center !important;
+    gap:8px !important;
+    border-radius:11px !important;
+    font-size:13px !important;
+  }
+
+  /* Secondary destinations are available through More instead. */
+  nav.mainnav > a[data-route="showcase"],
+  nav.mainnav > a[data-route="favorites"],
+  nav.mainnav > a[data-route="giveaway"],
+  nav.mainnav > a[data-route="about"],
+  nav.mainnav > a[data-route="contact"]{
+    display:none !important;
+  }
+
+  .mobile-more-toggle{
+    display:flex !important;
+    grid-column:1 / -1 !important;
+    width:100% !important;
+    min-height:42px !important;
+    padding:8px 12px !important;
+    justify-content:center !important;
+    align-items:center !important;
+    gap:7px !important;
+    border-radius:11px !important;
+    border:1px solid var(--border) !important;
+    background:var(--panel) !important;
+    color:var(--text-muted) !important;
+    font:inherit !important;
+    font-size:12px !important;
+    font-weight:800 !important;
+    box-shadow:none !important;
+    appearance:none !important;
+    -webkit-appearance:none !important;
+  }
+
+  .mobile-more-toggle:hover,
+  .mobile-more-toggle:focus{
+    background:var(--panel-2) !important;
+    color:var(--text) !important;
+  }
+
+  .mobile-more-toggle.active{
+    color:var(--text) !important;
+    border-color:rgba(255,255,255,.16) !important;
+  }
+
+  .mobile-more-caret{
+    font-size:10px !important;
+    line-height:1 !important;
+  }
+
+  .nav-count{
+    margin-left:auto !important;
+  }
+
+  /* More dropdown: clean two-column menu instead of exposing everything in main nav. */
+  .mobile-more-menu{
+    grid-column:1 / -1 !important;
+    width:100% !important;
+    margin-top:0 !important;
+    padding:8px !important;
+    border:1px solid var(--border) !important;
+    border-radius:12px !important;
+    background:var(--panel) !important;
+    box-shadow:0 12px 30px rgba(0,0,0,.28) !important;
+  }
+
+  .mobile-more-menu:not([hidden]){
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:5px !important;
+  }
+
+  .mobile-more-menu a{
+    min-height:40px !important;
+    padding:8px 10px !important;
+    display:flex !important;
+    align-items:center !important;
+    gap:7px !important;
+    border-radius:9px !important;
+    font-size:12px !important;
+  }
+}
+
+@media(max-width:380px){
+  nav.mainnav > a[data-route="home"],
+  nav.mainnav > a[data-route="inventory"],
+  nav.mainnav > a[data-route="reserved"],
+  nav.mainnav > a[data-route="sold"]{
+    font-size:12px !important;
+    padding:8px !important;
+  }
+
+  .mobile-more-menu:not([hidden]){
+    grid-template-columns:1fr !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -2001,7 +2120,8 @@
         <a href="#/giveaway" data-route="giveaway"><span class="ic">★</span> Giveaway</a>
         <a href="#/about" data-route="about"><span class="ic">◎</span> About Us</a>
         <a href="#/contact" data-route="contact"><span class="ic">✉</span> Contact</a>
-      </div>
+      
+        <a href="#/showcase" data-route="showcase"><span class="ic">▶</span> Showcase</a></div>
       <a href="#/favorites" data-route="favorites" class="mobile-secondary-nav"><span class="ic">♡</span> Favorites</a>
       <a href="#/giveaway" data-route="giveaway" class="mobile-secondary-nav"><span class="ic">★</span> Giveaway</a>
       <a href="#/insights" data-route="insights" class="owner-only"><span class="ic">◔</span> Insights</a>
@@ -2800,7 +2920,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     });
     const moreToggle = $("mobileMoreToggle");
     if(moreToggle){
-      moreToggle.classList.toggle("active", ["favorites","giveaway","about","contact"].includes(route));
+      moreToggle.classList.toggle("active", ["showcase","favorites","giveaway","about","contact"].includes(route));
     }
     const moreMenu = $("mobileMoreMenu");
     if(moreMenu){
