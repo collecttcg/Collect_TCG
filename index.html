@@ -3971,6 +3971,15 @@
     display:flex !important;
   }
 
+
+  /* Detail modal: Edit is never visible to public viewers */
+  #detailsEditBtn{
+    display:none !important;
+  }
+  body.owner-mode #detailsEditBtn{
+    display:inline-flex !important;
+  }
+
 </style>
 </head>
 <body>
@@ -4037,7 +4046,7 @@
   <div class="modal card-details-modal" id="detailsModal" role="dialog" aria-modal="true" aria-labelledby="detailsTitle">
     <div class="details-top-actions">
       <button type="button" id="detailsCloseBtn">Close</button>
-      <button type="button" class="btn-primary owner-only" id="detailsEditBtn">Edit card</button>
+      <button type="button" class="btn-primary owner-only" id="detailsEditBtn" hidden>Edit card</button>
     </div>
     <div id="detailsMount"></div>
   </div>
@@ -4226,6 +4235,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     document.body.classList.toggle("owner-mode", isOwnerMode());
     const b = $("ownerToggle");
     if(b) b.textContent = isOwnerMode() ? "Owner logout" : "Owner login";
+
+    const detailsEditBtn = $("detailsEditBtn");
+    if(detailsEditBtn){
+      detailsEditBtn.hidden = !isOwnerMode();
+      detailsEditBtn.style.display = isOwnerMode() ? "inline-flex" : "none";
+    }
   }
 
   async function refreshOwnerSession(){
