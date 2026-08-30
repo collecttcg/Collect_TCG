@@ -2883,6 +2883,28 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return "Raw";
   }
 
+  function isChampionshipSeries(series){
+    const s = String(series || "")
+      .toLowerCase()
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if(!s) return false;
+
+    // Explicit championship-style wording.
+    if(/\bchampion(ship)?s?\b/.test(s)) return true;
+
+    // Competitive "Cup" naming is common across tournament prize cards:
+    // Treasure Cup, 3on3 Cup, 2on2 Cup, Online Cup, Regional Cup, etc.
+    if(/\bcup\b/.test(s)) return true;
+
+    // Other clearly tournament-oriented series names.
+    if(/\b(regional|nationals?|worlds?|tournament|finalist)\b/.test(s)) return true;
+
+    return false;
+  }
+
   function getFiltered(){
     const q = ($("search") && $("search").value.trim().toLowerCase()) || "";
     const gameF = ($("filterGame") && $("filterGame").value) || "";
@@ -2900,10 +2922,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(activeQuickFilter === "graded" && format !== "Graded") return false;
       if(activeQuickFilter === "raw" && format !== "Raw") return false;
       if(activeQuickFilter === "sealed" && format !== "Sealed") return false;
-      if(activeQuickFilter === "championship"){
-        const s = (c.series || "").toLowerCase();
-        if(!(s.includes("championship") || s.includes("champion") || s.includes("treasure cup"))) return false;
-      }
+      if(activeQuickFilter === "championship" && !isChampionshipSeries(c.series)) return false;
       if(activeQuickFilter === "vintage" && !(c.game === "One Piece Vintage" || (c.series || "").toLowerCase().includes("vintage"))) return false;
       return true;
     });
