@@ -2353,6 +2353,22 @@
     box-sizing:border-box;
   }
 
+
+  .showcase-thumb-preview{
+    width:180px;
+    aspect-ratio:16/9;
+    border-radius:10px;
+    overflow:hidden;
+    border:1px solid var(--border);
+    background:var(--bg);
+  }
+  .showcase-thumb-preview img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+
 </style>
 </head>
 <body>
@@ -2505,9 +2521,11 @@
     </div>
 
     <div class="field">
-      <label for="showcaseThumbnail">Thumbnail URL (optional)</label>
-      <input id="showcaseThumbnail" placeholder="https://...">
-      <div class="hint">Recommended. This image becomes the video preview in your Showcase. If left blank, a clean Facebook video placeholder is shown.</div>
+      <label for="showcaseThumbnailFile">Thumbnail image (optional)</label>
+      <input id="showcaseThumbnailFile" type="file" accept="image/*">
+      <input id="showcaseThumbnail" type="hidden">
+      <div id="showcaseThumbnailPreview" style="margin-top:8px;"></div>
+      <div class="hint">Upload a thumbnail image from your device. It will be stored in Supabase Storage.</div>
     </div>
 
     <div class="field">
@@ -3965,6 +3983,46 @@ function wireShimmer(container){
     return d.toLocaleString();
   }
 
+  async function uploadShowcaseThumbnail(file){
+    if(!file) return null;
+    if(!isOwnerMode()){
+      showToast("Owner login required");
+      return null;
+    }
+
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const safeExt = ["jpg","jpeg","png","webp","gif"].includes(ext) ? ext : "jpg";
+    const path = `${ownerSession.user.id}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${safeExt}`;
+
+    const { error: uploadError } = await supabaseClient.storage
+      .from("showcase-thumbnails")
+      .upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type || undefined
+      });
+
+    if(uploadError){
+      console.error("Thumbnail upload error:", uploadError);
+      showToast("Could not upload thumbnail");
+      return null;
+    }
+
+    const { data } = supabaseClient.storage
+      .from("showcase-thumbnails")
+      .getPublicUrl(path);
+
+    return data?.publicUrl || null;
+  }
+
+  function renderShowcaseThumbnailPreview(url){
+    const mount = $("showcaseThumbnailPreview");
+    if(!mount) return;
+    mount.innerHTML = url
+      ? `<div class="showcase-thumb-preview"><img src="${escapeHtml(url)}" alt="Thumbnail preview"></div>`
+      : "";
+  }
+
   // ---------------- Showcase ----------------
   function cleanFacebookVideoUrl(url){
     try{
@@ -4169,6 +4227,8 @@ function wireShimmer(container){
     $("showcaseSeries").value = v ? v.series : "";
     $("showcaseVideoUrl").value = v ? v.video_url : "";
     $("showcaseThumbnail").value = v ? v.thumbnail_url : "";
+    $("showcaseThumbnailFile").value = "";
+    renderShowcaseThumbnailPreview(v ? v.thumbnail_url : "");
     $("showcaseDescription").value = v ? v.description : "";
     $("showcaseSortOrder").value = v ? v.sort_order : 0;
     $("showcaseFeatured").checked = v ? !!v.featured : false;
@@ -4182,6 +4242,17 @@ function wireShimmer(container){
   }
 
   $("showcaseCancelBtn").addEventListener("click", closeShowcaseForm);
+
+  $("showcaseThumbnailFile").addEventListener("change", ()=>{
+    const file = $("showcaseThumbnailFile").files?.[0];
+    if(!file){
+      renderShowcaseThumbnailPreview($("showcaseThumbnail").value);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    renderShowcaseThumbnailPreview(objectUrl);
+  });
+
   showcaseOverlay.addEventListener("click", e=>{
     if(e.target === showcaseOverlay) closeShowcaseForm();
   });
@@ -4191,11 +4262,22 @@ function wireShimmer(container){
     if(!isOwnerMode()){ showToast("Owner login required"); return; }
 
     const id = $("showcaseId").value || null;
+
+    let thumbnailUrl = $("showcaseThumbnail").value.trim();
+    const thumbnailFile = $("showcaseThumbnailFile").files?.[0];
+
+    if(thumbnailFile){
+      showToast("Uploading thumbnail…");
+      const uploaded = await uploadShowcaseThumbnail(thumbnailFile);
+      if(!uploaded) return;
+      thumbnailUrl = uploaded;
+    }
+
     const payload = {
       title: $("showcaseTitle").value.trim(),
       series: $("showcaseSeries").value.trim(),
       video_url: $("showcaseVideoUrl").value.trim(),
-      thumbnail_url: $("showcaseThumbnail").value.trim(),
+      thumbnail_url: thumbnailUrl,
       description: $("showcaseDescription").value.trim(),
       sort_order: parseInt($("showcaseSortOrder").value || "0",10) || 0,
       featured: $("showcaseFeatured").checked
