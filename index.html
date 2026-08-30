@@ -2759,6 +2759,19 @@
     }
   }
 
+  /* Recently Viewed */
+  .recently-viewed-grid,.home-recent-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;}
+  .home-recent-section{margin-top:24px;}
+  .home-section-link{color:var(--accent-teal);font-size:11px;font-weight:800;text-decoration:none;white-space:nowrap;}
+  .home-section-link:hover{text-decoration:underline;}
+  .recent-empty-state{min-height:260px;}
+  @media(max-width:1100px){.recently-viewed-grid,.home-recent-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+  @media(max-width:700px){
+    .recently-viewed-grid,.home-recent-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;}
+    .home-recent-section{margin-top:18px;}
+    .recent-clear-btn{width:auto !important;min-height:38px !important;padding:8px 11px !important;font-size:10px !important;}
+  }
+
 </style>
 </head>
 <body>
@@ -2792,7 +2805,8 @@
         <a href="#/about" data-route="about"><span class="ic">◎</span> About Us</a>
         <a href="#/contact" data-route="contact"><span class="ic">✉</span> Contact</a>
       
-        <a href="#/showcase" data-route="showcase"><span class="ic">▶</span> Showcase</a></div>
+        <a href="#/showcase" data-route="showcase"><span class="ic">▶</span> Showcase</a>
+        <a href="#/recent" data-route="recent"><span class="ic">↻</span> Recently Viewed</a></div>
       <a href="#/favorites" data-route="favorites" class="mobile-secondary-nav"><span class="ic">♡</span> Favorites</a>
       <a href="#/giveaway" data-route="giveaway" class="mobile-secondary-nav"><span class="ic">★</span> Giveaway</a>
       <a href="#/insights" data-route="insights" class="owner-only"><span class="ic">◔</span> Insights</a>
@@ -3003,6 +3017,32 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   const AVAILABILITY_OPTIONS = ["Available","Reserved","Sold","Collection (NFS)"];
   const RARITY_LIST = ["Common","Uncommon","Rare","Rare Holo","Ultra Rare","Secret Rare","Promo"];
   const INDEX_KEY = "card-index";
+  const RECENTLY_VIEWED_KEY = "collect_tcg_recently_viewed_v1";
+  const RECENTLY_VIEWED_LIMIT = 12;
+  function safeCardId(value){
+    const id=String(value||"").trim();
+    return /^[0-9a-fA-F-]{20,40}$/.test(id) ? id : "";
+  }
+  function getRecentlyViewedIds(){
+    try{
+      const parsed=JSON.parse(localStorage.getItem(RECENTLY_VIEWED_KEY)||"[]");
+      if(!Array.isArray(parsed)) return [];
+      return [...new Set(parsed.map(safeCardId).filter(Boolean))].slice(0,RECENTLY_VIEWED_LIMIT);
+    }catch{return [];}
+  }
+  function rememberRecentlyViewed(cardId){
+    const id=safeCardId(cardId); if(!id) return;
+    try{
+      const ids=getRecentlyViewedIds().filter(x=>x!==id);
+      ids.unshift(id);
+      localStorage.setItem(RECENTLY_VIEWED_KEY,JSON.stringify(ids.slice(0,RECENTLY_VIEWED_LIMIT)));
+    }catch{}
+  }
+  function getRecentlyViewedCards(){
+    const byId=new Map(cards.map(c=>[String(c.id),c]));
+    return getRecentlyViewedIds().map(id=>byId.get(id)).filter(Boolean);
+  }
+
   const FAVORITES_KEY = "collect-tcg-favorites";
 
   function getFavoriteIds(){
@@ -3611,7 +3651,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     });
     const moreToggle = $("mobileMoreToggle");
     if(moreToggle){
-      moreToggle.classList.toggle("active", ["showcase","favorites","giveaway","about","contact"].includes(route));
+      moreToggle.classList.toggle("active", ["showcase","favorites","giveaway","recent","about","contact"].includes(route));
     }
     const moreMenu = $("mobileMoreMenu");
     if(moreMenu){
@@ -3637,6 +3677,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     else if(route === "inventory") renderInventoryPage("inventory");
     else if(route === "reserved") renderInventoryPage("reserved");
     else if(route === "sold") renderInventoryPage("sold");
+    else if(route === "recent") renderRecentlyViewedPage();
     else if(route === "favorites") renderFavoritesPage();
     else if(route === "by-game"){
       if(isOwnerMode()) renderByGamePage();
@@ -4251,6 +4292,26 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   // ---------------- Favorites / Shortlist ----------------
+  function renderRecentlyViewedPage(){
+    const recent=getRecentlyViewedCards();
+    view.innerHTML=`
+      <div class="page-head">
+        <div><div class="eyebrow">Your Browser</div><h2>Recently Viewed</h2>
+        <p>Your last ${RECENTLY_VIEWED_LIMIT} viewed cards are stored only on this device.</p></div>
+        ${recent.length?`<button class="btn-secondary recent-clear-btn" id="clearRecentlyViewed" type="button">Clear History</button>`:""}
+      </div>
+      ${recent.length?`<div class="recently-viewed-grid">${recent.map(cardTileHTML).join("")}</div>`:
+      `<div class="empty-state recent-empty-state"><div class="empty-icon">↻</div>
+       <h3>No recently viewed cards yet</h3><p>Cards you open will appear here automatically on this device.</p>
+       <a class="btn-primary" href="#/inventory">Browse Inventory</a></div>`}
+    `;
+    document.getElementById("clearRecentlyViewed")?.addEventListener("click",()=>{
+      try{localStorage.removeItem(RECENTLY_VIEWED_KEY);}catch{}
+      renderRecentlyViewedPage();
+    });
+    wireCardTiles(view);
+  }
+
   function renderFavoritesPage(){
     const list = favoriteCards();
 
@@ -4359,6 +4420,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             </div>
           </section>
         `;
+      })()}
+
+      ${(()=>{
+        const recent=getRecentlyViewedCards().slice(0,4);
+        return recent.length?`
+          <section class="home-section home-recent-section">
+            <div class="home-section-head">
+              <div><h3>Recently Viewed</h3><p>Continue browsing where you left off.</p></div>
+              <a href="#/recent" class="home-section-link">View All</a>
+            </div>
+            <div class="home-recent-grid">${recent.map(cardTileHTML).join("")}</div>
+          </section>`:"";
       })()}
 
       <section class="home-section">
@@ -6004,6 +6077,7 @@ function wireShimmer(container){
   }
 
   function openDetailsModal(card){
+    rememberRecentlyViewed(card && card.id);
     detailsCardId = card.id;
     recordCardViewEvent(card);
     const images = getImages(card);
