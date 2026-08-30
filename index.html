@@ -4416,20 +4416,6 @@ function wireShimmer(container){
     if(!card) return;
 
     const url = getCardShareUrl(card.id);
-    const shareData = {
-      title: card.name || "Collect TCG card",
-      text: card.name ? `View ${card.name}${card.card_code ? ` (${card.card_code})` : ""} on Collect TCG MY & SG` : "View this card on Collect TCG MY & SG",
-      url
-    };
-
-    if(navigator.share){
-      try{
-        await navigator.share(shareData);
-        return;
-      }catch(err){
-        if(err && err.name === "AbortError") return;
-      }
-    }
 
     try{
       await navigator.clipboard.writeText(url);
