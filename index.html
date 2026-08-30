@@ -3492,7 +3492,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         grade: g.grade || "",
         cert: g.cert || ""
       })) : [],
-      ...(soldAtSupported ? { sold_at: card.sold_at || null } : {})
+      ...(soldAtSupported &&
+          normalizeFilterValue(card.availability || "") === "sold" &&
+          card.sold_at
+        ? { sold_at: card.sold_at }
+        : {})
     };
   }
 
@@ -3530,35 +3534,68 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   async function createCardStorage(card){
     if(!requireOwner("createCard")) return false;
-    const { data, error } = await supabaseClient
+
+    const payload = cardToDb(card);
+    let result = await supabaseClient
       .from("cards")
-      .insert(cardToDb(card))
+      .insert(payload)
       .select()
       .single();
 
-    if(error){
-      console.error("Create card error:", error);
-      showToast("Could not save card");
+    // sold_at is an optional enhancement. It must never prevent the owner
+    // from creating an otherwise valid card.
+    if(result.error && Object.prototype.hasOwnProperty.call(payload, "sold_at")){
+      const message = `${result.error.message || ""} ${result.error.details || ""}`.toLowerCase();
+      if(message.includes("sold_at") || message.includes("permission") || message.includes("column")){
+        const retryPayload = {...payload};
+        delete retryPayload.sold_at;
+        result = await supabaseClient
+          .from("cards")
+          .insert(retryPayload)
+          .select()
+          .single();
+      }
+    }
+
+    if(result.error){
+      console.error("Create card error:", result.error);
+      showToast("Could not save card. Check the required fields and try again.");
       return null;
     }
-    return dbToCard(data);
+    return dbToCard(result.data);
   }
 
   async function updateCardStorage(card){
     if(!requireOwner("updateCard")) return false;
-    const { data, error } = await supabaseClient
+
+    const payload = cardToDb(card);
+    let result = await supabaseClient
       .from("cards")
-      .update(cardToDb(card))
+      .update(payload)
       .eq("id", card.id)
       .select()
       .single();
 
-    if(error){
-      console.error("Update card error:", error);
-      showToast("Could not update card");
+    if(result.error && Object.prototype.hasOwnProperty.call(payload, "sold_at")){
+      const message = `${result.error.message || ""} ${result.error.details || ""}`.toLowerCase();
+      if(message.includes("sold_at") || message.includes("permission") || message.includes("column")){
+        const retryPayload = {...payload};
+        delete retryPayload.sold_at;
+        result = await supabaseClient
+          .from("cards")
+          .update(retryPayload)
+          .eq("id", card.id)
+          .select()
+          .single();
+      }
+    }
+
+    if(result.error){
+      console.error("Update card error:", result.error);
+      showToast("Could not update card. Check the required fields and try again.");
       return null;
     }
-    return dbToCard(data);
+    return dbToCard(result.data);
   }
 
   async function saveIndex(){ return true; }
@@ -4017,7 +4054,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   // ---------------- Image helpers ----------------
   const CARD_WATERMARK_LOGO = "collect-tcg-logo.png";
   const CARD_IMAGE_MAX_BYTES = 20 * 1024 * 1024;
-  const CARD_IMAGE_TYPES = new Set(["image/jpeg","image/png","image/webp"]);
+  const CARD_IMAGE_TYPES = new Set([
+    "image/jpeg","image/png","image/webp","image/avif","image/heic","image/heif"
+  ]);
   let watermarkLogoPromise = null;
 
   function loadWatermarkLogo(){
@@ -4095,7 +4134,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   async function resizeImageFile(file, maxDim, quality){
     if(!file) throw new Error("no file");
-    if(!CARD_IMAGE_TYPES.has(file.type)) throw new Error("unsupported image type");
+    const mime = String(file.type || "").toLowerCase();
+    if(mime === "image/svg+xml") throw new Error("unsupported image type");
+    if(mime && !mime.startsWith("image/")) throw new Error("unsupported image type");
     if(file.size > CARD_IMAGE_MAX_BYTES) throw new Error("image too large");
 
     const dataUrl = await new Promise((resolve,reject)=>{
@@ -4129,7 +4170,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(!response.ok) throw new Error("image fetch failed");
 
     const contentType = String(response.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
-    if(!CARD_IMAGE_TYPES.has(contentType)) throw new Error("unsupported image type");
+    if(contentType === "image/svg+xml") throw new Error("unsupported image type");
+    if(contentType && !contentType.startsWith("image/") && contentType !== "application/octet-stream"){
+      throw new Error("unsupported image type");
+    }
 
     const blob = await response.blob();
     if(blob.size > CARD_IMAGE_MAX_BYTES) throw new Error("image too large");
@@ -4274,7 +4318,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       <div class="image-field">
         <div class="image-gallery-preview" id="${p}ImageGalleryPreview"></div>
         <div class="image-controls">
-          <input type="file" id="${p}ImageFile" accept="image/jpeg,image/png,image/webp" multiple>
+          <input type="file" id="${p}ImageFile" accept="image/*" multiple>
           <div class="image-url-row">
             <input type="text" id="${p}ImageUrl" placeholder="Paste an image URL, then click Add URL">
             <button type="button" class="btn-ghost" id="${p}AddImageUrl">Add URL</button>
@@ -4504,6 +4548,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       const files = Array.from(fileInput.files || []);
       if(!files.length) return;
 
+      formState.processingImages = Number(formState.processingImages || 0) + files.length;
       fileInput.disabled = true;
       try{
         for(const file of files){
@@ -4518,10 +4563,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           String(e?.message || "").includes("too large")
             ? "Image is too large. Maximum size is 20 MB."
             : String(e?.message || "").includes("unsupported")
-              ? "Use JPG, PNG, or WebP images."
-              : "Could not process an image or load the watermark logo."
+              ? "That image format is not supported by this browser."
+              : "Could not process the image or load the watermark logo."
         );
       }finally{
+        formState.processingImages = Math.max(0, Number(formState.processingImages || 0) - files.length);
         fileInput.disabled = false;
       }
     });
@@ -4530,6 +4576,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       const val = urlInput.value.trim();
       if(!val) return;
 
+      formState.processingImages = Number(formState.processingImages || 0) + 1;
       addUrlBtn.disabled = true;
       const originalText = addUrlBtn.textContent;
       addUrlBtn.textContent = "Watermarking…";
@@ -4544,6 +4591,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         console.warn("Could not watermark image URL:", err);
         showToast("Could not watermark that URL. Upload the image file instead.");
       }finally{
+        formState.processingImages = Math.max(0, Number(formState.processingImages || 0) - 1);
         addUrlBtn.disabled = false;
         addUrlBtn.textContent = originalText;
       }
@@ -6593,16 +6641,38 @@ function wireShimmer(container){
         </div>
       </form>
     `;
-    const formState = { images: [], grading: [] };
+    const formState = { images: [], grading: [], processingImages: 0 };
     wireGameCombobox("add");
     wireSoldDateField("add");
     wireImageControls("add", formState);
     wireGradingControls("add", formState);
     $("addForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
+
+      if(formState.processingImages){
+        showToast("Please wait for the image watermark to finish.");
+        return;
+      }
+
+      const form = $("addForm");
+      if(!form.checkValidity()){
+        form.reportValidity();
+        showToast("Please complete the required fields.");
+        return;
+      }
+
       const data = collectFields("add", null, formState);
-      if(!data.name || !data.game) return;
+      if(!data.name || !data.game){
+        showToast("Card name and game are required.");
+        return;
+      }
       if(!requireOwner()) return;
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if(submitBtn){
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Saving…";
+      }
 
       const saved = await createCardStorage(data);
       if(saved){
@@ -6614,6 +6684,9 @@ function wireShimmer(container){
           showToast("Card added");
         }
         location.hash = "#/inventory";
+      }else if(submitBtn){
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Save card";
       }
     });
   }
@@ -7006,7 +7079,7 @@ function wireShimmer(container){
   // ---------------- Edit modal ----------------
   const overlay = $("modalOverlay");
   const editForm = $("editForm");
-  let editFormState = { images: [], grading: [] };
+  let editFormState = { images: [], grading: [], processingImages: 0 };
 
   function openEditModal(card){
     if(!requireOwner()) return;
@@ -7015,6 +7088,7 @@ function wireShimmer(container){
     populateFields("edit", card);
     editFormState = {
       images: getImages(card).slice(),
+      processingImages: 0,
       grading: Array.isArray(card.grading) ? card.grading.map(g=>({
         company:g.company || "PSA",
         grade:String(g.grade || "10"),
@@ -7038,10 +7112,32 @@ function wireShimmer(container){
 
   editForm.addEventListener("submit", async (e)=>{
     e.preventDefault();
+
+    if(editFormState.processingImages){
+      showToast("Please wait for the image watermark to finish.");
+      return;
+    }
+
+    if(!editForm.checkValidity()){
+      editForm.reportValidity();
+      showToast("Please complete the required fields.");
+      return;
+    }
+
     const id = $("editId").value;
     const data = collectFields("edit", id, editFormState);
-    if(!data.name || !data.game) return;
+    if(!data.name || !data.game){
+      showToast("Card name and game are required.");
+      return;
+    }
     if(!requireOwner()) return;
+
+    const submitBtn = editForm.querySelector('button[type="submit"]');
+    if(submitBtn){
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Saving…";
+    }
+
     const saved = await updateCardStorage(data);
     if(saved){
       const idx = cards.findIndex(c=>c.id === id);
@@ -7054,6 +7150,9 @@ function wireShimmer(container){
       }
       closeEditModal();
       router();
+    }else if(submitBtn){
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Save changes";
     }
   });
 
