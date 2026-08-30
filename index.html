@@ -3953,6 +3953,24 @@
     }
   }
 
+
+  /* Security/UI guard: owner controls are hidden unless authenticated owner mode is active. */
+  .owner-only{
+    display:none !important;
+  }
+  body.owner-mode .owner-only{
+    display:revert !important;
+  }
+  body.owner-mode a.owner-only{
+    display:flex !important;
+  }
+  body.owner-mode button.owner-only{
+    display:inline-flex !important;
+  }
+  body.owner-mode div.owner-only{
+    display:flex !important;
+  }
+
 </style>
 </head>
 <body>
@@ -5495,6 +5513,7 @@ function wireShimmer(container){
         const card = cards.find(c=>c.id === id);
         if(!card) return;
         if(btn.dataset.action === "edit"){
+          if(!isOwnerMode()){ showToast("Owner login required"); return; }
           openEditModal(card);
         } else if(btn.dataset.action === "delete"){
           if(confirm(`Remove "${card.name}" from your inventory?`)){
@@ -6728,6 +6747,7 @@ function wireShimmer(container){
   }, {passive:true});
   $("detailsCloseBtn").addEventListener("click", closeDetailsModal);
   $("detailsEditBtn").addEventListener("click", ()=>{
+    if(!isOwnerMode()){ showToast("Owner login required"); return; }
     const card = cards.find(c=>c.id === detailsCardId);
     if(card){
       closeDetailsModal();
@@ -6752,6 +6772,7 @@ function wireShimmer(container){
   let editFormState = { images: [], grading: [] };
 
   function openEditModal(card){
+    if(!isOwnerMode()){ showToast("Owner login required"); return; }
     $("editId").value = card.id;
     $("editFieldsMount").innerHTML = fieldsTemplate("edit");
     populateFields("edit", card);
