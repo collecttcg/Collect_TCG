@@ -2504,7 +2504,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           cert: (privateGrades[i] && privateGrades[i].cert) ? privateGrades[i].cert : ""
         }));
       })(),
-      view_count: Number(row.view_count || 0)
+      view_count: Number(row.view_count || 0),
+      created_at: row.created_at || null,
+      updated_at: row.updated_at || null
     };
   }
 
