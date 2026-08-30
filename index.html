@@ -1422,14 +1422,14 @@
   @media(max-width:700px){#filterAvailabilityWrap{min-width:0 !important;}}
 
 
-  /* Automatic SOLD corner — visual overlay only; original images are untouched. */
+  /* Automatic status corners — visual overlays only; original images are untouched. */
   .thumb-wrap,
   .detail-slider-stage{
     position:relative !important;
     overflow:hidden !important;
   }
 
-  .sold-ribbon{
+  .status-corner{
     position:absolute;
     top:0;
     left:0;
@@ -1437,14 +1437,12 @@
     width:min(42%, 145px);
     aspect-ratio:1 / 1;
     pointer-events:none;
-    background:linear-gradient(135deg,#f52b24 0%,#e51f19 68%,#cc1713 100%);
     clip-path:polygon(0 0,100% 0,0 100%);
     -webkit-clip-path:polygon(0 0,100% 0,0 100%);
     filter:drop-shadow(2px 3px 4px rgba(0,0,0,.28));
   }
 
-  .sold-ribbon::before{
-    content:"SOLD";
+  .status-corner::before{
     position:absolute;
     top:27%;
     left:2%;
@@ -1455,7 +1453,7 @@
     font-family:'Barlow Condensed','Inter',sans-serif;
     font-size:clamp(15px,2.2vw,25px);
     font-weight:900;
-    letter-spacing:1.5px;
+    letter-spacing:1.2px;
     line-height:1;
     text-align:center;
     text-shadow:
@@ -1463,12 +1461,30 @@
       0 0 1px rgba(0,0,0,.35);
   }
 
-  /* Larger corner treatment in the opened card window. */
-  .detail-slider-stage .sold-ribbon{
+  .status-corner-sold{
+    background:linear-gradient(135deg,#f52b24 0%,#e51f19 68%,#cc1713 100%);
+  }
+  .status-corner-sold::before{
+    content:"SOLD";
+  }
+
+  /* Reserved uses the same gold family as the Reserved availability pill. */
+  .status-corner-reserved{
+    background:linear-gradient(135deg,#f3c85a 0%,var(--accent-gold) 68%,#bd8c20 100%);
+  }
+  .status-corner-reserved::before{
+    content:"RESERVED";
+    color:#171717;
+    text-shadow:0 1px 1px rgba(255,255,255,.28);
+    font-size:clamp(11px,1.65vw,19px);
+    letter-spacing:.6px;
+  }
+
+  .detail-slider-stage .status-corner{
     width:min(38%, 250px);
   }
 
-  .detail-slider-stage .sold-ribbon::before{
+  .detail-slider-stage .status-corner::before{
     top:28%;
     left:2%;
     width:76%;
@@ -1476,24 +1492,36 @@
     letter-spacing:2px;
   }
 
+  .detail-slider-stage .status-corner-reserved::before{
+    font-size:clamp(17px,2.2vw,30px);
+    letter-spacing:1px;
+  }
+
   @media(max-width:800px){
-    .sold-ribbon{
+    .status-corner{
       width:min(43%, 120px);
     }
 
-    .sold-ribbon::before{
+    .status-corner::before{
       font-size:clamp(14px,4.2vw,21px);
     }
 
-    .detail-slider-stage .sold-ribbon{
+    .status-corner-reserved::before{
+      font-size:clamp(10px,3.1vw,15px);
+    }
+
+    .detail-slider-stage .status-corner{
       width:min(42%, 190px);
     }
 
-    .detail-slider-stage .sold-ribbon::before{
+    .detail-slider-stage .status-corner::before{
       font-size:clamp(21px,6vw,34px);
     }
-  }
 
+    .detail-slider-stage .status-corner-reserved::before{
+      font-size:clamp(15px,4.3vw,25px);
+    }
+  }
 </style>
 </head>
 <body>
@@ -2263,10 +2291,15 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return [];
   }
 
-  function soldRibbonHTML(card){
-    return (card && card.availability === "Sold")
-      ? `<span class="sold-ribbon" aria-label="Sold"></span>`
-      : "";
+  function statusCornerHTML(card){
+    if(!card) return "";
+    if(card.availability === "Sold"){
+      return `<span class="status-corner status-corner-sold" aria-label="Sold"></span>`;
+    }
+    if(card.availability === "Reserved"){
+      return `<span class="status-corner status-corner-reserved" aria-label="Reserved"></span>`;
+    }
+    return "";
   }
 
   function cardThumbHTML(c){
@@ -2275,7 +2308,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(images.length){
       return `<div class="thumb-wrap" style="position:relative; flex-shrink:0;">
         <img class="thumb" src="${escapeHtml(images[0])}" alt="" style="border-color:${color}">
-        ${soldRibbonHTML(c)}
+        ${statusCornerHTML(c)}
         ${images.length > 1 ? `<span style="position:absolute;right:3px;bottom:3px;background:rgba(0,0,0,.78);color:#fff;border-radius:5px;padding:2px 5px;font:9px 'JetBrains Mono',monospace;">+${images.length-1}</span>` : ""}
       </div>`;
     }
@@ -4274,7 +4307,7 @@ function wireShimmer(container){
       ? `<div class="detail-slider" data-card-slider>
           <div class="detail-slider-stage">
             <img class="detail-slider-image" src="${escapeHtml(images[0])}" alt="${escapeHtml(card.name)} image 1">
-            ${soldRibbonHTML(card)}
+            ${statusCornerHTML(card)}
           </div>
           ${images.length > 1 ? `
             <button type="button" class="detail-slider-btn prev" aria-label="Previous image">‹</button>
