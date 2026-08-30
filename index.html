@@ -2773,6 +2773,44 @@
     }
   }
 
+
+  /* Cleaner Views Over Time date axis */
+  .insights-chart{
+    min-height:210px !important;
+    padding:12px 0 4px !important;
+    gap:10px !important;
+  }
+  .insights-bar-wrap{
+    min-width:54px !important;
+    height:190px !important;
+    gap:8px !important;
+  }
+  .insights-bar-label{
+    color:var(--text-muted) !important;
+    font-family:'Inter',sans-serif !important;
+    font-size:10.5px !important;
+    font-weight:600 !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
+    transform:none !important;
+    transform-origin:initial !important;
+    margin-top:2px !important;
+    min-height:14px;
+    text-align:center;
+  }
+  @media(max-width:700px){
+    .insights-chart{
+      grid-auto-columns:minmax(48px,1fr) !important;
+      gap:7px !important;
+    }
+    .insights-bar-wrap{
+      min-width:48px !important;
+    }
+    .insights-bar-label{
+      font-size:9.5px !important;
+    }
+  }
+
 </style>
 </head>
 <body>
