@@ -1668,7 +1668,7 @@
   }
 
   #filterGame{min-width:185px !important;}
-  #filterFormat{min-width:175px !important;}
+  #filterGrade{min-width:175px !important;}
   #filterSeries{min-width:190px !important;}
   #sortBy{min-width:205px !important;}
 
@@ -1690,7 +1690,7 @@
       width:auto !important;
       flex:1 1 calc(50% - 8px) !important;
     }
-    #filterGame,#filterFormat,#filterSeries,#sortBy{
+    #filterGame,#filterGrade,#filterSeries,#sortBy{
       min-width:0 !important;
     }
   }
@@ -1705,7 +1705,7 @@
     min-width:175px;
   }
   #filterGameWrap{min-width:185px;}
-  #filterFormatWrap{min-width:175px;}
+  #filterGradeWrap{min-width:175px;}
   #filterSeriesWrap{min-width:190px;}
   #sortByWrap{min-width:205px;}
 
@@ -4118,7 +4118,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function getFiltered(){
     const q = ($("search") && $("search").value.trim().toLowerCase()) || "";
     const gameF = ($("filterGame") && $("filterGame").value) || "";
-    const formatF = ($("filterFormat") && $("filterFormat").value) || "";
+    const gradeF = ($("filterGrade") && $("filterGrade").value) || "";
     const seriesF = ($("filterSeries") && $("filterSeries").value) || "";
     const sortBy = ($("sortBy") && $("sortBy").value) || "name";
 
@@ -4126,7 +4126,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       const format = effectiveFormat(c);
       const haystack = [c.name,c.series,c.game].filter(Boolean).join(" ").toLowerCase();
       if(gameF && c.game !== gameF) return false;
-      if(formatF && format !== formatF) return false;
+      if(gradeF){
+        const hasGrade = Array.isArray(c.grading) && c.grading.some(g=>{
+          if(!g || !g.company) return false;
+          const key = `${String(g.company).trim().toUpperCase()} ${String(g.grade ?? "").trim()}`.trim();
+          return key === gradeF;
+        });
+        if(!hasGrade) return false;
+      }
       if(seriesF && (c.series || "") !== seriesF) return false;
       if(q && !haystack.includes(q)) return false;
       if(activeQuickFilter === "graded" && format !== "Graded") return false;
@@ -4254,10 +4261,10 @@ function wireShimmer(container){
   <div class="overview-select-menu" id="filterGameMenu" hidden></div>
   <input type="hidden" id="filterGame" value="">
 </div>
-        <div class="overview-select" id="filterFormatWrap">
-  <button type="button" class="overview-select-btn" id="filterFormatBtn"><span>All Formats</span><i></i></button>
-  <div class="overview-select-menu" id="filterFormatMenu" hidden></div>
-  <input type="hidden" id="filterFormat" value="">
+        <div class="overview-select" id="filterGradeWrap">
+  <button type="button" class="overview-select-btn" id="filterGradeBtn"><span>All Grades</span><i></i></button>
+  <div class="overview-select-menu" id="filterGradeMenu" hidden></div>
+  <input type="hidden" id="filterGrade" value="">
 </div>
         <div class="overview-select" id="filterSeriesWrap">
   <button type="button" class="overview-select-btn" id="filterSeriesBtn"><span>All Series</span><i></i></button>
@@ -4314,11 +4321,23 @@ function wireShimmer(container){
       {value:"",label:"All Games"},
       ...games.map(g=>({value:g,label:g}))
     ]);
-    setupOverviewSelect("filterFormat", [
-      {value:"",label:"All Formats"},
-      {value:"Raw",label:"Raw Card"},
-      {value:"Graded",label:"Graded / Slab"},
-      {value:"Sealed",label:"Sealed"}
+    const gradeOptions = Array.from(new Set(
+      cards.flatMap(c => Array.isArray(c.grading) ? c.grading : [])
+        .filter(g => g && g.company && String(g.grade ?? "").trim())
+        .map(g => `${String(g.company).trim().toUpperCase()} ${String(g.grade).trim()}`)
+    )).sort((a,b)=>{
+      const [ca,...ga] = a.split(" ");
+      const [cb,...gb] = b.split(" ");
+      if(ca !== cb) return ca.localeCompare(cb);
+      const na = parseFloat(ga.join(" "));
+      const nb = parseFloat(gb.join(" "));
+      if(Number.isFinite(na) && Number.isFinite(nb)) return nb-na;
+      return a.localeCompare(b);
+    });
+
+    setupOverviewSelect("filterGrade", [
+      {value:"",label:"All Grades"},
+      ...gradeOptions.map(g=>({value:g,label:g}))
     ]);
     setupOverviewSelect("filterSeries", [
       {value:"",label:"All Series"},
@@ -4346,7 +4365,7 @@ function wireShimmer(container){
       wireShimmer(grid);
     }
 
-    ["search","filterGame","filterFormat","filterSeries","sortBy"].forEach(id=>{
+    ["search","filterGame","filterGrade","filterSeries","sortBy"].forEach(id=>{
       $(id).addEventListener("input", draw);
       $(id).addEventListener("change", draw);
     });
