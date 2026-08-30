@@ -3282,6 +3282,38 @@
     }
   }
 
+
+  .fb-post-website-link-note{
+    margin:0 0 14px;
+    padding:9px 10px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:var(--surface-2);
+  }
+
+  .fb-post-website-link-note[hidden]{
+    display:none !important;
+  }
+
+  .fb-post-website-link-note span{
+    display:block;
+    margin-bottom:4px;
+    color:var(--text-muted);
+    font-size:8px;
+    font-weight:800;
+    letter-spacing:.6px;
+    text-transform:uppercase;
+  }
+
+  .fb-post-website-link-note a{
+    display:block;
+    color:var(--accent-teal);
+    font-size:9.5px;
+    line-height:1.4;
+    text-decoration:none;
+    overflow-wrap:anywhere;
+  }
+
 </style>
 </head>
 <body>
@@ -7089,7 +7121,7 @@ function wireShimmer(container){
     const title = String(values.title || defaultFbPostTitle(card)).trim();
     const cardList = getFbCardListEntry(values.cardListKey);
     const cardListUrl = safeHttpUrl(cardList.url);
-    const carousellListingUrl = safeHttpUrl(values.carousellListingUrl);
+    const websiteCardUrl = getCardShareUrl(card.id);
     const carousellShopUrl = safeHttpUrl(values.carousellShopUrl);
     const instagramUrl = safeHttpUrl(values.instagramUrl);
     const hashtags = String(values.hashtags || defaultFbHashtags(card)).trim();
@@ -7126,16 +7158,14 @@ function wireShimmer(container){
       divider
     ];
 
-    if(carousellListingUrl){
-      lines.push(
-        "",
-        "FURTHER DETAILS ON OUR CAROUSELL PAGE :",
-        "",
-        carousellListingUrl,
-        "",
-        divider
-      );
-    }
+    lines.push(
+      "",
+      "FURTHER DETAILS ON OUR WEBSITE :",
+      "",
+      websiteCardUrl,
+      "",
+      divider
+    );
 
     lines.push(
       "",
@@ -7236,16 +7266,12 @@ function wireShimmer(container){
             <div class="hint">The PRICE section will automatically use the Facebook link for the selected card list.</div>
           </div>
 
+          <div class="fb-post-website-link-note" id="fbPostWebsiteLinkNote" hidden></div>
+
           <div class="field">
             <label for="fbPostTitle">Facebook title</label>
             <input id="fbPostTitle" type="text" maxlength="300" placeholder="Generated automatically after selecting a card">
             <div class="hint">The title is generated from the card data, but you can edit it for terms such as FOIL or a specific Carddass series.</div>
-          </div>
-
-          <div class="field">
-            <label for="fbPostCarousellListing">Carousell listing URL <span class="field-optional">(optional)</span></label>
-            <input id="fbPostCarousellListing" type="url" maxlength="1000" placeholder="https://www.carousell.com.my/...">
-            <div class="hint">Saved only in this browser for the selected card. If blank, the “Further Details” section is omitted.</div>
           </div>
 
           <details class="fb-post-settings">
@@ -7292,12 +7318,12 @@ function wireShimmer(container){
 
     const select = $("fbPostCardSelect");
     const titleInput = $("fbPostTitle");
-    const listingInput = $("fbPostCarousellListing");
     const cardListSelect = $("fbPostCardList");
     const shopInput = $("fbPostCarousellShop");
     const instagramInput = $("fbPostInstagram");
     const hashtagsInput = $("fbPostHashtags");
     const output = $("fbPostOutput");
+    const websiteLinkNote = $("fbPostWebsiteLinkNote");
     const activeListMount = $("fbPostActiveList");
     const selectedCardMount = $("fbPostSelectedCard");
     const copyTitleBtn = $("fbCopyTitleBtn");
@@ -7310,7 +7336,6 @@ function wireShimmer(container){
     function currentValues(){
       return {
         title:titleInput.value,
-        carousellListingUrl:listingInput.value,
         cardListKey:cardListSelect.value,
         carousellShopUrl:shopInput.value,
         instagramUrl:instagramInput.value,
@@ -7326,7 +7351,6 @@ function wireShimmer(container){
         const meta = getFbCardMeta();
         meta[selectedCard.id] = {
           title:String(titleInput.value || "").trim().slice(0,300),
-          carousellListingUrl:safeHttpUrl(listingInput.value),
           cardListKey:Object.prototype.hasOwnProperty.call(FB_CARD_LISTS, cardListSelect.value)
             ? cardListSelect.value
             : FB_POST_DEFAULTS.cardListKey
@@ -7338,6 +7362,8 @@ function wireShimmer(container){
     function updateOutput(){
       if(!selectedCard){
         output.value = "";
+        websiteLinkNote.hidden = true;
+        websiteLinkNote.innerHTML = "";
         activeListMount.hidden = true;
         activeListMount.innerHTML = "";
         copyTitleBtn.disabled = true;
@@ -7348,6 +7374,13 @@ function wireShimmer(container){
 
       const values = currentValues();
       const listEntry = getFbCardListEntry(values.cardListKey);
+      const websiteCardUrl = getCardShareUrl(selectedCard.id);
+
+      websiteLinkNote.hidden = false;
+      websiteLinkNote.innerHTML = `
+        <span>Website details link</span>
+        <a href="${escapeHtml(cardShareHash(selectedCard.id))}">${escapeHtml(websiteCardUrl)}</a>
+      `;
       activeListMount.hidden = false;
       activeListMount.innerHTML = `
         <span>PRICE CARD LIST</span>
@@ -7401,7 +7434,6 @@ function wireShimmer(container){
 
       const meta = perCardMeta[selectedCard.id] || {};
       titleInput.value = String(meta.title || defaultFbPostTitle(selectedCard)).slice(0,300);
-      listingInput.value = safeHttpUrl(meta.carousellListingUrl) || "";
 
       const suggestedCardListKey = Object.prototype.hasOwnProperty.call(FB_CARD_LISTS, meta.cardListKey)
         ? meta.cardListKey
@@ -7420,7 +7452,7 @@ function wireShimmer(container){
 
     select.addEventListener("change", ()=>selectCard(select.value));
 
-    [titleInput,listingInput,cardListSelect,shopInput,instagramInput,hashtagsInput].forEach(input=>{
+    [titleInput,cardListSelect,shopInput,instagramInput,hashtagsInput].forEach(input=>{
       input.addEventListener("input", ()=>{
         persistCurrent();
         updateOutput();
