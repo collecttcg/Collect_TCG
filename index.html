@@ -2943,6 +2943,157 @@
     }
   }
 
+
+  /* ---------- Mobile navigation: Home / Inventory / Showcase / More ---------- */
+  .mobile-more-toggle,
+  .mobile-more-menu{
+    display:none;
+  }
+
+  @media(max-width:800px){
+    .sidebar{
+      overflow:visible !important;
+      flex-wrap:nowrap;
+    }
+
+    nav.mainnav{
+      display:flex;
+      flex-direction:row;
+      align-items:center;
+      gap:4px;
+      min-width:0;
+      overflow:visible;
+    }
+
+    nav.mainnav > a[data-route="home"],
+    nav.mainnav > a[data-route="inventory"],
+    nav.mainnav > a[data-route="showcase"]{
+      display:flex !important;
+      flex:0 1 auto;
+      min-width:0;
+      padding:9px 8px;
+      font-size:11.5px;
+    }
+
+    nav.mainnav > a[data-route="home"] .ic,
+    nav.mainnav > a[data-route="inventory"] .ic,
+    nav.mainnav > a[data-route="showcase"] .ic{
+      width:14px;
+    }
+
+    nav.mainnav > .mobile-secondary-nav{
+      display:none !important;
+    }
+
+    .mobile-more-toggle{
+      display:flex;
+      align-items:center;
+      gap:5px;
+      flex:0 0 auto;
+      padding:9px 8px;
+      border:0;
+      border-radius:9px;
+      background:transparent;
+      color:var(--text-muted);
+      font-family:'Inter',sans-serif;
+      font-size:11.5px;
+      font-weight:500;
+      cursor:pointer;
+    }
+
+    .mobile-more-toggle:hover,
+    .mobile-more-toggle.open{
+      color:var(--text);
+      background:var(--surface);
+    }
+
+    .mobile-more-caret{
+      font-size:10px;
+      transition:transform .15s ease;
+    }
+
+    .mobile-more-toggle.open .mobile-more-caret{
+      transform:rotate(180deg);
+    }
+
+    .mobile-more-menu{
+      position:absolute;
+      top:calc(100% - 2px);
+      right:10px;
+      z-index:70;
+      min-width:170px;
+      padding:6px;
+      border:1px solid var(--border);
+      border-radius:11px;
+      background:var(--surface-2);
+      box-shadow:var(--shadow-pop);
+    }
+
+    .mobile-more-menu[hidden]{
+      display:none !important;
+    }
+
+    .mobile-more-menu:not([hidden]){
+      display:block !important;
+    }
+
+    .mobile-more-menu a{
+      display:flex;
+      align-items:center;
+      gap:9px;
+      width:100%;
+      padding:10px 11px;
+      border-radius:7px;
+      color:var(--text-muted);
+      font-size:12px;
+      white-space:nowrap;
+    }
+
+    .mobile-more-menu a:hover,
+    .mobile-more-menu a.active{
+      color:var(--text);
+      background:var(--surface);
+    }
+
+    .mobile-more-menu .ic{
+      width:16px;
+      text-align:center;
+      color:var(--accent-gold);
+    }
+  }
+
+  @media(max-width:390px){
+    nav.mainnav > a[data-route="home"],
+    nav.mainnav > a[data-route="inventory"],
+    nav.mainnav > a[data-route="showcase"],
+    .mobile-more-toggle{
+      font-size:10.5px;
+      padding-left:6px;
+      padding-right:6px;
+      gap:4px;
+    }
+  }
+
+
+  #filterLanguageWrap{min-width:160px;}
+
+  .filter-pill-btn{
+    appearance:none;
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .filter-pill-btn:hover{
+    border-color:var(--accent-teal) !important;
+    background:rgba(78,210,199,.10) !important;
+  }
+  .filter-pill-btn:focus-visible{
+    outline:2px solid var(--accent-teal);
+    outline-offset:2px;
+  }
+  @media(max-width:700px){
+    #filterLanguageWrap{min-width:0 !important;}
+  }
+
 </style>
 </head>
 <body>
@@ -2965,11 +3116,19 @@
       <a href="#/inventory" data-route="inventory"><span class="ic">▦</span> Inventory</a>
       <a href="#/by-game" data-route="by-game" class="owner-only"><span class="ic">▥</span> By Game</a>
       <a href="#/showcase" data-route="showcase"><span class="ic">▶</span> Showcase</a>
-      <a href="#/giveaway" data-route="giveaway"><span class="ic">★</span> Giveaway</a>
+      <button type="button" class="mobile-more-toggle" id="mobileMoreToggle" aria-expanded="false">
+        <span class="ic">⋯</span> More <span class="mobile-more-caret">⌄</span>
+      </button>
+      <div class="mobile-more-menu" id="mobileMoreMenu" hidden>
+        <a href="#/giveaway" data-route="giveaway"><span class="ic">★</span> Giveaway</a>
+        <a href="#/about" data-route="about"><span class="ic">◎</span> About Us</a>
+        <a href="#/contact" data-route="contact"><span class="ic">✉</span> Contact</a>
+      </div>
+      <a href="#/giveaway" data-route="giveaway" class="mobile-secondary-nav"><span class="ic">★</span> Giveaway</a>
       <a href="#/insights" data-route="insights" class="owner-only"><span class="ic">◔</span> Insights</a>
       <a href="#/add" data-route="add" class="owner-only"><span class="ic">+</span> Add Card</a>
-      <a href="#/about" data-route="about"><span class="ic">◎</span> About Us</a>
-      <a href="#/contact" data-route="contact"><span class="ic">✉</span> Contact</a>
+      <a href="#/about" data-route="about" class="mobile-secondary-nav"><span class="ic">◎</span> About Us</a>
+      <a href="#/contact" data-route="contact" class="mobile-secondary-nav"><span class="ic">✉</span> Contact</a>
     </nav>
     <div class="sidebar-footer">
       <div><b id="sfCount">0</b> listings</div>
@@ -3608,6 +3767,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     document.querySelectorAll("#mainnav a").forEach(a=>{
       a.classList.toggle("active", a.dataset.route === route);
     });
+    const moreToggle = $("mobileMoreToggle");
+    if(moreToggle){
+      moreToggle.classList.toggle("active", ["giveaway","about","contact"].includes(route));
+    }
+    const moreMenu = $("mobileMoreMenu");
+    if(moreMenu){
+      moreMenu.querySelectorAll("a").forEach(a=>{
+        a.classList.toggle("active", a.dataset.route === route);
+      });
+    }
     if(route === "home") renderHomePage();
     else if(route === "inventory") renderInventoryPage();
     else if(route === "by-game"){
@@ -4267,6 +4436,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   // ---------------- Inventory ----------------
   let activeQuickFilter = "all";
+  let pendingPillFilter = null;
 
   function effectiveFormat(c){
     if(c.format) return c.format;
@@ -4301,6 +4471,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const q = ($("search") && $("search").value.trim().toLowerCase()) || "";
     const gameF = ($("filterGame") && $("filterGame").value) || "";
     const gradeF = ($("filterGrade") && $("filterGrade").value) || "";
+    const languageF = ($("filterLanguage") && $("filterLanguage").value) || "";
     const seriesF = ($("filterSeries") && $("filterSeries").value) || "";
     const sortBy = ($("sortBy") && $("sortBy").value) || "name";
 
@@ -4316,6 +4487,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         });
         if(!hasGrade) return false;
       }
+      if(languageF && (c.language || "") !== languageF) return false;
       if(seriesF && (c.series || "") !== seriesF) return false;
       if(q && !haystack.includes(q)) return false;
       if(activeQuickFilter === "graded" && format !== "Graded") return false;
@@ -4357,9 +4529,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           <div class="clean-card-main">
             <div class="card-name clean-card-name">${escapeHtml(c.name).toUpperCase()}</div>
             <div class="clean-card-subrow clean-all-pills">
-              <span class="clean-grade-badge">${escapeHtml(gradeText)}</span>
-              ${c.language ? `<span class="clean-meta-pill clean-language-pill">${escapeHtml(c.language)}</span>` : ""}
-              ${seriesText ? `<span class="clean-meta-pill clean-series-pill">${escapeHtml(seriesText)}</span>` : ""}
+              ${grades.length
+                ? `<button type="button" class="clean-grade-badge filter-pill-btn" data-pill-filter="grade" data-pill-value="${escapeHtml(gradeText)}" title="Filter by ${escapeHtml(gradeText)}">${escapeHtml(gradeText)}</button>`
+                : `<span class="clean-grade-badge">${escapeHtml(gradeText)}</span>`}
+              ${c.language ? `<button type="button" class="clean-meta-pill clean-language-pill filter-pill-btn" data-pill-filter="language" data-pill-value="${escapeHtml(c.language)}" title="Filter by ${escapeHtml(c.language)}">${escapeHtml(c.language)}</button>` : ""}
+              ${seriesText ? `<button type="button" class="clean-meta-pill clean-series-pill filter-pill-btn" data-pill-filter="series" data-pill-value="${escapeHtml(seriesText)}" title="Filter by ${escapeHtml(seriesText)}">${escapeHtml(seriesText)}</button>` : ""}
             </div>
           </div>
 
@@ -4387,6 +4561,22 @@ function wireShimmer(container){
 
   function wireCardActions(container){
     container.addEventListener("click", async (e)=>{
+      const filterPill = e.target.closest(".filter-pill-btn[data-pill-filter]");
+      if(filterPill){
+        e.stopPropagation();
+        pendingPillFilter = {
+          type: filterPill.dataset.pillFilter,
+          value: filterPill.dataset.pillValue
+        };
+        activeQuickFilter = "all";
+        if(currentRoute() === "inventory"){
+          renderInventoryPage();
+        }else{
+          location.hash = "#/inventory";
+        }
+        return;
+      }
+
       const btn = e.target.closest("button[data-action]");
       if(btn){
         e.stopPropagation();
@@ -4449,6 +4639,11 @@ function wireShimmer(container){
   <div class="overview-select-menu" id="filterGradeMenu" hidden></div>
   <input type="hidden" id="filterGrade" value="">
 </div>
+        <div class="overview-select" id="filterLanguageWrap">
+  <button type="button" class="overview-select-btn" id="filterLanguageBtn"><span>All Languages</span><i></i></button>
+  <div class="overview-select-menu" id="filterLanguageMenu" hidden></div>
+  <input type="hidden" id="filterLanguage" value="">
+</div>
         <div class="overview-select" id="filterSeriesWrap">
   <button type="button" class="overview-select-btn" id="filterSeriesBtn"><span>All Series</span><i></i></button>
   <div class="overview-select-menu" id="filterSeriesMenu" hidden></div>
@@ -4466,6 +4661,7 @@ function wireShimmer(container){
     `;
 
     const games = Array.from(new Set(cards.map(c=>c.game).filter(Boolean))).sort();
+    const languages = ["JP","ENG","KR","CN"].filter(lang=>cards.some(c=>c.language===lang));
     const series = Array.from(new Set(cards.map(c=>c.series).filter(Boolean))).sort();
 
     function setupOverviewSelect(id, options){
@@ -4522,6 +4718,10 @@ function wireShimmer(container){
       {value:"",label:"All Grades"},
       ...gradeOptions.map(g=>({value:g,label:g}))
     ]);
+    setupOverviewSelect("filterLanguage", [
+      {value:"",label:"All Languages"},
+      ...languages.map(l=>({value:l,label:l}))
+    ]);
     setupOverviewSelect("filterSeries", [
       {value:"",label:"All Series"},
       ...series.map(s=>({value:s,label:s}))
@@ -4548,7 +4748,7 @@ function wireShimmer(container){
       wireShimmer(grid);
     }
 
-    ["search","filterGame","filterGrade","filterSeries","sortBy"].forEach(id=>{
+    ["search","filterGame","filterGrade","filterLanguage","filterSeries","sortBy"].forEach(id=>{
       $(id).addEventListener("input", draw);
       $(id).addEventListener("change", draw);
     });
@@ -4560,6 +4760,21 @@ function wireShimmer(container){
         draw();
       });
     });
+
+    if(pendingPillFilter){
+      const map = {
+        grade:"filterGrade",
+        language:"filterLanguage",
+        series:"filterSeries"
+      };
+      const id = map[pendingPillFilter.type];
+      if(id && $(id)){
+        $(id).value = pendingPillFilter.value;
+        const btn = $(id + "Btn");
+        if(btn) btn.querySelector("span").textContent = pendingPillFilter.value;
+      }
+      pendingPillFilter = null;
+    }
 
     syncQuickFilterUI();
     draw();
@@ -5670,6 +5885,44 @@ function wireShimmer(container){
 
   loadTheme();
 
+  function setupMobileMoreMenu(){
+    const toggle = $("mobileMoreToggle");
+    const menu = $("mobileMoreMenu");
+    if(!toggle || !menu) return;
+
+    const closeMenu = ()=>{
+      menu.hidden = true;
+      toggle.classList.remove("open");
+      toggle.setAttribute("aria-expanded","false");
+    };
+
+    toggle.addEventListener("click", e=>{
+      e.stopPropagation();
+      const willOpen = menu.hidden;
+      if(willOpen){
+        menu.hidden = false;
+        toggle.classList.add("open");
+        toggle.setAttribute("aria-expanded","true");
+      }else{
+        closeMenu();
+      }
+    });
+
+    menu.addEventListener("click", e=>{
+      if(e.target.closest("a")) closeMenu();
+    });
+
+    document.addEventListener("click", e=>{
+      if(!menu.hidden && !menu.contains(e.target) && !toggle.contains(e.target)){
+        closeMenu();
+      }
+    });
+
+    window.addEventListener("resize", ()=>{
+      if(window.innerWidth > 800) closeMenu();
+    });
+  }
+
   async function startApp(){
     await refreshOwnerSession();
     await loadCards();
@@ -5678,6 +5931,7 @@ function wireShimmer(container){
     router();
   }
 
+  setupMobileMoreMenu();
   startApp();
 
 })();
