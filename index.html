@@ -2921,6 +2921,66 @@
     }
   }
 
+
+  /* Automatic card-image watermark + public downloads */
+  .image-lightbox-download{
+    position:fixed;
+    top:18px;
+    right:70px;
+    z-index:103;
+    min-height:38px;
+    padding:8px 12px;
+    border:1px solid rgba(255,255,255,.20);
+    border-radius:9px;
+    background:rgba(20,20,24,.82);
+    color:#fff;
+    font-family:'Inter',sans-serif;
+    font-size:10.5px;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  .image-lightbox-download:hover{
+    border-color:var(--accent-teal);
+    color:var(--accent-teal);
+  }
+
+  .image-controls button:disabled,
+  .image-controls input:disabled{
+    opacity:.55;
+    cursor:wait;
+  }
+
+  @media(max-width:700px){
+    .details-top-actions{
+      flex-wrap:wrap;
+    }
+
+    .details-top-actions #detailsDownloadBtn{
+      order:3;
+    }
+
+    .image-lightbox-download{
+      top:16px;
+      right:62px;
+      min-height:34px;
+      padding:6px 9px;
+      font-size:9.5px;
+    }
+  }
+
+  @media(max-width:390px){
+    .details-top-actions button{
+      padding:5px 7px;
+      font-size:9.5px;
+    }
+
+    .image-lightbox-download{
+      top:14px;
+      right:56px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -2994,6 +3054,7 @@
     <div class="details-top-actions">
       <button type="button" id="detailsFavoriteBtn" aria-label="Add to favorites">♡ Favorite</button>
       <button type="button" id="detailsShareBtn" aria-label="Share this card">Share</button>
+      <button type="button" id="detailsDownloadBtn" aria-label="Download current card image">Download Image</button>
       <button type="button" id="detailsCloseBtn">Close</button>
       <button type="button" class="btn-primary owner-only" id="detailsEditBtn" hidden>Edit card</button>
     </div>
@@ -3003,6 +3064,7 @@
 
 <div class="image-lightbox" id="imageLightbox" hidden>
   <button type="button" class="image-lightbox-close" id="imageLightboxClose" aria-label="Close image">×</button>
+  <button type="button" class="image-lightbox-download" id="imageLightboxDownload" aria-label="Download current image">Download</button>
   <div class="image-lightbox-count" id="imageLightboxCount">1 / 1</div>
   <button type="button" class="image-lightbox-nav image-lightbox-prev" id="imageLightboxPrev" aria-label="Previous image">‹</button>
   <div class="image-lightbox-main" id="imageLightboxMain">
@@ -3953,26 +4015,137 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   // ---------------- Image helpers ----------------
-  function resizeImageFile(file, maxDim, quality){
-    return new Promise((resolve, reject)=>{
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error("read failed"));
-      reader.onload = () => {
-        const img = new Image();
-        img.onerror = () => reject(new Error("decode failed"));
-        img.onload = () => {
-          let w = img.width, h = img.height;
-          if(w > h && w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; }
-          else if(h >= w && h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; }
-          const canvas = document.createElement("canvas");
-          canvas.width = w; canvas.height = h;
-          canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL("image/jpeg", quality));
-        };
-        img.src = reader.result;
+  const CARD_WATERMARK_LOGO = "collect-tcg-logo.png";
+  const CARD_IMAGE_MAX_BYTES = 20 * 1024 * 1024;
+  const CARD_IMAGE_TYPES = new Set(["image/jpeg","image/png","image/webp"]);
+  let watermarkLogoPromise = null;
+
+  function loadWatermarkLogo(){
+    if(watermarkLogoPromise) return watermarkLogoPromise;
+
+    watermarkLogoPromise = new Promise((resolve,reject)=>{
+      const logo = new Image();
+      logo.onload = ()=>resolve(logo);
+      logo.onerror = ()=>{
+        watermarkLogoPromise = null;
+        reject(new Error("watermark logo unavailable"));
       };
+      logo.src = CARD_WATERMARK_LOGO;
+    });
+
+    return watermarkLogoPromise;
+  }
+
+  function drawWatermark(ctx, canvas, logo){
+    const margin = Math.max(10, Math.round(Math.min(canvas.width, canvas.height) * 0.025));
+    const targetWidth = Math.min(
+      170,
+      Math.max(64, Math.round(canvas.width * 0.18))
+    );
+    const ratio = logo.naturalHeight && logo.naturalWidth
+      ? logo.naturalHeight / logo.naturalWidth
+      : 1;
+    const targetHeight = Math.round(targetWidth * ratio);
+    const x = canvas.width - targetWidth - margin;
+    const y = margin;
+
+    ctx.save();
+    ctx.globalAlpha = 0.72;
+    ctx.drawImage(logo, x, y, targetWidth, targetHeight);
+    ctx.restore();
+  }
+
+  async function renderWatermarkedImage(img, maxDim = 900, quality = 0.82){
+    let w = img.naturalWidth || img.width;
+    let h = img.naturalHeight || img.height;
+    if(!w || !h) throw new Error("invalid image dimensions");
+
+    if(w > h && w > maxDim){
+      h = Math.round(h * maxDim / w);
+      w = maxDim;
+    }else if(h >= w && h > maxDim){
+      w = Math.round(w * maxDim / h);
+      h = maxDim;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d", {alpha:false});
+    if(!ctx) throw new Error("canvas unavailable");
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0,0,w,h);
+    ctx.drawImage(img, 0, 0, w, h);
+
+    const logo = await loadWatermarkLogo();
+    drawWatermark(ctx, canvas, logo);
+
+    return canvas.toDataURL("image/jpeg", quality);
+  }
+
+  function loadImageFromDataUrl(dataUrl){
+    return new Promise((resolve,reject)=>{
+      const img = new Image();
+      img.onload = ()=>resolve(img);
+      img.onerror = ()=>reject(new Error("decode failed"));
+      img.src = dataUrl;
+    });
+  }
+
+  async function resizeImageFile(file, maxDim, quality){
+    if(!file) throw new Error("no file");
+    if(!CARD_IMAGE_TYPES.has(file.type)) throw new Error("unsupported image type");
+    if(file.size > CARD_IMAGE_MAX_BYTES) throw new Error("image too large");
+
+    const dataUrl = await new Promise((resolve,reject)=>{
+      const reader = new FileReader();
+      reader.onerror = ()=>reject(new Error("read failed"));
+      reader.onload = ()=>resolve(reader.result);
       reader.readAsDataURL(file);
     });
+
+    const img = await loadImageFromDataUrl(dataUrl);
+    return renderWatermarkedImage(img, maxDim, quality);
+  }
+
+  async function watermarkImageUrl(url, maxDim = 900, quality = 0.82){
+    let parsed;
+    try{
+      parsed = new URL(url, location.href);
+      if(!["http:","https:"].includes(parsed.protocol)){
+        throw new Error("unsupported URL");
+      }
+    }catch{
+      throw new Error("invalid image URL");
+    }
+
+    const response = await fetch(parsed.href, {
+      method:"GET",
+      mode:"cors",
+      credentials:"omit",
+      referrerPolicy:"no-referrer"
+    });
+    if(!response.ok) throw new Error("image fetch failed");
+
+    const contentType = String(response.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+    if(!CARD_IMAGE_TYPES.has(contentType)) throw new Error("unsupported image type");
+
+    const blob = await response.blob();
+    if(blob.size > CARD_IMAGE_MAX_BYTES) throw new Error("image too large");
+
+    const objectUrl = URL.createObjectURL(blob);
+    try{
+      const img = await new Promise((resolve,reject)=>{
+        const image = new Image();
+        image.onload = ()=>resolve(image);
+        image.onerror = ()=>reject(new Error("decode failed"));
+        image.src = objectUrl;
+      });
+      return await renderWatermarkedImage(img, maxDim, quality);
+    }finally{
+      URL.revokeObjectURL(objectUrl);
+    }
   }
 
   function getImages(c){
@@ -4101,12 +4274,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       <div class="image-field">
         <div class="image-gallery-preview" id="${p}ImageGalleryPreview"></div>
         <div class="image-controls">
-          <input type="file" id="${p}ImageFile" accept="image/*" multiple>
+          <input type="file" id="${p}ImageFile" accept="image/jpeg,image/png,image/webp" multiple>
           <div class="image-url-row">
             <input type="text" id="${p}ImageUrl" placeholder="Paste an image URL, then click Add URL">
             <button type="button" class="btn-ghost" id="${p}AddImageUrl">Add URL</button>
           </div>
-          <div class="image-gallery-note">Add multiple pictures. Drag pictures to change their order. The first picture is used as the listing thumbnail.</div>
+          <div class="image-gallery-note">Add multiple pictures. New images are automatically watermarked with the Collect TCG logo at the top-right before they are saved. Drag pictures to change their order. The first picture is used as the listing thumbnail.</div>
         </div>
       </div>
       <div class="field">
@@ -4330,24 +4503,53 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     fileInput.addEventListener("change", async ()=>{
       const files = Array.from(fileInput.files || []);
       if(!files.length) return;
+
+      fileInput.disabled = true;
       try{
         for(const file of files){
-          formState.images.push(await resizeImageFile(file, 900, 0.78));
+          formState.images.push(await resizeImageFile(file, 900, 0.82));
         }
         fileInput.value = "";
         refreshPreview();
-      }catch(e){ showToast("Couldn't read one of the images."); }
+        showToast(files.length === 1 ? "Image added with watermark" : `${files.length} images added with watermark`);
+      }catch(e){
+        console.warn("Card image processing failed:", e);
+        showToast(
+          String(e?.message || "").includes("too large")
+            ? "Image is too large. Maximum size is 20 MB."
+            : String(e?.message || "").includes("unsupported")
+              ? "Use JPG, PNG, or WebP images."
+              : "Could not process an image or load the watermark logo."
+        );
+      }finally{
+        fileInput.disabled = false;
+      }
     });
 
-    function addUrl(){
+    async function addUrl(){
       const val = urlInput.value.trim();
       if(!val) return;
-      formState.images.push(val);
-      urlInput.value = "";
-      refreshPreview();
+
+      addUrlBtn.disabled = true;
+      const originalText = addUrlBtn.textContent;
+      addUrlBtn.textContent = "Watermarking…";
+
+      try{
+        const processed = await watermarkImageUrl(val, 900, 0.82);
+        formState.images.push(processed);
+        urlInput.value = "";
+        refreshPreview();
+        showToast("Image added with watermark");
+      }catch(err){
+        console.warn("Could not watermark image URL:", err);
+        showToast("Could not watermark that URL. Upload the image file instead.");
+      }finally{
+        addUrlBtn.disabled = false;
+        addUrlBtn.textContent = originalText;
+      }
     }
 
-    addUrlBtn.addEventListener("click", addUrl);
+    addUrlBtn.addEventListener("click", ()=>{ addUrl(); });
     urlInput.addEventListener("keydown", e=>{
       if(e.key === "Enter"){
         e.preventDefault();
@@ -6420,6 +6622,7 @@ function wireShimmer(container){
   const detailsOverlay = $("detailsOverlay");
   const detailsMount = $("detailsMount");
   let detailsCardId = null;
+  let detailsImageIndex = 0;
 
   function gradingDetailsHTML(card){
     const grades = Array.isArray(card.grading) ? card.grading.filter(g=>g && g.company) : [];
@@ -6478,6 +6681,56 @@ function wireShimmer(container){
     document.body.style.overflow = "";
   }
 
+  function safeDownloadName(value){
+    const clean = String(value || "card")
+      .replace(/[<>:"/\\|?*\x00-\x1F]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0,80);
+    return clean || "card";
+  }
+
+  async function downloadImageSource(src, filenameBase, imageNumber = 1){
+    if(!src) return;
+
+    const filename = `${safeDownloadName(filenameBase)}-${imageNumber}.jpg`;
+
+    try{
+      let href = src;
+      let revoke = false;
+
+      if(!/^data:/i.test(src) && !/^blob:/i.test(src)){
+        const response = await fetch(src, {
+          mode:"cors",
+          credentials:"omit",
+          referrerPolicy:"no-referrer"
+        });
+        if(!response.ok) throw new Error("download fetch failed");
+        const blob = await response.blob();
+        href = URL.createObjectURL(blob);
+        revoke = true;
+      }
+
+      const a = document.createElement("a");
+      a.href = href;
+      a.download = filename;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      if(revoke){
+        setTimeout(()=>URL.revokeObjectURL(href), 1000);
+      }
+    }catch(err){
+      console.warn("Direct image download failed:", err);
+      // Legacy external images may block CORS. Open them safely rather than
+      // weakening browser security or proxying through an owner credential.
+      window.open(src, "_blank", "noopener,noreferrer");
+      showToast("Opened image in a new tab");
+    }
+  }
+
   function getCardShareUrl(cardId){
     const base = `${location.origin}${location.pathname}${location.search}`;
     return `${base}${cardShareHash(cardId)}`;
@@ -6509,6 +6762,7 @@ function wireShimmer(container){
   function openDetailsModal(card){
     rememberRecentlyViewed(card && card.id);
     detailsCardId = card.id;
+    detailsImageIndex = 0;
     recordCardViewEvent(card);
     const images = getImages(card);
     const imageHTML = images.length
@@ -6630,6 +6884,7 @@ function wireShimmer(container){
 
       function showSlide(index){
         slideIndex = (index + images.length) % images.length;
+        detailsImageIndex = slideIndex;
         slideImg.src = images[slideIndex];
         slideImg.alt = `${card.name} image ${slideIndex + 1}`;
         if(countEl) countEl.textContent = `${slideIndex + 1} / ${images.length}`;
@@ -6678,6 +6933,16 @@ function wireShimmer(container){
   }
 
   $("imageLightboxClose").addEventListener("click", closeImageLightbox);
+  $("imageLightboxDownload").addEventListener("click", e=>{
+    e.stopPropagation();
+    if(!lightboxImages.length) return;
+    const card = cards.find(c=>c.id === detailsCardId);
+    downloadImageSource(
+      lightboxImages[lightboxIndex],
+      card?.name || card?.card_code || "card",
+      lightboxIndex + 1
+    );
+  });
   $("imageLightboxPrev").addEventListener("click", e=>{ e.stopPropagation(); renderLightboxImage(lightboxIndex - 1); });
   $("imageLightboxNext").addEventListener("click", e=>{ e.stopPropagation(); renderLightboxImage(lightboxIndex + 1); });
   $("imageLightbox").addEventListener("click", e=>{
@@ -6706,6 +6971,17 @@ function wireShimmer(container){
     btn.setAttribute("aria-label", active ? "Remove from favorites" : "Add to favorites");
   });
   $("detailsShareBtn").addEventListener("click", shareCurrentCard);
+  $("detailsDownloadBtn").addEventListener("click", ()=>{
+    const card = cards.find(c=>c.id === detailsCardId);
+    if(!card) return;
+    const images = getImages(card);
+    if(!images.length){
+      showToast("No image to download");
+      return;
+    }
+    const index = Math.min(detailsImageIndex, images.length - 1);
+    downloadImageSource(images[index], card.name || card.card_code || "card", index + 1);
+  });
   $("detailsCloseBtn").addEventListener("click", ()=>closeDetailsModal(true));
   $("detailsEditBtn").addEventListener("click", ()=>{
     if(!requireOwner()) return;
