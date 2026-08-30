@@ -2811,6 +2811,58 @@
     }
   }
 
+
+  .clean-language{
+    color:var(--text-dim);
+    font-size:9.5px;
+    line-height:1.2;
+    font-weight:700;
+    letter-spacing:.45px;
+  }
+
+
+  /* Overview metadata pills */
+  .clean-meta-pills{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+    margin-top:1px;
+  }
+  .clean-meta-pill{
+    display:inline-flex;
+    align-items:center;
+    max-width:100%;
+    padding:4px 8px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:var(--surface-2);
+    font-size:9.5px;
+    line-height:1;
+    font-weight:700;
+    letter-spacing:.25px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .clean-series-pill{
+    color:var(--text-muted);
+  }
+  .clean-language-pill{
+    color:var(--accent-gold);
+  }
+
+  @media(max-width:800px){
+    #homeRecentGrid .clean-meta-pills,
+    .grid .clean-meta-pills{
+      gap:4px;
+    }
+    #homeRecentGrid .clean-meta-pill,
+    .grid .clean-meta-pill{
+      font-size:9px;
+      padding:4px 7px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -3033,6 +3085,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   };
   const SHIMMER_RARITIES = new Set(["Rare Holo","Ultra Rare","Secret Rare","Promo"]);
   const CONDITION_LABEL = {NM:"Near Mint", M:"Mint", LP:"Lightly Played", MP:"Moderately Played", HP:"Heavily Played", DMG:"Damaged", SEALED:"Sealed", NA:"Not Applicable"};
+  const LANGUAGE_OPTIONS = ["JP","ENG","KR","CN"];
   const RARITY_LIST = ["Common","Uncommon","Rare","Rare Holo","Ultra Rare","Secret Rare","Promo"];
   const INDEX_KEY = "card-index";
 
@@ -3094,6 +3147,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       id: row.id,
       name: (row.name || "").toUpperCase(),
       game: row.game === "One Piece" ? "One Piece Card Game" : (row.game || ""),
+      language: row.language || "",
       set: row.set_name || "",
       series: row.series || "",
       format: row.format || "",
@@ -3124,6 +3178,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return {
       name: (card.name || "").toUpperCase(),
       game: card.game,
+      language: card.language || "",
       set_name: card.set || "",
       series: card.series || "",
       format: card.format || "",
@@ -3153,7 +3208,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function loadCards(){
-    const publicColumns = "id,name,game,set_name,series,format,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,images,grading,created_at,updated_at";
+    const publicColumns = "id,name,game,language,set_name,series,format,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,images,grading,created_at,updated_at";
     const columns = isOwnerMode() ? "*" : publicColumns;
 
     const { data, error } = await supabaseClient
@@ -3656,9 +3711,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           </div>
         </div>
         <div class="field">
-          <label for="${p}Series">Series / Collection</label>
-          <input type="text" id="${p}Series" placeholder="e.g. Hyper Battle, Visual Adventure, Championship">
+          <label for="${p}Language">Language</label>
+          <select id="${p}Language" required>
+            <option value="">Select language</option>
+            ${LANGUAGE_OPTIONS.map(v=>`<option value="${v}">${v}</option>`).join("")}
+          </select>
         </div>
+      </div>
+      <div class="field">
+        <label for="${p}Series">Series / Collection</label>
+        <input type="text" id="${p}Series" placeholder="e.g. Hyper Battle, Visual Adventure, Championship">
       </div>
       <div class="field-row">
         <div class="field">
@@ -3916,6 +3978,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function populateFields(p, card){
     $(p + "Name").value = card ? card.name : "";
     $(p + "Game").value = card ? card.game : "";
+    $(p + "Language").value = card ? (card.language || "") : "";
     $(p + "Series").value = card ? (card.series || "") : "";
     $(p + "Format").value = card ? (card.format || (Array.isArray(card.grading) && card.grading.length ? "Graded" : (card.condition === "SEALED" ? "Sealed" : "Raw"))) : "Raw";
     $(p + "Condition").value = card ? card.condition : "NM";
@@ -3930,6 +3993,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       id: id || uid(),
       name: $(p + "Name").value.trim().toUpperCase(),
       game: $(p + "Game").value.trim(),
+      language: $(p + "Language").value,
       series: $(p + "Series").value.trim(),
       format: $(p + "Format").value,
       rarity: "Common",
@@ -4215,7 +4279,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             <div class="clean-card-subrow">
               <span class="clean-grade-badge">${escapeHtml(gradeText)}</span>
             </div>
-            ${seriesText ? `<div class="clean-series">${escapeHtml(seriesText)}</div>` : ""}
+            ${(seriesText || c.language) ? `
+              <div class="clean-meta-pills">
+                ${seriesText ? `<span class="clean-meta-pill clean-series-pill">${escapeHtml(seriesText)}</span>` : ""}
+                ${c.language ? `<span class="clean-meta-pill clean-language-pill">${escapeHtml(c.language)}</span>` : ""}
+              </div>` : ""}
           </div>
 
           <div class="clean-price-block">
@@ -5300,6 +5368,7 @@ function wireShimmer(container){
               </div>
             </div>
             <div class="detail-item"><div class="detail-label">Format</div><div class="detail-value">${escapeHtml(effectiveFormat(card))}</div></div>
+            ${card.language ? `<div class="detail-item"><div class="detail-label">Language</div><div class="detail-value">${escapeHtml(card.language)}</div></div>` : ""}
             ${card.series ? `<div class="detail-item"><div class="detail-label">Series</div><div class="detail-value">${escapeHtml(card.series)}</div></div>` : ""}
             <div class="detail-item"><div class="detail-label">Pictures</div><div class="detail-value">${images.length}</div></div>
             <div class="detail-item owner-only"><div class="detail-label">Views</div><div class="detail-value">${Number(card.view_count || 0).toLocaleString()}</div></div>
