@@ -4132,6 +4132,266 @@
     display:block;
   }
 
+
+/* ==========================================================
+   RESPONSIVE SYSTEM V2
+   Canonical final layout layer. Keep this block LAST.
+   Breakpoints:
+     Desktop        > 1200px
+     Laptop         801–1200px
+     Phone          <= 800px
+     Compact phone  <= 390px
+   ========================================================== */
+
+/* Shared safety: prevent grid/flex children from forcing overflow. */
+.main,
+.content,
+.card-tile,
+.card-tile > *,
+.detail-item,
+.showcase-card,
+.giveaway-card{
+  min-width:0;
+}
+
+/* ---------- DESKTOP / LAPTOP ---------- */
+@media (min-width:801px){
+  /* Fixed navigation column; only content scrolls. */
+  .shell{
+    display:block !important;
+    min-height:100vh !important;
+  }
+
+  .sidebar{
+    position:fixed !important;
+    inset:0 auto 0 0 !important;
+    width:250px !important;
+    height:100vh !important;
+    max-height:100vh !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    z-index:50 !important;
+  }
+
+  .main{
+    margin-left:250px !important;
+    width:calc(100% - 250px) !important;
+    min-width:0 !important;
+  }
+
+  /* Cards choose their column count from available content width. */
+  .home-recent-grid,
+  .inventory-grid{
+    display:grid !important;
+    grid-template-columns:repeat(auto-fit,minmax(300px,1fr)) !important;
+    gap:14px !important;
+  }
+
+  .card-tile{
+    width:100% !important;
+    min-width:0 !important;
+    grid-template-columns:minmax(135px,42%) minmax(145px,1fr) !important;
+  }
+
+  .card-title{
+    min-width:0 !important;
+    white-space:normal !important;
+    overflow-wrap:anywhere !important;
+  }
+
+  .clean-meta-row{
+    display:flex !important;
+    flex-wrap:wrap !important;
+    align-items:center !important;
+    gap:5px !important;
+    min-width:0 !important;
+  }
+}
+
+/* Normal laptops: fewer, wider cards instead of squeezed cards. */
+@media (min-width:901px) and (max-width:1200px){
+  .home-recent-grid,
+  .inventory-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+
+  .card-tile{
+    grid-template-columns:minmax(125px,40%) minmax(0,1fr) !important;
+  }
+}
+
+/* Narrow desktop window: one comfortable card per row. */
+@media (min-width:801px) and (max-width:900px){
+  .home-recent-grid,
+  .inventory-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  .card-tile{
+    grid-template-columns:minmax(145px,36%) minmax(0,1fr) !important;
+  }
+}
+
+/* ---------- PHONE ---------- */
+@media (max-width:800px){
+  /* Mobile returns to normal document flow. */
+  .shell{
+    display:block !important;
+    min-height:100vh !important;
+  }
+
+  .sidebar{
+    position:relative !important;
+    inset:auto !important;
+    width:100% !important;
+    height:auto !important;
+    max-height:none !important;
+    overflow:visible !important;
+    padding:12px 14px !important;
+    gap:12px !important;
+    z-index:30 !important;
+  }
+
+  .main{
+    margin-left:0 !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  /* Larger, device-friendly branding. */
+  .brand.shop-brand{
+    gap:10px !important;
+    max-width:none !important;
+  }
+
+  .logo-click-target,
+  .logo-click-target .shop-logo{
+    width:clamp(60px,16vw,68px) !important;
+    height:clamp(60px,16vw,68px) !important;
+    flex:0 0 clamp(60px,16vw,68px) !important;
+  }
+
+  .shop-brand-text h1{
+    font-size:clamp(17px,4.6vw,19px) !important;
+    line-height:1.05 !important;
+  }
+
+  .shop-region{
+    margin-top:4px !important;
+    font-size:clamp(12.5px,3.3vw,14px) !important;
+    line-height:1.1 !important;
+  }
+
+  /* Four primary controls always fit the width. */
+  nav.mainnav{
+    display:grid !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:4px !important;
+    width:100% !important;
+    overflow:visible !important;
+  }
+
+  nav.mainnav > a[data-route="home"],
+  nav.mainnav > a[data-route="inventory"],
+  nav.mainnav > a[data-route="showcase"],
+  .mobile-more-toggle{
+    min-width:0 !important;
+    min-height:48px !important;
+    padding:8px 5px !important;
+    font-size:clamp(10.8px,3vw,12px) !important;
+    border-radius:10px !important;
+    justify-content:center !important;
+  }
+
+  /* Card grids become width-driven instead of device-name driven. */
+  .home-recent-grid,
+  .inventory-grid{
+    grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)) !important;
+    gap:10px !important;
+  }
+
+  .card-tile{
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  .clean-meta-row{
+    flex-wrap:wrap !important;
+  }
+
+  /* Details remain readable without horizontal overflow. */
+  .details-info-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:8px !important;
+  }
+
+  .modal.card-details-modal{
+    max-width:min(94vw,760px) !important;
+    max-height:92dvh !important;
+  }
+
+  .modal.card-details-modal #detailsMount{
+    overflow-wrap:anywhere !important;
+  }
+}
+
+/* ---------- COMPACT PHONE ---------- */
+@media (max-width:390px){
+  .sidebar{
+    padding:10px !important;
+    gap:10px !important;
+  }
+
+  .logo-click-target,
+  .logo-click-target .shop-logo{
+    width:58px !important;
+    height:58px !important;
+    flex-basis:58px !important;
+  }
+
+  .shop-brand-text h1{
+    font-size:16.5px !important;
+  }
+
+  .shop-region{
+    font-size:12px !important;
+  }
+
+  nav.mainnav > a[data-route="home"],
+  nav.mainnav > a[data-route="inventory"],
+  nav.mainnav > a[data-route="showcase"],
+  .mobile-more-toggle{
+    min-height:48px !important;
+    padding:7px 3px !important;
+    font-size:10.3px !important;
+  }
+
+  .details-info-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  .detail-price-primary{
+    font-size:17px !important;
+  }
+}
+
+/* Very narrow legacy phones: stack icon/text rather than hide a tab. */
+@media (max-width:340px){
+  nav.mainnav > a[data-route="home"],
+  nav.mainnav > a[data-route="inventory"],
+  nav.mainnav > a[data-route="showcase"],
+  .mobile-more-toggle{
+    min-height:52px !important;
+    flex-direction:column !important;
+    gap:3px !important;
+    font-size:9.5px !important;
+  }
+
+  .mobile-more-caret{
+    display:none !important;
+  }
+}
+
 </style>
 </head>
 <body>
