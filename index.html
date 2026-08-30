@@ -1680,6 +1680,84 @@
     text-transform:uppercase !important;
   }
 
+
+  /* Polished responsive Favorite control */
+  .public-card-actions{
+    position:absolute !important;
+    top:10px !important;
+    left:10px !important;
+    right:auto !important;
+    z-index:12 !important;
+    margin:0 !important;
+    padding:0 !important;
+    width:auto !important;
+    height:auto !important;
+    pointer-events:none;
+  }
+
+  .public-card-actions .favorite-btn{
+    appearance:none !important;
+    -webkit-appearance:none !important;
+    box-sizing:border-box !important;
+    pointer-events:auto;
+    width:36px !important;
+    height:36px !important;
+    min-width:36px !important;
+    min-height:36px !important;
+    padding:0 !important;
+    margin:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    border-radius:50% !important;
+    border:1px solid rgba(255,255,255,.22) !important;
+    outline:none !important;
+    background:rgba(12,14,18,.78) !important;
+    color:#f4f5f7 !important;
+    font-family:Arial,sans-serif !important;
+    font-size:22px !important;
+    font-weight:400 !important;
+    line-height:1 !important;
+    text-align:center !important;
+    cursor:pointer !important;
+    box-shadow:0 4px 14px rgba(0,0,0,.34) !important;
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    transition:transform .16s ease, background .16s ease, border-color .16s ease, color .16s ease !important;
+  }
+
+  .public-card-actions .favorite-btn:hover{
+    transform:scale(1.07) !important;
+    border-color:rgba(255,255,255,.42) !important;
+    background:rgba(24,27,33,.94) !important;
+  }
+
+  .public-card-actions .favorite-btn.active{
+    color:#ff667d !important;
+    border-color:rgba(255,102,125,.58) !important;
+    background:rgba(35,16,21,.90) !important;
+  }
+
+  .public-card-actions .favorite-btn:focus-visible{
+    outline:2px solid var(--accent-gold) !important;
+    outline-offset:2px !important;
+  }
+
+  @media(max-width:800px){
+    .public-card-actions{
+      top:7px !important;
+      left:7px !important;
+    }
+
+    .public-card-actions .favorite-btn{
+      width:32px !important;
+      height:32px !important;
+      min-width:32px !important;
+      min-height:32px !important;
+      font-size:19px !important;
+    }
+  }
+
 </style>
 </head>
 <body>
