@@ -1625,6 +1625,7 @@
 <div class="modal-overlay" id="detailsOverlay" hidden>
   <div class="modal card-details-modal" id="detailsModal" role="dialog" aria-modal="true" aria-labelledby="detailsTitle">
     <div class="details-top-actions">
+      <button type="button" id="detailsShareBtn" aria-label="Share this card">Share</button>
       <button type="button" id="detailsCloseBtn">Close</button>
       <button type="button" class="btn-primary owner-only" id="detailsEditBtn" hidden>Edit card</button>
     </div>
@@ -2253,6 +2254,24 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   // ---------------- Router ----------------
+  let detailsReturnHash = "#/inventory";
+
+  function cardShareHash(cardId){
+    return `#/card/${encodeURIComponent(cardId)}`;
+  }
+
+  function openCardRoute(cardId){
+    const current = location.hash || "#/home";
+    if(!currentRoute().startsWith("card/")) detailsReturnHash = current;
+    const target = cardShareHash(cardId);
+    if(location.hash === target){
+      const card = cards.find(c=>c.id === cardId);
+      if(card) openCardRoute(card.id);
+    }else{
+      location.hash = target;
+    }
+  }
+
   function currentRoute(){
     const h = location.hash.replace(/^#\/?/, "");
     return h || "home";
@@ -2261,8 +2280,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function router(){
     const route = currentRoute();
+    const isCardRoute = route.startsWith("card/");
     document.querySelectorAll("#mainnav a").forEach(a=>{
-      a.classList.toggle("active", a.dataset.route === route);
+      a.classList.toggle("active", isCardRoute ? a.dataset.route === "inventory" : a.dataset.route === route);
     });
     const moreToggle = $("mobileMoreToggle");
     if(moreToggle){
@@ -2274,7 +2294,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         a.classList.toggle("active", a.dataset.route === route);
       });
     }
-    if(route === "home") renderHomePage();
+    if(isCardRoute){
+      const cardId = decodeURIComponent(route.slice(5));
+      const card = cards.find(c=>c.id === cardId);
+      renderInventoryPage();
+      if(card){
+        openDetailsModal(card);
+      }else{
+        closeDetailsModal(false);
+        showToast("Card not found");
+      }
+    }
+    else if(route === "home") renderHomePage();
     else if(route === "inventory") renderInventoryPage();
     else if(route === "by-game"){
       if(isOwnerMode()) renderByGamePage();
@@ -3204,7 +3235,7 @@ function wireShimmer(container){
       const tile = e.target.closest(".card[data-card-id]");
       if(!tile) return;
       const card = cards.find(c=>c.id === tile.dataset.cardId);
-      if(card) openDetailsModal(card);
+      if(card) openCardRoute(card.id);
     });
   }
 
@@ -3473,7 +3504,7 @@ function wireShimmer(container){
       if(!tile) return;
       e.preventDefault();
       const card = cards.find(c=>c.id === tile.dataset.cardId);
-      if(card) openDetailsModal(card);
+      if(card) openCardRoute(card.id);
     });
   }
 
@@ -4337,6 +4368,48 @@ function wireShimmer(container){
     document.body.style.overflow = "";
   }
 
+  function getCardShareUrl(cardId){
+    const base = `${location.origin}${location.pathname}${location.search}`;
+    return `${base}${cardShareHash(cardId)}`;
+  }
+
+  async function shareCurrentCard(){
+    const card = cards.find(c=>c.id === detailsCardId);
+    if(!card) return;
+
+    const url = getCardShareUrl(card.id);
+    const shareData = {
+      title: card.name || "Collect TCG card",
+      text: card.name ? `View ${card.name} on Collect TCG MY & SG` : "View this card on Collect TCG MY & SG",
+      url
+    };
+
+    if(navigator.share){
+      try{
+        await navigator.share(shareData);
+        return;
+      }catch(err){
+        if(err && err.name === "AbortError") return;
+      }
+    }
+
+    try{
+      await navigator.clipboard.writeText(url);
+      showToast("Card link copied");
+    }catch(err){
+      const input = document.createElement("textarea");
+      input.value = url;
+      input.setAttribute("readonly", "");
+      input.style.position = "fixed";
+      input.style.opacity = "0";
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      input.remove();
+      showToast("Card link copied");
+    }
+  }
+
   function openDetailsModal(card){
     detailsCardId = card.id;
     recordCardViewEvent(card);
@@ -4446,10 +4519,17 @@ function wireShimmer(container){
     }
   }
 
-  function closeDetailsModal(){
+  function closeDetailsModal(navigateBack = true){
     detailsOverlay.hidden = true;
     detailsMount.innerHTML = "";
     detailsCardId = null;
+
+    if(navigateBack && currentRoute().startsWith("card/")){
+      const target = detailsReturnHash && !detailsReturnHash.includes("#/card/")
+        ? detailsReturnHash
+        : "#/inventory";
+      if(location.hash !== target) location.hash = target;
+    }
   }
 
   $("imageLightboxClose").addEventListener("click", closeImageLightbox);
@@ -4471,17 +4551,18 @@ function wireShimmer(container){
     }
     lightboxTouchStartX = null;
   }, {passive:true});
-  $("detailsCloseBtn").addEventListener("click", closeDetailsModal);
+  $("detailsShareBtn").addEventListener("click", shareCurrentCard);
+  $("detailsCloseBtn").addEventListener("click", ()=>closeDetailsModal(true));
   $("detailsEditBtn").addEventListener("click", ()=>{
     if(!requireOwner()) return;
     const card = cards.find(c=>c.id === detailsCardId);
     if(card){
-      closeDetailsModal();
+      closeDetailsModal(false);
       openEditModal(card);
     }
   });
   detailsOverlay.addEventListener("click", e=>{
-    if(e.target === detailsOverlay) closeDetailsModal();
+    if(e.target === detailsOverlay) closeDetailsModal(true);
   });
   document.addEventListener("keydown", e=>{
     if(!$("imageLightbox").hidden){
@@ -4489,7 +4570,7 @@ function wireShimmer(container){
       if(e.key === "ArrowLeft" && lightboxImages.length > 1){ renderLightboxImage(lightboxIndex - 1); return; }
       if(e.key === "ArrowRight" && lightboxImages.length > 1){ renderLightboxImage(lightboxIndex + 1); return; }
     }
-    if(e.key === "Escape" && !detailsOverlay.hidden) closeDetailsModal();
+    if(e.key === "Escape" && !detailsOverlay.hidden) closeDetailsModal(true);
   });
 
   // ---------------- Edit modal ----------------
