@@ -4395,6 +4395,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       detailsEditBtn.hidden = !isOwnerMode();
       detailsEditBtn.style.display = isOwnerMode() ? "inline-flex" : "none";
     }
+
+  function requireOwner(action = "perform this action"){
+    if(isOwnerMode()) return true;
+    console.warn(`Blocked non-owner attempt to ${action}.`);
+    showToast("Owner login required");
+    return false;
+  }
   }
 
   async function refreshOwnerSession(){
@@ -4517,6 +4524,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function createCardStorage(card){
+    if(!requireOwner("createCard")) return false;
     const { data, error } = await supabaseClient
       .from("cards")
       .insert(cardToDb(card))
@@ -4532,6 +4540,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function updateCardStorage(card){
+    if(!requireOwner("updateCard")) return false;
     const { data, error } = await supabaseClient
       .from("cards")
       .update(cardToDb(card))
@@ -4550,6 +4559,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   async function saveIndex(){ return true; }
 
   async function deleteCardStorage(id){
+    if(!requireOwner("deleteCard")) return false;
     const { error } = await supabaseClient
       .from("cards")
       .delete()
@@ -4594,7 +4604,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function saveGiveaway(payload, id){
-    if(!isOwnerMode()) return { data:null, error:new Error("Owner login required") };
+    if(!requireOwner()) return { data:null, error:new Error("Owner login required") };
     if(id){
       return await supabaseClient
         .from("giveaways")
@@ -4611,7 +4621,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function deleteGiveaway(id){
-    if(!isOwnerMode()) return { data:null, error:new Error("Owner login required") };
+    if(!requireOwner()) return { data:null, error:new Error("Owner login required") };
     return await supabaseClient
       .from("giveaways")
       .delete()
@@ -4652,6 +4662,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function saveShowcase(payload, id){
+    if(!requireOwner("saveShowcase")) return { data:null, error:new Error("Owner login required") };
     if(id){
       return await supabaseClient
         .from("showcases")
@@ -4668,6 +4679,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function deleteShowcase(id){
+    if(!requireOwner("deleteShowcase")) return { data:null, error:new Error("Owner login required") };
     return await supabaseClient
       .from("showcases")
       .delete()
@@ -5499,6 +5511,20 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   // ---------------- Inventory ----------------
   let activeQuickFilter = "all";
+  function normalizeFilterValue(value){
+    return String(value ?? "").trim().toLowerCase();
+  }
+
+  function selectedSetMatches(set, values){
+    if(!set || set.size === 0) return true;
+    const normalizedValues = new Set(
+      (Array.isArray(values) ? values : [values])
+        .filter(v => v !== null && v !== undefined && String(v).trim() !== "")
+        .map(normalizeFilterValue)
+    );
+    return Array.from(set).some(v => normalizedValues.has(normalizeFilterValue(v)));
+  }
+
   const pillFilterState = {
     grade: new Set(),
     language: new Set(),
@@ -5560,16 +5586,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           ? (CONDITION_LABEL[c.condition] || c.condition || "")
           : (format === "Sealed" ? "Sealed" : "");
 
-        const normalizedGradeF = String(gradeF).trim().toLowerCase();
-        const normalizedCondition = String(conditionLabel).trim().toLowerCase();
-
         const hasNormalizedGrade = Array.isArray(c.grading) && c.grading.some(g=>{
           if(!g || !g.company) return false;
           const key = `${String(g.company).trim().toUpperCase()} ${String(g.grade ?? "").trim()}`.trim();
-          return key.toLowerCase() === normalizedGradeF;
+          return normalizeFilterValue(key) === normalizeFilterValue(gradeF);
         });
 
-        if(!hasNormalizedGrade && normalizedCondition !== normalizedGradeF) return false;
+        if(!hasNormalizedGrade &&
+           normalizeFilterValue(conditionLabel) !== normalizeFilterValue(gradeF)) return false;
       }
       if(languageF && (c.language || "") !== languageF) return false;
       if(eraF && (c.era || "") !== eraF) return false;
@@ -5590,13 +5614,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           cardGrades.add("Sealed");
         }
 
-        const normalizedCardGrades = new Set(
-          Array.from(cardGrades).map(v=>String(v).trim().toLowerCase())
-        );
-        const matchesSelectedGrade = Array.from(pillFilterState.grade)
-          .some(v=>normalizedCardGrades.has(String(v).trim().toLowerCase()));
-
-        if(!matchesSelectedGrade) return false;
+        if(!selectedSetMatches(pillFilterState.grade, Array.from(cardGrades))) return false;
       }
       if(pillFilterState.language.size && !pillFilterState.language.has(c.language || "")) return false;
       if(pillFilterState.era.size && !pillFilterState.era.has(c.era || "")) return false;
@@ -5707,11 +5725,11 @@ function wireShimmer(container){
         const card = cards.find(c=>c.id === id);
         if(!card) return;
         if(btn.dataset.action === "edit"){
-          if(!isOwnerMode()){ showToast("Owner login required"); return; }
+          if(!requireOwner()) return;
           openEditModal(card);
         } else if(btn.dataset.action === "delete"){
           if(confirm(`Remove "${card.name}" from your inventory?`)){
-            if(!isOwnerMode()){ showToast("Owner login required"); return; }
+            if(!requireOwner()) return;
             const ok = await deleteCardStorage(id);
             if(ok){
               cards = cards.filter(c=>c.id !== id);
@@ -6017,36 +6035,34 @@ function wireShimmer(container){
     return d.toLocaleString();
   }
 
-  async function uploadGiveawayImage(file){
+  async function uploadOwnerImage(file, bucket, errorLabel){
     if(!file) return null;
-    if(!isOwnerMode()){
-      showToast("Owner login required");
-      return null;
-    }
+    if(!requireOwner(`upload to ${bucket}`)) return null;
 
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
     const safeExt = ["jpg","jpeg","png","webp","gif"].includes(ext) ? ext : "jpg";
     const path = `${ownerSession.user.id}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${safeExt}`;
 
     const { error: uploadError } = await supabaseClient.storage
-      .from("giveaway-images")
+      .from(bucket)
       .upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type || undefined
+        cacheControl:"3600",
+        upsert:false,
+        contentType:file.type || undefined
       });
 
     if(uploadError){
-      console.error("Giveaway image upload error:", uploadError);
-      showToast("Could not upload giveaway image");
+      console.error(`${errorLabel} upload error:`, uploadError);
+      showToast(`Could not upload ${errorLabel.toLowerCase()}`);
       return null;
     }
 
-    const { data } = supabaseClient.storage
-      .from("giveaway-images")
-      .getPublicUrl(path);
-
+    const { data } = supabaseClient.storage.from(bucket).getPublicUrl(path);
     return data?.publicUrl || null;
+  }
+
+  async function uploadGiveawayImage(file){
+    return uploadOwnerImage(file, "giveaway-images", "Giveaway image");
   }
 
   function renderGiveawayImagePreview(url){
@@ -6058,35 +6074,7 @@ function wireShimmer(container){
   }
 
   async function uploadShowcaseThumbnail(file){
-    if(!file) return null;
-    if(!isOwnerMode()){
-      showToast("Owner login required");
-      return null;
-    }
-
-    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-    const safeExt = ["jpg","jpeg","png","webp","gif"].includes(ext) ? ext : "jpg";
-    const path = `${ownerSession.user.id}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${safeExt}`;
-
-    const { error: uploadError } = await supabaseClient.storage
-      .from("showcase-thumbnails")
-      .upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type || undefined
-      });
-
-    if(uploadError){
-      console.error("Thumbnail upload error:", uploadError);
-      showToast("Could not upload thumbnail");
-      return null;
-    }
-
-    const { data } = supabaseClient.storage
-      .from("showcase-thumbnails")
-      .getPublicUrl(path);
-
-    return data?.publicUrl || null;
+    return uploadOwnerImage(file, "showcase-thumbnails", "Thumbnail");
   }
 
   function renderShowcaseThumbnailPreview(url){
@@ -6289,7 +6277,7 @@ function wireShimmer(container){
 
     mount.querySelectorAll("[data-showcase-delete]").forEach(btn=>{
       btn.addEventListener("click", async ()=>{
-        if(!isOwnerMode()){ showToast("Owner login required"); return; }
+        if(!requireOwner()) return;
         const v = showcases.find(x=>x.id===btn.dataset.showcaseDelete);
         if(!v) return;
         if(!confirm(`Delete showcase "${v.title}"?`)) return;
@@ -6306,7 +6294,7 @@ function wireShimmer(container){
   const showcaseForm = $("showcaseForm");
 
   function openShowcaseForm(v=null){
-    if(!isOwnerMode()){ showToast("Owner login required"); return; }
+    if(!requireOwner()) return;
     $("showcaseFormTitle").textContent = v ? "Edit Showcase Video" : "Add Showcase Video";
     $("showcaseId").value = v ? v.id : "";
     $("showcaseTitle").value = v ? v.title : "";
@@ -6346,7 +6334,7 @@ function wireShimmer(container){
 
   showcaseForm.addEventListener("submit", async e=>{
     e.preventDefault();
-    if(!isOwnerMode()){ showToast("Owner login required"); return; }
+    if(!requireOwner()) return;
 
     const id = $("showcaseId").value || null;
 
@@ -6441,7 +6429,7 @@ function wireShimmer(container){
 
     mount.querySelectorAll("[data-giveaway-edit]").forEach(btn=>{
       btn.addEventListener("click", ()=>{
-        if(!isOwnerMode()){ showToast("Owner login required"); return; }
+        if(!requireOwner()) return;
         const g = giveaways.find(x=>x.id===btn.dataset.giveawayEdit);
         if(g) openGiveawayForm(g);
       });
@@ -6449,7 +6437,7 @@ function wireShimmer(container){
 
     mount.querySelectorAll("[data-giveaway-delete]").forEach(btn=>{
       btn.addEventListener("click", async ()=>{
-        if(!isOwnerMode()){ showToast("Owner login required"); return; }
+        if(!requireOwner()) return;
         const g = giveaways.find(x=>x.id===btn.dataset.giveawayDelete);
         if(!g) return;
         if(!confirm(`Delete giveaway "${g.title}"?`)) return;
@@ -6465,7 +6453,7 @@ function wireShimmer(container){
   const giveawayOverlay = $("giveawayOverlay");
 
   function openGiveawayForm(g=null){
-    if(!isOwnerMode()){ showToast("Owner login required"); return; }
+    if(!requireOwner()) return;
     $("giveawayFormTitle").textContent = g ? "Edit Giveaway" : "Add Giveaway";
     $("giveawayId").value = g ? g.id : "";
     $("giveawayTitle").value = g ? g.title : "";
@@ -6502,12 +6490,12 @@ function wireShimmer(container){
 
   $("giveawayForm").addEventListener("submit", async e=>{
     e.preventDefault();
-    if(!isOwnerMode()){ showToast("Owner login required"); return; }
+    if(!requireOwner()) return;
 
     const id = $("giveawayId").value || null;
     const endsValue = $("giveawayEndsAt").value;
 
-    if(!isOwnerMode()){ showToast("Owner login required"); return; }
+    if(!requireOwner()) return;
 
     let giveawayImageUrl = $("giveawayImage").value.trim();
     const giveawayImageFile = $("giveawayImageFile").files?.[0];
@@ -6798,7 +6786,7 @@ function wireShimmer(container){
       e.preventDefault();
       const data = collectFields("add", null, formState);
       if(!data.name || !data.game) return;
-      if(!isOwnerMode()){ showToast("Owner login required"); return; }
+      if(!requireOwner()) return;
 
       const saved = await createCardStorage(data);
       if(saved){
@@ -7010,7 +6998,7 @@ function wireShimmer(container){
   }, {passive:true});
   $("detailsCloseBtn").addEventListener("click", closeDetailsModal);
   $("detailsEditBtn").addEventListener("click", ()=>{
-    if(!isOwnerMode()){ showToast("Owner login required"); return; }
+    if(!requireOwner()) return;
     const card = cards.find(c=>c.id === detailsCardId);
     if(card){
       closeDetailsModal();
@@ -7035,7 +7023,7 @@ function wireShimmer(container){
   let editFormState = { images: [], grading: [] };
 
   function openEditModal(card){
-    if(!isOwnerMode()){ showToast("Owner login required"); return; }
+    if(!requireOwner()) return;
     $("editId").value = card.id;
     $("editFieldsMount").innerHTML = fieldsTemplate("edit");
     populateFields("edit", card);
@@ -7066,7 +7054,7 @@ function wireShimmer(container){
     const id = $("editId").value;
     const data = collectFields("edit", id, editFormState);
     if(!data.name || !data.game) return;
-    if(!isOwnerMode()){ showToast("Owner login required"); return; }
+    if(!requireOwner()) return;
     const saved = await updateCardStorage(data);
     if(saved){
       const idx = cards.findIndex(c=>c.id === id);
