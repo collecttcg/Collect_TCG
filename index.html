@@ -1421,6 +1421,88 @@
   .clean-availability-pill[data-pill-value="Collection (NFS)"]{color:#c084fc !important;border-color:rgba(192,132,252,.30) !important;background:rgba(192,132,252,.08) !important;}
   @media(max-width:700px){#filterAvailabilityWrap{min-width:0 !important;}}
 
+
+  /* Automatic SOLD image ribbon — visual overlay only; original images are untouched. */
+  .thumb-wrap,
+  .detail-slider-stage{
+    position:relative !important;
+  }
+
+  .sold-ribbon{
+    position:absolute;
+    top:0;
+    left:0;
+    z-index:6;
+    width:92px;
+    height:92px;
+    overflow:hidden;
+    pointer-events:none;
+    border-radius:inherit;
+  }
+
+  .sold-ribbon::before{
+    content:"SOLD";
+    position:absolute;
+    top:17px;
+    left:-31px;
+    width:135px;
+    padding:7px 0;
+    transform:rotate(-45deg);
+    transform-origin:center;
+    background:#e3261f;
+    color:#fff;
+    border-top:1px solid rgba(255,255,255,.35);
+    border-bottom:1px solid rgba(0,0,0,.22);
+    box-shadow:0 3px 10px rgba(0,0,0,.34);
+    font-family:'Barlow Condensed','Inter',sans-serif;
+    font-size:18px;
+    font-weight:900;
+    letter-spacing:1.5px;
+    line-height:1;
+    text-align:center;
+    text-shadow:0 1px 2px rgba(0,0,0,.35);
+  }
+
+  .detail-slider-stage .sold-ribbon{
+    width:145px;
+    height:145px;
+  }
+
+  .detail-slider-stage .sold-ribbon::before{
+    top:27px;
+    left:-43px;
+    width:195px;
+    padding:10px 0;
+    font-size:27px;
+    letter-spacing:2px;
+  }
+
+  @media(max-width:800px){
+    .sold-ribbon{
+      width:82px;
+      height:82px;
+    }
+    .sold-ribbon::before{
+      top:15px;
+      left:-29px;
+      width:122px;
+      padding:6px 0;
+      font-size:16px;
+    }
+
+    .detail-slider-stage .sold-ribbon{
+      width:120px;
+      height:120px;
+    }
+    .detail-slider-stage .sold-ribbon::before{
+      top:23px;
+      left:-38px;
+      width:165px;
+      padding:8px 0;
+      font-size:22px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -2190,12 +2272,19 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return [];
   }
 
+  function soldRibbonHTML(card){
+    return (card && card.availability === "Sold")
+      ? `<span class="sold-ribbon" aria-label="Sold">SOLD</span>`
+      : "";
+  }
+
   function cardThumbHTML(c){
     const color = RARITY_COLOR[c.rarity] || "var(--r-common)";
     const images = getImages(c);
     if(images.length){
       return `<div class="thumb-wrap" style="position:relative; flex-shrink:0;">
         <img class="thumb" src="${escapeHtml(images[0])}" alt="" style="border-color:${color}">
+        ${soldRibbonHTML(c)}
         ${images.length > 1 ? `<span style="position:absolute;right:3px;bottom:3px;background:rgba(0,0,0,.78);color:#fff;border-radius:5px;padding:2px 5px;font:9px 'JetBrains Mono',monospace;">+${images.length-1}</span>` : ""}
       </div>`;
     }
@@ -4194,6 +4283,7 @@ function wireShimmer(container){
       ? `<div class="detail-slider" data-card-slider>
           <div class="detail-slider-stage">
             <img class="detail-slider-image" src="${escapeHtml(images[0])}" alt="${escapeHtml(card.name)} image 1">
+            ${soldRibbonHTML(card)}
           </div>
           ${images.length > 1 ? `
             <button type="button" class="detail-slider-btn prev" aria-label="Previous image">‹</button>
