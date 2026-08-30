@@ -6671,7 +6671,6 @@ function wireShimmer(container){
         <div>${imageHTML}</div>
         <div class="detail-info">
           <div class="detail-grid details-info-grid">
-            <div class="detail-item"><div class="detail-label">Condition</div><div class="detail-value">${escapeHtml(detailCondition)}</div></div>
             <div class="detail-item detail-price-item">
               <div class="detail-label">Price</div>
               <div class="detail-price-stack">
@@ -6683,6 +6682,7 @@ function wireShimmer(container){
               </div>
             </div>
             <div class="detail-item"><div class="detail-label">Format</div><div class="detail-value">${escapeHtml(effectiveFormat(card))}</div></div>
+            <div class="detail-item"><div class="detail-label">Condition</div><div class="detail-value">${escapeHtml(detailCondition)}</div></div>
             ${card.language ? `<div class="detail-item"><div class="detail-label">Language</div><div class="detail-value">${escapeHtml(card.language)}</div></div>` : ""}
             ${card.era ? `<div class="detail-item"><div class="detail-label">Era</div><div class="detail-value">${escapeHtml(card.era)}</div></div>` : ""}
             ${card.series ? `<div class="detail-item"><div class="detail-label">Series</div><div class="detail-value">${escapeHtml(card.series)}</div></div>` : ""}
