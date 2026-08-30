@@ -1997,9 +1997,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   async function recordCardViewEvent(card){
     try{
       const visitorId = getVisitorId();
-      const { error } = await supabaseClient.rpc("record_card_view_event", {
-        p_card_id: card.id,
-        p_visitor_id: visitorId
+      const { error } = await supabaseClient.functions.invoke("record-card-view", {
+        body: {
+          card_id: card.id,
+          visitor_id: visitorId
+        }
       });
       if(error) console.error("Record view event error:", error);
       if(isOwnerMode()) card.view_count = Number(card.view_count || 0) + 1;
