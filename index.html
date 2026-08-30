@@ -2369,6 +2369,44 @@
     display:block;
   }
 
+
+  /* Showcase is primarily Reels / Shorts: display portrait previews without cropping */
+  .showcase-grid{
+    grid-template-columns:repeat(auto-fill,minmax(220px,260px)) !important;
+    align-items:start;
+  }
+  .showcase-card{
+    width:100%;
+  }
+  .showcase-media{
+    aspect-ratio:9/16 !important;
+    background:#08090b !important;
+  }
+  .showcase-media img{
+    width:100% !important;
+    height:100% !important;
+    object-fit:contain !important;
+    object-position:center !important;
+    background:#08090b;
+  }
+  .showcase-media-placeholder{
+    aspect-ratio:9/16;
+  }
+  .showcase-thumb-preview{
+    width:150px !important;
+    aspect-ratio:9/16 !important;
+  }
+  .showcase-thumb-preview img{
+    object-fit:contain !important;
+    background:#08090b;
+  }
+  @media(max-width:600px){
+    .showcase-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+      gap:12px !important;
+    }
+  }
+
 </style>
 </head>
 <body>
