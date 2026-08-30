@@ -5554,10 +5554,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           const key = `${String(g.company).trim().toUpperCase()} ${String(g.grade ?? "").trim()}`.trim();
           return key === gradeF;
         });
-        const rawCondition = effectiveFormat(c) === "Raw"
+
+        const format = effectiveFormat(c);
+        const conditionLabel = format === "Raw"
           ? (CONDITION_LABEL[c.condition] || c.condition || "")
-          : "";
-        if(!hasGrade && rawCondition !== gradeF) return false;
+          : (format === "Sealed" ? "Sealed" : "");
+
+        if(!hasGrade && conditionLabel !== gradeF) return false;
       }
       if(languageF && (c.language || "") !== languageF) return false;
       if(eraF && (c.era || "") !== eraF) return false;
@@ -5569,10 +5572,15 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             .filter(g=>g && g.company && String(g.grade ?? "").trim())
             .map(g=>`${String(g.company).trim().toUpperCase()} ${String(g.grade).trim()}`)
         );
-        if(effectiveFormat(c) === "Raw"){
+
+        const format = effectiveFormat(c);
+        if(format === "Raw"){
           const rawCondition = CONDITION_LABEL[c.condition] || c.condition || "";
           if(rawCondition) cardGrades.add(rawCondition);
+        }else if(format === "Sealed"){
+          cardGrades.add("Sealed");
         }
+
         if(!Array.from(pillFilterState.grade).some(v=>cardGrades.has(v))) return false;
       }
       if(pillFilterState.language.size && !pillFilterState.language.has(c.language || "")) return false;
@@ -5622,7 +5630,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           <div class="clean-card-main">
             <div class="card-name clean-card-name">${escapeHtml(c.name).toUpperCase()}</div>
             <div class="clean-card-subrow clean-all-pills">
-              ${(grades.length || format === "Raw")
+              ${(grades.length || format === "Raw" || format === "Sealed")
                 ? `<button type="button" class="clean-grade-badge filter-pill-btn ${pillFilterState.grade.has(gradeText) ? "pill-selected" : ""}" data-pill-filter="grade" data-pill-value="${escapeHtml(gradeText)}" title="Filter by ${escapeHtml(gradeText)}">${escapeHtml(gradeText)}</button>`
                 : `<span class="clean-grade-badge">${escapeHtml(gradeText)}</span>`}
               ${c.language ? `<button type="button" class="clean-meta-pill clean-language-pill filter-pill-btn ${pillFilterState.language.has(c.language) ? "pill-selected" : ""}" data-pill-filter="language" data-pill-value="${escapeHtml(c.language)}" title="Filter by ${escapeHtml(c.language)}">${escapeHtml(c.language)}</button>` : ""}
@@ -5838,7 +5846,8 @@ function wireShimmer(container){
       cards.some(c => effectiveFormat(c) === "Raw" && (CONDITION_LABEL[c.condition] || c.condition || "") === label)
     );
 
-    const gradeOptions = [...slabGradeOptions, ...rawConditionOptions];
+    const sealedOptions = cards.some(c => effectiveFormat(c) === "Sealed") ? ["Sealed"] : [];
+    const gradeOptions = [...slabGradeOptions, ...rawConditionOptions, ...sealedOptions];
 
     setupOverviewSelect("filterGrade", [
       {value:"",label:"All Grades / Conditions"},
