@@ -2872,6 +2872,39 @@
     background:rgba(78,210,199,.045) !important;
   }
 
+
+  /* Grade + Series + Language share one row */
+  .clean-all-pills{
+    display:flex !important;
+    flex-wrap:nowrap !important;
+    align-items:center !important;
+    gap:5px !important;
+    width:100%;
+    min-width:0;
+  }
+  .clean-all-pills .clean-grade-badge,
+  .clean-all-pills .clean-meta-pill{
+    flex:0 1 auto;
+    min-width:0;
+    margin:0 !important;
+  }
+  .clean-all-pills .clean-series-pill{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .clean-all-pills .clean-language-pill{
+    flex:0 0 auto;
+  }
+  @media(max-width:390px){
+    .clean-all-pills{gap:3px !important;}
+    .clean-all-pills .clean-grade-badge,
+    .clean-all-pills .clean-meta-pill{
+      font-size:8.5px !important;
+      padding:4px 6px !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -4285,14 +4318,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
           <div class="clean-card-main">
             <div class="card-name clean-card-name">${escapeHtml(c.name).toUpperCase()}</div>
-            <div class="clean-card-subrow">
+            <div class="clean-card-subrow clean-all-pills">
               <span class="clean-grade-badge">${escapeHtml(gradeText)}</span>
+              ${seriesText ? `<span class="clean-meta-pill clean-series-pill">${escapeHtml(seriesText)}</span>` : ""}
+              ${c.language ? `<span class="clean-meta-pill clean-language-pill">${escapeHtml(c.language)}</span>` : ""}
             </div>
-            ${(seriesText || c.language) ? `
-              <div class="clean-meta-pills">
-                ${seriesText ? `<span class="clean-meta-pill clean-series-pill">${escapeHtml(seriesText)}</span>` : ""}
-                ${c.language ? `<span class="clean-meta-pill clean-language-pill">${escapeHtml(c.language)}</span>` : ""}
-              </div>` : ""}
           </div>
 
           <div class="clean-price-block">
