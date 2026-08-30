@@ -2905,6 +2905,44 @@
     }
   }
 
+
+  /* Responsive Grade / Language / Series pills */
+  .clean-all-pills{
+    display:flex !important;
+    flex-wrap:wrap !important;
+    align-items:center !important;
+    align-content:flex-start;
+    gap:5px !important;
+    width:100%;
+    min-width:0;
+  }
+
+  .clean-all-pills .clean-grade-badge,
+  .clean-all-pills .clean-language-pill{
+    flex:0 0 auto !important;
+  }
+
+  .clean-all-pills .clean-series-pill{
+    flex:0 1 auto !important;
+    min-width:0;
+    max-width:100%;
+  }
+
+  /* If Series has to move to the next row, show its full text instead of
+     unnecessarily truncating it. */
+  .clean-all-pills .clean-series-pill{
+    white-space:normal !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+    line-height:1.15;
+  }
+
+  @media(max-width:390px){
+    .clean-all-pills{
+      gap:4px !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -4320,8 +4358,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             <div class="card-name clean-card-name">${escapeHtml(c.name).toUpperCase()}</div>
             <div class="clean-card-subrow clean-all-pills">
               <span class="clean-grade-badge">${escapeHtml(gradeText)}</span>
-              ${seriesText ? `<span class="clean-meta-pill clean-series-pill">${escapeHtml(seriesText)}</span>` : ""}
               ${c.language ? `<span class="clean-meta-pill clean-language-pill">${escapeHtml(c.language)}</span>` : ""}
+              ${seriesText ? `<span class="clean-meta-pill clean-series-pill">${escapeHtml(seriesText)}</span>` : ""}
             </div>
           </div>
 
