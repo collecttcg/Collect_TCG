@@ -2088,6 +2088,67 @@
   }
 }
 
+
+  /* Home: Collection at a Glance */
+  .home-collection-stats-section{margin-top:2px;}
+
+  .home-collection-stats{
+    display:grid;
+    grid-template-columns:repeat(6,minmax(0,1fr));
+    gap:10px;
+  }
+
+  .home-stat-card{
+    min-width:0;
+    padding:15px 14px;
+    border:1px solid var(--border);
+    border-radius:13px;
+    background:var(--surface);
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    text-decoration:none;
+    transition:transform .15s ease,border-color .15s ease,background .15s ease;
+  }
+
+  a.home-stat-card:hover{
+    transform:translateY(-2px);
+    border-color:rgba(227,179,65,.30);
+    background:var(--surface-2);
+  }
+
+  .home-stat-value{
+    color:var(--accent-gold);
+    font-family:'JetBrains Mono',monospace;
+    font-size:22px;
+    font-weight:800;
+    line-height:1;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .home-stat-label{
+    color:var(--text-muted);
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.65px;
+    text-transform:uppercase;
+    line-height:1.15;
+  }
+
+  @media(max-width:1180px){
+    .home-collection-stats{grid-template-columns:repeat(3,minmax(0,1fr));}
+  }
+
+  @media(max-width:700px){
+    .home-collection-stats{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:8px;
+    }
+    .home-stat-card{padding:13px 12px;border-radius:11px;}
+    .home-stat-value{font-size:20px;}
+    .home-stat-label{font-size:9.5px;}
+  }
+
 </style>
 </head>
 <body>
@@ -2884,6 +2945,24 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
   }
 
+  function getCollectionStats(){
+    return cards.reduce((acc, card)=>{
+      const status = normalizeFilterValue(card && card.availability ? card.availability : "Available");
+      const format = normalizeFilterValue(effectiveFormat(card));
+      const era = normalizeFilterValue(card && card.era ? card.era : "");
+
+      if(status === "sold") acc.sold += 1;
+      else if(status === "reserved") acc.reserved += 1;
+      else acc.inventory += 1;
+
+      if(format === "graded") acc.graded += 1;
+      if(format === "sealed") acc.sealed += 1;
+      if(era === "vintage") acc.vintage += 1;
+
+      return acc;
+    }, {inventory:0,reserved:0,sold:0,graded:0,vintage:0,sealed:0});
+  }
+
   function updateStatusNavCounts(){
     const counts = cards.reduce((acc, card)=>{
       const status = normalizeFilterValue(card && card.availability ? card.availability : "Available");
@@ -3629,6 +3708,48 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           <a href="#/giveaway" class="btn-ghost" style="display:inline-flex;align-items:center;text-decoration:none;">View Giveaways</a>
         </div>
       </div>
+
+      ${(()=>{
+        const stats = getCollectionStats();
+        return `
+          <section class="home-section home-collection-stats-section">
+            <div class="home-section-head">
+              <div>
+                <div class="eyebrow">Collection Overview</div>
+                <h3>Collection at a Glance</h3>
+                <p>Live counts from the current catalogue.</p>
+              </div>
+            </div>
+
+            <div class="home-collection-stats">
+              <a href="#/inventory" class="home-stat-card">
+                <span class="home-stat-value">${stats.inventory.toLocaleString()}</span>
+                <span class="home-stat-label">Inventory</span>
+              </a>
+              <a href="#/reserved" class="home-stat-card">
+                <span class="home-stat-value">${stats.reserved.toLocaleString()}</span>
+                <span class="home-stat-label">Reserved</span>
+              </a>
+              <a href="#/sold" class="home-stat-card">
+                <span class="home-stat-value">${stats.sold.toLocaleString()}</span>
+                <span class="home-stat-label">Sold</span>
+              </a>
+              <div class="home-stat-card">
+                <span class="home-stat-value">${stats.graded.toLocaleString()}</span>
+                <span class="home-stat-label">Graded</span>
+              </div>
+              <div class="home-stat-card">
+                <span class="home-stat-value">${stats.vintage.toLocaleString()}</span>
+                <span class="home-stat-label">Vintage</span>
+              </div>
+              <div class="home-stat-card">
+                <span class="home-stat-value">${stats.sealed.toLocaleString()}</span>
+                <span class="home-stat-label">Sealed</span>
+              </div>
+            </div>
+          </section>
+        `;
+      })()}
 
       <section class="home-section">
         <div class="home-section-head">
