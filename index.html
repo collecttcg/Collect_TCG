@@ -2501,7 +2501,7 @@
     <div class="field">
       <label for="showcaseVideoUrl">Facebook video / post URL</label>
       <input id="showcaseVideoUrl" required placeholder="https://www.facebook.com/...">
-      <div class="hint">Paste the public Facebook video/post link. Visitors will open the video directly on Facebook, so Facebook hosts the video and your Supabase storage/bandwidth is not used.</div>
+      <div class="hint">Paste the public Facebook video link. Facebook /videos/ permalinks will play inside the website when Facebook allows embedding; share links will open on Facebook as a fallback. Facebook still hosts the video, so your Supabase storage/bandwidth is not used.</div>
     </div>
 
     <div class="field">
@@ -3966,6 +3966,27 @@ function wireShimmer(container){
   }
 
   // ---------------- Showcase ----------------
+  function cleanFacebookVideoUrl(url){
+    try{
+      const u = new URL(url);
+      u.search = "";
+      u.hash = "";
+      return u.toString();
+    }catch(_){
+      return url;
+    }
+  }
+
+  function isFacebookEmbeddableVideoUrl(url){
+    try{
+      const u = new URL(url);
+      const hostOk = /(^|\.)facebook\.com$/i.test(u.hostname);
+      return hostOk && /\/videos\//i.test(u.pathname);
+    }catch(_){
+      return false;
+    }
+  }
+
   function isFacebookVideoUrl(url){
     try{
       const u = new URL(url);
@@ -4004,16 +4025,15 @@ function wireShimmer(container){
   }
 
   function openShowcaseVideo(v){
-    if(isFacebookVideoUrl(v.video_url)){
-      window.open(v.video_url, "_blank", "noopener,noreferrer");
-      return;
-    }
+    const cleanedUrl = isFacebookVideoUrl(v.video_url)
+      ? cleanFacebookVideoUrl(v.video_url)
+      : v.video_url;
 
     const overlay = $("videoOverlay");
     const mount = $("videoPlayerMount");
     const title = $("videoModalTitle");
     const copy = $("videoModalCopy");
-    const yt = youtubeVideoId(v.video_url);
+    const yt = youtubeVideoId(cleanedUrl);
 
     title.textContent = v.title || "Showcase";
     copy.innerHTML = `
@@ -4021,18 +4041,37 @@ function wireShimmer(container){
       ${v.description ? `<p>${escapeHtml(v.description)}</p>` : ""}
     `;
 
+    if(isFacebookEmbeddableVideoUrl(cleanedUrl)){
+      mount.innerHTML = `<iframe
+        src="${escapeHtml(facebookEmbedUrl(cleanedUrl))}"
+        title="${escapeHtml(v.title)}"
+        scrolling="no"
+        frameborder="0"
+        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+        allowfullscreen></iframe>`;
+      copy.innerHTML += `<p><a href="${escapeHtml(cleanedUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent-gold);font-weight:700;">Open on Facebook ↗</a></p>`;
+      overlay.hidden = false;
+      return;
+    }
+
+    if(isFacebookVideoUrl(cleanedUrl)){
+      window.open(cleanedUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
     if(yt){
       mount.innerHTML = `<iframe
         src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(yt)}?autoplay=1&rel=0"
         title="${escapeHtml(v.title)}"
         allow="autoplay; encrypted-media; picture-in-picture"
         allowfullscreen></iframe>`;
-    }else if(/\.(mp4|webm|ogg)(\?|#|$)/i.test(v.video_url)){
-      mount.innerHTML = `<video controls autoplay playsinline src="${escapeHtml(v.video_url)}"></video>`;
+    }else if(/\.(mp4|webm|ogg)(\?|#|$)/i.test(cleanedUrl)){
+      mount.innerHTML = `<video controls autoplay playsinline src="${escapeHtml(cleanedUrl)}"></video>`;
     }else{
-      window.open(v.video_url, "_blank", "noopener,noreferrer");
+      window.open(cleanedUrl, "_blank", "noopener,noreferrer");
       return;
     }
+
     overlay.hidden = false;
   }
 
@@ -4066,7 +4105,7 @@ function wireShimmer(container){
               ${v.featured ? `<span class="showcase-featured">Featured</span>` : ""}
               ${thumb
                 ? `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(v.title)} thumbnail">`
-                : `<div class="showcase-media-placeholder">${isFacebookVideoUrl(v.video_url) ? "Facebook Video · Click to watch ↗" : "Video showcase"}</div>`}
+                : `<div class="showcase-media-placeholder">${isFacebookEmbeddableVideoUrl(v.video_url) ? "Facebook Video" : (isFacebookVideoUrl(v.video_url) ? "Facebook Video · Click to watch ↗" : "Video showcase")}</div>`}
               <div class="showcase-play">▶</div>
             </div>
             <div class="showcase-body">
@@ -4074,7 +4113,7 @@ function wireShimmer(container){
               ${v.series ? `<div class="showcase-series">${escapeHtml(v.series)}</div>` : ""}
               ${v.description ? `<div class="showcase-description">${escapeHtml(v.description)}</div>` : ""}
               <div class="showcase-actions">
-                <button type="button" class="btn-ghost showcase-watch" data-showcase-watch="${v.id}">${isFacebookVideoUrl(v.video_url) ? "▶ Watch on Facebook ↗" : "▶ Watch"}</button>
+                <button type="button" class="btn-ghost showcase-watch" data-showcase-watch="${v.id}">${isFacebookEmbeddableVideoUrl(v.video_url) ? "▶ Watch" : (isFacebookVideoUrl(v.video_url) ? "▶ Watch on Facebook ↗" : "▶ Watch")}</button>
                 <div class="showcase-owner-actions owner-only">
                   <button type="button" class="btn-ghost" data-showcase-edit="${v.id}">Edit</button>
                   <button type="button" class="btn-ghost" data-showcase-delete="${v.id}" style="color:var(--danger)">Delete</button>
