@@ -2772,6 +2772,56 @@
     .recent-clear-btn{width:auto !important;min-height:38px !important;padding:8px 11px !important;font-size:10px !important;}
   }
 
+
+  /* Shareable inventory filters */
+  .inventory-filter-tools{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:12px;
+  }
+
+  .inventory-filter-tools .quick-filters{
+    flex:1 1 auto;
+    margin-bottom:0 !important;
+  }
+
+  .copy-filter-link-btn{
+    appearance:none;
+    -webkit-appearance:none;
+    flex:0 0 auto;
+    min-height:32px;
+    padding:7px 10px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:var(--surface);
+    color:var(--accent-teal);
+    font-family:inherit;
+    font-size:10.5px;
+    font-weight:800;
+    white-space:nowrap;
+    cursor:pointer;
+  }
+
+  .copy-filter-link-btn:hover{
+    border-color:rgba(78,210,199,.35);
+    background:var(--surface-2);
+  }
+
+  @media(max-width:700px){
+    .inventory-filter-tools{
+      display:block;
+    }
+
+    .copy-filter-link-btn{
+      width:100%;
+      min-height:38px;
+      margin-top:8px;
+      font-size:11px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -3633,7 +3683,68 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function currentRoute(){
     const h = location.hash.replace(/^#\/?/, "");
-    return h || "home";
+    return (h.split("?")[0] || "home").trim();
+  }
+
+  function currentHashParams(){
+    const raw = location.hash.replace(/^#\/?/, "");
+    const qIndex = raw.indexOf("?");
+    return new URLSearchParams(qIndex >= 0 ? raw.slice(qIndex + 1) : "");
+  }
+
+  function safeUrlFilterText(value, maxLength = 100){
+    return String(value ?? "").trim().slice(0, maxLength);
+  }
+
+  function listingRouteForScope(scope = listingAvailabilityScope){
+    return ["inventory","reserved","sold"].includes(scope) ? scope : "inventory";
+  }
+
+  function updateListingUrlFromControls(){
+    const route = listingRouteForScope();
+    const params = new URLSearchParams();
+
+    const put = (key, value, maxLength = 100)=>{
+      const safe = safeUrlFilterText(value, maxLength);
+      if(safe) params.set(key, safe);
+    };
+
+    put("q", $("search")?.value, 100);
+    put("game", $("filterGame")?.value, 60);
+    put("grade", $("filterGrade")?.value, 60);
+    put("lang", $("filterLanguage")?.value, 24);
+    put("era", $("filterEra")?.value, 40);
+    if(route === "inventory") put("availability", $("filterAvailability")?.value, 40);
+    put("series", $("filterSeries")?.value, 80);
+
+    const sort = safeUrlFilterText($("sortBy")?.value, 24);
+    if(sort && sort !== "name") params.set("sort", sort);
+
+    if(activeQuickFilter && activeQuickFilter !== "all"){
+      params.set("quick", activeQuickFilter);
+    }
+
+    const pillKeys = {
+      grade:"pg",
+      language:"pl",
+      era:"pe",
+      availability:"pa",
+      series:"ps"
+    };
+    Object.entries(pillKeys).forEach(([type,key])=>{
+      Array.from(pillFilterState[type] || [])
+        .slice(0,12)
+        .forEach(value=>{
+          const safe = safeUrlFilterText(value, 80);
+          if(safe) params.append(key, safe);
+        });
+    });
+
+    const query = params.toString();
+    const nextHash = `#/${route}${query ? `?${query}` : ""}`;
+    if(location.hash !== nextHash){
+      history.replaceState(null, "", nextHash);
+    }
   }
   window.addEventListener("hashchange", router);
 
@@ -4865,9 +4976,11 @@ function wireShimmer(container){
         }
 
         activeQuickFilter = "all";
+        updateListingUrlFromControls();
 
-        if(currentRoute() === "inventory"){
-          renderInventoryPage();
+        const route = currentRoute();
+        if(["inventory","reserved","sold"].includes(route)){
+          renderInventoryPage(route);
         }else{
           location.hash = "#/inventory";
         }
@@ -4920,7 +5033,8 @@ function wireShimmer(container){
     view.innerHTML = `
       <div class="page-head"><div><div class="eyebrow">${escapeHtml(scopeMeta.eyebrow)}</div><h2>${escapeHtml(scopeMeta.title)}</h2><p>${escapeHtml(scopeMeta.description)}</p></div></div>
 
-      <div class="quick-filters" id="quickFilters">
+      <div class="inventory-filter-tools">
+        <div class="quick-filters" id="quickFilters">
         <button type="button" class="quick-filter" data-quick="all">All</button>
         <button type="button" class="quick-filter" data-quick="new">New This Week</button>
         <button type="button" class="quick-filter" data-quick="graded">Slabs</button>
@@ -4928,6 +5042,8 @@ function wireShimmer(container){
         <button type="button" class="quick-filter" data-quick="sealed">Sealed</button>
         <button type="button" class="quick-filter" data-quick="championship">Championship</button>
         <button type="button" class="quick-filter" data-quick="vintage">Vintage</button>
+        </div>
+        <button type="button" class="copy-filter-link-btn" id="copyFilterLinkBtn" title="Copy a link to these filters">Copy Filtered Link</button>
       </div>
 
       <div class="pill-filter-summary" id="pillFilterSummary" hidden></div>
@@ -5081,6 +5197,97 @@ function wireShimmer(container){
       {value:"price-high",label:"Price: Highest to Lowest"}
     ]);
 
+    function restoreListingFiltersFromUrl(){
+      const params = currentHashParams();
+
+      // URL input is untrusted. Only accept values that exist in the
+      // current public catalogue/options, plus whitelisted sort/quick values.
+      const valid = {
+        game:new Set(games.map(normalizeFilterValue)),
+        grade:new Set(gradeOptions.map(normalizeFilterValue)),
+        language:new Set(languages.map(normalizeFilterValue)),
+        era:new Set(eras.map(normalizeFilterValue)),
+        availability:new Set(AVAILABILITY_OPTIONS.map(normalizeFilterValue)),
+        series:new Set(series.map(normalizeFilterValue))
+      };
+
+      const setSelect = (id, key, validSet, fallbackLabel)=>{
+        const hidden = $(id);
+        const btn = $(id + "Btn");
+        if(!hidden) return;
+
+        const raw = safeUrlFilterText(params.get(key), 100);
+        const accepted = raw && validSet.has(normalizeFilterValue(raw)) ? raw : "";
+        hidden.value = accepted;
+
+        if(btn){
+          const option = Array.from($(id + "Menu")?.querySelectorAll(".overview-select-option") || [])
+            .find(el=>normalizeFilterValue(el.dataset.value) === normalizeFilterValue(accepted));
+          btn.querySelector("span").textContent = option ? option.textContent : fallbackLabel;
+        }
+      };
+
+      $("search").value = safeUrlFilterText(params.get("q"), 100);
+
+      setSelect("filterGame","game",valid.game,"All Games");
+      setSelect("filterGrade","grade",valid.grade,"All Grades / Conditions");
+      setSelect("filterLanguage","lang",valid.language,"All Languages");
+      setSelect("filterEra","era",valid.era,"All Eras");
+      setSelect("filterSeries","series",valid.series,"All Series");
+
+      if(listingAvailabilityScope === "inventory" && $("filterAvailabilityWrap")){
+        const allowedAvailability = new Set(
+          AVAILABILITY_OPTIONS
+            .filter(v=>!["Reserved","Sold"].includes(v))
+            .map(normalizeFilterValue)
+        );
+        setSelect("filterAvailability","availability",allowedAvailability,"All Availability");
+      }else if($("filterAvailability")){
+        $("filterAvailability").value = "";
+      }
+
+      const allowedSort = new Set(["name","price-low","price-high"]);
+      const sort = safeUrlFilterText(params.get("sort"), 24);
+      $("sortBy").value = allowedSort.has(sort) ? sort : "name";
+      const sortLabel = {
+        name:"Sort: Name",
+        "price-low":"Price: Lowest to Highest",
+        "price-high":"Price: Highest to Lowest"
+      }[$("sortBy").value];
+      $("sortByBtn").querySelector("span").textContent = sortLabel;
+
+      const allowedQuick = new Set(["all","new","graded","raw","sealed","championship","vintage"]);
+      const quick = safeUrlFilterText(params.get("quick"), 24);
+      activeQuickFilter = allowedQuick.has(quick) ? quick : "all";
+
+      // Clear old in-memory pill state before restoring this URL.
+      Object.values(pillFilterState).forEach(set=>set.clear());
+
+      const pillConfig = [
+        ["grade","pg",valid.grade],
+        ["language","pl",valid.language],
+        ["era","pe",valid.era],
+        ["availability","pa",valid.availability],
+        ["series","ps",valid.series]
+      ];
+
+      pillConfig.forEach(([type,key,validSet])=>{
+        params.getAll(key)
+          .slice(0,12)
+          .map(v=>safeUrlFilterText(v,80))
+          .filter(v=>v && validSet.has(normalizeFilterValue(v)))
+          .forEach(v=>pillFilterState[type].add(v));
+      });
+
+      // Reserved/Sold pages are already status-scoped; an availability pill
+      // from a copied Inventory URL must not override that scope.
+      if(listingAvailabilityScope !== "inventory"){
+        pillFilterState.availability.clear();
+      }
+    }
+
+    restoreListingFiltersFromUrl();
+
     function draw(){
       const grid = $("invGrid");
       if(cards.length === 0){
@@ -5103,16 +5310,46 @@ function wireShimmer(container){
     }
 
     ["search","filterGame","filterGrade","filterLanguage","filterEra","filterAvailability","filterSeries","sortBy"].forEach(id=>{
-      $(id).addEventListener("input", draw);
-      $(id).addEventListener("change", draw);
+      const el = $(id);
+      if(!el) return;
+
+      el.addEventListener("input", ()=>{
+        updateListingUrlFromControls();
+        draw();
+      });
+      el.addEventListener("change", ()=>{
+        updateListingUrlFromControls();
+        draw();
+      });
     });
 
     $("quickFilters").querySelectorAll(".quick-filter").forEach(btn=>{
       btn.addEventListener("click", ()=>{
         activeQuickFilter = btn.dataset.quick;
         syncQuickFilterUI();
+        updateListingUrlFromControls();
         draw();
       });
+    });
+
+    $("copyFilterLinkBtn")?.addEventListener("click", async ()=>{
+      updateListingUrlFromControls();
+      const url = location.href;
+      try{
+        await navigator.clipboard.writeText(url);
+        showToast("Filtered link copied");
+      }catch{
+        const input = document.createElement("textarea");
+        input.value = url;
+        input.setAttribute("readonly","");
+        input.style.position = "fixed";
+        input.style.opacity = "0";
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        input.remove();
+        showToast("Filtered link copied");
+      }
     });
 
     function syncPillFilterSummary(){
@@ -5145,7 +5382,8 @@ function wireShimmer(container){
         btn.addEventListener("click", ()=>{
           const bucket = pillFilterState[btn.dataset.removePillType];
           if(bucket) bucket.delete(btn.dataset.removePillValue);
-          renderInventoryPage();
+          updateListingUrlFromControls();
+          renderInventoryPage(listingAvailabilityScope);
         });
       });
 
@@ -5153,7 +5391,8 @@ function wireShimmer(container){
       if(clearBtn){
         clearBtn.addEventListener("click", ()=>{
           Object.values(pillFilterState).forEach(set=>set.clear());
-          renderInventoryPage();
+          updateListingUrlFromControls();
+          renderInventoryPage(listingAvailabilityScope);
         });
       }
 
