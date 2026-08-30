@@ -2381,6 +2381,172 @@
     }
   }
 
+
+  /* Premium NEW badge */
+  .new-card-badge{
+    min-width:48px !important;
+    min-height:25px !important;
+    padding:5px 10px !important;
+    border-radius:8px !important;
+    background:
+      linear-gradient(135deg,#76f7e6 0%,#42d8c7 55%,#25b7a9 100%) !important;
+    color:#061210 !important;
+    border:1px solid rgba(255,255,255,.42) !important;
+    box-shadow:
+      0 5px 14px rgba(0,0,0,.32),
+      0 0 0 1px rgba(55,218,199,.18),
+      inset 0 1px 0 rgba(255,255,255,.34) !important;
+    font-size:11px !important;
+    font-weight:900 !important;
+    letter-spacing:1.2px !important;
+    text-shadow:0 1px 0 rgba(255,255,255,.25);
+  }
+
+  @media(min-width:801px){
+    .new-card-badge{
+      top:10px !important;
+      right:10px !important;
+      min-width:54px !important;
+      min-height:27px !important;
+      padding:6px 11px !important;
+      font-size:11.5px !important;
+      border-radius:9px !important;
+    }
+
+    .detail-new-card-badge{
+      min-width:68px !important;
+      min-height:32px !important;
+      padding:8px 14px !important;
+      font-size:14px !important;
+      border-radius:10px !important;
+    }
+  }
+
+  @media(max-width:800px){
+    .new-card-badge{
+      min-width:40px !important;
+      min-height:21px !important;
+      padding:4px 7px !important;
+      font-size:9.5px !important;
+      letter-spacing:.8px !important;
+      border-radius:7px !important;
+    }
+  }
+
+  /* Inventory / Reserved / Sold overview */
+  .listing-overview-panel{
+    margin:0 0 18px;
+    padding:18px 18px 19px;
+    border:1px solid rgba(255,255,255,.075);
+    border-radius:16px;
+    background:
+      radial-gradient(circle at 10% 0%, rgba(78,210,199,.07), transparent 30%),
+      linear-gradient(180deg, rgba(255,255,255,.024), rgba(255,255,255,.008));
+    box-shadow:0 10px 28px rgba(0,0,0,.12);
+  }
+
+  .listing-overview-head{
+    margin-bottom:12px;
+  }
+
+  .listing-overview-head h3{
+    margin:2px 0 0;
+    font-size:17px;
+  }
+
+  .listing-overview-grid{
+    display:grid;
+    grid-template-columns:repeat(6,minmax(0,1fr));
+    gap:9px;
+  }
+
+  .listing-overview-card{
+    position:relative;
+    min-width:0;
+    min-height:76px;
+    padding:13px 12px;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    gap:5px;
+    border:1px solid rgba(255,255,255,.075);
+    border-radius:12px;
+    background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.014));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+    overflow:hidden;
+  }
+
+  .listing-overview-card::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    height:2px;
+    background:linear-gradient(90deg,var(--accent-teal),rgba(78,210,199,.05));
+    opacity:.65;
+  }
+
+  .listing-overview-new::before{
+    background:linear-gradient(90deg,#66f0df,#35c9ba);
+    opacity:1;
+  }
+
+  .listing-overview-value{
+    color:var(--accent-gold);
+    font-family:'JetBrains Mono',monospace;
+    font-size:23px;
+    font-weight:800;
+    line-height:1;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .listing-overview-new .listing-overview-value{
+    color:#66f0df;
+  }
+
+  .listing-overview-label{
+    color:var(--text-muted);
+    font-size:9px;
+    font-weight:800;
+    line-height:1.15;
+    letter-spacing:.7px;
+    text-transform:uppercase;
+  }
+
+  @media(max-width:1100px){
+    .listing-overview-grid{
+      grid-template-columns:repeat(3,minmax(0,1fr));
+    }
+  }
+
+  @media(max-width:700px){
+    .listing-overview-panel{
+      padding:14px;
+      margin-bottom:14px;
+      border-radius:13px;
+    }
+
+    .listing-overview-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:7px;
+    }
+
+    .listing-overview-card{
+      min-height:66px;
+      padding:11px;
+      border-radius:10px;
+    }
+
+    .listing-overview-value{
+      font-size:20px;
+    }
+
+    .listing-overview-label{
+      font-size:8.5px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -4075,9 +4241,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const ageMs = Date.now() - created;
     const maxAgeMs = days * 24 * 60 * 60 * 1000;
 
-    return ageMs >= 0
-      && ageMs <= maxAgeMs
-      && cardMatchesListingScope(card, "inventory");
+    return ageMs >= 0 && ageMs <= maxAgeMs;
   }
 
   function cardMatchesListingScope(card, scope = listingAvailabilityScope){
@@ -4087,6 +4251,24 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     // Main Inventory contains everything still in the collection except
     // cards that have moved to the dedicated Reserved or Sold tabs.
     return availability !== "reserved" && availability !== "sold";
+  }
+
+  function getListingOverview(scope = listingAvailabilityScope){
+    const scoped = cards.filter(c=>cardMatchesListingScope(c, scope));
+
+    return scoped.reduce((acc, card)=>{
+      const format = normalizeFilterValue(effectiveFormat(card));
+      const era = normalizeFilterValue(card.era || "");
+
+      acc.total += 1;
+      if(isNewCard(card)) acc.new += 1;
+      if(format === "graded") acc.graded += 1;
+      if(format === "raw") acc.raw += 1;
+      if(format === "sealed") acc.sealed += 1;
+      if(era === "vintage") acc.vintage += 1;
+
+      return acc;
+    }, {total:0,new:0,graded:0,raw:0,sealed:0,vintage:0});
   }
 
   function listingScopeMeta(scope){
@@ -4452,6 +4634,47 @@ function wireShimmer(container){
     activeQuickFilter = "all";
     view.innerHTML = `
       <div class="page-head"><div><div class="eyebrow">${escapeHtml(scopeMeta.eyebrow)}</div><h2>${escapeHtml(scopeMeta.title)}</h2><p>${escapeHtml(scopeMeta.description)}</p></div></div>
+
+      ${(()=>{
+        const overview = getListingOverview(listingAvailabilityScope);
+        return `
+          <section class="listing-overview-panel">
+            <div class="listing-overview-head">
+              <div>
+                <div class="eyebrow">Overview</div>
+                <h3>${escapeHtml(scopeMeta.title)} at a Glance</h3>
+              </div>
+            </div>
+
+            <div class="listing-overview-grid">
+              <div class="listing-overview-card">
+                <span class="listing-overview-value">${overview.total.toLocaleString()}</span>
+                <span class="listing-overview-label">Total</span>
+              </div>
+              <div class="listing-overview-card listing-overview-new">
+                <span class="listing-overview-value">${overview.new.toLocaleString()}</span>
+                <span class="listing-overview-label">New This Week</span>
+              </div>
+              <div class="listing-overview-card">
+                <span class="listing-overview-value">${overview.graded.toLocaleString()}</span>
+                <span class="listing-overview-label">Graded</span>
+              </div>
+              <div class="listing-overview-card">
+                <span class="listing-overview-value">${overview.raw.toLocaleString()}</span>
+                <span class="listing-overview-label">Raw</span>
+              </div>
+              <div class="listing-overview-card">
+                <span class="listing-overview-value">${overview.sealed.toLocaleString()}</span>
+                <span class="listing-overview-label">Sealed</span>
+              </div>
+              <div class="listing-overview-card">
+                <span class="listing-overview-value">${overview.vintage.toLocaleString()}</span>
+                <span class="listing-overview-label">Vintage</span>
+              </div>
+            </div>
+          </section>
+        `;
+      })()}
 
       <div class="quick-filters" id="quickFilters">
         <button type="button" class="quick-filter" data-quick="all">All</button>
