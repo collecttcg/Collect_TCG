@@ -3363,6 +3363,33 @@
     }
   }
 
+
+  /* ===== Mobile safe bottom breathing room =====
+     Keeps the final content above Safari/Chrome's bottom browser controls
+     while preserving the bounded mobile scroll behavior. */
+  @media(max-width:800px){
+    .main{
+      padding-bottom:calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    #view{
+      padding-bottom:0 !important;
+    }
+
+    /* Detail modal needs its own safe space because it can scroll independently. */
+    .modal-card,
+    .details-modal,
+    .modal-content{
+      scroll-padding-bottom:calc(88px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .modal-card > :last-child,
+    .details-modal > :last-child,
+    .modal-content > :last-child{
+      margin-bottom:calc(22px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+  }
+
 </style>
 </head>
 <body>
