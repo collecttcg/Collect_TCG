@@ -1578,6 +1578,85 @@
     .clean-card-reference{font-size:9px;gap:4px;}
   }
 
+
+  /* Favorites / shortlist */
+  .public-card-actions{
+    position:absolute;
+    top:8px;
+    right:8px;
+    z-index:7;
+    display:flex;
+    gap:5px;
+  }
+
+  .favorite-btn{
+    width:30px;
+    height:30px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.16);
+    background:rgba(14,16,20,.78);
+    color:#fff;
+    font-size:17px;
+    line-height:1;
+    cursor:pointer;
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    box-shadow:0 3px 12px rgba(0,0,0,.25);
+  }
+
+  .favorite-btn:hover{
+    border-color:var(--accent-gold);
+    transform:translateY(-1px);
+  }
+
+  .favorite-btn.active{
+    color:#ff5d73;
+    border-color:rgba(255,93,115,.40);
+    background:rgba(255,93,115,.10);
+  }
+
+  #detailsFavoriteBtn.active{
+    color:#ff5d73 !important;
+    border-color:rgba(255,93,115,.38) !important;
+    background:rgba(255,93,115,.08) !important;
+  }
+
+  .favorites-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+  }
+
+  .favorites-summary{
+    margin:0 0 14px;
+    color:var(--text-muted);
+    font-size:12px;
+  }
+
+  .favorites-summary strong{color:var(--text);}
+
+  @media(max-width:700px){
+    .favorite-btn{
+      width:32px;
+      height:32px;
+      font-size:18px;
+    }
+
+    .favorites-actions{
+      width:100%;
+    }
+
+    .favorites-actions .btn-primary,
+    .favorites-actions .btn-ghost{
+      flex:1 1 auto;
+      justify-content:center;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -1604,10 +1683,12 @@
         <span class="ic">⋯</span> More <span class="mobile-more-caret">⌄</span>
       </button>
       <div class="mobile-more-menu" id="mobileMoreMenu" hidden>
+        <a href="#/favorites" data-route="favorites"><span class="ic">♡</span> Favorites</a>
         <a href="#/giveaway" data-route="giveaway"><span class="ic">★</span> Giveaway</a>
         <a href="#/about" data-route="about"><span class="ic">◎</span> About Us</a>
         <a href="#/contact" data-route="contact"><span class="ic">✉</span> Contact</a>
       </div>
+      <a href="#/favorites" data-route="favorites" class="mobile-secondary-nav"><span class="ic">♡</span> Favorites</a>
       <a href="#/giveaway" data-route="giveaway" class="mobile-secondary-nav"><span class="ic">★</span> Giveaway</a>
       <a href="#/insights" data-route="insights" class="owner-only"><span class="ic">◔</span> Insights</a>
       <a href="#/add" data-route="add" class="owner-only"><span class="ic">+</span> Add Card</a>
@@ -1643,6 +1724,7 @@
 <div class="modal-overlay" id="detailsOverlay" hidden>
   <div class="modal card-details-modal" id="detailsModal" role="dialog" aria-modal="true" aria-labelledby="detailsTitle">
     <div class="details-top-actions">
+      <button type="button" id="detailsFavoriteBtn" aria-label="Add to favorites">♡ Favorite</button>
       <button type="button" id="detailsShareBtn" aria-label="Share this card">Share</button>
       <button type="button" id="detailsCloseBtn">Close</button>
       <button type="button" class="btn-primary owner-only" id="detailsEditBtn" hidden>Edit card</button>
@@ -1816,6 +1898,72 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   const AVAILABILITY_OPTIONS = ["Available","Reserved","Sold","Collection (NFS)"];
   const RARITY_LIST = ["Common","Uncommon","Rare","Rare Holo","Ultra Rare","Secret Rare","Promo"];
   const INDEX_KEY = "card-index";
+  const FAVORITES_KEY = "collect-tcg-favorites";
+
+  function getFavoriteIds(){
+    try{
+      const raw = JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]");
+      return new Set(Array.isArray(raw) ? raw.filter(Boolean) : []);
+    }catch(e){
+      return new Set();
+    }
+  }
+
+  function saveFavoriteIds(set){
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(set)));
+  }
+
+  function isFavorite(cardId){
+    return getFavoriteIds().has(cardId);
+  }
+
+  function toggleFavorite(cardId){
+    const set = getFavoriteIds();
+    if(set.has(cardId)) set.delete(cardId);
+    else set.add(cardId);
+    saveFavoriteIds(set);
+    return set.has(cardId);
+  }
+
+  function favoriteCards(){
+    const ids = getFavoriteIds();
+    return cards.filter(c=>ids.has(c.id));
+  }
+
+  async function copyInquiryList(){
+    const list = favoriteCards();
+    if(!list.length){
+      showToast("No favorites yet");
+      return;
+    }
+
+    const text = [
+      "Hi, I'm interested in these cards:",
+      "",
+      ...list.map(c=>{
+        const code = c.card_code ? `${c.card_code} — ` : "";
+        const year = c.year ? ` (${c.year})` : "";
+        return `${code}${c.name}${year}`;
+      })
+    ].join("\n");
+
+    try{
+      await navigator.clipboard.writeText(text);
+      showToast("Inquiry list copied");
+    }catch(err){
+      const input = document.createElement("textarea");
+      input.value = text;
+      input.setAttribute("readonly", "");
+      input.style.position = "fixed";
+      input.style.opacity = "0";
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      input.remove();
+      showToast("Inquiry list copied");
+    }
+  }
+
 
   let cards = [];
   let giveaways = [];
@@ -2329,6 +2477,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
     else if(route === "home") renderHomePage();
     else if(route === "inventory") renderInventoryPage();
+    else if(route === "favorites") renderFavoritesPage();
     else if(route === "by-game"){
       if(isOwnerMode()) renderByGamePage();
       else { location.hash="#/inventory"; return; }
@@ -2929,6 +3078,52 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     `;
   }
 
+  // ---------------- Favorites / Shortlist ----------------
+  function renderFavoritesPage(){
+    const list = favoriteCards();
+
+    view.innerHTML = `
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Your shortlist</div>
+          <h2>Favorites</h2>
+          <p>Saved only in this browser. No account is required.</p>
+        </div>
+        <div class="favorites-actions">
+          <button type="button" class="btn-primary" id="copyInquiryBtn" ${list.length ? "" : "disabled"}>Copy Inquiry List</button>
+          <button type="button" class="btn-ghost" id="clearFavoritesBtn" ${list.length ? "" : "disabled"}>Clear Favorites</button>
+        </div>
+      </div>
+
+      <div class="favorites-summary"><strong>${list.length}</strong> ${list.length === 1 ? "card" : "cards"} saved</div>
+
+      <div class="grid" id="favoritesGrid">
+        ${list.length
+          ? list.map(cardTileHTML).join("")
+          : `<div class="empty-state">${EMPTY_ICON}<h2>No favorites yet</h2><p>Tap the ♡ on any card to build a shortlist.</p><a href="#/inventory" class="btn-primary" style="display:inline-flex;margin-top:12px;">Browse Inventory</a></div>`
+        }
+      </div>
+    `;
+
+    const grid = $("favoritesGrid");
+    if(grid){
+      wireCardActions(grid);
+      wireShimmer(grid);
+    }
+
+    const copyBtn = $("copyInquiryBtn");
+    if(copyBtn) copyBtn.addEventListener("click", copyInquiryList);
+
+    const clearBtn = $("clearFavoritesBtn");
+    if(clearBtn){
+      clearBtn.addEventListener("click", ()=>{
+        localStorage.removeItem(FAVORITES_KEY);
+        renderFavoritesPage();
+        showToast("Favorites cleared");
+      });
+    }
+  }
+
   // ---------------- Home ----------------
   function renderHomePage(){
     const recent = cards
@@ -3182,6 +3377,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       <div class="card ${shimmer ? "shimmer" : ""}" style="--stripe:${color}" data-shimmer="${shimmer}" data-card-id="${escapeHtml(c.id)}" tabindex="0" role="button" aria-label="View details for ${escapeHtml(c.name)}">
         ${cardThumbHTML(c)}
         <div class="card-body clean-card-body">
+          <div class="public-card-actions">
+            <button type="button" class="favorite-btn ${isFavorite(c.id) ? "active" : ""}" data-favorite-id="${escapeHtml(c.id)}" title="${isFavorite(c.id) ? "Remove from favorites" : "Add to favorites"}" aria-label="${isFavorite(c.id) ? "Remove from favorites" : "Add to favorites"}">${isFavorite(c.id) ? "♥" : "♡"}</button>
+          </div>
+
           <div class="card-actions owner-only">
             <button class="icon-btn" data-action="edit" data-id="${c.id}" title="Edit" aria-label="Edit ${escapeHtml(c.name)}">✎</button>
             <button class="icon-btn" data-action="delete" data-id="${c.id}" title="Delete" aria-label="Delete ${escapeHtml(c.name)}">✕</button>
@@ -3225,6 +3424,21 @@ function wireShimmer(container){
 
   function wireCardActions(container){
     container.addEventListener("click", async (e)=>{
+      const favoriteBtn = e.target.closest(".favorite-btn[data-favorite-id]");
+      if(favoriteBtn){
+        e.stopPropagation();
+        const id = favoriteBtn.dataset.favoriteId;
+        const active = toggleFavorite(id);
+        favoriteBtn.classList.toggle("active", active);
+        favoriteBtn.textContent = active ? "♥" : "♡";
+        favoriteBtn.title = active ? "Remove from favorites" : "Add to favorites";
+        favoriteBtn.setAttribute("aria-label", favoriteBtn.title);
+        if(currentRoute() === "favorites" && !active){
+          renderFavoritesPage();
+        }
+        return;
+      }
+
       const filterPill = e.target.closest(".filter-pill-btn[data-pill-filter]");
       if(filterPill){
         e.stopPropagation();
@@ -4462,6 +4676,14 @@ function wireShimmer(container){
       : condition;
     const cost = card.cost == null ? "—" : fmtMoney(card.cost);
 
+    const detailsFavoriteBtn = $("detailsFavoriteBtn");
+    if(detailsFavoriteBtn){
+      const fav = isFavorite(card.id);
+      detailsFavoriteBtn.textContent = fav ? "♥ Favorited" : "♡ Favorite";
+      detailsFavoriteBtn.classList.toggle("active", fav);
+      detailsFavoriteBtn.setAttribute("aria-label", fav ? "Remove from favorites" : "Add to favorites");
+    }
+
     detailsMount.innerHTML = `
       <div class="detail-header">
         <div class="detail-title">
@@ -4577,6 +4799,15 @@ function wireShimmer(container){
     }
     lightboxTouchStartX = null;
   }, {passive:true});
+  $("detailsFavoriteBtn").addEventListener("click", ()=>{
+    const card = cards.find(c=>c.id === detailsCardId);
+    if(!card) return;
+    const active = toggleFavorite(card.id);
+    const btn = $("detailsFavoriteBtn");
+    btn.textContent = active ? "♥ Favorited" : "♡ Favorite";
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-label", active ? "Remove from favorites" : "Add to favorites");
+  });
   $("detailsShareBtn").addEventListener("click", shareCurrentCard);
   $("detailsCloseBtn").addEventListener("click", ()=>closeDetailsModal(true));
   $("detailsEditBtn").addEventListener("click", ()=>{
