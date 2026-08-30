@@ -1412,6 +1412,15 @@
   .mobile-more-caret{display:none !important;}
 }
 
+
+  #filterAvailabilityWrap{min-width:165px;}
+  .clean-availability-pill{font-weight:800 !important;}
+  .clean-availability-pill[data-pill-value="Available"]{color:#4ade80 !important;border-color:rgba(74,222,128,.30) !important;background:rgba(74,222,128,.08) !important;}
+  .clean-availability-pill[data-pill-value="Reserved"]{color:var(--accent-gold) !important;border-color:rgba(227,179,65,.34) !important;background:rgba(227,179,65,.09) !important;}
+  .clean-availability-pill[data-pill-value="Sold"]{color:#f87171 !important;border-color:rgba(248,113,113,.30) !important;background:rgba(248,113,113,.08) !important;}
+  .clean-availability-pill[data-pill-value="Collection (NFS)"]{color:#c084fc !important;border-color:rgba(192,132,252,.30) !important;background:rgba(192,132,252,.08) !important;}
+  @media(max-width:700px){#filterAvailabilityWrap{min-width:0 !important;}}
+
 </style>
 </head>
 <body>
@@ -1646,6 +1655,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   const CONDITION_LABEL = {NM:"Near Mint", M:"Mint", LP:"Lightly Played", MP:"Moderately Played", HP:"Heavily Played", DMG:"Damaged", SEALED:"Sealed", NA:"Not Applicable"};
   const LANGUAGE_OPTIONS = ["JP","ENG","KR","CN"];
   const ERA_OPTIONS = ["Modern","Mid-Era","Vintage"];
+  const AVAILABILITY_OPTIONS = ["Available","Reserved","Sold","Collection (NFS)"];
   const RARITY_LIST = ["Common","Uncommon","Rare","Rare Holo","Ultra Rare","Secret Rare","Promo"];
   const INDEX_KEY = "card-index";
 
@@ -1676,12 +1686,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       detailsEditBtn.style.display = isOwnerMode() ? "inline-flex" : "none";
     }
 
+  }
+
   function requireOwner(action = "perform this action"){
     if(isOwnerMode()) return true;
     console.warn(`Blocked non-owner attempt to ${action}.`);
     showToast("Owner login required");
     return false;
-  }
   }
 
   async function refreshOwnerSession(){
@@ -1722,6 +1733,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       game: row.game === "One Piece" ? "One Piece Card Game" : (row.game || ""),
       language: row.language || "",
       era: row.era || "",
+      availability: row.availability || "Available",
       set: row.set_name || "",
       series: row.series || "",
       format: row.format || "",
@@ -1754,6 +1766,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       game: card.game,
       language: card.language || "",
       era: card.era || "",
+      availability: card.availability || "Available",
       set_name: card.set || "",
       series: card.series || "",
       format: card.format || "",
@@ -1783,7 +1796,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function loadCards(){
-    const publicColumns = "id,name,game,language,era,set_name,series,format,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,images,grading,created_at,updated_at";
+    const publicColumns = "id,name,game,language,era,availability,set_name,series,format,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,images,grading,created_at,updated_at";
     const columns = isOwnerMode() ? "*" : publicColumns;
 
     const { data, error } = await supabaseClient
@@ -2326,6 +2339,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           </select>
         </div>
       </div>
+      <div class="field">
+        <label for="${p}Availability">Availability</label>
+        <select id="${p}Availability" required>
+          ${AVAILABILITY_OPTIONS.map(v=>`<option value="${v}">${v}</option>`).join("")}
+        </select>
+      </div>
       <div class="field-row">
         <div class="field">
           <label for="${p}Format">Format</label>
@@ -2585,6 +2604,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     $(p + "Language").value = card ? (card.language || "") : "";
     $(p + "Series").value = card ? (card.series || "") : "";
     $(p + "Era").value = card ? (card.era || "") : "";
+    $(p + "Availability").value = card ? (card.availability || "Available") : "Available";
     $(p + "Format").value = card ? (card.format || (Array.isArray(card.grading) && card.grading.length ? "Graded" : (card.condition === "SEALED" ? "Sealed" : "Raw"))) : "Raw";
     $(p + "Condition").value = card ? card.condition : "NM";
     $(p + "PriceUSD").value = card ? (card.price_usd ?? card.price ?? 0) : "0.00";
@@ -2601,6 +2621,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       language: $(p + "Language").value,
       series: $(p + "Series").value.trim(),
       era: $(p + "Era").value,
+      availability: $(p + "Availability").value,
       format: $(p + "Format").value,
       rarity: "Common",
       condition: $(p + "Condition").value,
@@ -2811,6 +2832,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     grade: new Set(),
     language: new Set(),
     era: new Set(),
+    availability: new Set(),
     series: new Set()
   };
 
@@ -2849,12 +2871,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const gradeF = ($("filterGrade") && $("filterGrade").value) || "";
     const languageF = ($("filterLanguage") && $("filterLanguage").value) || "";
     const eraF = ($("filterEra") && $("filterEra").value) || "";
+    const availabilityF = ($("filterAvailability") && $("filterAvailability").value) || "";
     const seriesF = ($("filterSeries") && $("filterSeries").value) || "";
     const sortBy = ($("sortBy") && $("sortBy").value) || "name";
 
     let list = cards.filter(c=>{
       const format = effectiveFormat(c);
-      const haystack = [c.name,c.series,c.game].filter(Boolean).join(" ").toLowerCase();
+      const haystack = [c.name,c.series,c.game,c.availability].filter(Boolean).join(" ").toLowerCase();
       if(gameF && c.game !== gameF) return false;
       if(gradeF){
         const hasGrade = Array.isArray(c.grading) && c.grading.some(g=>{
@@ -2879,6 +2902,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       }
       if(languageF && (c.language || "") !== languageF) return false;
       if(eraF && (c.era || "") !== eraF) return false;
+      if(availabilityF && (c.availability || "Available") !== availabilityF) return false;
       if(seriesF && (c.series || "") !== seriesF) return false;
 
       if(pillFilterState.grade.size){
@@ -2900,6 +2924,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       }
       if(pillFilterState.language.size && !pillFilterState.language.has(c.language || "")) return false;
       if(pillFilterState.era.size && !pillFilterState.era.has(c.era || "")) return false;
+      if(pillFilterState.availability.size && !pillFilterState.availability.has(c.availability || "Available")) return false;
       if(pillFilterState.series.size && !pillFilterState.series.has(c.series || "")) return false;
       if(q && !haystack.includes(q)) return false;
       if(activeQuickFilter === "graded" && format !== "Graded") return false;
@@ -2948,6 +2973,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
               ${(grades.length || format === "Raw" || format === "Sealed")
                 ? `<button type="button" class="clean-grade-badge filter-pill-btn ${pillFilterState.grade.has(gradeText) ? "pill-selected" : ""}" data-pill-filter="grade" data-pill-value="${escapeHtml(gradeText)}" title="Filter by ${escapeHtml(gradeText)}">${escapeHtml(gradeText)}</button>`
                 : `<span class="clean-grade-badge">${escapeHtml(gradeText)}</span>`}
+              ${c.availability ? `<button type="button" class="clean-meta-pill clean-availability-pill filter-pill-btn ${pillFilterState.availability.has(c.availability) ? "pill-selected" : ""}" data-pill-filter="availability" data-pill-value="${escapeHtml(c.availability)}" title="Filter by ${escapeHtml(c.availability)}">${escapeHtml(c.availability)}</button>` : ""}
               ${c.language ? `<button type="button" class="clean-meta-pill clean-language-pill filter-pill-btn ${pillFilterState.language.has(c.language) ? "pill-selected" : ""}" data-pill-filter="language" data-pill-value="${escapeHtml(c.language)}" title="Filter by ${escapeHtml(c.language)}">${escapeHtml(c.language)}</button>` : ""}
               ${c.era ? `<button type="button" class="clean-meta-pill clean-era-pill filter-pill-btn ${pillFilterState.era.has(c.era) ? "pill-selected" : ""}" data-pill-filter="era" data-pill-value="${escapeHtml(c.era)}" title="Filter by ${escapeHtml(c.era)}">${escapeHtml(c.era)}</button>` : ""}
               ${seriesText ? `<button type="button" class="clean-meta-pill clean-series-pill filter-pill-btn ${pillFilterState.series.has(seriesText) ? "pill-selected" : ""}" data-pill-filter="series" data-pill-value="${escapeHtml(seriesText)}" title="Filter by ${escapeHtml(seriesText)}">${escapeHtml(seriesText)}</button>` : ""}
@@ -3075,6 +3101,11 @@ function wireShimmer(container){
   <div class="overview-select-menu" id="filterEraMenu" hidden></div>
   <input type="hidden" id="filterEra" value="">
 </div>
+        <div class="overview-select" id="filterAvailabilityWrap">
+  <button type="button" class="overview-select-btn" id="filterAvailabilityBtn"><span>All Availability</span><i></i></button>
+  <div class="overview-select-menu" id="filterAvailabilityMenu" hidden></div>
+  <input type="hidden" id="filterAvailability" value="">
+</div>
         <div class="overview-select" id="filterSeriesWrap">
   <button type="button" class="overview-select-btn" id="filterSeriesBtn"><span>All Series</span><i></i></button>
   <div class="overview-select-menu" id="filterSeriesMenu" hidden></div>
@@ -3124,6 +3155,7 @@ function wireShimmer(container){
           filterGrade:"grade",
           filterLanguage:"language",
           filterEra:"era",
+          filterAvailability:"availability",
           filterSeries:"series"
         };
         const pillType = pillTypeByFilter[id];
@@ -3176,6 +3208,10 @@ function wireShimmer(container){
       {value:"",label:"All Eras"},
       ...eras.map(e=>({value:e,label:e}))
     ]);
+    setupOverviewSelect("filterAvailability", [
+      {value:"",label:"All Availability"},
+      ...AVAILABILITY_OPTIONS.map(v=>({value:v,label:v}))
+    ]);
     setupOverviewSelect("filterSeries", [
       {value:"",label:"All Series"},
       ...series.map(s=>({value:s,label:s}))
@@ -3202,7 +3238,7 @@ function wireShimmer(container){
       wireShimmer(grid);
     }
 
-    ["search","filterGame","filterGrade","filterLanguage","filterEra","filterSeries","sortBy"].forEach(id=>{
+    ["search","filterGame","filterGrade","filterLanguage","filterEra","filterAvailability","filterSeries","sortBy"].forEach(id=>{
       $(id).addEventListener("input", draw);
       $(id).addEventListener("change", draw);
     });
@@ -3223,6 +3259,7 @@ function wireShimmer(container){
         ...Array.from(pillFilterState.grade).map(value=>({type:"grade", value})),
         ...Array.from(pillFilterState.language).map(value=>({type:"language", value})),
         ...Array.from(pillFilterState.era).map(value=>({type:"era", value})),
+        ...Array.from(pillFilterState.availability).map(value=>({type:"availability", value})),
         ...Array.from(pillFilterState.series).map(value=>({type:"series", value}))
       ];
 
@@ -3261,6 +3298,7 @@ function wireShimmer(container){
         ["grade","filterGrade","Grades / Conditions"],
         ["language","filterLanguage","Languages"],
         ["era","filterEra","Eras"],
+        ["availability","filterAvailability","Availability"],
         ["series","filterSeries","Series"]
       ];
       maps.forEach(([type,id,plural])=>{
@@ -4197,6 +4235,7 @@ function wireShimmer(container){
             </div>
             <div class="detail-item"><div class="detail-label">Format</div><div class="detail-value">${escapeHtml(effectiveFormat(card))}</div></div>
             <div class="detail-item"><div class="detail-label">Condition</div><div class="detail-value">${escapeHtml(detailCondition)}</div></div>
+            <div class="detail-item"><div class="detail-label">Availability</div><div class="detail-value">${escapeHtml(card.availability || "Available")}</div></div>
             ${card.language ? `<div class="detail-item"><div class="detail-label">Language</div><div class="detail-value">${escapeHtml(card.language)}</div></div>` : ""}
             ${card.era ? `<div class="detail-item"><div class="detail-label">Era</div><div class="detail-value">${escapeHtml(card.era)}</div></div>` : ""}
             ${card.series ? `<div class="detail-item"><div class="detail-label">Series</div><div class="detail-value">${escapeHtml(card.series)}</div></div>` : ""}
