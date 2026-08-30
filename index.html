@@ -1560,6 +1560,24 @@
     }
   }
 
+
+  .clean-card-reference{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:5px;
+    margin-top:3px;
+    color:var(--text-muted);
+    font-family:'JetBrains Mono',monospace;
+    font-size:9.5px;
+    font-weight:600;
+    line-height:1.2;
+  }
+  .clean-card-reference-dot{opacity:.55;}
+  @media(max-width:800px){
+    .clean-card-reference{font-size:9px;gap:4px;}
+  }
+
 </style>
 </head>
 <body>
@@ -1870,6 +1888,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return {
       id: row.id,
       name: (row.name || "").toUpperCase(),
+      card_code: row.card_code || "",
+      year: row.year == null ? null : Number(row.year),
       game: row.game === "One Piece" ? "One Piece Card Game" : (row.game || ""),
       language: row.language || "",
       era: row.era || "",
@@ -1903,6 +1923,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function cardToDb(card){
     return {
       name: (card.name || "").toUpperCase(),
+      card_code: (card.card_code || "").trim().toUpperCase(),
+      year: card.year == null || card.year === "" ? null : Number(card.year),
       game: card.game,
       language: card.language || "",
       era: card.era || "",
@@ -1936,7 +1958,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function loadCards(){
-    const publicColumns = "id,name,game,language,era,availability,set_name,series,format,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,images,grading,created_at,updated_at";
+    const publicColumns = "id,name,card_code,year,game,language,era,availability,set_name,series,format,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,images,grading,created_at,updated_at";
     const columns = isOwnerMode() ? "*" : publicColumns;
 
     const { data, error } = await supabaseClient
@@ -2493,6 +2515,17 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       </div>
       <div class="field-row">
         <div class="field">
+          <label for="${p}CardCode">Card code</label>
+          <input type="text" id="${p}CardCode" placeholder="e.g. C01, OP01-001, M-001" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="${p}Year">Year</label>
+          <input type="number" id="${p}Year" min="1900" max="2100" step="1" placeholder="e.g. 1999">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
           <label for="${p}Game">Game</label>
           <div class="combo" id="${p}GameCombo">
             <input type="text" id="${p}Game" required placeholder="e.g. Pokémon" autocomplete="off">
@@ -2782,6 +2815,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function populateFields(p, card){
     $(p + "Name").value = card ? card.name : "";
+    $(p + "CardCode").value = card ? (card.card_code || "") : "";
+    $(p + "Year").value = card && card.year ? card.year : "";
     $(p + "Game").value = card ? card.game : "";
     $(p + "Language").value = card ? (card.language || "") : "";
     $(p + "Series").value = card ? (card.series || "") : "";
@@ -2799,6 +2834,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return {
       id: id || uid(),
       name: $(p + "Name").value.trim().toUpperCase(),
+      card_code: $(p + "CardCode").value.trim().toUpperCase(),
+      year: $(p + "Year").value ? Number($(p + "Year").value) : null,
       game: $(p + "Game").value.trim(),
       language: $(p + "Language").value,
       series: $(p + "Series").value.trim(),
@@ -3059,7 +3096,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     let list = cards.filter(c=>{
       const format = effectiveFormat(c);
-      const haystack = [c.name,c.series,c.game,c.availability].filter(Boolean).join(" ").toLowerCase();
+      const haystack = [c.name,c.card_code,c.year,c.series,c.game,c.availability].filter(v=>v !== null && v !== undefined && v !== "").join(" ").toLowerCase();
       if(gameF && c.game !== gameF) return false;
       if(gradeF){
         const hasGrade = Array.isArray(c.grading) && c.grading.some(g=>{
@@ -3152,6 +3189,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
           <div class="clean-card-main">
             <div class="card-name clean-card-name">${escapeHtml(c.name).toUpperCase()}</div>
+            ${(c.card_code || c.year) ? `<div class="clean-card-reference">${c.card_code ? `<span>${escapeHtml(c.card_code)}</span>` : ""}${c.card_code && c.year ? `<span class="clean-card-reference-dot">·</span>` : ""}${c.year ? `<span>${escapeHtml(c.year)}</span>` : ""}</div>` : ""}
             <div class="clean-card-subrow clean-all-pills">
               ${(grades.length || format === "Raw" || format === "Sealed")
                 ? `<button type="button" class="clean-grade-badge filter-pill-btn ${pillFilterState.grade.has(gradeText) ? "pill-selected" : ""}" data-pill-filter="grade" data-pill-value="${escapeHtml(gradeText)}" title="Filter by ${escapeHtml(gradeText)}">${escapeHtml(gradeText)}</button>`
@@ -3264,7 +3302,7 @@ function wireShimmer(container){
       <div class="pill-filter-summary" id="pillFilterSummary" hidden></div>
 
       <div class="filter-row">
-        <input type="text" id="search" placeholder="Search card name or series…">
+        <input type="text" id="search" placeholder="Search name, code, year or series…">
         <div class="overview-select" id="filterGameWrap">
   <button type="button" class="overview-select-btn" id="filterGameBtn"><span>All Games</span><i></i></button>
   <div class="overview-select-menu" id="filterGameMenu" hidden></div>
@@ -4380,7 +4418,7 @@ function wireShimmer(container){
     const url = getCardShareUrl(card.id);
     const shareData = {
       title: card.name || "Collect TCG card",
-      text: card.name ? `View ${card.name} on Collect TCG MY & SG` : "View this card on Collect TCG MY & SG",
+      text: card.name ? `View ${card.name}${card.card_code ? ` (${card.card_code})` : ""} on Collect TCG MY & SG` : "View this card on Collect TCG MY & SG",
       url
     };
 
@@ -4463,6 +4501,8 @@ function wireShimmer(container){
             <div class="detail-item"><div class="detail-label">Format</div><div class="detail-value">${escapeHtml(effectiveFormat(card))}</div></div>
             <div class="detail-item"><div class="detail-label">Condition</div><div class="detail-value">${escapeHtml(detailCondition)}</div></div>
             <div class="detail-item"><div class="detail-label">Availability</div><div class="detail-value">${escapeHtml(card.availability || "Available")}</div></div>
+            ${card.card_code ? `<div class="detail-item"><div class="detail-label">Card Code</div><div class="detail-value">${escapeHtml(card.card_code)}</div></div>` : ""}
+            ${card.year ? `<div class="detail-item"><div class="detail-label">Year</div><div class="detail-value">${escapeHtml(card.year)}</div></div>` : ""}
             ${card.language ? `<div class="detail-item"><div class="detail-label">Language</div><div class="detail-value">${escapeHtml(card.language)}</div></div>` : ""}
             ${card.era ? `<div class="detail-item"><div class="detail-label">Era</div><div class="detail-value">${escapeHtml(card.era)}</div></div>` : ""}
             ${card.series ? `<div class="detail-item"><div class="detail-label">Series</div><div class="detail-value">${escapeHtml(card.series)}</div></div>` : ""}
