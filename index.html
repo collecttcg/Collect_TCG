@@ -1440,6 +1440,7 @@
     pointer-events:none;
     clip-path:polygon(0 0,100% 0,0 100%);
     -webkit-clip-path:polygon(0 0,100% 0,0 100%);
+    container-type:inline-size;
     filter:
       drop-shadow(3px 4px 3px rgba(0,0,0,.42))
       drop-shadow(7px 9px 7px rgba(0,0,0,.48))
@@ -1467,11 +1468,11 @@
   .status-corner-sold::before{
     content:"SOLD";
     color:#fff;
-    top:32%;
-    left:5%;
-    width:62%;
-    font-size:clamp(15px,2.1vw,25px);
-    letter-spacing:.4px;
+    top:29%;
+    left:2%;
+    width:70%;
+    font-size:clamp(10px, 23cqw, 34px);
+    letter-spacing:clamp(.15px, .65cqw, 1px);
     text-shadow:
       0 4px 5px rgba(0,0,0,.48),
       0 1px 2px rgba(0,0,0,.36);
@@ -1484,11 +1485,11 @@
   .status-corner-reserved::before{
     content:"RESERVED";
     color:#171717;
-    top:32%;
-    left:5%;
-    width:62%;
-    font-size:clamp(10px,1.45vw,17px);
-    letter-spacing:.2px;
+    top:29%;
+    left:0%;
+    width:73%;
+    font-size:clamp(7px, 13.2cqw, 21px);
+    letter-spacing:clamp(0px, .08cqw, .35px);
     text-shadow:0 1px 1px rgba(255,255,255,.35);
   }
 
@@ -1498,19 +1499,7 @@
     max-width:360px;
   }
 
-  .detail-slider-stage .status-corner-sold::before{
-    top:32%;
-    left:5%;
-    width:62%;
-    font-size:clamp(24px,3.2vw,44px);
-  }
 
-  .detail-slider-stage .status-corner-reserved::before{
-    top:32%;
-    left:5%;
-    width:62%;
-    font-size:clamp(16px,2.2vw,30px);
-  }
 
   @media(max-width:800px){
     .status-corner{
@@ -1518,60 +1507,59 @@
       max-width:170px;
     }
 
-    .status-corner-sold::before{
-      top:32%;
-      left:5%;
-      width:62%;
-      font-size:clamp(14px,4vw,20px);
-    }
 
-    .status-corner-reserved::before{
-      top:32%;
-      left:5%;
-      width:62%;
-      font-size:clamp(9px,2.8vw,14px);
-    }
 
     .detail-slider-stage .status-corner{
       width:48%;
       max-width:260px;
     }
 
-    .detail-slider-stage .status-corner-sold::before{
-      top:32%;
-      left:5%;
-      width:62%;
-      font-size:clamp(21px,5.6vw,34px);
-    }
-
-    .detail-slider-stage .status-corner-reserved::before{
-      top:32%;
-      left:5%;
-      width:62%;
-      font-size:clamp(14px,4vw,23px);
-    }
-  }
-
+  
   @media(max-width:390px){
     .status-corner{
       width:52%;
       max-width:150px;
     }
 
+
+  }
+  /* Small-card safeguard: labels scale with the ribbon and stay fully visible. */
+  @container (max-width: 105px){
     .status-corner-sold::before{
-      top:33%;
-      left:6%;
-      width:60%;
-      font-size:clamp(13px,4.1vw,18px);
+      top:30%;
+      left:3%;
+      width:68%;
+      font-size:21cqw;
+      letter-spacing:.35cqw;
     }
 
     .status-corner-reserved::before{
-      top:33%;
-      left:6%;
-      width:60%;
-      font-size:clamp(8.5px,2.7vw,12px);
+      top:31%;
+      left:1%;
+      width:71%;
+      font-size:11.7cqw;
+      letter-spacing:0;
     }
   }
+
+  @container (max-width: 75px){
+    .status-corner-sold::before{
+      top:31%;
+      left:4%;
+      width:66%;
+      font-size:19cqw;
+      letter-spacing:.2cqw;
+    }
+
+    .status-corner-reserved::before{
+      top:32%;
+      left:2%;
+      width:69%;
+      font-size:10.5cqw;
+      letter-spacing:0;
+    }
+  }
+
 </style>
 </head>
 <body>
