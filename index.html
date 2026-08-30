@@ -6636,8 +6636,12 @@ function wireShimmer(container){
         </div>`
       : `<div class="detail-empty-image">No uploaded pictures</div>`;
 
-    const hasGrade = Array.isArray(card.grading) && card.grading.some(g=>g && g.company);
+    const detailGrades = Array.isArray(card.grading) ? card.grading.filter(g=>g && g.company) : [];
+    const hasGrade = detailGrades.length > 0;
     const condition = CONDITION_LABEL[card.condition] || card.condition || "—";
+    const detailCondition = hasGrade
+      ? `${detailGrades[0].company} ${detailGrades[0].grade || ""}`.trim()
+      : condition;
     const cost = card.cost == null ? "—" : fmtMoney(card.cost);
 
     detailsMount.innerHTML = `
@@ -6652,7 +6656,7 @@ function wireShimmer(container){
         <div>${imageHTML}</div>
         <div class="detail-info">
           <div class="detail-grid details-info-grid">
-            <div class="detail-item"><div class="detail-label">Condition</div><div class="detail-value">${escapeHtml(hasGrade ? gradeText(card) : condition)}</div></div>
+            <div class="detail-item"><div class="detail-label">Condition</div><div class="detail-value">${escapeHtml(detailCondition)}</div></div>
             <div class="detail-item detail-price-item">
               <div class="detail-label">Price</div>
               <div class="detail-price-stack">
