@@ -2822,6 +2822,105 @@
     }
   }
 
+
+  /* Sold Archive polish */
+  .sold-archive-date{
+    margin-top:4px;
+    color:#ff8d91;
+    font-size:9px;
+    font-weight:800;
+    line-height:1.2;
+    letter-spacing:.35px;
+    text-transform:uppercase;
+  }
+
+  .sold-detail-notice{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:0 0 16px;
+    padding:12px 14px;
+    border:1px solid rgba(228,71,79,.25);
+    border-radius:12px;
+    background:linear-gradient(135deg,rgba(228,71,79,.095),rgba(228,71,79,.025));
+  }
+
+  .sold-detail-notice-mark{
+    flex:0 0 auto;
+    padding:6px 8px;
+    border:1px solid rgba(255,112,118,.35);
+    border-radius:7px;
+    background:rgba(228,71,79,.12);
+    color:#ff8d91;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:1px;
+  }
+
+  .sold-detail-notice strong{
+    display:block;
+    margin-bottom:2px;
+    color:var(--text);
+    font-size:12px;
+  }
+
+  .sold-detail-notice span{
+    display:block;
+    color:var(--text-muted);
+    font-size:10.5px;
+    line-height:1.4;
+  }
+
+  .sold-alternatives-section{
+    border-top-color:rgba(78,210,199,.18);
+  }
+
+  .sold-date-field[hidden]{
+    display:none !important;
+  }
+
+  .field-optional{
+    color:var(--text-muted);
+    font-size:.9em;
+    font-weight:500;
+    text-transform:none;
+    letter-spacing:0;
+  }
+
+  .sold-date-hint{
+    margin-top:5px;
+    font-size:9.5px;
+    line-height:1.35;
+  }
+
+  @media(max-width:700px){
+    .sold-detail-notice{
+      align-items:flex-start;
+      gap:9px;
+      padding:10px 11px;
+      margin-bottom:12px;
+      border-radius:10px;
+    }
+
+    .sold-detail-notice-mark{
+      padding:5px 6px;
+      font-size:9px;
+    }
+
+    .sold-detail-notice strong{
+      font-size:11px;
+    }
+
+    .sold-detail-notice span{
+      font-size:9.5px;
+    }
+
+    .sold-archive-date{
+      font-size:8.5px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -3161,6 +3260,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
 
   let cards = [];
+  let soldAtSupported = false;
   let giveaways = [];
   let showcases = [];
   let activeShowcaseCategory = "All";
@@ -3209,6 +3309,30 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     clearTimeout(showToast._t);
     showToast._t = setTimeout(()=>{ toastEl.hidden = true; }, 2200);
   }
+  function soldDateInputValue(value){
+    if(!value) return "";
+    const d = new Date(value);
+    if(Number.isNaN(d.getTime())) return "";
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2,"0");
+    const day = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function soldDateToIso(value){
+    const safe = String(value || "").trim();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(safe)) return null;
+    const d = new Date(`${safe}T12:00:00`);
+    return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  }
+
+  function formatSoldDate(value){
+    if(!value) return "";
+    const d = new Date(value);
+    if(Number.isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("en-US", {year:"numeric", month:"short", day:"numeric"});
+  }
+
   function hasListedPrice(value){
     if(value === null || value === undefined || value === "") return false;
     const n = Number(value);
@@ -3266,6 +3390,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         }));
       })(),
       view_count: Number(row.view_count || 0),
+      sold_at: row.sold_at || null,
       created_at: row.created_at || null,
       updated_at: row.updated_at || null
     };
@@ -3304,12 +3429,24 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         company: g.company || "",
         grade: g.grade || "",
         cert: g.cert || ""
-      })) : []
+      })) : [],
+      ...(soldAtSupported ? { sold_at: card.sold_at || null } : {})
     };
   }
 
   async function loadCards(){
-    const publicColumns = "id,name,card_code,year,game,language,era,availability,set_name,series,format,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,images,grading,created_at,updated_at";
+    // Optional schema capability probe. If sold_at has not been added yet,
+    // the rest of the public inventory still loads normally.
+    const soldAtProbe = await supabaseClient
+      .from("cards")
+      .select("sold_at")
+      .limit(1);
+    soldAtSupported = !soldAtProbe.error;
+
+    const publicColumnsBase = "id,name,card_code,year,game,language,era,availability,set_name,series,format,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,images,grading,created_at,updated_at";
+    const publicColumns = soldAtSupported
+      ? `${publicColumnsBase},sold_at`
+      : publicColumnsBase;
     const columns = isOwnerMode() ? "*" : publicColumns;
 
     const { data, error } = await supabaseClient
@@ -3718,7 +3855,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     put("series", $("filterSeries")?.value, 80);
 
     const sort = safeUrlFilterText($("sortBy")?.value, 24);
-    if(sort && sort !== "name") params.set("sort", sort);
+    const defaultSort = route === "sold" ? "recent-sold" : "name";
+    if(sort && sort !== defaultSort) params.set("sort", sort);
 
     if(activeQuickFilter && activeQuickFilter !== "all"){
       params.set("quick", activeQuickFilter);
@@ -4016,11 +4154,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           </select>
         </div>
       </div>
-      <div class="field">
-        <label for="${p}Availability">Availability</label>
-        <select id="${p}Availability" required>
-          ${AVAILABILITY_OPTIONS.map(v=>`<option value="${v}">${v}</option>`).join("")}
-        </select>
+      <div class="field-row">
+        <div class="field">
+          <label for="${p}Availability">Availability</label>
+          <select id="${p}Availability" required>
+            ${AVAILABILITY_OPTIONS.map(v=>`<option value="${v}">${v}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field sold-date-field" id="${p}SoldDateField" hidden>
+          <label for="${p}SoldDate">Sold date <span class="field-optional">(optional)</span></label>
+          <input type="date" id="${p}SoldDate">
+          <div class="hint sold-date-hint">Used only for the public Sold archive. No buyer information is stored.</div>
+        </div>
       </div>
       <div class="field-row">
         <div class="field">
@@ -4275,6 +4420,29 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     refresh();
   }
 
+  function wireSoldDateField(p){
+    const availability = $(p + "Availability");
+    const field = $(p + "SoldDateField");
+    const input = $(p + "SoldDate");
+    if(!availability || !field || !input) return;
+
+    const sync = ()=>{
+      const isSold = normalizeFilterValue(availability.value) === "sold";
+      field.hidden = !(soldAtSupported && isSold);
+
+      if(soldAtSupported && isSold && !input.value){
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2,"0");
+        const d = String(now.getDate()).padStart(2,"0");
+        input.value = `${y}-${m}-${d}`;
+      }
+    };
+
+    availability.addEventListener("change", sync);
+    sync();
+  }
+
   function wireAutoCapitalization(p){
     const seriesInput = $(p + "Series");
     if(seriesInput && !seriesInput.dataset.autoCapsWired){
@@ -4295,6 +4463,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     $(p + "Series").value = card ? (card.series || "") : "";
     $(p + "Era").value = card ? (card.era || "") : "";
     $(p + "Availability").value = card ? (card.availability || "Available") : "Available";
+    if($(p + "SoldDate")) $(p + "SoldDate").value = card ? soldDateInputValue(card.sold_at) : "";
     $(p + "Format").value = card ? (card.format || (Array.isArray(card.grading) && card.grading.length ? "Graded" : (card.condition === "SEALED" ? "Sealed" : "Raw"))) : "Raw";
     $(p + "Condition").value = card ? card.condition : "NM";
     $(p + "PriceUSD").value = card && card.price_usd != null ? card.price_usd : "";
@@ -4314,6 +4483,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       series: normalizeStoredLabel($(p + "Series").value),
       era: $(p + "Era").value,
       availability: $(p + "Availability").value,
+      sold_at: soldAtSupported && normalizeFilterValue($(p + "Availability").value) === "sold"
+        ? soldDateToIso($(p + "SoldDate")?.value)
+        : null,
       format: $(p + "Format").value,
       rarity: "Common",
       condition: $(p + "Condition").value,
@@ -4678,7 +4850,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(scope === "sold"){
       return {
         title:"Sold Cards",
-        description:"Previously listed cards that have been sold.",
+        description:"Previously listed cards that have been sold. Most recent sales appear first.",
         eyebrow:"Sold Archive"
       };
     }
@@ -4758,7 +4930,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const eraF = ($("filterEra") && $("filterEra").value) || "";
     const availabilityF = ($("filterAvailability") && $("filterAvailability").value) || "";
     const seriesF = ($("filterSeries") && $("filterSeries").value) || "";
-    const sortBy = ($("sortBy") && $("sortBy").value) || "name";
+    const sortBy = ($("sortBy") && $("sortBy").value) || (listingAvailabilityScope === "sold" ? "recent-sold" : "name");
 
     let list = cards.filter(c=>{
       if(!cardMatchesListingScope(c)) return false;
@@ -4828,6 +5000,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     list.sort((a,b)=>{
       switch(sortBy){
+        case "recent-sold": {
+          const at = Date.parse(a.sold_at || a.updated_at || a.created_at || "") || 0;
+          const bt = Date.parse(b.sold_at || b.updated_at || b.created_at || "") || 0;
+          return bt - at || a.name.localeCompare(b.name);
+        }
         case "price-low": return (a.price_usd ?? a.price ?? 0) - (b.price_usd ?? b.price ?? 0);
         case "price-high": return (b.price_usd ?? b.price ?? 0) - (a.price_usd ?? a.price ?? 0);
         default: return a.name.localeCompare(b.name);
@@ -4836,11 +5013,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return list;
   }
 
-  function getRelatedCards(card, limit = 4){
+  function getRelatedCards(card, limit = 4, options = {}){
     if(!card) return [];
+    const availableOnly = !!options.availableOnly;
 
     return cards
-      .filter(c=>c && c.id !== card.id)
+      .filter(c=>{
+        if(!c || c.id === card.id) return false;
+        if(availableOnly && normalizeFilterValue(c.availability || "Available") !== "available") return false;
+        return true;
+      })
       .map(c=>{
         let score = 0;
         if(normalizeFilterValue(c.game) === normalizeFilterValue(card.game)) score += 8;
@@ -4909,6 +5091,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
                 aria-label="${isFavorite(c.id) ? "Remove from favorites" : "Add to favorites"}">${isFavorite(c.id) ? "♥" : "♡"}</button>
             </div>
             ${(c.card_code || c.year) ? `<div class="clean-card-reference">${c.card_code ? `<span>${escapeHtml(c.card_code)}</span>` : ""}${c.card_code && c.year ? `<span class="clean-card-reference-dot">·</span>` : ""}${c.year ? `<span>${escapeHtml(c.year)}</span>` : ""}</div>` : ""}
+            ${normalizeFilterValue(c.availability) === "sold" && c.sold_at ? `<div class="sold-archive-date">Sold ${escapeHtml(formatSoldDate(c.sold_at))}</div>` : ""}
             <div class="clean-card-subrow clean-all-pills">
               ${(grades.length || format === "Raw" || format === "Sealed")
                 ? `<button type="button" class="clean-grade-badge filter-pill-btn ${pillFilterState.grade.has(gradeText) ? "pill-selected" : ""}" data-pill-filter="grade" data-pill-value="${escapeHtml(gradeText)}" title="Filter by ${escapeHtml(gradeText)}">${escapeHtml(gradeText)}</button>`
@@ -5081,9 +5264,9 @@ function wireShimmer(container){
   <input type="hidden" id="filterSeries" value="">
 </div>
         <div class="overview-select" id="sortByWrap">
-  <button type="button" class="overview-select-btn" id="sortByBtn"><span>Sort: Name</span><i></i></button>
+  <button type="button" class="overview-select-btn" id="sortByBtn"><span>${listingAvailabilityScope === "sold" ? "Sort: Recently Sold" : "Sort: Name"}</span><i></i></button>
   <div class="overview-select-menu" id="sortByMenu" hidden></div>
-  <input type="hidden" id="sortBy" value="name">
+  <input type="hidden" id="sortBy" value="${listingAvailabilityScope === "sold" ? "recent-sold" : "name"}">
 </div>
         <a href="#/add" class="btn-primary owner-only" style="display:inline-block;">+ Add card</a>
       </div>
@@ -5192,6 +5375,7 @@ function wireShimmer(container){
       ...series.map(s=>({value:s,label:s}))
     ]);
     setupOverviewSelect("sortBy", [
+      ...(listingAvailabilityScope === "sold" ? [{value:"recent-sold",label:"Sort: Recently Sold"}] : []),
       {value:"name",label:"Sort: Name"},
       {value:"price-low",label:"Price: Lowest to Highest"},
       {value:"price-high",label:"Price: Highest to Lowest"}
@@ -5246,10 +5430,16 @@ function wireShimmer(container){
         $("filterAvailability").value = "";
       }
 
-      const allowedSort = new Set(["name","price-low","price-high"]);
+      const allowedSort = new Set(
+        listingAvailabilityScope === "sold"
+          ? ["recent-sold","name","price-low","price-high"]
+          : ["name","price-low","price-high"]
+      );
+      const defaultSort = listingAvailabilityScope === "sold" ? "recent-sold" : "name";
       const sort = safeUrlFilterText(params.get("sort"), 24);
-      $("sortBy").value = allowedSort.has(sort) ? sort : "name";
+      $("sortBy").value = allowedSort.has(sort) ? sort : defaultSort;
       const sortLabel = {
+        "recent-sold":"Sort: Recently Sold",
         name:"Sort: Name",
         "price-low":"Price: Lowest to Highest",
         "price-high":"Price: Highest to Lowest"
@@ -6203,6 +6393,7 @@ function wireShimmer(container){
     `;
     const formState = { images: [], grading: [] };
     wireGameCombobox("add");
+    wireSoldDateField("add");
     wireImageControls("add", formState);
     wireGradingControls("add", formState);
     $("addForm").addEventListener("submit", async (e)=>{
@@ -6344,6 +6535,8 @@ function wireShimmer(container){
       ? `${detailGrades[0].company} ${detailGrades[0].grade || ""}`.trim()
       : condition;
     const cost = card.cost == null ? "—" : fmtMoney(card.cost);
+    const isSoldListing = normalizeFilterValue(card.availability || "") === "sold";
+    const soldDateLabel = formatSoldDate(card.sold_at);
 
     const detailsFavoriteBtn = $("detailsFavoriteBtn");
     if(detailsFavoriteBtn){
@@ -6361,6 +6554,15 @@ function wireShimmer(container){
           <div class="detail-meta">${escapeHtml(card.game || "—")}${card.set ? " · " + escapeHtml(card.set) : ""}</div>
         </div>
       </div>
+      ${isSoldListing ? `
+        <div class="sold-detail-notice" role="status">
+          <div class="sold-detail-notice-mark">SOLD</div>
+          <div>
+            <strong>This card has been sold.</strong>
+            <span>${soldDateLabel ? `Sold ${escapeHtml(soldDateLabel)} · ` : ""}This listing remains visible as part of the collection archive.</span>
+          </div>
+        </div>
+      ` : ""}
       <div class="detail-layout">
         <div>${imageHTML}</div>
         <div class="detail-info">
@@ -6378,6 +6580,7 @@ function wireShimmer(container){
             <div class="detail-item"><div class="detail-label">Format</div><div class="detail-value">${escapeHtml(effectiveFormat(card))}</div></div>
             <div class="detail-item"><div class="detail-label">Condition</div><div class="detail-value">${escapeHtml(detailCondition)}</div></div>
             <div class="detail-item"><div class="detail-label">Availability</div><div class="detail-value">${escapeHtml(card.availability || "Available")}</div></div>
+            ${isSoldListing && soldDateLabel ? `<div class="detail-item"><div class="detail-label">Sold Date</div><div class="detail-value">${escapeHtml(soldDateLabel)}</div></div>` : ""}
             ${card.card_code ? `<div class="detail-item"><div class="detail-label">Card Code</div><div class="detail-value">${escapeHtml(card.card_code)}</div></div>` : ""}
             ${card.year ? `<div class="detail-item"><div class="detail-label">Year</div><div class="detail-value">${escapeHtml(card.year)}</div></div>` : ""}
             ${card.language ? `<div class="detail-item"><div class="detail-label">Language</div><div class="detail-value">${escapeHtml(card.language)}</div></div>` : ""}
@@ -6392,12 +6595,12 @@ function wireShimmer(container){
       </div>
 
       ${(()=>{
-        const related = getRelatedCards(card, 4);
+        const related = getRelatedCards(card, 4, {availableOnly:isSoldListing});
         return related.length ? `
-          <section class="related-cards-section">
+          <section class="related-cards-section ${isSoldListing ? "sold-alternatives-section" : ""}">
             <div class="related-cards-head">
-              <div class="eyebrow">Keep Browsing</div>
-              <h3>Related Cards</h3>
+              <div class="eyebrow">${isSoldListing ? "Available Alternatives" : "Keep Browsing"}</div>
+              <h3>${isSoldListing ? "Similar Available Cards" : "Related Cards"}</h3>
             </div>
             <div class="related-cards-grid">
               ${related.map(relatedCardHTML).join("")}
@@ -6546,6 +6749,7 @@ function wireShimmer(container){
       })) : []
     };
     wireGameCombobox("edit");
+    wireSoldDateField("edit");
     wireImageControls("edit", editFormState);
     wireGradingControls("edit", editFormState);
     overlay.hidden = false;
