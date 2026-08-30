@@ -2936,6 +2936,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         c.game === "Vintages" ||
         (c.series || "").toLowerCase().includes("vintage")
       )) return false;
+      if(activeQuickFilter === "sold" && (c.availability || "Available") !== "Sold") return false;
       return true;
     });
 
@@ -3075,6 +3076,7 @@ function wireShimmer(container){
         <button type="button" class="quick-filter" data-quick="sealed">Sealed</button>
         <button type="button" class="quick-filter" data-quick="championship">Championship</button>
         <button type="button" class="quick-filter" data-quick="vintage">Vintage</button>
+        <button type="button" class="quick-filter" data-quick="sold">Sold</button>
       </div>
 
       <div class="pill-filter-summary" id="pillFilterSummary" hidden></div>
