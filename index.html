@@ -4238,6 +4238,15 @@
       <div id="giveawayImagePreview" style="margin-top:8px;"></div>
       <div class="hint">Choose an image from your device. The image will be uploaded to Supabase Storage.</div>
     </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="giveawayStatus">Status</label>
+        <select id="giveawayStatus">
+          <option value="active">Active</option>
+          <option value="closed">Closed</option>
+        </select>
+      </div>
       <div class="field">
         <label for="giveawayEndsAt">End date/time</label>
         <input id="giveawayEndsAt" type="datetime-local">
@@ -4585,6 +4594,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function saveGiveaway(payload, id){
+    if(!isOwnerMode()) return { data:null, error:new Error("Owner login required") };
     if(id){
       return await supabaseClient
         .from("giveaways")
@@ -4601,6 +4611,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function deleteGiveaway(id){
+    if(!isOwnerMode()) return { data:null, error:new Error("Owner login required") };
     return await supabaseClient
       .from("giveaways")
       .delete()
@@ -6018,7 +6029,7 @@ function wireShimmer(container){
     const mount = $("giveawayImagePreview");
     if(!mount) return;
     mount.innerHTML = url
-      ? `<div class="showcase-thumb-preview"><img src="${escapeHtml(url)}" alt="Giveaway image preview"></div>`
+      ? `<div class="giveaway-image-preview"><img src="${escapeHtml(url)}" alt="Giveaway image preview"></div>`
       : "";
   }
 
@@ -6406,6 +6417,7 @@ function wireShimmer(container){
 
     mount.querySelectorAll("[data-giveaway-edit]").forEach(btn=>{
       btn.addEventListener("click", ()=>{
+        if(!isOwnerMode()){ showToast("Owner login required"); return; }
         const g = giveaways.find(x=>x.id===btn.dataset.giveawayEdit);
         if(g) openGiveawayForm(g);
       });
@@ -6434,7 +6446,9 @@ function wireShimmer(container){
     $("giveawayId").value = g ? g.id : "";
     $("giveawayTitle").value = g ? g.title : "";
     $("giveawayCardName").value = g ? g.card_name : "";
-    $("giveawayImage").value = g ? g.image_url : "";
+    $("giveawayImage").value = g ? (g.image_url || "") : "";
+    $("giveawayImageFile").value = "";
+    renderGiveawayImagePreview(g ? (g.image_url || "") : "");
     $("giveawayStatus").value = g ? g.status : "active";
     $("giveawayHowToEnter").value = g ? g.how_to_enter : "";
     $("giveawayDetails").value = g ? g.details : "";
