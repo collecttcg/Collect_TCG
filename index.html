@@ -2149,6 +2149,125 @@
     .home-stat-label{font-size:9.5px;}
   }
 
+
+  /* Related cards in card details */
+  .related-cards-section{
+    margin-top:20px;
+    padding-top:18px;
+    border-top:1px solid var(--border);
+  }
+
+  .related-cards-head{
+    margin-bottom:11px;
+  }
+
+  .related-cards-head h3{
+    margin:1px 0 0;
+    font-size:18px;
+  }
+
+  .related-cards-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:9px;
+  }
+
+  .related-card{
+    appearance:none;
+    -webkit-appearance:none;
+    min-width:0;
+    padding:0;
+    overflow:hidden;
+    border:1px solid var(--border);
+    border-radius:11px;
+    background:var(--surface);
+    color:var(--text);
+    text-align:left;
+    cursor:pointer;
+    transition:transform .15s ease,border-color .15s ease,background .15s ease;
+  }
+
+  .related-card:hover{
+    transform:translateY(-2px);
+    border-color:rgba(78,210,199,.30);
+    background:var(--surface-2);
+  }
+
+  .related-card-image-wrap{
+    position:relative;
+    aspect-ratio:4 / 5;
+    overflow:hidden;
+    background:#0d0f12;
+  }
+
+  .related-card-image-wrap img{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:cover;
+  }
+
+  .related-card-no-image{
+    width:100%;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--text-muted);
+    font-size:10px;
+  }
+
+  .related-card-info{
+    padding:8px 9px 9px;
+    min-width:0;
+  }
+
+  .related-card-name{
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+    font-family:'Barlow Condensed','Inter',sans-serif;
+    font-size:12px;
+    font-weight:800;
+    line-height:1.15;
+    text-transform:uppercase;
+  }
+
+  .related-card-code{
+    margin-top:4px;
+    color:var(--accent-gold);
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px;
+    font-weight:700;
+  }
+
+  .related-card-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px;
+    margin-top:6px;
+  }
+
+  .related-card-meta span{
+    max-width:100%;
+    padding:3px 5px;
+    border:1px solid rgba(78,210,199,.18);
+    border-radius:999px;
+    color:var(--accent-teal);
+    background:rgba(78,210,199,.045);
+    font-size:8.5px;
+    font-weight:700;
+    line-height:1;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  @media(max-width:900px){
+    .related-cards-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  }
+
 </style>
 </head>
 <body>
@@ -4026,6 +4145,51 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return list;
   }
 
+  function getRelatedCards(card, limit = 4){
+    if(!card) return [];
+
+    return cards
+      .filter(c=>c && c.id !== card.id)
+      .map(c=>{
+        let score = 0;
+        if(normalizeFilterValue(c.game) === normalizeFilterValue(card.game)) score += 8;
+        if(card.series && normalizeFilterValue(c.series) === normalizeFilterValue(card.series)) score += 7;
+        if(card.era && normalizeFilterValue(c.era) === normalizeFilterValue(card.era)) score += 4;
+        if(normalizeFilterValue(effectiveFormat(c)) === normalizeFilterValue(effectiveFormat(card))) score += 3;
+        if(card.language && normalizeFilterValue(c.language) === normalizeFilterValue(card.language)) score += 2;
+
+        const status = normalizeFilterValue(c.availability || "Available");
+        if(status === "available" || status === "collection (nfs)") score += 2;
+        else if(status === "reserved") score += 1;
+
+        return {card:c, score};
+      })
+      .filter(x=>x.score > 0)
+      .sort((a,b)=>b.score - a.score || String(b.card.created_at || "").localeCompare(String(a.card.created_at || "")))
+      .slice(0, limit)
+      .map(x=>x.card);
+  }
+
+  function relatedCardHTML(c){
+    const image = getImages(c)[0] || "";
+    return `
+      <button type="button" class="related-card" data-related-card-id="${escapeHtml(c.id)}" aria-label="View ${escapeHtml(c.name)}">
+        <div class="related-card-image-wrap">
+          ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(c.name)}">` : `<div class="related-card-no-image">No image</div>`}
+          ${statusCornerHTML(c)}
+        </div>
+        <div class="related-card-info">
+          <div class="related-card-name">${escapeHtml(c.name)}</div>
+          ${c.card_code ? `<div class="related-card-code">${escapeHtml(c.card_code)}</div>` : ""}
+          <div class="related-card-meta">
+            ${c.game ? `<span>${escapeHtml(c.game)}</span>` : ""}
+            ${c.era ? `<span>${escapeHtml(c.era)}</span>` : ""}
+          </div>
+        </div>
+      </button>
+    `;
+  }
+
   function cardTileHTML(c){
     const color = RARITY_COLOR[c.rarity] || "var(--r-common)";
     const shimmer = SHIMMER_RARITIES.has(c.rarity);
@@ -5406,9 +5570,34 @@ function wireShimmer(container){
           ${card.notes ? `<div class="detail-section"><h3>Notes</h3><div class="detail-notes">${escapeHtml(card.notes)}</div></div>` : ""}
         </div>
       </div>
+
+      ${(()=>{
+        const related = getRelatedCards(card, 4);
+        return related.length ? `
+          <section class="related-cards-section">
+            <div class="related-cards-head">
+              <div class="eyebrow">Keep Browsing</div>
+              <h3>Related Cards</h3>
+            </div>
+            <div class="related-cards-grid">
+              ${related.map(relatedCardHTML).join("")}
+            </div>
+          </section>
+        ` : "";
+      })()}
     `;
 
     detailsOverlay.hidden = false;
+
+    detailsMount.querySelectorAll("[data-related-card-id]").forEach(el=>{
+      el.addEventListener("click", ()=>{
+        const id = el.dataset.relatedCardId;
+        if(!id) return;
+        closeDetailsModal(false);
+        openCardRoute(id);
+      });
+    });
+
     const slider = detailsMount.querySelector("[data-card-slider]");
     if(slider && images.length){
       let slideIndex = 0;
