@@ -6633,7 +6633,7 @@ function wireShimmer(container){
         <div>${imageHTML}</div>
         <div class="detail-info">
           <div class="detail-grid details-info-grid">
-            ${hasGrade ? "" : `<div class="detail-item"><div class="detail-label">Condition</div><div class="detail-value">${escapeHtml(condition)}</div></div>`}
+            <div class="detail-item"><div class="detail-label">Condition</div><div class="detail-value">${escapeHtml(hasGrade ? gradeText(card) : condition)}</div></div>
             <div class="detail-item detail-price-item">
               <div class="detail-label">Price</div>
               <div class="detail-price-stack">
@@ -6651,7 +6651,7 @@ function wireShimmer(container){
             <div class="detail-item"><div class="detail-label">Pictures</div><div class="detail-value">${images.length}</div></div>
             <div class="detail-item owner-only"><div class="detail-label">Views</div><div class="detail-value">${Number(card.view_count || 0).toLocaleString()}</div></div>
           </div>
-          ${gradingDetailsHTML(card)}
+
           ${card.notes ? `<div class="detail-section"><h3>Notes</h3><div class="detail-notes">${escapeHtml(card.notes)}</div></div>` : ""}
         </div>
       </div>
