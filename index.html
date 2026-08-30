@@ -3565,6 +3565,50 @@
     box-shadow:none !important;
   }
 
+
+/* FINAL: Inventory and Showcase filter buttons use identical styling */
+.quick-filter,
+.showcase-category-btn{
+  appearance:none !important;
+  border:1px solid var(--border) !important;
+  background:var(--surface) !important;
+  color:var(--text-muted) !important;
+  border-radius:999px !important;
+  padding:7px 10px !important;
+  font:inherit !important;
+  font-size:11px !important;
+  font-weight:600 !important;
+  line-height:1.2 !important;
+  cursor:pointer !important;
+  box-shadow:none !important;
+  outline:none !important;
+}
+.quick-filter:hover,
+.showcase-category-btn:hover{
+  color:var(--text) !important;
+  border-color:var(--accent-gold) !important;
+  background:var(--surface) !important;
+}
+.quick-filter.active,
+.showcase-category-btn.active,
+.quick-filter[aria-pressed="true"],
+.showcase-category-btn[aria-pressed="true"]{
+  color:#17130a !important;
+  background:var(--accent-gold) !important;
+  border-color:var(--accent-gold) !important;
+  box-shadow:none !important;
+}
+.quick-filter.active:hover,
+.quick-filter.active:focus,
+.quick-filter.active:active,
+.showcase-category-btn.active:hover,
+.showcase-category-btn.active:focus,
+.showcase-category-btn.active:active{
+  color:#17130a !important;
+  background:var(--accent-gold) !important;
+  border-color:var(--accent-gold) !important;
+}
+
 </style>
 </head>
 <body>
