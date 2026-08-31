@@ -5665,6 +5665,16 @@
     }
   }
 
+
+  /* Featured Collections are real navigation controls. */
+  .home-feature{
+    cursor:pointer;
+  }
+  .home-feature:focus-visible{
+    outline:2px solid var(--accent-teal);
+    outline-offset:3px;
+  }
+
 </style>
 </head>
 <body>
@@ -8134,8 +8144,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     view.querySelectorAll("[data-home-filter]").forEach(btn=>{
       btn.addEventListener("click", ()=>{
-        activeQuickFilter = btn.dataset.homeFilter || "all";
-        location.hash = cardLifecycle(saved)==="live" ? "#/inventory" : "#/inventory-tools?mode=lifecycle";
+        const filter=String(btn.dataset.homeFilter||"all");
+        if(!["championship","vintage","graded","sealed"].includes(filter)) return;
+        location.hash=`#/inventory?quick=${encodeURIComponent(filter)}`;
       });
     });
   }
