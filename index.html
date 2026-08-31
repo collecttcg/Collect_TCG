@@ -11833,6 +11833,7 @@ function relatedCardHTML(c){
               <div class="quick-card-menu-separator"></div>
               ${normalizeFilterValue(c.availability)!=="available" ? `<button type="button" data-action="availability" data-status="Available" data-id="${escapeHtml(c.id)}">Mark Available</button>` : ""}
               ${normalizeFilterValue(c.availability)!=="reserved" ? `<button type="button" data-action="availability" data-status="Reserved" data-id="${escapeHtml(c.id)}">Mark Reserved</button>` : ""}
+              ${normalizeFilterValue(c.availability)!=="collection (nfs)" ? `<button type="button" data-action="availability" data-status="Collection (NFS)" data-id="${escapeHtml(c.id)}">Mark NFS</button>` : ""}
               ${normalizeFilterValue(c.availability)!=="sold" ? `<button type="button" class="quick-card-danger-soft" data-action="availability" data-status="Sold" data-id="${escapeHtml(c.id)}">Mark Sold</button>` : ""}
               ${lifecycleSupported ? `
                 <div class="quick-card-menu-separator"></div>
