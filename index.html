@@ -3952,6 +3952,53 @@
     }
   }
 
+
+  /* ---------- Owner inventory data quality ---------- */
+  .quality-summary-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:14px;}
+  .quality-summary-card{min-width:0;padding:11px 10px;border:1px solid var(--border);border-radius:11px;background:var(--surface);color:var(--text);text-align:left;cursor:pointer;transition:border-color .14s ease,background .14s ease,transform .14s ease;}
+  .quality-summary-card:hover{border-color:var(--text-muted);transform:translateY(-1px);}
+  .quality-summary-card.active{border-color:rgba(95,212,196,.45);background:linear-gradient(135deg,rgba(95,212,196,.08),rgba(227,179,65,.035));}
+  .quality-summary-card strong{display:block;color:var(--accent-teal);font-family:'JetBrains Mono',monospace;font-size:18px;}
+  .quality-summary-card span{display:block;margin-top:4px;color:var(--text);font-size:9px;font-weight:700;}
+  .quality-summary-card small{display:block;margin-top:4px;color:var(--text-muted);font-size:7.5px;line-height:1.35;}
+  .quality-panel{padding:14px;}
+  .quality-toolbar{display:flex;align-items:end;gap:10px;margin-bottom:10px;}
+  .quality-search-field{flex:1 1 auto;margin-bottom:0 !important;}
+  .quality-clean-toggle{flex:0 0 auto;min-height:38px;display:flex;align-items:center;gap:7px;padding:0 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text-muted);font-size:9px;cursor:pointer;}
+  .quality-clean-toggle input{accent-color:var(--accent-teal);}
+  .quality-status-line{margin-bottom:9px;color:var(--text-muted);font-size:8.5px;}
+  .quality-list{display:flex;flex-direction:column;gap:6px;}
+  .quality-row{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--bg);}
+  .quality-row.has-issues{border-color:rgba(232,96,122,.16);}
+  .quality-row.is-clean{border-color:rgba(74,222,128,.15);}
+  .quality-row-image{width:54px;height:66px;overflow:hidden;display:flex;align-items:center;justify-content:center;border-radius:7px;background:var(--surface-2);color:var(--text-muted);font-size:7px;}
+  .quality-row-image img{width:100%;height:100%;object-fit:cover;display:block;}
+  .quality-row-main{min-width:0;}
+  .quality-row-title{display:flex;align-items:center;gap:7px;min-width:0;}
+  .quality-row-title strong{min-width:0;overflow:hidden;color:var(--text);font-size:10px;text-overflow:ellipsis;white-space:nowrap;}
+  .quality-row-title span{flex:0 0 auto;padding:2px 5px;border-radius:999px;background:var(--surface-2);color:var(--text-muted);font-size:7px;font-weight:700;text-transform:uppercase;}
+  .quality-row-meta{margin-top:4px;overflow:hidden;color:var(--text-muted);font-size:8px;line-height:1.3;text-overflow:ellipsis;white-space:nowrap;}
+  .quality-row-issues{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;}
+  .quality-issue,.quality-clean-badge{padding:3px 6px;border:1px solid rgba(227,179,65,.20);border-radius:999px;background:rgba(227,179,65,.05);color:var(--accent-gold);font-size:7.3px;font-weight:700;}
+  .quality-issue.critical{border-color:rgba(232,96,122,.26);background:rgba(232,96,122,.06);color:var(--danger);}
+  .quality-clean-badge{border-color:rgba(74,222,128,.22);background:rgba(74,222,128,.06);color:var(--success);}
+  .quality-row-actions{display:flex;gap:5px;}
+  .quality-row-actions button{min-height:32px;padding:6px 9px;font-size:8px;}
+  .quality-empty{padding:34px 12px;text-align:center;color:var(--text-muted);}
+  .quality-empty[hidden]{display:none !important;}
+  .quality-empty strong{display:block;color:var(--text);font-size:12px;}
+  .quality-empty span{display:block;margin-top:5px;font-size:8.5px;}
+  @media(max-width:1100px){.quality-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+  @media(max-width:700px){
+    .quality-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .quality-toolbar{align-items:stretch;flex-direction:column;}
+    .quality-clean-toggle{justify-content:center;}
+    .quality-row{grid-template-columns:46px minmax(0,1fr);gap:8px;}
+    .quality-row-image{width:46px;height:58px;}
+    .quality-row-actions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;}
+  }
+  @media(max-width:390px){.quality-summary-grid{grid-template-columns:1fr;}}
+
 </style>
 </head>
 <body>
@@ -3991,6 +4038,7 @@
       <a href="#/giveaway" data-route="giveaway" class="mobile-secondary-nav"><span class="ic">★</span> Giveaway</a>
       <a href="#/insights" data-route="insights" class="owner-only"><span class="ic">◔</span> Insights</a>
       <a href="#/fb-tools" data-route="fb-tools" class="owner-only"><span class="ic">ƒ</span> Facebook Tools</a>
+      <a href="#/quality" data-route="quality" class="owner-only"><span class="ic">✓</span> Data Quality</a>
       <a href="#/add" data-route="add" class="owner-only"><span class="ic">+</span> Add Card</a>
       <a href="#/about" data-route="about" class="mobile-secondary-nav"><span class="ic">◎</span> About Us</a>
       <a href="#/contact" data-route="contact" class="mobile-secondary-nav"><span class="ic">✉</span> Contact</a>
@@ -5017,6 +5065,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
     else if(route === "fb-card-list"){
       if(isOwnerMode()) { location.hash="#/fb-tools?mode=list"; return; }
+      else { location.hash="#/inventory"; return; }
+    }
+    else if(route === "quality"){
+      if(isOwnerMode()) renderDataQualityPage();
       else { location.hash="#/inventory"; return; }
     }
     else if(route === "add"){
@@ -9145,6 +9197,179 @@ function wireShimmer(container){
 
     renderPicker();
     applyOrderPreset("default");
+  }
+
+
+  // ---------------- Owner Data Quality Checker ----------------
+  function getCardDataQualityIssues(card){
+    const issues=[];
+    const images=getImages(card);
+    const format=normalizeFilterValue(effectiveFormat(card));
+    const grades=Array.isArray(card.grading)?card.grading.filter(g=>g&&g.company):[];
+    const add=(key,label,group,severity="warning")=>issues.push({key,label,group,severity});
+
+    if(!images.length) add("image","Missing image","media","critical");
+
+    const hasAnyPrice=
+      hasListedPrice(card.price_myr) ||
+      hasListedPrice(card.price_usd ?? card.price) ||
+      hasListedPrice(card.price_sgd);
+
+    if(!hasAnyPrice){
+      add("price","No listed price","price","critical");
+    }else{
+      if(!hasListedPrice(card.price_myr)) add("price-myr","Missing MYR price","price");
+      if(!hasListedPrice(card.price_usd ?? card.price)) add("price-usd","Missing USD price","price");
+      if(!hasListedPrice(card.price_sgd)) add("price-sgd","Missing SGD price","price");
+    }
+
+    if(!String(card.card_code||"").trim()) add("card-code","Missing card code","metadata");
+    if(!String(card.year||"").trim()) add("year","Missing year","metadata");
+    if(!String(card.series||"").trim()) add("series","Missing series","metadata");
+    if(!String(card.condition||"").trim()) add("condition","Missing condition","metadata");
+    if(!String(card.language||"").trim()) add("language","Missing language","metadata");
+
+    if(format==="graded"&&!grades.length) add("grading-entry","Marked graded but no grading entry","grading","critical");
+    if(format!=="graded"&&grades.length) add("grading-format","Has grading data but format is not graded","grading");
+    if(grades.some(g=>!String(g.grade||"").trim())) add("grade-value","Grading entry missing grade","grading");
+
+    if(normalizeFilterValue(card.availability)==="sold"&&soldAtSupported&&!card.sold_at){
+      add("sold-date","Sold listing missing sold date","status");
+    }
+    return issues;
+  }
+
+  function dataQualitySummary(cardsToCheck){
+    const rows=cardsToCheck.map(card=>({card,issues:getCardDataQualityIssues(card)}));
+    const withIssues=rows.filter(row=>row.issues.length);
+    const countKey=key=>withIssues.filter(row=>row.issues.some(issue=>issue.key===key)).length;
+    const countGroup=group=>withIssues.filter(row=>row.issues.some(issue=>issue.group===group)).length;
+    return {
+      rows,withIssues,clean:rows.length-withIssues.length,
+      missingImages:countKey("image"),
+      missingPrice:countKey("price"),
+      priceIssues:countGroup("price"),
+      metadataIssues:countGroup("metadata"),
+      gradingIssues:countGroup("grading"),
+      critical:withIssues.filter(row=>row.issues.some(issue=>issue.severity==="critical")).length
+    };
+  }
+
+  function renderDataQualityPage(){
+    if(!requireOwner("open data quality checker")) return;
+
+    const relevantCards=cards.filter(card=>normalizeFilterValue(card.availability||"")!=="sold");
+    const summary=dataQualitySummary(relevantCards);
+
+    view.innerHTML=`
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Owner Tool</div>
+          <h2>Inventory Data Quality</h2>
+          <p>Find incomplete or inconsistent active listings before they are shared with buyers.</p>
+        </div>
+      </div>
+
+      <div class="quality-summary-grid">
+        <button type="button" class="quality-summary-card active" data-quality-filter="all"><strong>${summary.withIssues.length}</strong><span>Listings with issues</span><small>${relevantCards.length} active listings checked</small></button>
+        <button type="button" class="quality-summary-card" data-quality-filter="critical"><strong>${summary.critical}</strong><span>Critical</span><small>Image, price or grading conflicts</small></button>
+        <button type="button" class="quality-summary-card" data-quality-filter="image"><strong>${summary.missingImages}</strong><span>Missing image</span><small>Listings without photos</small></button>
+        <button type="button" class="quality-summary-card" data-quality-filter="price"><strong>${summary.priceIssues}</strong><span>Price issues</span><small>${summary.missingPrice} with no price at all</small></button>
+        <button type="button" class="quality-summary-card" data-quality-filter="metadata"><strong>${summary.metadataIssues}</strong><span>Metadata issues</span><small>Code, year, series, condition or language</small></button>
+        <button type="button" class="quality-summary-card" data-quality-filter="grading"><strong>${summary.gradingIssues}</strong><span>Grading issues</span><small>Format and grading mismatches</small></button>
+      </div>
+
+      <div class="panel quality-panel">
+        <div class="quality-toolbar">
+          <div class="field quality-search-field">
+            <label for="qualitySearch">Search listings</label>
+            <input id="qualitySearch" type="search" maxlength="100" placeholder="Name, card code or series…">
+          </div>
+          <label class="quality-clean-toggle">
+            <input type="checkbox" id="qualityShowClean">
+            <span>Show clean listings</span>
+          </label>
+        </div>
+
+        <div class="quality-status-line" id="qualityStatusLine"></div>
+        <div class="quality-list" id="qualityList"></div>
+        <div class="quality-empty" id="qualityEmpty" hidden>
+          <strong>No matching issues.</strong>
+          <span>Your current filter did not find any listings that need attention.</span>
+        </div>
+      </div>
+    `;
+
+    const list=$("qualityList"), empty=$("qualityEmpty"), search=$("qualitySearch");
+    const showClean=$("qualityShowClean"), status=$("qualityStatusLine");
+    let activeFilter="all";
+
+    function rowMatchesFilter(row){
+      if(!row.issues.length) return showClean.checked;
+      if(activeFilter==="all") return true;
+      if(activeFilter==="critical") return row.issues.some(i=>i.severity==="critical");
+      if(activeFilter==="image") return row.issues.some(i=>i.key==="image");
+      return row.issues.some(i=>i.group===activeFilter);
+    }
+
+    function renderRows(){
+      const q=normalizeFilterValue(search.value);
+      const visible=summary.rows.filter(row=>{
+        if(!rowMatchesFilter(row)) return false;
+        if(!q) return true;
+        const c=row.card;
+        return [c.name,c.card_code,c.series,c.year,c.game,c.language,c.era]
+          .map(v=>normalizeFilterValue(v)).join(" ").includes(q);
+      });
+
+      const issueCount=visible.filter(row=>row.issues.length).length;
+      status.textContent=`Showing ${visible.length} listing${visible.length===1?"":"s"} · ${issueCount} with issue${issueCount===1?"":"s"} · ${summary.clean} clean overall`;
+      empty.hidden=visible.length>0;
+
+      list.innerHTML=visible.map(row=>{
+        const card=row.card, issues=row.issues, image=getImages(card)[0]||"";
+        const issueHtml=issues.length
+          ? issues.map(issue=>`<span class="quality-issue ${issue.severity==="critical"?"critical":""}">${escapeHtml(issue.label)}</span>`).join("")
+          : `<span class="quality-clean-badge">Clean</span>`;
+
+        return `
+          <article class="quality-row ${issues.length?"has-issues":"is-clean"}">
+            <div class="quality-row-image">${image?`<img src="${escapeHtml(image)}" alt="">`:`<span>No image</span>`}</div>
+            <div class="quality-row-main">
+              <div class="quality-row-title">
+                <strong>${escapeHtml(card.name||"Untitled card")}</strong>
+                <span>${escapeHtml(card.availability||"Available")}</span>
+              </div>
+              <div class="quality-row-meta">${escapeHtml([card.card_code,card.year,card.game,card.series].filter(Boolean).join(" · ")||"No listing metadata")}</div>
+              <div class="quality-row-issues">${issueHtml}</div>
+            </div>
+            <div class="quality-row-actions">
+              <button type="button" class="btn-ghost" data-quality-view="${escapeHtml(card.id)}">View</button>
+              <button type="button" class="btn-primary" data-quality-edit="${escapeHtml(card.id)}">Edit</button>
+            </div>
+          </article>`;
+      }).join("");
+
+      list.querySelectorAll("[data-quality-view]").forEach(btn=>btn.addEventListener("click",()=>{
+        const card=cards.find(c=>String(c.id)===String(btn.dataset.qualityView));
+        if(card) openCardRoute(card.id);
+      }));
+
+      list.querySelectorAll("[data-quality-edit]").forEach(btn=>btn.addEventListener("click",()=>{
+        const card=cards.find(c=>String(c.id)===String(btn.dataset.qualityEdit));
+        if(card&&requireOwner("edit data-quality listing")) openEditModal(card);
+      }));
+    }
+
+    document.querySelectorAll("[data-quality-filter]").forEach(btn=>btn.addEventListener("click",()=>{
+      activeFilter=btn.dataset.qualityFilter||"all";
+      document.querySelectorAll("[data-quality-filter]").forEach(other=>other.classList.toggle("active",other===btn));
+      renderRows();
+    }));
+
+    search.addEventListener("input",renderRows);
+    showClean.addEventListener("change",renderRows);
+    renderRows();
   }
 
   // ---------------- Add page ----------------
