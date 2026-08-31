@@ -6509,6 +6509,79 @@
     }
   }
 
+
+  /* ---------- Smooth in-modal card navigation ----------
+     Previous/Next changes only the details content. The modal overlay stays
+     mounted so there is no close/reopen flash. */
+  #detailsMount{
+    transform:translateX(0);
+    opacity:1;
+    will-change:auto;
+  }
+
+  #detailsMount.details-card-transitioning{
+    will-change:transform,opacity;
+    pointer-events:none;
+  }
+
+  #detailsMount.details-card-slide-out-left{
+    opacity:0;
+    transform:translateX(-14px);
+    transition:opacity 105ms ease,transform 105ms ease;
+  }
+
+  #detailsMount.details-card-slide-out-right{
+    opacity:0;
+    transform:translateX(14px);
+    transition:opacity 105ms ease,transform 105ms ease;
+  }
+
+  #detailsMount.details-card-slide-in-right{
+    animation:detailsCardInRight 170ms ease both;
+  }
+
+  #detailsMount.details-card-slide-in-left{
+    animation:detailsCardInLeft 170ms ease both;
+  }
+
+  @keyframes detailsCardInRight{
+    from{opacity:0;transform:translateX(14px);}
+    to{opacity:1;transform:translateX(0);}
+  }
+
+  @keyframes detailsCardInLeft{
+    from{opacity:0;transform:translateX(-14px);}
+    to{opacity:1;transform:translateX(0);}
+  }
+
+  @media(prefers-reduced-motion:reduce){
+    #detailsMount.details-card-slide-out-left,
+    #detailsMount.details-card-slide-out-right{
+      transition:none!important;
+      transform:none!important;
+    }
+
+    #detailsMount.details-card-slide-in-right,
+    #detailsMount.details-card-slide-in-left{
+      animation:none!important;
+    }
+  }
+
+  @media(max-width:800px){
+    #detailsMount.details-card-slide-out-left{transform:translateX(-10px);}
+    #detailsMount.details-card-slide-out-right{transform:translateX(10px);}
+
+    @keyframes detailsCardInRight{
+      from{opacity:0;transform:translateX(10px);}
+      to{opacity:1;transform:translateX(0);}
+    }
+
+    @keyframes detailsCardInLeft{
+      from{opacity:0;transform:translateX(-10px);}
+      to{opacity:1;transform:translateX(0);}
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -15809,6 +15882,78 @@ function wireShimmer(container){
     };
   }
 
+  let detailsCardTransitionTimer=null;
+  let detailsCardTransitioning=false;
+
+  function replaceCardRouteWithoutRefresh(cardId){
+    const id=safeCardId(cardId);
+    if(!id) return;
+    const target=cardShareHash(id);
+    try{
+      history.replaceState(history.state,"",target);
+    }catch{
+      // Do not fall back to location.hash here: that would trigger router()
+      // and recreate the modal, which is exactly what this smooth path avoids.
+    }
+  }
+
+  function smoothNavigateDetailsCard(cardId,direction="next"){
+    const id=safeCardId(cardId);
+    if(!id || detailsCardTransitioning) return;
+
+    const card=cards.find(c=>String(c.id)===id);
+    if(!card || (!isOwnerMode() && !isLiveLifecycle(card))) return;
+
+    detailsCardTransitioning=true;
+    if(detailsCardTransitionTimer){
+      clearTimeout(detailsCardTransitionTimer);
+      detailsCardTransitionTimer=null;
+    }
+
+    const modal=$("detailsModal");
+    const mount=detailsMount;
+    const outgoingClass=direction==="previous"
+      ? "details-card-slide-out-right"
+      : "details-card-slide-out-left";
+    const incomingClass=direction==="previous"
+      ? "details-card-slide-in-left"
+      : "details-card-slide-in-right";
+
+    mount.classList.remove(
+      "details-card-slide-out-left",
+      "details-card-slide-out-right",
+      "details-card-slide-in-left",
+      "details-card-slide-in-right"
+    );
+    mount.classList.add("details-card-transitioning",outgoingClass);
+
+    detailsCardTransitionTimer=setTimeout(()=>{
+      replaceCardRouteWithoutRefresh(id);
+
+      // Re-render only the contents inside the already-open modal.
+      // The overlay itself never closes, so there is no flash/reopen effect.
+      openDetailsModal(card);
+
+      if(modal){
+        try{modal.scrollTo({top:0,left:0,behavior:"auto"});}catch{modal.scrollTop=0;}
+      }
+
+      mount.classList.remove(outgoingClass);
+      mount.classList.add(incomingClass);
+
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          mount.classList.remove(incomingClass);
+          detailsCardTransitionTimer=setTimeout(()=>{
+            mount.classList.remove("details-card-transitioning");
+            detailsCardTransitioning=false;
+            detailsCardTransitionTimer=null;
+          },170);
+        });
+      });
+    },105);
+  }
+
   function openDetailsModal(card){
     if(!card) return;
     if(!isOwnerMode() && !isLiveLifecycle(card)){
@@ -15889,6 +16034,7 @@ function wireShimmer(container){
           <button type="button"
                   class="btn-ghost filtered-result-nav-btn"
                   data-filtered-result-id="${escapeHtml(filteredResultNav.previous)}"
+                  data-filtered-result-direction="previous"
                   ${filteredResultNav.previous ? "" : "disabled"}
                   aria-label="Previous card in current filtered results">
             ← <span>Previous</span>
@@ -15900,6 +16046,7 @@ function wireShimmer(container){
           <button type="button"
                   class="btn-ghost filtered-result-nav-btn"
                   data-filtered-result-id="${escapeHtml(filteredResultNav.next)}"
+                  data-filtered-result-direction="next"
                   ${filteredResultNav.next ? "" : "disabled"}
                   aria-label="Next card in current filtered results">
             <span>Next</span> →
@@ -15994,26 +16141,25 @@ function wireShimmer(container){
         const context=getFilteredResultsBrowseContext();
         if(!context || !context.ids.includes(id)) return;
 
-        closeDetailsModal(false);
-        openCardRoute(id);
+        const direction=el.dataset.filteredResultDirection==="previous" ? "previous" : "next";
+        smoothNavigateDetailsCard(id,direction);
       });
     });
 
     detailsMount.querySelectorAll("[data-series-card-id]").forEach(el=>{
       el.addEventListener("click",()=>{
-        const id=String(el.dataset.seriesCardId||"");
+        const id=safeCardId(el.dataset.seriesCardId);
         if(!id) return;
-        closeDetailsModal(false);
-        openCardRoute(id);
+        const direction=el.textContent.includes("Previous") ? "previous" : "next";
+        smoothNavigateDetailsCard(id,direction);
       });
     });
 
     detailsMount.querySelectorAll("[data-related-card-id]").forEach(el=>{
       el.addEventListener("click", ()=>{
-        const id = el.dataset.relatedCardId;
+        const id=safeCardId(el.dataset.relatedCardId);
         if(!id) return;
-        closeDetailsModal(false);
-        openCardRoute(id);
+        smoothNavigateDetailsCard(id,"next");
       });
     });
 
@@ -16062,6 +16208,18 @@ function wireShimmer(container){
   }
 
   function closeDetailsModal(navigateBack = true){
+    if(detailsCardTransitionTimer){
+      clearTimeout(detailsCardTransitionTimer);
+      detailsCardTransitionTimer=null;
+    }
+    detailsCardTransitioning=false;
+    detailsMount.classList.remove(
+      "details-card-transitioning",
+      "details-card-slide-out-left",
+      "details-card-slide-out-right",
+      "details-card-slide-in-left",
+      "details-card-slide-in-right"
+    );
     detailsOverlay.hidden = true;
     detailsMount.innerHTML = "";
     detailsCardId = null;
