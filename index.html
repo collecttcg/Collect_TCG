@@ -7390,6 +7390,28 @@
     .carousell-post-output{min-height:620px !important;}
   }
 
+
+  /* Keep Card Views and Website Visits on the exact same x-axis geometry. */
+  .insights-time-chart{
+    --insights-slot-width:46px;
+    --insights-slot-gap:18px;
+    align-items:flex-end !important;
+    gap:var(--insights-slot-gap) !important;
+  }
+
+  .insights-time-chart .insights-bar-wrap{
+    flex:0 0 var(--insights-slot-width) !important;
+    width:var(--insights-slot-width) !important;
+    min-width:var(--insights-slot-width) !important;
+  }
+
+  @media(max-width:560px){
+    .insights-time-chart{
+      --insights-slot-width:40px;
+      --insights-slot-gap:12px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -8877,6 +8899,53 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       return [];
     }
     return Array.isArray(data) ? data : [];
+  }
+
+  function alignWebsiteVisitSeriesToCardSeries(cardSeries, websiteSeries){
+    const cards=Array.isArray(cardSeries) ? cardSeries : [];
+    const visits=Array.isArray(websiteSeries) ? websiteSeries : [];
+
+    if(!cards.length) return visits;
+
+    const parseBucket=value=>{
+      const t=new Date(String(value||"")).getTime();
+      return Number.isFinite(t) ? t : null;
+    };
+
+    const visitRows=visits
+      .map(row=>({
+        ...row,
+        _time:parseBucket(row.bucket),
+        _visits:Number(row.visits||0)
+      }))
+      .filter(row=>row._time!=null)
+      .sort((a,b)=>a._time-b._time);
+
+    return cards.map((row,index)=>{
+      const start=parseBucket(row.bucket);
+      const next=index+1<cards.length ? parseBucket(cards[index+1].bucket) : null;
+
+      if(start!=null){
+        const total=visitRows.reduce((sum,visit)=>{
+          if(visit._time < start) return sum;
+          if(next!=null && visit._time >= next) return sum;
+          return sum+visit._visits;
+        },0);
+
+        return {
+          bucket:row.bucket,
+          label:row.label || row.bucket,
+          visits:total
+        };
+      }
+
+      const fallback=visits[index]||{};
+      return {
+        bucket:row.bucket,
+        label:row.label || row.bucket,
+        visits:Number(fallback.visits||0)
+      };
+    });
   }
 
   function insightTrend(row, avg){
@@ -13118,12 +13187,12 @@ function wireShimmer(container){
 
       <div class="insights-panel">
         <h3>Card Views Over Time</h3>
-        <div id="insightsChart" class="insights-chart"></div>
+        <div id="insightsChart" class="insights-chart insights-time-chart"></div>
       </div>
 
       <div class="insights-panel">
         <h3>Website Visits Over Time</h3>
-        <div id="insightsWebsiteChart" class="insights-chart"></div>
+        <div id="insightsWebsiteChart" class="insights-chart insights-time-chart"></div>
       </div>
 
       <div class="insights-panel">
@@ -13168,11 +13237,12 @@ function wireShimmer(container){
         ({start,end} = dateRangeForPreset(rangeSel.value));
       }
 
-      const [rows, series, websiteSeries] = await Promise.all([
+      const [rows, series, websiteSeriesRaw] = await Promise.all([
         fetchInsights(start,end),
         fetchViewSeries(start,end),
         fetchWebsiteVisitSeries(start,end)
       ]);
+      const websiteSeries=alignWebsiteVisitSeriesToCardSeries(series,websiteSeriesRaw);
 
       const totalViews = rows.reduce((s,r)=>s+Number(r.views||0),0);
       const totalUnique = rows.reduce((s,r)=>s+Number(r.unique_views||0),0);
