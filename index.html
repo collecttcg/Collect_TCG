@@ -7256,6 +7256,31 @@
     }
   }
 
+
+  .fb-card-list-terms-note{
+    margin:0 0 12px;
+    padding:8px 10px;
+    border:1px solid rgba(95,212,196,.18);
+    border-radius:9px;
+    background:rgba(95,212,196,.04);
+    color:var(--text-muted);
+    font-size:8.6px;
+    line-height:1.45;
+  }
+
+  .fb-card-list-terms-note strong{
+    color:var(--accent-teal);
+  }
+
+
+  #addCondition:disabled,
+  #editCondition:disabled{
+    opacity:.78;
+    cursor:not-allowed;
+    border-color:rgba(95,212,196,.24);
+    background:rgba(95,212,196,.035);
+  }
+
 </style>
 </head>
 <body>
@@ -9697,6 +9722,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             <option value="NM">Near Mint</option><option value="M">Mint</option><option value="LP">Lightly Played</option>
             <option value="MP">Moderately Played</option><option value="HP">Heavily Played</option><option value="DMG">Damaged</option><option value="SEALED">Sealed</option><option value="NA">Not Applicable</option>
           </select>
+          <div class="hint">Automatically set to Not Applicable when grading information is present.</div>
         </div>
       </div>
       <div class="field-row">
@@ -9982,18 +10008,48 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function wireGradingControls(p, formState){
     const mount = $(p + "GradingRows");
     const addBtn = $(p + "AddGrade");
+    const condition = $(p + "Condition");
+
+    function syncGradedCondition(){
+      if(!condition) return;
+
+      const hasGrade=Array.isArray(formState.grading) &&
+        formState.grading.some(g=>
+          g &&
+          String(g.company||"").trim() &&
+          String(g.grade??"").trim()
+        );
+
+      if(hasGrade){
+        condition.value="NA";
+        condition.disabled=true;
+        condition.setAttribute("aria-disabled","true");
+        condition.title="Condition is automatically Not Applicable for graded cards.";
+      }else{
+        condition.disabled=false;
+        condition.removeAttribute("aria-disabled");
+        condition.title="";
+      }
+    }
 
     function refresh(){
       mount.innerHTML = formState.grading.map((g,i)=>gradingRowHTML(p,g,i)).join("");
       mount.querySelectorAll(".grading-row").forEach((row, i)=>{
-        row.querySelector("." + p + "GradeCompany").addEventListener("change", e=>formState.grading[i].company=e.target.value);
-        row.querySelector("." + p + "GradeValue").addEventListener("change", e=>formState.grading[i].grade=e.target.value);
+        row.querySelector("." + p + "GradeCompany").addEventListener("change", e=>{
+          formState.grading[i].company=e.target.value;
+          syncGradedCondition();
+        });
+        row.querySelector("." + p + "GradeValue").addEventListener("change", e=>{
+          formState.grading[i].grade=e.target.value;
+          syncGradedCondition();
+        });
         row.querySelector("." + p + "GradeCert").addEventListener("input", e=>formState.grading[i].cert=e.target.value.trim());
         row.querySelector(".grading-remove").addEventListener("click", ()=>{
           formState.grading.splice(i,1);
           refresh();
         });
       });
+      syncGradedCondition();
     }
 
     addBtn.addEventListener("click", ()=>{
@@ -14274,7 +14330,6 @@ function wireShimmer(container){
       const p = JSON.parse(localStorage.getItem(FB_CARD_LIST_POST_PREFS_KEY) || "{}");
       return {
         listTitle:String(p.listTitle || "AVAILABLE INVENTORY").trim().slice(0,120),
-        defaultTerms:["","negotiable","non-negotiable"].includes(p.defaultTerms) ? p.defaultTerms : "negotiable",
         carousellMalaysiaUrl:safeHttpUrl(p.carousellMalaysiaUrl || p.carousellShopUrl) || "https://www.carousell.com.my/u/collect_tcg_my_sg/",
         carousellSingaporeUrl:safeHttpUrl(p.carousellSingaporeUrl) || "https://www.carousell.sg/u/collect_tcg_sg/",
         instagramUrl:safeHttpUrl(p.instagramUrl) || "https://www.instagram.com/collecttcg.mysg",
@@ -14283,7 +14338,6 @@ function wireShimmer(container){
     }catch{
       return {
         listTitle:"AVAILABLE INVENTORY",
-        defaultTerms:"negotiable",
         carousellMalaysiaUrl:"https://www.carousell.com.my/u/collect_tcg_my_sg/",
         carousellSingaporeUrl:"https://www.carousell.sg/u/collect_tcg_sg/",
         instagramUrl:"https://www.instagram.com/collecttcg.mysg",
@@ -14296,7 +14350,6 @@ function wireShimmer(container){
     try{
       localStorage.setItem(FB_CARD_LIST_POST_PREFS_KEY, JSON.stringify({
         listTitle:String(p.listTitle || "").trim().slice(0,120),
-        defaultTerms:["","negotiable","non-negotiable"].includes(p.defaultTerms) ? p.defaultTerms : "negotiable",
         carousellMalaysiaUrl:safeHttpUrl(p.carousellMalaysiaUrl),
         carousellSingaporeUrl:safeHttpUrl(p.carousellSingaporeUrl),
         instagramUrl:safeHttpUrl(p.instagramUrl),
@@ -14343,18 +14396,19 @@ function wireShimmer(container){
     return `${String(grade.company || "").toUpperCase()} ${String(grade.grade || "").trim()}`.trim();
   }
 
-  function cardListPriceLine(card, defaultTerms){
+  function cardListPriceLine(card){
     const pieces = [];
     if(hasListedPrice(card.price_myr)) pieces.push(fmtMYR(card.price_myr));
     if(hasListedPrice(card.price_usd ?? card.price)) pieces.push(`$${Math.round(Number(card.price_usd ?? card.price)).toLocaleString("en-US")} USD`);
     if(hasListedPrice(card.price_sgd)) pieces.push(fmtSGD(card.price_sgd));
 
-    const savedTerm=priceNegotiabilityFromNotes(card.notes||"");
-    const terms=savedTerm
-      ? savedTerm.toLowerCase()
-      : defaultTerms;
+    // Pricing terms now come only from the card's saved Pricing terms
+    // category. There is no Facebook-level override/default anymore.
+    const savedTerm=normalizePriceNegotiability(
+      card.price_negotiability || priceNegotiabilityFromNotes(card.notes||"")
+    );
+    const termsSuffix=savedTerm ? ` (${savedTerm.toLowerCase()})` : "";
 
-    const termsSuffix = terms ? ` (${terms})` : "";
     return `PRICE : ${pieces.length ? pieces.join(" / ") : "PLEASE INQUIRE"}${termsSuffix}`;
   }
 
@@ -14413,7 +14467,7 @@ function wireShimmer(container){
         lines.push(`【${heading}】`,"");
         lastHeading = heading;
       }
-      lines.push(cardListItemLine(card),"",cardListPriceLine(card,prefs.defaultTerms),"");
+      lines.push(cardListItemLine(card),"",cardListPriceLine(card),"");
     });
 
     return lines.join("\n").trimEnd();
@@ -14766,14 +14820,8 @@ function wireShimmer(container){
             <input id="fbCardListTitle" maxlength="120" value="${escapeHtml(prefs.listTitle)}" placeholder="e.g. VINTAGE SERIES">
           </div>
 
-          <div class="field">
-            <label for="fbCardListTerms">Default pricing terms</label>
-            <select id="fbCardListTerms">
-              <option value="" ${prefs.defaultTerms===""?"selected":""}>Empty</option>
-              <option value="negotiable" ${prefs.defaultTerms==="negotiable"?"selected":""}>Negotiable</option>
-              <option value="non-negotiable" ${prefs.defaultTerms==="non-negotiable"?"selected":""}>Non-negotiable</option>
-            </select>
-            <div class="hint">Choose Empty to omit the pricing term. If a card's Notes contains “negotiable” or “non-negotiable”, that card overrides this default.</div>
+          <div class="fb-card-list-terms-note">
+            Pricing terms are taken automatically from each card's saved <strong>Pricing terms</strong> category.
           </div>
 
           <details class="fb-post-settings">
@@ -14844,7 +14892,6 @@ function wireShimmer(container){
     const orderModeLabel=$("fbCardListOrderModeLabel");
 
     const titleInput=$("fbCardListTitle");
-    const termsInput=$("fbCardListTerms");
     const carousellMYInput=$("fbCardListCarousellMY");
     const carousellSGInput=$("fbCardListCarousellSG");
     const instagramInput=$("fbCardListInstagram");
@@ -14860,7 +14907,6 @@ function wireShimmer(container){
     function currentPrefs(){
       return {
         listTitle:titleInput.value,
-        defaultTerms:termsInput.value,
         carousellMalaysiaUrl:carousellMYInput.value,
         carousellSingaporeUrl:carousellSGInput.value,
         instagramUrl:instagramInput.value,
@@ -15249,7 +15295,7 @@ function wireShimmer(container){
       applyOrderPreset(orderPreset.value);
     });
 
-    [titleInput,termsInput,carousellMYInput,carousellSGInput,instagramInput,hashtagsInput].forEach(el=>{
+    [titleInput,carousellMYInput,carousellSGInput,instagramInput,hashtagsInput].forEach(el=>{
       el.addEventListener("input",regenerate);
       el.addEventListener("change",regenerate);
     });
