@@ -3248,6 +3248,143 @@
 
 
 
+
+  /* Owner Card List Post Generator */
+  .card-list-generator-stats{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:9px;
+    margin-bottom:14px;
+  }
+
+  .card-list-generator-stats>div{
+    padding:11px 12px;
+    border:1px solid var(--border);
+    border-radius:11px;
+    background:var(--surface);
+  }
+
+  .card-list-generator-stats strong{
+    display:block;
+    color:var(--accent-teal);
+    font-family:'JetBrains Mono',monospace;
+    font-size:18px;
+  }
+
+  .card-list-generator-stats span{
+    display:block;
+    margin-top:4px;
+    color:var(--text-muted);
+    font-size:8.5px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.55px;
+  }
+
+  .fb-card-list-layout{
+    display:grid;
+    grid-template-columns:minmax(300px,.72fr) minmax(520px,1.28fr);
+    gap:16px;
+    align-items:start;
+  }
+
+  .fb-card-list-controls{
+    position:sticky;
+    top:20px;
+  }
+
+  .fb-card-list-controls h3{
+    margin:2px 0 15px;
+  }
+
+  .fb-card-list-preview-panel{
+    min-width:0;
+  }
+
+  .fb-card-list-output{
+    min-height:720px;
+  }
+
+  .fb-card-list-image-note{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    margin:14px 0 10px;
+    padding:10px 11px;
+    border:1px solid rgba(78,210,199,.18);
+    border-radius:10px;
+    background:rgba(78,210,199,.045);
+  }
+
+  .fb-card-list-image-note strong{
+    color:var(--accent-teal);
+    font-size:10px;
+  }
+
+  .fb-card-list-image-note span{
+    color:var(--text-muted);
+    font-size:9.5px;
+    line-height:1.4;
+  }
+
+  .fb-card-list-zip-btn{
+    width:100%;
+    justify-content:center;
+  }
+
+  .fb-card-list-zip-btn:disabled{
+    opacity:.45;
+    cursor:not-allowed;
+  }
+
+  @media(max-width:1100px){
+    .fb-card-list-layout{
+      grid-template-columns:1fr;
+    }
+
+    .fb-card-list-controls{
+      position:static;
+    }
+
+    .fb-card-list-output{
+      min-height:620px;
+    }
+  }
+
+  @media(max-width:700px){
+    .card-list-generator-stats{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+
+    .card-list-generator-stats>div:last-child{
+      grid-column:1 / -1;
+    }
+
+    .fb-card-list-layout{
+      gap:12px;
+    }
+
+    .fb-card-list-controls,
+    .fb-card-list-preview-panel{
+      padding:14px;
+    }
+
+    .fb-card-list-preview-panel .fb-post-section-title{
+      display:block;
+    }
+
+    .fb-card-list-preview-panel .fb-post-section-title button{
+      width:100%;
+      margin-top:10px;
+      justify-content:center;
+    }
+
+    .fb-card-list-output{
+      min-height:560px;
+      font-size:10.5px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -3287,6 +3424,7 @@
       <a href="#/giveaway" data-route="giveaway" class="mobile-secondary-nav"><span class="ic">★</span> Giveaway</a>
       <a href="#/insights" data-route="insights" class="owner-only"><span class="ic">◔</span> Insights</a>
       <a href="#/fb-posts" data-route="fb-posts" class="owner-only"><span class="ic">ƒ</span> FB Posts</a>
+      <a href="#/fb-card-list" data-route="fb-card-list" class="owner-only"><span class="ic">☷</span> Card List Post</a>
       <a href="#/add" data-route="add" class="owner-only"><span class="ic">+</span> Add Card</a>
       <a href="#/about" data-route="about" class="mobile-secondary-nav"><span class="ic">◎</span> About Us</a>
       <a href="#/contact" data-route="contact" class="mobile-secondary-nav"><span class="ic">✉</span> Contact</a>
@@ -3479,6 +3617,9 @@
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"
+        integrity="sha384-w5Kq7oKbQWG1JTh2I7YJttwE2H8lgpqWM5GKxXMb9gVjEw6X6U6lEoMmbPHaX3hD"
+        crossorigin="anonymous"></script>
 <script>
 window.COLLECT_TCG_SUPABASE_URL = "https://cbzytysxtdcqxuckspye.supabase.co";
 window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-Au";
@@ -4303,6 +4444,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         else if(route === "giveaway") renderGiveawayPage();
     else if(route === "insights"){ if(isOwnerMode()) renderInsightsPage(); else { location.hash="#/inventory"; return; } }
     else if(route === "fb-posts"){ if(isOwnerMode()) renderFbPostGeneratorPage(); else { location.hash="#/inventory"; return; } }
+    else if(route === "fb-card-list"){ if(isOwnerMode()) renderFbCardListGeneratorPage(); else { location.hash="#/inventory"; return; } }
     else if(route === "add"){
       if(isOwnerMode()) renderAddPage();
       else { location.hash = "#/inventory"; return; }
@@ -7327,6 +7469,473 @@ function wireShimmer(container){
         downloadBtn.textContent = originalText;
       }
     });
+  }
+
+  // ---------------- Owner Card List Post Generator ----------------
+  const FB_CARD_LIST_POST_PREFS_KEY = "collect_tcg_fb_card_list_post_prefs_v1";
+  const FB_CARD_LIST_LINKS = Object.freeze([
+    ["CHAMPIONSHIP","https://www.facebook.com/share/p/1C886w7YJC/?mibextid=wwXIfr"],
+    ["VINTAGE","https://www.facebook.com/share/p/1E2v2daUcb/?mibextid=wwXIfr"],
+    ["ANNIVERSARIES","https://www.facebook.com/share/p/1DDwuBRvrt/?mibextid=wwXIfr"],
+    ["ONLINE REGIONAL CHAMPION","https://www.facebook.com/share/p/1ENthmhe6X/?mibextid=wwXIfr"],
+    ["ASSORTED","https://www.facebook.com/share/p/1Ceo2zm4ms/"]
+  ]);
+
+  function getFbCardListPostPrefs(){
+    try{
+      const p = JSON.parse(localStorage.getItem(FB_CARD_LIST_POST_PREFS_KEY) || "{}");
+      return {
+        listTitle:String(p.listTitle || "AVAILABLE INVENTORY").trim().slice(0,120),
+        defaultTerms:["negotiable","non-negotiable"].includes(p.defaultTerms) ? p.defaultTerms : "negotiable",
+        carousellShopUrl:safeHttpUrl(p.carousellShopUrl) || "https://www.carousell.com.my/u/collect_tcg_my_sg/",
+        instagramUrl:safeHttpUrl(p.instagramUrl) || "https://www.instagram.com/collecttcg.mysg",
+        hashtags:String(p.hashtags || "#tcg #onepiece #onepiecetcg #onepiececardgame #TCGCollector").trim().slice(0,500)
+      };
+    }catch{
+      return {
+        listTitle:"AVAILABLE INVENTORY",
+        defaultTerms:"negotiable",
+        carousellShopUrl:"https://www.carousell.com.my/u/collect_tcg_my_sg/",
+        instagramUrl:"https://www.instagram.com/collecttcg.mysg",
+        hashtags:"#tcg #onepiece #onepiecetcg #onepiececardgame #TCGCollector"
+      };
+    }
+  }
+
+  function saveFbCardListPostPrefs(p){
+    try{
+      localStorage.setItem(FB_CARD_LIST_POST_PREFS_KEY, JSON.stringify({
+        listTitle:String(p.listTitle || "").trim().slice(0,120),
+        defaultTerms:["negotiable","non-negotiable"].includes(p.defaultTerms) ? p.defaultTerms : "negotiable",
+        carousellShopUrl:safeHttpUrl(p.carousellShopUrl),
+        instagramUrl:safeHttpUrl(p.instagramUrl),
+        hashtags:String(p.hashtags || "").trim().slice(0,500)
+      }));
+    }catch{}
+  }
+
+  function ordinalDay(n){
+    const v = n % 100;
+    if(v >= 11 && v <= 13) return `${n}TH`;
+    switch(n % 10){
+      case 1:return `${n}ST`;
+      case 2:return `${n}ND`;
+      case 3:return `${n}RD`;
+      default:return `${n}TH`;
+    }
+  }
+
+  function fbCardListDateLabel(date = new Date()){
+    const month = date.toLocaleDateString("en-US",{month:"long"}).toUpperCase();
+    return `${ordinalDay(date.getDate())} ${month} ${date.getFullYear()}`;
+  }
+
+  function cardListFormat(card){
+    const format = normalizeFilterValue(effectiveFormat(card));
+    if(format === "sealed") return "sealed";
+    const grades = Array.isArray(card.grading) ? card.grading.filter(g=>g && g.company) : [];
+    if(grades.length || format === "graded") return "graded";
+    return "raw";
+  }
+
+  function rawConditionPostLabel(card){
+    const c = String(card.condition || "").toUpperCase();
+    if(c === "NM" || c === "M") return "NM/BETTER";
+    if(c === "LP") return "LP/BELOW";
+    if(c === "MP" || c === "HP" || c === "DMG") return `${c}/BELOW`;
+    return "RAW";
+  }
+
+  function gradedPostLabel(card){
+    const grade = Array.isArray(card.grading) ? card.grading.find(g=>g && g.company) : null;
+    if(!grade) return "GRADED";
+    return `${String(grade.company || "").toUpperCase()} ${String(grade.grade || "").trim()}`.trim();
+  }
+
+  function cardListPriceLine(card, defaultTerms){
+    const pieces = [];
+    if(hasListedPrice(card.price_myr)) pieces.push(fmtMYR(card.price_myr));
+    if(hasListedPrice(card.price_usd ?? card.price)) pieces.push(`$${Math.round(Number(card.price_usd ?? card.price)).toLocaleString("en-US")} USD`);
+    if(hasListedPrice(card.price_sgd)) pieces.push(fmtSGD(card.price_sgd));
+
+    const terms = /\bnon[- ]?negotiable\b/i.test(card.notes || "")
+      ? "non-negotiable"
+      : (/\bnegotiable\b/i.test(card.notes || "") ? "negotiable" : defaultTerms);
+
+    return `PRICE : ${pieces.length ? pieces.join(" / ") : "PLEASE INQUIRE"} (${terms})`;
+  }
+
+  function cardListGroupHeading(card){
+    const year = card.year ? String(card.year) : "";
+    const series = String(card.series || "").trim().toUpperCase();
+    if(year && series){
+      if(series.includes(year)) return series;
+      return `${year} ${series}`;
+    }
+    return series || year || "OTHER";
+  }
+
+  function cardListItemLine(card){
+    const format = cardListFormat(card);
+    const label = format === "graded"
+      ? gradedPostLabel(card)
+      : (format === "sealed" ? "SEALED" : rawConditionPostLabel(card));
+
+    const nameParts = [
+      card.year || "",
+      String(card.series || "").toUpperCase(),
+      String(card.name || "").toUpperCase(),
+      String(card.card_code || "").toUpperCase()
+    ].filter(Boolean);
+
+    return `-【${label}】${nameParts.join(" ").replace(/\s+/g," ").trim()}`;
+  }
+
+  function sortCardListCards(list){
+    return list.slice().sort((a,b)=>{
+      const ay = Number(a.year || 9999);
+      const by = Number(b.year || 9999);
+      if(ay !== by) return ay - by;
+      const as = String(a.series || "");
+      const bs = String(b.series || "");
+      const sc = as.localeCompare(bs);
+      if(sc) return sc;
+      const ag = Number((Array.isArray(a.grading) && a.grading[0]?.grade) || -1);
+      const bg = Number((Array.isArray(b.grading) && b.grading[0]?.grade) || -1);
+      if(bg !== ag) return bg - ag;
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    });
+  }
+
+  function buildFbCardListSection(title, cardsInSection, prefs){
+    if(!cardsInSection.length) return "";
+    const divider = "━━━━━━━━━━━━━━━━━━━━━━━━";
+    const lines = [divider,"",title,"",divider,""];
+
+    let lastHeading = null;
+    sortCardListCards(cardsInSection).forEach(card=>{
+      const heading = cardListGroupHeading(card);
+      if(heading !== lastHeading){
+        if(lastHeading !== null) lines.push("");
+        lines.push(`【${heading}】`,"");
+        lastHeading = heading;
+      }
+      lines.push(cardListItemLine(card),"",cardListPriceLine(card,prefs.defaultTerms),"");
+    });
+
+    return lines.join("\n").trimEnd();
+  }
+
+  function buildFbCardListPost(availableCards,prefs){
+    const divider = "━━━━━━━━━━━━━━━━━━━━━━━━";
+    const graded = availableCards.filter(c=>cardListFormat(c)==="graded");
+    const raw = availableCards.filter(c=>cardListFormat(c)==="raw");
+    const sealed = availableCards.filter(c=>cardListFormat(c)==="sealed");
+
+    const sections = [
+      buildFbCardListSection("𝐆𝐑𝐀𝐃𝐄𝐃 𝐒𝐋𝐀𝐁𝐒",graded,prefs),
+      buildFbCardListSection("𝐑𝐀𝐖 𝐒𝐈𝐍𝐆𝐋𝐄𝐒",raw,prefs),
+      buildFbCardListSection("𝐒𝐄𝐀𝐋𝐄𝐃 𝐏𝐑𝐎𝐃𝐔𝐂𝐓𝐒",sealed,prefs)
+    ].filter(Boolean);
+
+    const otherLists = FB_CARD_LIST_LINKS.flatMap(([label,url])=>[
+      `(${label})`,
+      "",
+      url,
+      ""
+    ]);
+
+    return [
+      `‼ CARD LIST ‼  [UPDATE : ${fbCardListDateLabel()}]`,
+      "",
+      `WTS【CARD LIST】${String(prefs.listTitle || "AVAILABLE INVENTORY").toUpperCase()}`,
+      "",
+      ...sections.flatMap((s,i)=>i ? ["",s] : [s]),
+      "",
+      divider,
+      "",
+      "📍 COD KL/SG",
+      "",
+      "🌏 INTERNATIONAL SHIPPING IS AVAILABLE",
+      "",
+      "Shipping costs and insurance fees will be borne by the buyer. We will pack the cards securely and are happy to provide a video of the packing process for your peace of mind. Please note that we cannot be held responsible for any loss, damage, or issues that may occur during transit once the package has been shipped.",
+      "",
+      "📦 FOR COURIER DELIVERIES",
+      "",
+      "Please record a clear, continuous unboxing video from the sealed parcel through to the cards themselves. Any claims regarding missing, damaged, or incorrect items will require an unboxing video for verification.",
+      "",
+      "📩 DM your offer if interested",
+      "",
+      "💰 Serious buyers only",
+      "",
+      "👥 Can discuss meetup location",
+      "",
+      "📍 Located in KL 🇲🇾 / SG 🇲🇨",
+      "",
+      "❌ No lowball offers",
+      "",
+      divider,
+      "",
+      "OTHER CARD LIST :",
+      "",
+      ...otherLists,
+      divider,
+      "",
+      "VIEW MORE OF OUR PRODUCTS :",
+      "",
+      "(CAROUSELL)",
+      "",
+      safeHttpUrl(prefs.carousellShopUrl),
+      "",
+      "(INSTAGRAM)",
+      "",
+      safeHttpUrl(prefs.instagramUrl),
+      "",
+      divider,
+      "",
+      "HASHTAG :",
+      "",
+      String(prefs.hashtags || "").trim()
+    ].join("\n");
+  }
+
+  function dataUrlToBlob(dataUrl){
+    const parts = String(dataUrl).split(",");
+    if(parts.length < 2) throw new Error("Invalid data URL");
+    const mimeMatch = parts[0].match(/^data:([^;]+);base64$/i);
+    if(!mimeMatch) throw new Error("Unsupported data URL");
+    const bytes = atob(parts[1]);
+    const arr = new Uint8Array(bytes.length);
+    for(let i=0;i<bytes.length;i++) arr[i]=bytes.charCodeAt(i);
+    return new Blob([arr],{type:mimeMatch[1]});
+  }
+
+  async function imageSourceToBlob(src){
+    if(/^data:/i.test(src)) return dataUrlToBlob(src);
+    if(/^blob:/i.test(src)){
+      const r = await fetch(src);
+      if(!r.ok) throw new Error("Could not read image");
+      return r.blob();
+    }
+    const r = await fetch(src,{
+      mode:"cors",
+      credentials:"omit",
+      referrerPolicy:"no-referrer"
+    });
+    if(!r.ok) throw new Error("Could not fetch image");
+    return r.blob();
+  }
+
+  function imageExtensionFromBlob(blob){
+    const t = String(blob?.type || "").toLowerCase();
+    if(t.includes("png")) return "png";
+    if(t.includes("webp")) return "webp";
+    if(t.includes("avif")) return "avif";
+    return "jpg";
+  }
+
+  async function downloadCardListFirstImagesZip(cardsForZip, progressCallback){
+    if(typeof JSZip === "undefined") throw new Error("ZIP library is unavailable");
+    const zip = new JSZip();
+    const usedNames = new Set();
+    let added = 0;
+
+    for(let i=0;i<cardsForZip.length;i++){
+      const card = cardsForZip[i];
+      const firstImage = getImages(card)[0];
+      if(!firstImage) continue;
+
+      try{
+        const blob = await imageSourceToBlob(firstImage);
+        const ext = imageExtensionFromBlob(blob);
+        let base = safeDownloadName(
+          [card.card_code,card.name].filter(Boolean).join(" - ") || `card-${i+1}`
+        );
+        let name = `${String(i+1).padStart(3,"0")} - ${base}.${ext}`;
+        let suffix = 2;
+        while(usedNames.has(name)){
+          name = `${String(i+1).padStart(3,"0")} - ${base} (${suffix++}).${ext}`;
+        }
+        usedNames.add(name);
+        zip.file(name,blob);
+        added++;
+      }catch(err){
+        console.warn("Could not add card-list image to ZIP:",card?.id,err);
+      }
+
+      if(progressCallback) progressCallback(i+1,cardsForZip.length,added);
+    }
+
+    if(!added) throw new Error("No downloadable first images found");
+
+    const blob = await zip.generateAsync({
+      type:"blob",
+      compression:"DEFLATE",
+      compressionOptions:{level:6}
+    });
+
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = href;
+    a.download = `Collect-TCG-Card-List-${new Date().toISOString().slice(0,10)}.zip`;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(href),1500);
+    return added;
+  }
+
+  function renderFbCardListGeneratorPage(){
+    if(!requireOwner("open card list post generator")) return;
+
+    const prefs = getFbCardListPostPrefs();
+    const availableCards = cards.filter(c=>
+      normalizeFilterValue(c.availability || "Available") === "available"
+    );
+
+    view.innerHTML = `
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Owner Tool</div>
+          <h2>Card List Post Generator</h2>
+          <p>Generate a Facebook sales list from every currently available inventory listing and download one cover image per listing as a ZIP.</p>
+        </div>
+      </div>
+
+      <div class="card-list-generator-stats">
+        <div><strong>${availableCards.length}</strong><span>Available listings</span></div>
+        <div><strong>${availableCards.filter(c=>cardListFormat(c)==="graded").length}</strong><span>Graded</span></div>
+        <div><strong>${availableCards.filter(c=>cardListFormat(c)==="raw").length}</strong><span>Raw</span></div>
+        <div><strong>${availableCards.filter(c=>cardListFormat(c)==="sealed").length}</strong><span>Sealed</span></div>
+        <div><strong>${availableCards.filter(c=>getImages(c).length).length}</strong><span>With image</span></div>
+      </div>
+
+      <div class="fb-card-list-layout">
+        <section class="panel fb-card-list-controls">
+          <div class="eyebrow">Post Settings</div>
+          <h3>Card List</h3>
+
+          <div class="field">
+            <label for="fbCardListTitle">List title</label>
+            <input id="fbCardListTitle" maxlength="120" value="${escapeHtml(prefs.listTitle)}" placeholder="e.g. VINTAGE SERIES">
+          </div>
+
+          <div class="field">
+            <label for="fbCardListTerms">Default pricing terms</label>
+            <select id="fbCardListTerms">
+              <option value="negotiable" ${prefs.defaultTerms==="negotiable"?"selected":""}>Negotiable</option>
+              <option value="non-negotiable" ${prefs.defaultTerms==="non-negotiable"?"selected":""}>Non-negotiable</option>
+            </select>
+            <div class="hint">If a card's Notes contains “negotiable” or “non-negotiable”, that card overrides this default.</div>
+          </div>
+
+          <details class="fb-post-settings">
+            <summary>Links & hashtags</summary>
+            <div class="fb-post-settings-body">
+              <div class="field">
+                <label for="fbCardListCarousell">Carousell shop URL</label>
+                <input id="fbCardListCarousell" type="url" maxlength="1000" value="${escapeHtml(prefs.carousellShopUrl)}">
+              </div>
+              <div class="field">
+                <label for="fbCardListInstagram">Instagram URL</label>
+                <input id="fbCardListInstagram" type="url" maxlength="1000" value="${escapeHtml(prefs.instagramUrl)}">
+              </div>
+              <div class="field">
+                <label for="fbCardListHashtags">Hashtags</label>
+                <textarea id="fbCardListHashtags" rows="3" maxlength="500">${escapeHtml(prefs.hashtags)}</textarea>
+              </div>
+            </div>
+          </details>
+
+          <div class="fb-card-list-image-note">
+            <strong>ZIP image rule</strong>
+            <span>Only the first image from each available listing is included. Existing watermarked images remain unchanged.</span>
+          </div>
+
+          <button type="button" class="btn-primary fb-card-list-zip-btn" id="fbCardListZipBtn" ${availableCards.some(c=>getImages(c).length)?"":"disabled"}>
+            Download First Images (.ZIP)
+          </button>
+          <div class="hint" id="fbCardListZipStatus">${availableCards.filter(c=>getImages(c).length).length} first image${availableCards.filter(c=>getImages(c).length).length===1?"":"s"} ready for ZIP.</div>
+        </section>
+
+        <section class="panel fb-card-list-preview-panel">
+          <div class="fb-post-section-title">
+            <div>
+              <div class="eyebrow">Post Preview</div>
+              <h3>Facebook Card List</h3>
+            </div>
+            <button type="button" class="btn-primary" id="fbCardListCopyBtn">Copy Full Post</button>
+          </div>
+
+          <textarea id="fbCardListOutput" class="fb-post-output fb-card-list-output"></textarea>
+          <div class="hint">The preview is editable. Changing the settings regenerates it.</div>
+        </section>
+      </div>
+    `;
+
+    const titleInput=$("fbCardListTitle");
+    const termsInput=$("fbCardListTerms");
+    const carousellInput=$("fbCardListCarousell");
+    const instagramInput=$("fbCardListInstagram");
+    const hashtagsInput=$("fbCardListHashtags");
+    const output=$("fbCardListOutput");
+    const copyBtn=$("fbCardListCopyBtn");
+    const zipBtn=$("fbCardListZipBtn");
+    const zipStatus=$("fbCardListZipStatus");
+
+    function currentPrefs(){
+      return {
+        listTitle:titleInput.value,
+        defaultTerms:termsInput.value,
+        carousellShopUrl:carousellInput.value,
+        instagramUrl:instagramInput.value,
+        hashtags:hashtagsInput.value
+      };
+    }
+
+    function regenerate(){
+      const now=currentPrefs();
+      saveFbCardListPostPrefs(now);
+      output.value=buildFbCardListPost(availableCards,now);
+    }
+
+    [titleInput,termsInput,carousellInput,instagramInput,hashtagsInput].forEach(el=>{
+      el.addEventListener("input",regenerate);
+      el.addEventListener("change",regenerate);
+    });
+
+    copyBtn.addEventListener("click",()=>copyPlainText(output.value,"Card list post copied"));
+
+    zipBtn.addEventListener("click",async()=>{
+      if(!requireOwner("download card list ZIP")) return;
+      const zipCards=sortCardListCards(availableCards.filter(c=>getImages(c).length));
+      if(!zipCards.length){
+        showToast("No available card images to download");
+        return;
+      }
+
+      const old=zipBtn.textContent;
+      zipBtn.disabled=true;
+      zipBtn.textContent="Preparing ZIP…";
+
+      try{
+        const added=await downloadCardListFirstImagesZip(zipCards,(done,total,included)=>{
+          zipStatus.textContent=`Preparing ${done}/${total} · ${included} image${included===1?"":"s"} added`;
+        });
+        zipStatus.textContent=`ZIP ready · ${added} image${added===1?"":"s"} included`;
+        showToast(`Downloaded ZIP with ${added} image${added===1?"":"s"}`);
+      }catch(err){
+        console.error("Card list ZIP error:",err);
+        zipStatus.textContent="Could not create ZIP. Check that images are accessible and try again.";
+        showToast("Could not create image ZIP");
+      }finally{
+        zipBtn.disabled=false;
+        zipBtn.textContent=old;
+      }
+    });
+
+    regenerate();
   }
 
   // ---------------- Add page ----------------
