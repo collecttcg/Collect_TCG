@@ -17173,42 +17173,59 @@ function wireShimmer(container){
     }
   }
 
-  async function fetchCardImageStorageUsage(){
-    if(!requireOwner("check card image Storage usage")) return null;
+  const SUPABASE_FREE_DATABASE_LIMIT_BYTES=500*1024*1024;
+  const SUPABASE_FREE_STORAGE_LIMIT_BYTES=1024*1024*1024;
 
-    // storage.objects metadata is protected by Storage RLS. The owner SELECT
-    // policy for card-images is already scoped to the verified owner's uid folder.
-    const {data,error}=await supabaseClient
-      .from("storage.objects")
-      .select("metadata")
-      .eq("bucket_id",CARD_IMAGE_STORAGE_BUCKET);
+  async function fetchSupabaseCapacityUsage(){
+    if(!requireOwner("check Supabase capacity usage")) return null;
 
+    const {data,error}=await supabaseClient.rpc("get_owner_capacity_usage");
     if(error){
-      console.warn("Storage usage read unavailable:",error);
-      return {ok:false,totalBytes:null,fileCount:null,error:String(error.message||"Storage usage unavailable")};
+      console.warn("Supabase capacity usage RPC unavailable:",error);
+      return {
+        ok:false,
+        databaseBytes:null,
+        storageBytes:null,
+        storageFileCount:null,
+        error:String(error.message||"Capacity usage unavailable")
+      };
     }
 
-    let totalBytes=0;
-    let fileCount=0;
-    (Array.isArray(data)?data:[]).forEach(row=>{
-      const raw=row?.metadata?.size;
-      const size=Number(raw);
-      if(Number.isFinite(size) && size>=0) totalBytes+=size;
-      fileCount++;
-    });
+    const row=Array.isArray(data) ? data[0] : data;
+    const databaseBytes=Number(row?.database_bytes);
+    const storageBytes=Number(row?.storage_bytes);
+    const storageFileCount=Number(row?.storage_file_count);
 
-    return {ok:true,totalBytes,fileCount};
+    if(!Number.isFinite(databaseBytes) || !Number.isFinite(storageBytes)){
+      return {
+        ok:false,
+        databaseBytes:null,
+        storageBytes:null,
+        storageFileCount:null,
+        error:"Capacity RPC returned an invalid result"
+      };
+    }
+
+    return {
+      ok:true,
+      databaseBytes:Math.max(0,databaseBytes),
+      storageBytes:Math.max(0,storageBytes),
+      storageFileCount:Number.isFinite(storageFileCount)?Math.max(0,storageFileCount):0
+    };
   }
 
-  const CARD_IMAGE_STORAGE_ASSUMED_LIMIT_BYTES=1024*1024*1024;
+  function capacityPercent(used,limit){
+    if(!Number.isFinite(used) || !Number.isFinite(limit) || limit<=0) return 0;
+    return Math.max(0,(used/limit)*100);
+  }
 
-  function storageUsageSummaryText(usage){
-    if(!usage?.ok || usage.totalBytes==null) return "Storage usage unavailable";
-    const used=Number(usage.totalBytes)||0;
-    const limit=CARD_IMAGE_STORAGE_ASSUMED_LIMIT_BYTES;
-    const left=Math.max(0,limit-used);
-    const percent=limit>0 ? (used/limit)*100 : 0;
-    return `${formatApproxBytes(used)} used · ${formatApproxBytes(left)} left · ${percent.toFixed(percent<1?2:1)}% used`;
+  function capacityLeft(used,limit){
+    return Math.max(0,Number(limit||0)-Math.max(0,Number(used||0)));
+  }
+
+  function capacitySummaryText(label,used,limit){
+    const percent=capacityPercent(used,limit);
+    return `${label}: ${formatApproxBytes(used)} used · ${formatApproxBytes(capacityLeft(used,limit))} left · ${percent.toFixed(percent<1?2:1)}% used`;
   }
 
   async function checkCardImageStorageReady(){
@@ -17276,8 +17293,10 @@ function wireShimmer(container){
         <div><strong id="migrationImagesRemaining">${initialStats.legacyImages}</strong><span>Legacy images</span></div>
         <div><strong id="migrationEstimatedSize">${escapeHtml(formatApproxBytes(initialStats.estimatedBytes))}</strong><span>Approx. embedded data</span></div>
         <div><strong id="migrationCompleted">0</strong><span>Cards migrated this run</span></div>
-        <div><strong id="migrationStorageUsed">—</strong><span>Storage used</span></div>
-        <div><strong id="migrationStorageLeft">—</strong><span>Storage left*</span></div>
+        <div><strong id="migrationStorageUsed">—</strong><span>File Storage used</span></div>
+        <div><strong id="migrationStorageLeft">—</strong><span>File Storage left</span></div>
+        <div><strong id="migrationDatabaseUsed">—</strong><span>Database used</span></div>
+        <div><strong id="migrationDatabaseLeft">—</strong><span>Database left</span></div>
       </div>
 
       <section class="panel storage-migration-panel">
@@ -17297,7 +17316,7 @@ function wireShimmer(container){
 
         <div class="storage-migration-actions">
           <button type="button" class="btn-ghost" id="migrationRefreshStorageBtn">
-            Refresh Storage Usage
+            Refresh Supabase Usage
           </button>
           <button type="button" class="btn-ghost" id="migrationTestBtn">
             Test Storage Connection
@@ -17319,7 +17338,7 @@ function wireShimmer(container){
             ? `This process can be safely rerun. Already migrated cards are skipped automatically. Keep this browser tab open while it runs.`
             : `All currently loaded card images are already Storage URLs or external URLs.`}
         </div>
-        <div class="hint storage-limit-note">* “Storage left” is calculated against a 1 GB reference limit. If your Supabase plan has a different Storage quota, the used amount is still accurate but the remaining amount will differ.</div>
+        <div class="hint storage-limit-note">Free-plan limits shown here: <strong>500 MB PostgreSQL database</strong> and <strong>1 GB file Storage</strong>. Usage is read from your Supabase project through an owner-only RPC; remaining capacity is calculated from those Free-plan limits.</div>
       </section>
 
       <section class="panel storage-migration-notes">
@@ -17334,6 +17353,8 @@ function wireShimmer(container){
     const startBtn=$("migrationStartBtn");
     const storageUsedEl=$("migrationStorageUsed");
     const storageLeftEl=$("migrationStorageLeft");
+    const databaseUsedEl=$("migrationDatabaseUsed");
+    const databaseLeftEl=$("migrationDatabaseLeft");
     const stopBtn=$("migrationStopBtn");
     const preflight=$("migrationPreflight");
     const progress=$("migrationProgressBar");
@@ -17358,24 +17379,42 @@ function wireShimmer(container){
       }
 
       try{
-        const usage=await fetchCardImageStorageUsage();
+        const usage=await fetchSupabaseCapacityUsage();
         if(!usage?.ok){
           storageUsedEl.textContent="Unavailable";
           storageLeftEl.textContent="Unavailable";
-          if(usage?.error) console.warn("Storage usage:",usage.error);
+          databaseUsedEl.textContent="Unavailable";
+          databaseLeftEl.textContent="Unavailable";
+
+          const detail=usage?.error
+            ? `Supabase capacity usage unavailable: ${usage.error}. Run supabase-owner-capacity-usage-migration.sql once in Supabase SQL Editor.`
+            : "Supabase capacity usage unavailable.";
+          storageUsedEl.title=detail;
+          databaseUsedEl.title=detail;
+          if(usage?.error) console.warn("Supabase capacity usage:",usage.error);
           return;
         }
 
-        const used=Number(usage.totalBytes)||0;
-        const left=Math.max(0,CARD_IMAGE_STORAGE_ASSUMED_LIMIT_BYTES-used);
-        storageUsedEl.textContent=formatApproxBytes(used);
-        storageLeftEl.textContent=formatApproxBytes(left);
-        storageUsedEl.title=`${usage.fileCount} file${usage.fileCount===1?"":"s"} in ${CARD_IMAGE_STORAGE_BUCKET}`;
-        storageLeftEl.title=storageUsageSummaryText(usage);
+        const storageUsed=usage.storageBytes;
+        const storageLeft=capacityLeft(storageUsed,SUPABASE_FREE_STORAGE_LIMIT_BYTES);
+        const databaseUsed=usage.databaseBytes;
+        const databaseLeft=capacityLeft(databaseUsed,SUPABASE_FREE_DATABASE_LIMIT_BYTES);
+
+        storageUsedEl.textContent=formatApproxBytes(storageUsed);
+        storageLeftEl.textContent=formatApproxBytes(storageLeft);
+        databaseUsedEl.textContent=formatApproxBytes(databaseUsed);
+        databaseLeftEl.textContent=formatApproxBytes(databaseLeft);
+
+        storageUsedEl.title=`${usage.storageFileCount} file${usage.storageFileCount===1?"":"s"} across all Supabase Storage buckets`;
+        storageLeftEl.title=capacitySummaryText("File Storage",storageUsed,SUPABASE_FREE_STORAGE_LIMIT_BYTES);
+        databaseUsedEl.title=capacitySummaryText("PostgreSQL database",databaseUsed,SUPABASE_FREE_DATABASE_LIMIT_BYTES);
+        databaseLeftEl.title=databaseUsed>SUPABASE_FREE_DATABASE_LIMIT_BYTES
+          ? "Free-plan database quota exceeded"
+          : capacitySummaryText("PostgreSQL database",databaseUsed,SUPABASE_FREE_DATABASE_LIMIT_BYTES);
       }finally{
         if(refreshStorageBtn){
           refreshStorageBtn.disabled=false;
-          refreshStorageBtn.textContent=old||"Refresh Storage Usage";
+          refreshStorageBtn.textContent=old||"Refresh Supabase Usage";
         }
       }
     }
@@ -17500,7 +17539,7 @@ function wireShimmer(container){
         progressNumbers.textContent=`${i+1} / ${targets.length}`;
         completedEl.textContent=String(completed);
         refreshStats();
-        // Update the owner-only Storage usage periodically during migration.
+        // Update owner-only database + file Storage usage periodically during migration.
         if((i+1)%5===0 || i===targets.length-1) await refreshStorageUsage();
 
         // Yield between cards so the UI remains responsive and mobile browsers
