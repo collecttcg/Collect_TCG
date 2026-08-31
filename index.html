@@ -10206,6 +10206,9 @@ function wireShimmer(container){
         </div>
       </div>
 
+      <!-- Desktop/mobile top controls only. Keep the filter drawer OUTSIDE
+           this flex container so desktop layout cannot treat the drawer as
+           another toolbar item. -->
       <div class="inventory-filter-tools listing-filter-tools" data-listing-scope="${escapeHtml(scope)}">
         <div class="quick-filters" id="quickFilters">${inventoryQuickFiltersHTML()}</div>
 
@@ -10237,81 +10240,90 @@ function wireShimmer(container){
             <span class="copy-filter-link-mobile">Copy Filter Link</span>
           </button>
         </div>
-
-        <div class="pill-filter-summary" id="pillFilterSummary" hidden></div>
-
-        <div class="mobile-filter-backdrop" id="mobileFilterBackdrop" hidden></div>
-        <aside class="filter-drawer-shell" id="filterDrawerShell" aria-label="Inventory filters">
-          <div class="filter-drawer-handle" aria-hidden="true"></div>
-          <div class="filter-drawer-head">
-            <div>
-              <strong>Filters</strong>
-              <span id="filterActiveSummary">No active filters</span>
-            </div>
-            <button type="button" class="filter-drawer-close" id="mobileFilterCloseBtn" aria-label="Close filters">×</button>
-          </div>
-
-          <div class="filter-row">
-            <div class="inventory-search-wrap">
-              <input type="text" id="search" placeholder="Search cards..." autocomplete="off" aria-autocomplete="list" aria-controls="searchSuggestions">
-              <div class="search-suggestions" id="searchSuggestions" role="listbox" hidden></div>
-            </div>
-
-            <div class="overview-select" id="filterGameWrap">
-              <button type="button" class="overview-select-btn" id="filterGameBtn"><span>All Games</span><i></i></button>
-              <div class="overview-select-menu" id="filterGameMenu" hidden></div>
-              <input type="hidden" id="filterGame" value="">
-            </div>
-
-            <div class="overview-select" id="filterGradeWrap">
-              <button type="button" class="overview-select-btn" id="filterGradeBtn"><span>All Grades / Conditions</span><i></i></button>
-              <div class="overview-select-menu" id="filterGradeMenu" hidden></div>
-              <input type="hidden" id="filterGrade" value="">
-            </div>
-
-            <div class="overview-select" id="filterLanguageWrap">
-              <button type="button" class="overview-select-btn" id="filterLanguageBtn"><span>All Languages</span><i></i></button>
-              <div class="overview-select-menu" id="filterLanguageMenu" hidden></div>
-              <input type="hidden" id="filterLanguage" value="">
-            </div>
-
-            <div class="overview-select" id="filterEraWrap">
-              <button type="button" class="overview-select-btn" id="filterEraBtn"><span>All Eras</span><i></i></button>
-              <div class="overview-select-menu" id="filterEraMenu" hidden></div>
-              <input type="hidden" id="filterEra" value="">
-            </div>
-
-            <input type="hidden" id="filterAvailability" value="">
-
-            <div class="overview-select" id="filterSeriesWrap">
-              <button type="button" class="overview-select-btn" id="filterSeriesBtn"><span>All Series</span><i></i></button>
-              <div class="overview-select-menu" id="filterSeriesMenu" hidden></div>
-              <input type="hidden" id="filterSeries" value="">
-            </div>
-
-            <div class="overview-select" id="sortByWrap">
-              <button type="button" class="overview-select-btn" id="sortByBtn">
-                <span>${scope==="sold" ? "Sort: Recently Sold" : "Sort: Name"}</span><i></i>
-              </button>
-              <div class="overview-select-menu" id="sortByMenu" hidden></div>
-              <input type="hidden" id="sortBy" value="${scope==="sold" ? "recent-sold" : "name"}">
-            </div>
-
-            ${!isCollection ? `
-              <div class="price-range-filter">
-                <span class="price-range-label">Price (${getPriceCurrencyPreference()})</span>
-                <input type="number" id="filterPriceMin" min="0" step="1" inputmode="decimal" placeholder="Min">
-                <span>–</span>
-                <input type="number" id="filterPriceMax" min="0" step="1" inputmode="decimal" placeholder="Max">
-              </div>
-            ` : ""}
-
-            <a href="#/add" class="btn-primary owner-only" style="display:inline-block;">+ Add card</a>
-          </div>
-
-          <div class="grade-shortcuts" id="gradeShortcuts" hidden></div>
-        </aside>
       </div>
+
+      <div class="pill-filter-summary" id="pillFilterSummary" hidden></div>
+
+      <div class="mobile-filter-backdrop" id="mobileFilterBackdrop" hidden></div>
+
+      <section class="filter-drawer-shell" id="filterDrawerShell" aria-label="Inventory filters">
+        <div class="filter-drawer-head">
+          <div>
+            <strong>Filters</strong>
+            <span id="filterActiveSummary">No active filters</span>
+          </div>
+          <div>
+            <button type="button" class="btn-ghost clear-all-filters-btn" id="clearAllFiltersBtn">Clear All</button>
+            <button type="button" class="btn-ghost mobile-filter-close-btn" id="mobileFilterCloseBtn">Done</button>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="inventory-search-wrap">
+            <input type="search"
+                   id="search"
+                   maxlength="100"
+                   autocomplete="off"
+                   placeholder="Search name, code, year or series…"
+                   aria-autocomplete="list"
+                   aria-controls="searchSuggestions">
+            <div class="search-suggestions" id="searchSuggestions" role="listbox" hidden></div>
+          </div>
+
+          <div class="overview-select" id="filterGameWrap">
+            <button type="button" class="overview-select-btn" id="filterGameBtn"><span>All Games</span><i></i></button>
+            <div class="overview-select-menu" id="filterGameMenu" hidden></div>
+            <input type="hidden" id="filterGame" value="">
+          </div>
+
+          <div class="overview-select" id="filterGradeWrap">
+            <button type="button" class="overview-select-btn" id="filterGradeBtn"><span>All Grades / Conditions</span><i></i></button>
+            <div class="overview-select-menu" id="filterGradeMenu" hidden></div>
+            <input type="hidden" id="filterGrade" value="">
+          </div>
+
+          <div class="overview-select" id="filterLanguageWrap">
+            <button type="button" class="overview-select-btn" id="filterLanguageBtn"><span>All Languages</span><i></i></button>
+            <div class="overview-select-menu" id="filterLanguageMenu" hidden></div>
+            <input type="hidden" id="filterLanguage" value="">
+          </div>
+
+          <div class="overview-select" id="filterEraWrap">
+            <button type="button" class="overview-select-btn" id="filterEraBtn"><span>All Eras</span><i></i></button>
+            <div class="overview-select-menu" id="filterEraMenu" hidden></div>
+            <input type="hidden" id="filterEra" value="">
+          </div>
+
+          <input type="hidden" id="filterAvailability" value="">
+
+          <div class="overview-select" id="filterSeriesWrap">
+            <button type="button" class="overview-select-btn" id="filterSeriesBtn"><span>All Series</span><i></i></button>
+            <div class="overview-select-menu" id="filterSeriesMenu" hidden></div>
+            <input type="hidden" id="filterSeries" value="">
+          </div>
+
+          <div class="overview-select" id="sortByWrap">
+            <button type="button" class="overview-select-btn" id="sortByBtn">
+              <span>${scope==="sold" ? "Sort: Recently Sold" : "Sort: Name"}</span><i></i>
+            </button>
+            <div class="overview-select-menu" id="sortByMenu" hidden></div>
+            <input type="hidden" id="sortBy" value="${scope==="sold" ? "recent-sold" : "name"}">
+          </div>
+
+          ${!isCollection ? `
+            <div class="price-range-filter">
+              <span class="price-range-label">Price (${getPriceCurrencyPreference()})</span>
+              <input type="number" id="filterPriceMin" min="0" step="1" inputmode="decimal" placeholder="Min">
+              <span>–</span>
+              <input type="number" id="filterPriceMax" min="0" step="1" inputmode="decimal" placeholder="Max">
+            </div>
+          ` : ""}
+
+          <a href="#/add" class="btn-primary owner-only" style="display:inline-block;">+ Add card</a>
+        </div>
+
+        <div class="grade-shortcuts" id="gradeShortcuts" hidden></div>
+      </section>
 
       <div id="invGrid"></div>
 
@@ -10320,10 +10332,12 @@ function wireShimmer(container){
           <strong id="stickyMobileResultCount">0</strong>
           <span>Results</span>
         </div>
+
         <button type="button" class="sticky-mobile-results-action" id="stickyMobileSortBtn" aria-expanded="false">
           <span>Sort</span>
           <small id="stickyMobileSortLabel">Name A–Z</small>
         </button>
+
         <button type="button" class="sticky-mobile-results-action" id="stickyMobileFilterBtn" aria-expanded="false">
           <span>Filters</span>
           <strong class="sticky-mobile-filter-count" id="stickyMobileFilterCount">0</strong>
@@ -10331,6 +10345,7 @@ function wireShimmer(container){
       </div>
     `;
   }
+
 
   function inventoryFilterOptions(scopedCards){
     const games=Array.from(new Set(scopedCards.map(c=>c.game).filter(Boolean))).sort();
