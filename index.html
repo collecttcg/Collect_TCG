@@ -6324,6 +6324,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   const CONDITION_LABEL = {NM:"Near Mint", M:"Mint", LP:"Lightly Played", MP:"Moderately Played", HP:"Heavily Played", DMG:"Damaged", SEALED:"Sealed", NA:"Not Applicable"};
   const LANGUAGE_OPTIONS = ["JP","ENG","KR","CN"];
   const ERA_OPTIONS = ["Modern","Mid-Era","Vintage"];
+  // Keep these canonical values exact. The Supabase availability CHECK
+  // constraint is case-sensitive, especially "Collection (NFS)".
   const AVAILABILITY_OPTIONS = ["Available","Reserved","Sold","Collection (NFS)"];
   const RARITY_LIST = ["Common","Uncommon","Rare","Rare Holo","Ultra Rare","Secret Rare","Promo"];
   const INDEX_KEY = "card-index";
@@ -6648,7 +6650,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       game: row.game === "One Piece" ? "One Piece Card Game" : (row.game || ""),
       language: row.language || "",
       era: normalizeStoredLabel(row.era || ""),
-      availability: normalizeStoredLabel(row.availability || "Available"),
+      availability: canonicalAvailability(row.availability || "Available"),
       set: row.set_name || "",
       series: normalizeStoredLabel(row.series || ""),
       format: normalizeStoredLabel(row.format || ""),
@@ -6689,7 +6691,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       game: card.game,
       language: card.language || "",
       era: normalizeStoredLabel(card.era || ""),
-      availability: normalizeStoredLabel(card.availability || "Available"),
+      availability: canonicalAvailability(card.availability || "Available"),
       set_name: card.set || "",
       series: normalizeStoredLabel(card.series || ""),
       format: normalizeStoredLabel(card.format || ""),
@@ -6943,7 +6945,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     if(result.error){
       console.error("Update card error:", result.error);
-      showToast("Could not update card. Check the required fields and try again.");
+      const message=`${result.error.message||""} ${result.error.details||""}`.toLowerCase();
+      if(message.includes("availability") || message.includes("cards_availability_check")){
+        showToast("Could not update availability. Please refresh and try again.");
+      }else{
+        showToast("Could not update card. Check the required fields and try again.");
+      }
       return null;
     }
     return mergeOwnerOnlyCardFields(dbToCard(result.data),card);
@@ -8210,7 +8217,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if($(p + "LifecycleStatus")){
       $(p + "LifecycleStatus").value = card ? cardLifecycle(card) : "live";
     }
-    $(p + "Availability").value = card ? (card.availability || "Available") : "Available";
+    $(p + "Availability").value = canonicalAvailability(card ? (card.availability || "Available") : "Available");
     if($(p + "SoldDate")) $(p + "SoldDate").value = card ? soldDateInputValue(card.sold_at) : "";
     $(p + "Format").value = card ? (card.format || (Array.isArray(card.grading) && card.grading.length ? "Graded" : (card.condition === "SEALED" ? "Sealed" : "Raw"))) : "Raw";
     $(p + "Condition").value = card ? card.condition : "NM";
@@ -8233,7 +8240,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       lifecycle_status: lifecycleSupported && $(p + "LifecycleStatus")
         ? String($(p + "LifecycleStatus").value||"live").toLowerCase()
         : "live",
-      availability: $(p + "Availability").value,
+      availability: canonicalAvailability($(p + "Availability").value),
       sold_at: soldAtSupported && normalizeFilterValue($(p + "Availability").value) === "sold"
         ? soldDateToIso($(p + "SoldDate")?.value)
         : null,
@@ -8645,6 +8652,20 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function normalizeStoredLabel(value){
     return titleCaseWords(value);
+  }
+
+  function canonicalAvailability(value){
+    const normalized=normalizeFilterValue(value);
+    if(normalized==="available") return "Available";
+    if(normalized==="reserved") return "Reserved";
+    if(normalized==="sold") return "Sold";
+    if(
+      normalized==="collection (nfs)" ||
+      normalized==="collection(nfs)" ||
+      normalized==="nfs" ||
+      normalized==="not for sale"
+    ) return "Collection (NFS)";
+    return "Available";
   }
 
   function selectedSetMatches(set, values){
@@ -14153,8 +14174,8 @@ function wireShimmer(container){
             if(field==="series"){
               candidate.series=value;
             }else if(field==="availability"){
-              candidate.availability=value;
-              if(value!=="Sold") candidate.sold_at=null;
+              candidate.availability=canonicalAvailability(value);
+              if(candidate.availability!=="Sold") candidate.sold_at=null;
             }else{
               candidate[field]=value;
             }
