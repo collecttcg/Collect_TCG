@@ -9459,11 +9459,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           <input type="number" id="${p}PriceMYR" min="0" step="0.01" inputmode="decimal" placeholder="Enter MYR price">
         </div>
         <div class="field">
-          <label for="${p}PriceUSD">Price (USD) <span class="field-optional">(auto from MYR)</span></label>
+          <label for="${p}PriceUSD">Price (USD) <span class="field-optional">(auto from MYR · rounded)</span></label>
           <input type="number" id="${p}PriceUSD" min="0" step="0.01" inputmode="decimal" placeholder="Auto converted">
         </div>
         <div class="field">
-          <label for="${p}PriceSGD">Price (SGD) <span class="field-optional">(auto from MYR)</span></label>
+          <label for="${p}PriceSGD">Price (SGD) <span class="field-optional">(auto from MYR · rounded)</span></label>
           <input type="number" id="${p}PriceSGD" min="0" step="0.01" inputmode="decimal" placeholder="Auto converted">
         </div>
       </div>
@@ -9875,10 +9875,33 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
   }
 
+  const FX_PRICE_ROUND_STEP=50;
+  const FX_CLEAN_HUNDRED_TOLERANCE=20;
+
+  function roundConvertedCardPrice(rawAmount){
+    const raw=Number(rawAmount);
+    if(!Number.isFinite(raw) || raw<0) return null;
+    if(raw===0) return 0;
+
+    // Hard rule: NEVER round below the live converted amount.
+    let rounded=Math.ceil(raw/FX_PRICE_ROUND_STEP)*FX_PRICE_ROUND_STEP;
+
+    // Clean-hundred presentation rule may only move the price UP.
+    // Example: 181 -> 200. But 212 can never become 200.
+    const nextHundred=Math.ceil(raw/100)*100;
+    if(nextHundred>0 &&
+       nextHundred>=raw &&
+       (nextHundred-raw)<=FX_CLEAN_HUNDRED_TOLERANCE){
+      rounded=nextHundred;
+    }
+
+    return rounded;
+  }
+
   function convertedPriceValue(amount,rate){
-    const result=Number(amount)*Number(rate);
-    if(!Number.isFinite(result) || result<0) return "";
-    return result.toFixed(2);
+    const raw=Number(amount)*Number(rate);
+    const rounded=roundConvertedCardPrice(raw);
+    return rounded==null ? "" : String(rounded);
   }
 
   function applyMyrConversionToFields(p,rates){
@@ -9923,7 +9946,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       : (rates.cacheState==="fresh" ? "cached today" : "latest");
 
     text.textContent=
-      `1 MYR ≈ USD ${Number(rates.usdPerMyr).toFixed(4)} · SGD ${Number(rates.sgdPerMyr).toFixed(4)} · ${sourceState} · ${fxRateDateLabel(rates)}`;
+      `1 MYR ≈ USD ${Number(rates.usdPerMyr).toFixed(4)} · SGD ${Number(rates.sgdPerMyr).toFixed(4)} · auto prices never round down; round up to 50, or up to the next 100 when within ${FX_CLEAN_HUNDRED_TOLERANCE} · ${sourceState} · ${fxRateDateLabel(rates)}`;
   }
 
   function wireAutoCurrencyConversion(p){
