@@ -3385,6 +3385,122 @@
     }
   }
 
+
+  /* ---------- Unified Facebook Tools ---------- */
+  .fb-tools-page-head{
+    margin-bottom:12px !important;
+  }
+
+  .fb-tools-switcher{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+    margin:0 0 16px;
+    padding:5px;
+    border:1px solid var(--border);
+    border-radius:14px;
+    background:var(--surface);
+  }
+
+  .fb-tools-switch{
+    min-width:0;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:11px 12px;
+    border:1px solid transparent;
+    border-radius:10px;
+    color:var(--text-muted);
+    background:transparent;
+    text-decoration:none;
+    transition:background .15s ease,border-color .15s ease,color .15s ease,transform .15s ease;
+  }
+
+  .fb-tools-switch:hover{
+    color:var(--text);
+    background:var(--surface-2);
+    border-color:var(--border);
+  }
+
+  .fb-tools-switch.active{
+    color:var(--text);
+    background:linear-gradient(135deg,rgba(227,179,65,.10),rgba(95,212,196,.07));
+    border-color:rgba(227,179,65,.42);
+    box-shadow:0 8px 24px rgba(0,0,0,.12);
+  }
+
+  .fb-tools-switch-icon{
+    width:34px;
+    height:34px;
+    flex:0 0 34px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:var(--bg);
+    color:var(--text-muted);
+    font-size:15px;
+  }
+
+  .fb-tools-switch.active .fb-tools-switch-icon{
+    color:var(--accent-gold);
+    border-color:rgba(227,179,65,.35);
+  }
+
+  .fb-tools-switch>span:last-child{
+    min-width:0;
+  }
+
+  .fb-tools-switch strong{
+    display:block;
+    color:inherit;
+    font-size:11.5px;
+    line-height:1.2;
+  }
+
+  .fb-tools-switch small{
+    display:block;
+    margin-top:3px;
+    color:var(--text-muted);
+    font-size:8.8px;
+    line-height:1.35;
+  }
+
+  /* The inner generator headings are replaced by the shared heading above,
+     so both workflows feel like one tool instead of two separate pages. */
+  #view:has(.fb-tools-switcher) .fb-post-layout,
+  #view:has(.fb-tools-switcher) .fb-card-list-layout{
+    margin-top:0;
+  }
+
+  @media(max-width:700px){
+    .fb-tools-switcher{
+      grid-template-columns:1fr;
+      gap:5px;
+      padding:5px;
+      border-radius:12px;
+    }
+
+    .fb-tools-switch{
+      padding:10px;
+    }
+
+    .fb-tools-switch-icon{
+      width:32px;
+      height:32px;
+      flex-basis:32px;
+    }
+
+    .fb-tools-switch strong{
+      font-size:11px;
+    }
+
+    .fb-tools-switch small{
+      font-size:8.4px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -3423,8 +3539,7 @@
       <a href="#/favorites" data-route="favorites" class="mobile-secondary-nav"><span class="ic">♡</span> Favorites</a>
       <a href="#/giveaway" data-route="giveaway" class="mobile-secondary-nav"><span class="ic">★</span> Giveaway</a>
       <a href="#/insights" data-route="insights" class="owner-only"><span class="ic">◔</span> Insights</a>
-      <a href="#/fb-posts" data-route="fb-posts" class="owner-only"><span class="ic">ƒ</span> FB Posts</a>
-      <a href="#/fb-card-list" data-route="fb-card-list" class="owner-only"><span class="ic">☷</span> Card List Post</a>
+      <a href="#/fb-tools" data-route="fb-tools" class="owner-only"><span class="ic">ƒ</span> Facebook Tools</a>
       <a href="#/add" data-route="add" class="owner-only"><span class="ic">+</span> Add Card</a>
       <a href="#/about" data-route="about" class="mobile-secondary-nav"><span class="ic">◎</span> About Us</a>
       <a href="#/contact" data-route="contact" class="mobile-secondary-nav"><span class="ic">✉</span> Contact</a>
@@ -4441,8 +4556,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     else if(route === "showcase") renderShowcasePage();
         else if(route === "giveaway") renderGiveawayPage();
     else if(route === "insights"){ if(isOwnerMode()) renderInsightsPage(); else { location.hash="#/inventory"; return; } }
-    else if(route === "fb-posts"){ if(isOwnerMode()) renderFbPostGeneratorPage(); else { location.hash="#/inventory"; return; } }
-    else if(route === "fb-card-list"){ if(isOwnerMode()) renderFbCardListGeneratorPage(); else { location.hash="#/inventory"; return; } }
+    else if(route === "fb-tools"){
+      if(isOwnerMode()) renderFacebookToolsPage();
+      else { location.hash="#/inventory"; return; }
+    }
+    else if(route === "fb-posts"){
+      if(isOwnerMode()) { location.hash="#/fb-tools?mode=single"; return; }
+      else { location.hash="#/inventory"; return; }
+    }
+    else if(route === "fb-card-list"){
+      if(isOwnerMode()) { location.hash="#/fb-tools?mode=list"; return; }
+      else { location.hash="#/inventory"; return; }
+    }
     else if(route === "add"){
       if(isOwnerMode()) renderAddPage();
       else { location.hash = "#/inventory"; return; }
@@ -7226,6 +7351,66 @@ function wireShimmer(container){
     }
   }
 
+  function currentFacebookToolMode(){
+    const mode = currentHashParams().get("mode");
+    return mode === "list" ? "list" : "single";
+  }
+
+  function facebookToolsHeaderHTML(mode){
+    return `
+      <div class="page-head fb-tools-page-head">
+        <div>
+          <div class="eyebrow">Owner Tools</div>
+          <h2>Facebook Post Tools</h2>
+          <p>${mode === "list"
+            ? "Create a complete Facebook sales list from your available inventory."
+            : "Create a ready-to-post Facebook listing for one card."}</p>
+        </div>
+      </div>
+      <div class="fb-tools-switcher" role="tablist" aria-label="Facebook post generator type">
+        <a href="#/fb-tools?mode=single"
+           class="fb-tools-switch ${mode === "single" ? "active" : ""}"
+           role="tab"
+           aria-selected="${mode === "single" ? "true" : "false"}">
+          <span class="fb-tools-switch-icon">▣</span>
+          <span>
+            <strong>Single Card Post</strong>
+            <small>Choose one card · copy post · download all images</small>
+          </span>
+        </a>
+        <a href="#/fb-tools?mode=list"
+           class="fb-tools-switch ${mode === "list" ? "active" : ""}"
+           role="tab"
+           aria-selected="${mode === "list" ? "true" : "false"}">
+          <span class="fb-tools-switch-icon">☷</span>
+          <span>
+            <strong>Card List Post</strong>
+            <small>All available cards · full list · first images ZIP</small>
+          </span>
+        </a>
+      </div>
+    `;
+  }
+
+  function renderFacebookToolsPage(){
+    if(!requireOwner("open Facebook tools")) return;
+
+    const mode = currentFacebookToolMode();
+
+    if(mode === "list"){
+      renderFbCardListGeneratorPage();
+    }else{
+      renderFbPostGeneratorPage();
+    }
+
+    const existingHead = view.querySelector(".page-head");
+    if(existingHead){
+      existingHead.outerHTML = facebookToolsHeaderHTML(mode);
+    }else{
+      view.insertAdjacentHTML("afterbegin", facebookToolsHeaderHTML(mode));
+    }
+  }
+
   function renderFbPostGeneratorPage(){
     if(!requireOwner("open FB post generator")) return;
 
@@ -7270,8 +7455,6 @@ function wireShimmer(container){
           </div>
 
           <div id="fbPostSelectedCard" class="fb-post-selected-card" hidden></div>
-
-<div class="fb-post-website-link-note" id="fbPostWebsiteLinkNote" hidden></div>
 
           <div class="field">
             <label for="fbPostTitle">Facebook title</label>
