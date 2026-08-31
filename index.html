@@ -7357,6 +7357,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   let ownerVerified = false;
   let inventoryRenderController = null;
   let inventoryStickyObserver = null;
+  let detailsPreservedListingHash = "";
 
   function isOwnerMode(){
     return !!ownerSession && ownerVerified === true;
@@ -7378,6 +7379,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     ownerPrivateSupported=false;
     editHistorySupported=false;
     ownerVerified=false;
+    detailsPreservedListingHash="";
     if(typeof invalidateOwnerReservedAgeCache==="function"){
       invalidateOwnerReservedAgeCache();
     }
@@ -8262,6 +8264,58 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     };
   }
 
+  function listingRouteFromHash(hash){
+    const safeHash=safeListingBrowseHash(hash);
+    if(!safeHash) return "";
+
+    const raw=safeHash.replace(/^#\/?/,"");
+    const route=raw.split("?")[0].trim();
+    return ["inventory","collection","reserved","sold"].includes(route) ? route : "";
+  }
+
+  function currentListingDomScope(){
+    const tools=view?.querySelector?.(".listing-filter-tools[data-listing-scope]");
+    const scope=String(tools?.dataset?.listingScope||"");
+    if(!["inventory","collection","reserved","sold"].includes(scope)) return "";
+    return view.querySelector("#invGrid") ? scope : "";
+  }
+
+  function canPreserveCurrentListing(hash){
+    const safeHash=safeListingBrowseHash(hash);
+    const route=listingRouteFromHash(safeHash);
+    return !!safeHash && !!route && currentListingDomScope()===route;
+  }
+
+  function canReusePreservedListing(hash){
+    const safeHash=safeListingBrowseHash(hash);
+    if(!safeHash || safeHash!==detailsPreservedListingHash) return false;
+
+    const route=listingRouteFromHash(safeHash);
+    return !!route && currentListingDomScope()===route;
+  }
+
+  function setNavigationActiveRoute(route){
+    const safeRoute=String(route||"");
+    document.querySelectorAll("#mainnav a").forEach(a=>{
+      a.classList.toggle("active",a.dataset.route===safeRoute);
+    });
+
+    const moreToggle=$("mobileMoreToggle");
+    if(moreToggle){
+      moreToggle.classList.toggle(
+        "active",
+        ["collection","showcase","favorites","giveaway","recent","about","contact"].includes(safeRoute)
+      );
+    }
+
+    const moreMenu=$("mobileMoreMenu");
+    if(moreMenu){
+      moreMenu.querySelectorAll("a").forEach(a=>{
+        a.classList.toggle("active",a.dataset.route===safeRoute);
+      });
+    }
+  }
+
   function rememberReturnScroll(hash){
     const safeHash=String(hash||"").slice(0,1500);
     if(!safeHash || safeHash.includes("#/card/")) return;
@@ -8300,6 +8354,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(!route.startsWith("card/")){
       detailsReturnHash=current;
       rememberReturnScroll(current);
+
+      detailsPreservedListingHash=canPreserveCurrentListing(current)
+        ? safeListingBrowseHash(current)
+        : "";
 
       if(!["inventory","collection","reserved","sold"].includes(route)){
         clearFilteredResultsBrowseContext();
@@ -8403,7 +8461,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const pmax=safePriceFilterValue($("filterPriceMax")?.value);
     if(pmin) params.set("pmin",pmin);
     if(pmax) params.set("pmax",pmax);
-    params.set("pc",getPriceCurrencyPreference());
+    if(route!=="collection") params.set("pc",getPriceCurrencyPreference());
 
     const sort = safeUrlFilterText($("sortBy")?.value, 24);
     const defaultSort = route === "sold" ? "recent-sold" : "name";
@@ -8442,8 +8500,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const route=currentRoute();
     const isCardRoute=route.startsWith("card/");
     const listingRoutes=new Set(["inventory","collection","reserved","sold"]);
+    const reusePreservedListingOnReturn=
+      !isCardRoute &&
+      listingRoutes.has(route) &&
+      canReusePreservedListing(location.hash);
+
     if(!isCardRoute && !listingRoutes.has(route)){
       cleanupInventoryRenderListeners();
+      detailsPreservedListingHash="";
+    }
+
+    if(reusePreservedListingOnReturn && !detailsOverlay.hidden){
+      closeDetailsModal(false);
     }
     const routedCardCandidate = isCardRoute ? cards.find(c=>c.id === decodeURIComponent(route.slice(5))) : null;
     const routedCard = routedCardCandidate && (isOwnerMode() || isLiveLifecycle(routedCardCandidate))
@@ -8475,7 +8543,15 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       const cardScope = cardStatus === "collection (nfs)"
         ? "collection"
         : (cardStatus === "reserved" ? "reserved" : (cardStatus === "sold" ? "sold" : "inventory"));
-      renderInventoryPage(cardScope);
+
+      const reuseExistingListing=
+        !!detailsPreservedListingHash &&
+        canReusePreservedListing(detailsPreservedListingHash);
+
+      if(!reuseExistingListing){
+        renderInventoryPage(cardScope);
+      }
+
       if(card){
         openDetailsModal(card);
       }else{
@@ -8484,10 +8560,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       }
     }
     else if(route === "home") renderHomePage();
-    else if(route === "inventory") renderInventoryPage("inventory");
-    else if(route === "collection") renderInventoryPage("collection");
-    else if(route === "reserved") renderInventoryPage("reserved");
-    else if(route === "sold") renderInventoryPage("sold");
+    else if(route === "inventory"){
+      if(!reusePreservedListingOnReturn) renderInventoryPage("inventory");
+    }
+    else if(route === "collection"){
+      if(!reusePreservedListingOnReturn) renderInventoryPage("collection");
+    }
+    else if(route === "reserved"){
+      if(!reusePreservedListingOnReturn) renderInventoryPage("reserved");
+    }
+    else if(route === "sold"){
+      if(!reusePreservedListingOnReturn) renderInventoryPage("sold");
+    }
     else if(route === "recent") renderRecentlyViewedPage();
     else if(route === "favorites") renderFavoritesPage();
     else if(route === "by-game"){
@@ -8541,14 +8625,23 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     else if(route === "contact") renderContactPage();
     else renderInventoryPage();
     updateSidebarFooter();
-    view.classList.remove("view-enter");
-    void view.offsetWidth;
-    view.classList.add("view-enter");
+
+    if(!isCardRoute && !reusePreservedListingOnReturn){
+      view.classList.remove("view-enter");
+      void view.offsetWidth;
+      view.classList.add("view-enter");
+    }
+
     restoreReturnScrollIfReady();
+
+    if(reusePreservedListingOnReturn){
+      detailsPreservedListingHash="";
+    }
   }
 
   function updateSidebarFooter(){
-    $("sfCount").textContent = cards.filter(isLiveLifecycle).reduce((s,c)=>s+Number(c.qty||0),0);
+    // "Listings" means listing records, not inventory quantity.
+    $("sfCount").textContent=cards.filter(isLiveLifecycle).length.toLocaleString();
   }
 
   // ---------------- Image helpers ----------------
@@ -16906,10 +16999,25 @@ function wireShimmer(container){
     detailsCardId = null;
 
     if(navigateBack && currentRoute().startsWith("card/")){
-      const target = detailsReturnHash && !detailsReturnHash.includes("#/card/")
+      const target=detailsReturnHash && !detailsReturnHash.includes("#/card/")
         ? detailsReturnHash
         : "#/inventory";
-      if(location.hash !== target) location.hash = target;
+
+      if(canReusePreservedListing(target)){
+        try{
+          history.replaceState(history.state,"",target);
+          setNavigationActiveRoute(listingRouteFromHash(target));
+          updateSidebarFooter();
+          restoreReturnScrollIfReady();
+          detailsPreservedListingHash="";
+          return;
+        }catch{
+          // Fall through to normal hash navigation.
+        }
+      }
+
+      detailsPreservedListingHash="";
+      if(location.hash!==target) location.hash=target;
     }
   }
 
