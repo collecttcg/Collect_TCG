@@ -4218,6 +4218,57 @@
     }
   }
 
+
+  /* ---------- Bulk metadata editor ---------- */
+  .bulk-meta-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px;}
+  .bulk-meta-summary>div{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);}
+  .bulk-meta-summary strong{display:block;color:var(--accent-teal);font-family:'JetBrains Mono',monospace;font-size:16px;}
+  .bulk-meta-summary span{display:block;margin-top:3px;color:var(--text-muted);font-size:8px;}
+  .bulk-meta-layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr);gap:12px;align-items:start;}
+  .bulk-meta-picker-panel,.bulk-meta-editor-panel{padding:14px;}
+  .bulk-meta-filters{display:grid;grid-template-columns:minmax(180px,1.3fr) repeat(3,minmax(120px,.7fr));gap:8px;margin-bottom:8px;}
+  .bulk-meta-filters .field{margin-bottom:0;}
+  .bulk-meta-picker{display:flex;flex-direction:column;gap:5px;max-height:620px;overflow:auto;padding-right:2px;}
+  .bulk-meta-card{display:grid;grid-template-columns:auto 44px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px;border:1px solid var(--border);border-radius:9px;background:var(--bg);cursor:pointer;}
+  .bulk-meta-card.selected{border-color:rgba(95,212,196,.42);background:rgba(95,212,196,.035);}
+  .bulk-meta-card>input{accent-color:var(--accent-teal);}
+  .bulk-meta-thumb{width:44px;height:54px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:6px;background:var(--surface-2);color:var(--text-muted);font-size:7px;}
+  .bulk-meta-thumb img{width:100%;height:100%;object-fit:cover;}
+  .bulk-meta-copy{min-width:0;}
+  .bulk-meta-copy strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-size:9px;}
+  .bulk-meta-copy small{display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted);font-size:7.5px;}
+  .bulk-meta-status-badge{padding:3px 6px;border-radius:999px;background:var(--surface-2);color:var(--text-muted);font-size:7px;font-weight:700;white-space:nowrap;}
+  .bulk-meta-empty{padding:24px 10px;text-align:center;color:var(--text-muted);font-size:9px;}
+  .bulk-meta-empty[hidden]{display:none!important;}
+  .bulk-meta-help{margin:4px 0 12px;color:var(--text-muted);font-size:8.5px;line-height:1.45;}
+  .bulk-meta-fields{display:flex;flex-direction:column;gap:7px;}
+  .bulk-meta-field-row{display:grid;grid-template-columns:125px minmax(0,1fr);gap:8px;align-items:center;padding:7px;border:1px solid var(--border-soft);border-radius:8px;background:var(--bg);}
+  .bulk-meta-enable{display:flex;align-items:center;gap:7px;color:var(--text);font-size:8.5px;font-weight:700;cursor:pointer;}
+  .bulk-meta-enable input{accent-color:var(--accent-teal);}
+  .bulk-meta-value input,.bulk-meta-value select{width:100%;min-height:34px;}
+  .bulk-meta-warning{margin-top:10px;padding:9px 10px;border:1px solid rgba(227,179,65,.18);border-radius:8px;background:rgba(227,179,65,.045);color:var(--text-muted);font-size:7.8px;line-height:1.45;}
+  .bulk-meta-preview{margin-top:10px;padding:10px;border-radius:8px;background:var(--surface-2);color:var(--text-muted);font-size:8.5px;line-height:1.5;}
+  .bulk-meta-preview strong{display:block;color:var(--text);margin-bottom:4px;}
+  .bulk-meta-preview span{display:block;}
+  .bulk-meta-actions{display:flex;justify-content:flex-end;margin-top:10px;}
+  .bulk-meta-actions .btn-primary{min-width:140px;}
+
+  @media(max-width:1050px){
+    .bulk-meta-layout{grid-template-columns:1fr;}
+  }
+
+  @media(max-width:760px){
+    .bulk-meta-filters{grid-template-columns:1fr 1fr;}
+    .bulk-meta-field-row{grid-template-columns:1fr;gap:5px;}
+    .bulk-meta-card{grid-template-columns:auto 40px minmax(0,1fr);}
+    .bulk-meta-status-badge{grid-column:3;}
+  }
+
+  @media(max-width:430px){
+    .bulk-meta-summary{grid-template-columns:1fr;}
+    .bulk-meta-filters{grid-template-columns:1fr;}
+  }
+
 </style>
 </head>
 <body>
@@ -4259,6 +4310,7 @@
       <a href="#/fb-tools" data-route="fb-tools" class="owner-only"><span class="ic">ƒ</span> Facebook Tools</a>
       <a href="#/quality" data-route="quality" class="owner-only"><span class="ic">✓</span> Data Quality</a>
       <a href="#/bulk-prices" data-route="bulk-prices" class="owner-only"><span class="ic">$</span> Bulk Prices</a>
+      <a href="#/bulk-metadata" data-route="bulk-metadata" class="owner-only"><span class="ic">≡</span> Bulk Metadata</a>
       <a href="#/add" data-route="add" class="owner-only"><span class="ic">+</span> Add Card</a>
       <a href="#/about" data-route="about" class="mobile-secondary-nav"><span class="ic">◎</span> About Us</a>
       <a href="#/contact" data-route="contact" class="mobile-secondary-nav"><span class="ic">✉</span> Contact</a>
@@ -5330,6 +5382,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
     else if(route === "bulk-prices"){
       if(isOwnerMode()) renderBulkPricePage();
+      else { location.hash="#/inventory"; return; }
+    }
+    else if(route === "bulk-metadata"){
+      if(isOwnerMode()) renderBulkMetadataPage();
       else { location.hash="#/inventory"; return; }
     }
     else if(route === "add"){
@@ -10203,6 +10259,395 @@ function wireShimmer(container){
     });
 
     renderRows();
+  }
+
+  // ---------------- Owner Bulk Metadata Editor ----------------
+  function bulkMetadataCleanString(value,maxLen=120){
+    return String(value ?? "").trim().slice(0,maxLen);
+  }
+
+  function bulkMetadataFieldLabel(field){
+    return ({
+      game:"Game",
+      series:"Series",
+      era:"Era",
+      language:"Language",
+      format:"Format",
+      condition:"Condition",
+      availability:"Availability"
+    })[field] || field;
+  }
+
+  function bulkMetadataValueOptions(field){
+    if(field==="game") return GAME_CHOICES.slice();
+    if(field==="era") return ERA_OPTIONS.slice();
+    if(field==="language") return ["JP","ENG","KR","CN"];
+    if(field==="format") return ["Raw","Graded","Sealed"];
+    if(field==="condition") return Object.keys(CONDITION_LABEL);
+    if(field==="availability") return ["Available","Reserved","Sold","Collection (NFS)"];
+    return [];
+  }
+
+  function renderBulkMetadataPage(){
+    if(!requireOwner("open bulk metadata editor")) return;
+
+    const eligibleCards=cards.filter(card=>
+      normalizeFilterValue(card.availability||"Available")!=="sold"
+    );
+    const byId=new Map(eligibleCards.map(card=>[String(card.id),card]));
+    const selectedIds=new Set();
+
+    view.innerHTML=`
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Owner Tool</div>
+          <h2>Bulk Metadata Editor</h2>
+          <p>Select active listings, choose the fields to change, preview the update, then apply it securely.</p>
+        </div>
+      </div>
+
+      <div class="bulk-meta-summary">
+        <div><strong id="bulkMetaSelectedCount">0</strong><span>Selected</span></div>
+        <div><strong>${eligibleCards.length}</strong><span>Eligible</span></div>
+        <div><strong id="bulkMetaFieldCount">0</strong><span>Fields to update</span></div>
+      </div>
+
+      <div class="bulk-meta-layout">
+        <section class="panel bulk-meta-picker-panel">
+          <div class="fb-card-list-control-heading">
+            <h3>1 · Select Listings</h3>
+            <span id="bulkMetaPickerCount">${eligibleCards.length} shown</span>
+          </div>
+
+          <div class="bulk-meta-filters">
+            <div class="field">
+              <label for="bulkMetaSearch">Search</label>
+              <input id="bulkMetaSearch" type="search" maxlength="100" placeholder="Name, code, game or series…">
+            </div>
+            <div class="field">
+              <label for="bulkMetaGameFilter">Game</label>
+              <select id="bulkMetaGameFilter">
+                <option value="">All games</option>
+                ${[...new Set(eligibleCards.map(c=>String(c.game||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b)).map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+              </select>
+            </div>
+            <div class="field">
+              <label for="bulkMetaEraFilter">Era</label>
+              <select id="bulkMetaEraFilter">
+                <option value="">All eras</option>
+                ${[...new Set(eligibleCards.map(c=>String(c.era||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b)).map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+              </select>
+            </div>
+            <div class="field">
+              <label for="bulkMetaFormatFilter">Format</label>
+              <select id="bulkMetaFormatFilter">
+                <option value="">All formats</option>
+                <option value="graded">Graded</option>
+                <option value="raw">Raw</option>
+                <option value="sealed">Sealed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="fb-card-list-bulk-actions">
+            <button type="button" class="btn-ghost" id="bulkMetaSelectAllBtn">Select All</button>
+            <button type="button" class="btn-ghost" id="bulkMetaClearAllBtn">Clear All</button>
+            <button type="button" class="btn-ghost" id="bulkMetaSelectFilteredBtn">Select Filtered</button>
+            <button type="button" class="btn-ghost" id="bulkMetaClearFilteredBtn">Clear Filtered</button>
+          </div>
+
+          <div class="bulk-meta-picker" id="bulkMetaPicker"></div>
+          <div class="bulk-meta-empty" id="bulkMetaPickerEmpty" hidden>No listings match the current filters.</div>
+        </section>
+
+        <section class="panel bulk-meta-editor-panel">
+          <div class="eyebrow">2 · Choose Fields</div>
+          <h3>Metadata Changes</h3>
+          <p class="bulk-meta-help">Only enabled fields below will be changed. Every other card field stays untouched.</p>
+
+          <div class="bulk-meta-fields">
+            ${["game","series","era","language","format","condition","availability"].map(field=>{
+              const label=bulkMetadataFieldLabel(field);
+              const options=bulkMetadataValueOptions(field);
+              const input=field==="series"
+                ? `<input type="text" id="bulkMetaValue_${field}" maxlength="80" placeholder="Enter new series">`
+                : `<select id="bulkMetaValue_${field}">
+                     <option value="">Choose ${escapeHtml(label.toLowerCase())}…</option>
+                     ${options.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+                   </select>`;
+              return `
+                <div class="bulk-meta-field-row">
+                  <label class="bulk-meta-enable">
+                    <input type="checkbox" data-bulk-meta-enable="${field}">
+                    <span>${escapeHtml(label)}</span>
+                  </label>
+                  <div class="bulk-meta-value">${input}</div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+
+          <div class="bulk-meta-warning">
+            Images, prices, quantities, grading certificate numbers, IDs, timestamps, sold dates and view counts cannot be changed here.
+          </div>
+
+          <div class="bulk-meta-preview" id="bulkMetaPreview">
+            Select listings and at least one field to see a preview.
+          </div>
+
+          <div class="bulk-meta-actions">
+            <button type="button" class="btn-primary" id="bulkMetaApplyBtn" disabled>Apply Changes</button>
+          </div>
+          <div class="hint" id="bulkMetaStatus"></div>
+        </section>
+      </div>
+    `;
+
+    const search=$("bulkMetaSearch");
+    const gameFilter=$("bulkMetaGameFilter");
+    const eraFilter=$("bulkMetaEraFilter");
+    const formatFilter=$("bulkMetaFormatFilter");
+    const picker=$("bulkMetaPicker");
+    const pickerEmpty=$("bulkMetaPickerEmpty");
+    const pickerCount=$("bulkMetaPickerCount");
+    const selectedCount=$("bulkMetaSelectedCount");
+    const fieldCount=$("bulkMetaFieldCount");
+    const preview=$("bulkMetaPreview");
+    const applyBtn=$("bulkMetaApplyBtn");
+    const status=$("bulkMetaStatus");
+
+    function visibleCards(){
+      const q=normalizeFilterValue(search.value);
+      const game=normalizeFilterValue(gameFilter.value);
+      const era=normalizeFilterValue(eraFilter.value);
+      const format=normalizeFilterValue(formatFilter.value);
+
+      return eligibleCards.filter(card=>{
+        if(game && normalizeFilterValue(card.game)!==game) return false;
+        if(era && normalizeFilterValue(card.era)!==era) return false;
+        if(format && normalizeFilterValue(effectiveFormat(card))!==format) return false;
+        if(q){
+          const hay=[card.name,card.card_code,card.game,card.series,card.year,card.language]
+            .map(v=>normalizeFilterValue(v)).join(" ");
+          if(!hay.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    function selectedCards(){
+      return [...selectedIds].map(id=>byId.get(id)).filter(Boolean);
+    }
+
+    function enabledChanges(){
+      const changes={};
+
+      document.querySelectorAll("[data-bulk-meta-enable]").forEach(box=>{
+        if(!box.checked) return;
+        const field=String(box.dataset.bulkMetaEnable||"");
+        const input=$(`bulkMetaValue_${field}`);
+        if(!input) return;
+
+        const raw=bulkMetadataCleanString(input.value, field==="series" ? 80 : 120);
+        if(!raw) return;
+
+        changes[field]=raw;
+      });
+
+      return changes;
+    }
+
+    function validateChanges(changes){
+      for(const [field,value] of Object.entries(changes)){
+        if(!["game","series","era","language","format","condition","availability"].includes(field)){
+          return `Unsupported field: ${field}`;
+        }
+
+        if(field!=="series"){
+          const allowed=bulkMetadataValueOptions(field);
+          if(!allowed.includes(value)) return `Invalid ${bulkMetadataFieldLabel(field)} value`;
+        }
+      }
+      return "";
+    }
+
+    function updateSummary(){
+      const changes=enabledChanges();
+      const fields=Object.keys(changes);
+      const selected=selectedCards();
+
+      selectedCount.textContent=selected.length;
+      fieldCount.textContent=fields.length;
+
+      const err=validateChanges(changes);
+      applyBtn.disabled=selected.length===0 || fields.length===0 || !!err;
+
+      if(err){
+        preview.textContent=err;
+        return;
+      }
+
+      if(!selected.length || !fields.length){
+        preview.textContent="Select listings and at least one field to see a preview.";
+        return;
+      }
+
+      const details=fields.map(field=>
+        `${bulkMetadataFieldLabel(field)} → ${changes[field]}`
+      );
+
+      preview.innerHTML=`
+        <strong>${selected.length} listing${selected.length===1?"":"s"} will be updated.</strong>
+        <span>${escapeHtml(details.join(" · "))}</span>
+      `;
+    }
+
+    function renderPicker(){
+      const visible=visibleCards();
+      pickerCount.textContent=`${visible.length} shown`;
+      pickerEmpty.hidden=visible.length>0;
+
+      picker.innerHTML=visible.map(card=>{
+        const id=String(card.id);
+        const image=getImages(card)[0]||"";
+        return `
+          <label class="bulk-meta-card ${selectedIds.has(id)?"selected":""}">
+            <input type="checkbox" data-bulk-meta-id="${escapeHtml(id)}" ${selectedIds.has(id)?"checked":""}>
+            <span class="bulk-meta-thumb">${image?`<img src="${escapeHtml(image)}" alt="">`:"—"}</span>
+            <span class="bulk-meta-copy">
+              <strong>${escapeHtml(card.name||"Untitled card")}</strong>
+              <small>${escapeHtml([card.card_code,card.year,card.series,card.language].filter(Boolean).join(" · "))}</small>
+            </span>
+            <span class="bulk-meta-status-badge">${escapeHtml(card.availability||"Available")}</span>
+          </label>
+        `;
+      }).join("");
+
+      picker.querySelectorAll("[data-bulk-meta-id]").forEach(box=>{
+        box.addEventListener("change",()=>{
+          const id=String(box.dataset.bulkMetaId||"");
+          if(box.checked) selectedIds.add(id);
+          else selectedIds.delete(id);
+          box.closest(".bulk-meta-card")?.classList.toggle("selected",box.checked);
+          updateSummary();
+        });
+      });
+
+      updateSummary();
+    }
+
+    function setVisibleSelection(select){
+      visibleCards().forEach(card=>{
+        const id=String(card.id);
+        if(select) selectedIds.add(id);
+        else selectedIds.delete(id);
+      });
+      renderPicker();
+    }
+
+    [search,gameFilter,eraFilter,formatFilter].forEach(el=>{
+      el.addEventListener("input",renderPicker);
+      el.addEventListener("change",renderPicker);
+    });
+
+    $("bulkMetaSelectAllBtn").addEventListener("click",()=>{
+      eligibleCards.forEach(card=>selectedIds.add(String(card.id)));
+      renderPicker();
+    });
+
+    $("bulkMetaClearAllBtn").addEventListener("click",()=>{
+      selectedIds.clear();
+      renderPicker();
+    });
+
+    $("bulkMetaSelectFilteredBtn").addEventListener("click",()=>setVisibleSelection(true));
+    $("bulkMetaClearFilteredBtn").addEventListener("click",()=>setVisibleSelection(false));
+
+    document.querySelectorAll("[data-bulk-meta-enable]").forEach(box=>{
+      box.addEventListener("change",updateSummary);
+    });
+
+    ["game","series","era","language","format","condition","availability"].forEach(field=>{
+      const input=$(`bulkMetaValue_${field}`);
+      if(!input) return;
+      input.addEventListener("input",updateSummary);
+      input.addEventListener("change",updateSummary);
+    });
+
+    applyBtn.addEventListener("click",async()=>{
+      if(!requireOwner("apply bulk metadata changes")) return;
+
+      const selected=selectedCards();
+      const changes=enabledChanges();
+      const fields=Object.keys(changes);
+      const err=validateChanges(changes);
+
+      if(err){
+        showToast(err);
+        return;
+      }
+      if(!selected.length || !fields.length) return;
+
+      const includesSold=changes.availability==="Sold";
+      const confirmText=includesSold
+        ? `Apply ${fields.length} field change${fields.length===1?"":"s"} to ${selected.length} listings? Some listings will be marked Sold.`
+        : `Apply ${fields.length} field change${fields.length===1?"":"s"} to ${selected.length} listings?`;
+
+      if(!confirm(confirmText)) return;
+
+      const originalText=applyBtn.textContent;
+      applyBtn.disabled=true;
+      let savedCount=0;
+      let failedCount=0;
+
+      try{
+        for(let i=0;i<selected.length;i++){
+          const card=selected[i];
+          applyBtn.textContent=`Saving ${i+1}/${selected.length}…`;
+
+          const candidate={...card};
+
+          for(const [field,value] of Object.entries(changes)){
+            if(field==="series"){
+              candidate.series=value;
+            }else if(field==="availability"){
+              candidate.availability=value;
+              if(value!=="Sold") candidate.sold_at=null;
+            }else{
+              candidate[field]=value;
+            }
+          }
+
+          const saved=await updateCardStorage(candidate);
+          if(saved){
+            const index=cards.findIndex(c=>String(c.id)===String(card.id));
+            if(index>-1) cards[index]=saved;
+            byId.set(String(card.id),saved);
+            savedCount++;
+          }else{
+            failedCount++;
+          }
+        }
+
+        status.textContent=failedCount
+          ? `${savedCount} saved · ${failedCount} failed.`
+          : `${savedCount} listing${savedCount===1?"":"s"} updated successfully.`;
+
+        showToast(
+          failedCount
+            ? `Bulk metadata: ${savedCount} saved · ${failedCount} failed`
+            : `Updated ${savedCount} listing${savedCount===1?"":"s"}`
+        );
+
+        selectedIds.clear();
+        renderPicker();
+      }finally{
+        applyBtn.textContent=originalText;
+        updateSummary();
+      }
+    });
+
+    renderPicker();
   }
 
   // ---------------- Add page ----------------
