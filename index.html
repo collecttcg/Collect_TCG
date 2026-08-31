@@ -4394,6 +4394,345 @@
     }
   }
 
+
+  /* ---------- Inventory Tools: 4-mode switcher ---------- */
+  .inventory-tools-switcher{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+
+  /* ---------- Image health checker ---------- */
+  .image-health-summary{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:8px;
+    margin-bottom:12px;
+  }
+
+  .image-health-summary-card{
+    min-width:0;
+    padding:10px 11px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--surface);
+    color:var(--text);
+    text-align:left;
+    cursor:pointer;
+  }
+
+  .image-health-summary-card.active{
+    border-color:rgba(95,212,196,.38);
+    background:rgba(95,212,196,.055);
+  }
+
+  .image-health-summary-card strong{
+    display:block;
+    color:var(--accent-teal);
+    font-family:'JetBrains Mono',monospace;
+    font-size:16px;
+  }
+
+  .image-health-summary-card span{
+    display:block;
+    margin-top:3px;
+    color:var(--text-muted);
+    font-size:8px;
+  }
+
+  .image-health-panel{padding:14px;}
+
+  .image-health-toolbar{
+    display:grid;
+    grid-template-columns:minmax(220px,1fr) auto;
+    gap:8px;
+    align-items:end;
+  }
+
+  .image-health-toolbar .field{margin-bottom:0;}
+
+  .image-health-note{
+    display:flex;
+    gap:8px;
+    margin:10px 0;
+    padding:9px 10px;
+    border:1px solid rgba(227,179,65,.17);
+    border-radius:8px;
+    background:rgba(227,179,65,.04);
+  }
+
+  .image-health-note strong{
+    flex:0 0 auto;
+    color:var(--accent-gold);
+    font-size:8px;
+  }
+
+  .image-health-note span{
+    color:var(--text-muted);
+    font-size:7.8px;
+    line-height:1.45;
+  }
+
+  .image-health-progress{
+    margin:8px 0;
+    color:var(--text-muted);
+    font-size:8.5px;
+  }
+
+  .image-health-list{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .image-health-row{
+    display:grid;
+    grid-template-columns:54px minmax(0,1fr) auto;
+    gap:10px;
+    align-items:center;
+    padding:8px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--bg);
+  }
+
+  .image-health-thumb{
+    width:54px;
+    height:66px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:7px;
+    background:var(--surface-2);
+    color:var(--text-muted);
+    font-size:7px;
+  }
+
+  .image-health-thumb img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+
+  .image-health-main{min-width:0;}
+
+  .image-health-title{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    min-width:0;
+  }
+
+  .image-health-title strong{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-size:9.5px;
+  }
+
+  .image-health-title span{
+    flex:0 0 auto;
+    padding:2px 5px;
+    border-radius:999px;
+    background:var(--surface-2);
+    color:var(--text-muted);
+    font-size:7px;
+    font-weight:700;
+  }
+
+  .image-health-meta{
+    margin-top:3px;
+    overflow:hidden;
+    color:var(--text-muted);
+    font-size:7.8px;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .image-health-dimensions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+    margin-top:5px;
+    color:var(--text-muted);
+    font-family:'JetBrains Mono',monospace;
+    font-size:7px;
+  }
+
+  .image-health-issues{
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px;
+    margin-top:6px;
+  }
+
+  .image-health-issue{
+    padding:3px 6px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:var(--surface-2);
+    color:var(--text-muted);
+    font-size:7.2px;
+    font-weight:700;
+  }
+
+  .image-health-issue.critical{
+    border-color:rgba(232,96,122,.25);
+    background:rgba(232,96,122,.06);
+    color:var(--danger);
+  }
+
+  .image-health-issue.warning{
+    border-color:rgba(227,179,65,.22);
+    background:rgba(227,179,65,.05);
+    color:var(--accent-gold);
+  }
+
+  .image-health-issue.info{
+    border-color:rgba(95,212,196,.20);
+    background:rgba(95,212,196,.04);
+    color:var(--accent-teal);
+  }
+
+  .image-health-actions{
+    display:flex;
+    gap:5px;
+  }
+
+  .image-health-actions button{
+    min-height:31px;
+    padding:6px 8px;
+    font-size:7.8px;
+  }
+
+  .image-health-empty{
+    padding:28px 10px;
+    text-align:center;
+    color:var(--text-muted);
+    font-size:9px;
+  }
+
+  .image-health-empty[hidden]{display:none!important;}
+
+  @media(max-width:1100px){
+    .image-health-summary{grid-template-columns:repeat(3,minmax(0,1fr));}
+  }
+
+  @media(max-width:700px){
+    .inventory-tools-switcher{grid-template-columns:1fr;}
+    .image-health-summary{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .image-health-toolbar{grid-template-columns:1fr;}
+    .image-health-note{flex-direction:column;gap:4px;}
+    .image-health-row{grid-template-columns:46px minmax(0,1fr);}
+    .image-health-thumb{width:46px;height:58px;}
+    .image-health-actions{
+      grid-column:1/-1;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+    }
+  }
+
+  @media(max-width:390px){
+    .image-health-summary{grid-template-columns:1fr;}
+  }
+
+
+  /* ---------- Owner alerts dashboard ---------- */
+  .owner-alerts-dashboard{
+    margin:0 0 13px;
+    padding:12px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:linear-gradient(135deg,rgba(95,212,196,.035),rgba(227,179,65,.018));
+  }
+
+  .owner-alerts-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:9px;
+  }
+
+  .owner-alerts-head h3{
+    margin:2px 0 0;
+    font-size:12px;
+  }
+
+  .owner-alerts-head>span{
+    color:var(--text-muted);
+    font-size:8px;
+  }
+
+  .owner-alerts-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:7px;
+  }
+
+  .owner-alerts-grid a{
+    min-width:0;
+    padding:9px 10px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:var(--bg);
+    color:var(--text);
+    text-decoration:none;
+    transition:border-color .14s ease,transform .14s ease,background .14s ease;
+  }
+
+  .owner-alerts-grid a:hover{
+    border-color:var(--accent-teal);
+    background:var(--surface-2);
+    transform:translateY(-1px);
+  }
+
+  .owner-alerts-grid a.needs-attention{
+    border-color:rgba(227,179,65,.22);
+    background:rgba(227,179,65,.035);
+  }
+
+  .owner-alerts-grid strong{
+    display:block;
+    color:var(--accent-teal);
+    font-family:'JetBrains Mono',monospace;
+    font-size:15px;
+  }
+
+  .owner-alerts-grid a.needs-attention strong{
+    color:var(--accent-gold);
+  }
+
+  .owner-alerts-grid span{
+    display:block;
+    margin-top:3px;
+    font-size:8px;
+    font-weight:750;
+  }
+
+  .owner-alerts-grid small{
+    display:block;
+    margin-top:3px;
+    overflow:hidden;
+    color:var(--text-muted);
+    font-size:7px;
+    line-height:1.3;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  @media(max-width:1000px){
+    .owner-alerts-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  }
+
+  @media(max-width:520px){
+    .owner-alerts-head{align-items:flex-start;flex-direction:column;gap:3px;}
+    .owner-alerts-grid{grid-template-columns:1fr 1fr;}
+  }
+
+  @media(max-width:360px){
+    .owner-alerts-grid{grid-template-columns:1fr;}
+  }
+
 </style>
 </head>
 <body>
@@ -7037,7 +7376,10 @@ function wireShimmer(container){
     updateStatusNavCounts();
     listingAvailabilityScope = ["inventory","reserved","sold"].includes(scope) ? scope : "inventory";
     const scopeMeta = listingScopeMeta(listingAvailabilityScope);
-    activeQuickFilter = "all";
+    const requestedQuick=safeUrlFilterText(currentHashParams().get("quick"),24);
+    activeQuickFilter=["all","new","graded","raw","sealed","championship","vintage"].includes(requestedQuick)
+      ? requestedQuick
+      : "all";
     view.innerHTML = `
       <div class="page-head"><div><div class="eyebrow">${escapeHtml(scopeMeta.eyebrow)}</div><h2>${escapeHtml(scopeMeta.title)}</h2><p>${escapeHtml(scopeMeta.description)}</p></div></div>
 
@@ -9961,7 +10303,10 @@ function wireShimmer(container){
 
     const list=$("qualityList"), empty=$("qualityEmpty"), search=$("qualitySearch");
     const showClean=$("qualityShowClean"), status=$("qualityStatusLine");
-    let activeFilter="all";
+    const requestedFilter=String(currentHashParams().get("filter")||"");
+    let activeFilter=["all","critical","image","price","metadata","grading"].includes(requestedFilter)
+      ? requestedFilter
+      : "all";
 
     function rowMatchesFilter(row){
       if(!row.issues.length) return showClean.checked;
@@ -10028,6 +10373,11 @@ function wireShimmer(container){
 
     search.addEventListener("input",renderRows);
     showClean.addEventListener("change",renderRows);
+
+    document.querySelectorAll("[data-quality-filter]").forEach(btn=>{
+      btn.classList.toggle("active",btn.dataset.qualityFilter===activeFilter);
+    });
+
     renderRows();
   }
 
@@ -10108,7 +10458,7 @@ function wireShimmer(container){
   // ---------------- Owner Inventory Tools Hub ----------------
   function currentInventoryToolMode(){
     const mode=currentHashParams().get("mode");
-    return ["prices","metadata","recent"].includes(mode) ? mode : "prices";
+    return ["prices","metadata","recent","images"].includes(mode) ? mode : "prices";
   }
 
   function inventoryToolsSwitcher(mode){
@@ -10135,7 +10485,149 @@ function wireShimmer(container){
           <strong>Recently Edited</strong>
           <span>Recent owner activity</span>
         </a>
+        <a href="#/inventory-tools?mode=images"
+           class="${mode==="images"?"active":""}"
+           role="tab"
+           aria-selected="${mode==="images"?"true":"false"}">
+          <strong>Image Health</strong>
+          <span>Broken · small · missing photos</span>
+        </a>
       </div>
+    `;
+  }
+
+  const IMAGE_HEALTH_SUMMARY_KEY="collect_tcg_image_health_summary_v1";
+
+  function getStoredImageHealthSummary(){
+    try{
+      const raw=JSON.parse(localStorage.getItem(IMAGE_HEALTH_SUMMARY_KEY)||"null");
+      if(!raw || typeof raw!=="object") return null;
+      const scannedAt=String(raw.scanned_at||"");
+      const ts=new Date(scannedAt).getTime();
+      if(!Number.isFinite(ts)) return null;
+      return {
+        scanned_at:scannedAt,
+        issues:Number(raw.issues||0),
+        broken:Number(raw.broken||0),
+        single:Number(raw.single||0),
+        small:Number(raw.small||0),
+        external:Number(raw.external||0)
+      };
+    }catch{
+      return null;
+    }
+  }
+
+  function saveStoredImageHealthSummary(summary){
+    try{
+      localStorage.setItem(IMAGE_HEALTH_SUMMARY_KEY,JSON.stringify({
+        scanned_at:new Date().toISOString(),
+        issues:Number(summary.issues||0),
+        broken:Number(summary.broken||0),
+        single:Number(summary.single||0),
+        small:Number(summary.small||0),
+        external:Number(summary.external||0)
+      }));
+    }catch{}
+  }
+
+  function ownerAlertSummary(){
+    const active=cards.filter(card=>normalizeFilterValue(card.availability||"Available")!=="sold");
+    const missingPrice=active.filter(card=>
+      !hasListedPrice(card.price_myr) &&
+      !hasListedPrice(card.price_usd ?? card.price) &&
+      !hasListedPrice(card.price_sgd)
+    ).length;
+    const missingImage=active.filter(card=>getImages(card).length===0).length;
+    const singleImage=active.filter(card=>getImages(card).length===1).length;
+    const metadataIssues=active.filter(card=>
+      !String(card.card_code||"").trim() ||
+      !String(card.year||"").trim() ||
+      !String(card.series||"").trim() ||
+      !String(card.condition||"").trim() ||
+      !String(card.language||"").trim()
+    ).length;
+    const reserved=cards.filter(card=>normalizeFilterValue(card.availability)==="reserved").length;
+    const newThisWeek=cards.filter(card=>isNewCard(card)).length;
+    const editedRecently=cards.filter(card=>{
+      const ts=ownerRecentEditTime(card);
+      return ts>0 && (Date.now()-ts)<=(7*24*60*60*1000);
+    }).length;
+
+    return {
+      active:active.length,
+      missingPrice,
+      missingImage,
+      singleImage,
+      metadataIssues,
+      reserved,
+      newThisWeek,
+      editedRecently,
+      imageHealth:getStoredImageHealthSummary()
+    };
+  }
+
+  function ownerAlertsDashboardHTML(){
+    const s=ownerAlertSummary();
+    const scanned=s.imageHealth;
+    const brokenLabel=scanned ? String(scanned.broken) : "—";
+    const brokenSub=scanned
+      ? `Latest scan · ${formatOwnerTimestamp(scanned.scanned_at)}`
+      : "Run Image Health to scan";
+
+    return `
+      <section class="owner-alerts-dashboard">
+        <div class="owner-alerts-head">
+          <div>
+            <div class="eyebrow">Owner Overview</div>
+            <h3>Inventory Alerts</h3>
+          </div>
+          <span>${s.active} active listings</span>
+        </div>
+
+        <div class="owner-alerts-grid">
+          <a href="#/quality?filter=price" class="${s.missingPrice?"needs-attention":""}">
+            <strong>${s.missingPrice}</strong>
+            <span>Missing price</span>
+            <small>Open Data Quality</small>
+          </a>
+          <a href="#/quality?filter=image" class="${s.missingImage?"needs-attention":""}">
+            <strong>${s.missingImage}</strong>
+            <span>Missing images</span>
+            <small>Open Data Quality</small>
+          </a>
+          <a href="#/inventory-tools?mode=images&filter=broken" class="${scanned&&scanned.broken?"needs-attention":""}">
+            <strong>${brokenLabel}</strong>
+            <span>Broken images</span>
+            <small>${escapeHtml(brokenSub)}</small>
+          </a>
+          <a href="#/inventory-tools?mode=images&filter=single" class="${s.singleImage?"needs-attention":""}">
+            <strong>${s.singleImage}</strong>
+            <span>One-photo listings</span>
+            <small>Review image coverage</small>
+          </a>
+          <a href="#/quality?filter=metadata" class="${s.metadataIssues?"needs-attention":""}">
+            <strong>${s.metadataIssues}</strong>
+            <span>Metadata issues</span>
+            <small>Open Data Quality</small>
+          </a>
+          <a href="#/reserved">
+            <strong>${s.reserved}</strong>
+            <span>Reserved</span>
+            <small>View reserved listings</small>
+          </a>
+          <a href="#/inventory?quick=new">
+            <strong>${s.newThisWeek}</strong>
+            <span>New this week</span>
+            <small>View new listings</small>
+          </a>
+          <a href="#/inventory-tools?mode=recent">
+            <strong>${s.editedRecently}</strong>
+            <span>Edited this week</span>
+            <small>Open Recently Edited</small>
+          </a>
+        </div>
+      </section>
     `;
   }
 
@@ -10145,12 +10637,354 @@ function wireShimmer(container){
     const mode=currentInventoryToolMode();
     if(mode==="metadata") renderBulkMetadataPage(true);
     else if(mode==="recent") renderRecentlyEditedOwnerPage(true);
+    else if(mode==="images") renderImageHealthPage(true);
     else renderBulkPricePage(true);
 
     const pageHead=view.querySelector(".page-head");
     if(pageHead){
-      pageHead.insertAdjacentHTML("afterend",inventoryToolsSwitcher(mode));
+      pageHead.insertAdjacentHTML("afterend",inventoryToolsSwitcher(mode)+ownerAlertsDashboardHTML());
     }
+  }
+
+  // ---------------- Owner Image Health Checker ----------------
+  function imageHealthSourceType(src){
+    const raw=String(src||"").trim();
+    if(!raw) return "missing";
+    if(raw.startsWith("data:image/")) return "embedded";
+    try{
+      const u=new URL(raw,location.href);
+      return u.origin===location.origin ? "same-origin" : "external";
+    }catch{
+      return "invalid-url";
+    }
+  }
+
+  function checkImageHealthSource(src,timeoutMs=8000){
+    return new Promise(resolve=>{
+      const raw=String(src||"").trim();
+      if(!raw){
+        resolve({ok:false,width:0,height:0,reason:"Missing image URL"});
+        return;
+      }
+
+      let done=false;
+      const finish=result=>{
+        if(done) return;
+        done=true;
+        clearTimeout(timer);
+        resolve(result);
+      };
+
+      const img=new Image();
+      img.referrerPolicy="no-referrer";
+      img.decoding="async";
+
+      img.onload=()=>{
+        const width=Number(img.naturalWidth||0);
+        const height=Number(img.naturalHeight||0);
+        finish({ok:true,width,height,reason:""});
+      };
+      img.onerror=()=>finish({ok:false,width:0,height:0,reason:"Image failed to load"});
+
+      const timer=setTimeout(()=>finish({
+        ok:false,width:0,height:0,reason:"Image check timed out"
+      }),timeoutMs);
+
+      img.src=raw;
+    });
+  }
+
+  function imageHealthIssuesForCard(card,checks){
+    const images=getImages(card);
+    const issues=[];
+
+    if(!images.length){
+      issues.push({key:"missing",label:"No images",severity:"critical"});
+      return issues;
+    }
+
+    if(images.length===1){
+      issues.push({key:"single",label:"Only 1 image",severity:"warning"});
+    }
+
+    checks.forEach((check,index)=>{
+      if(!check.ok){
+        issues.push({
+          key:"broken",
+          label:`Image ${index+1}: ${check.reason||"Failed"}`,
+          severity:"critical"
+        });
+        return;
+      }
+
+      const minSide=Math.min(check.width||0,check.height||0);
+      const maxSide=Math.max(check.width||0,check.height||0);
+
+      if(minSide>0 && minSide<500){
+        issues.push({
+          key:"small",
+          label:`Image ${index+1}: small (${check.width}×${check.height})`,
+          severity:"warning"
+        });
+      }else if(maxSide>0 && maxSide<800){
+        issues.push({
+          key:"small",
+          label:`Image ${index+1}: low resolution (${check.width}×${check.height})`,
+          severity:"warning"
+        });
+      }
+
+      const sourceType=imageHealthSourceType(images[index]);
+      if(sourceType==="external"){
+        issues.push({
+          key:"external",
+          label:`Image ${index+1}: external source`,
+          severity:"info"
+        });
+      }else if(sourceType==="invalid-url"){
+        issues.push({
+          key:"broken",
+          label:`Image ${index+1}: invalid URL`,
+          severity:"critical"
+        });
+      }
+    });
+
+    return issues;
+  }
+
+  function renderImageHealthPage(fromInventoryTools=false){
+    if(!requireOwner("open image health checker")) return;
+
+    const activeCards=cards.filter(card=>
+      normalizeFilterValue(card.availability||"Available")!=="sold"
+    );
+
+    view.innerHTML=`
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Inventory Tools · Image Audit</div>
+          <h2>Image Health Checker</h2>
+          <p>Check active listings for missing, broken, single-photo, low-resolution or externally hosted images.</p>
+        </div>
+      </div>
+
+      <div class="image-health-summary">
+        <button type="button" class="image-health-summary-card active" data-image-health-filter="issues">
+          <strong id="imageHealthIssuesCount">—</strong>
+          <span>Listings with issues</span>
+        </button>
+        <button type="button" class="image-health-summary-card" data-image-health-filter="broken">
+          <strong id="imageHealthBrokenCount">—</strong>
+          <span>Broken images</span>
+        </button>
+        <button type="button" class="image-health-summary-card" data-image-health-filter="single">
+          <strong id="imageHealthSingleCount">—</strong>
+          <span>Only one image</span>
+        </button>
+        <button type="button" class="image-health-summary-card" data-image-health-filter="small">
+          <strong id="imageHealthSmallCount">—</strong>
+          <span>Low resolution</span>
+        </button>
+        <button type="button" class="image-health-summary-card" data-image-health-filter="external">
+          <strong id="imageHealthExternalCount">—</strong>
+          <span>External source</span>
+        </button>
+      </div>
+
+      <div class="panel image-health-panel">
+        <div class="image-health-toolbar">
+          <div class="field">
+            <label for="imageHealthSearch">Search</label>
+            <input id="imageHealthSearch" type="search" maxlength="100" placeholder="Name, code, game or series…">
+          </div>
+          <button type="button" class="btn-primary" id="imageHealthRunBtn">Run Image Check</button>
+        </div>
+
+        <div class="image-health-note">
+          <strong>Watermark note</strong>
+          <span>Browser security prevents reliable pixel-level watermark detection for many external images. External images are flagged for manual review instead of being incorrectly labeled as unwatermarked.</span>
+        </div>
+
+        <div class="image-health-progress" id="imageHealthProgress">Ready to scan ${activeCards.length} active listing${activeCards.length===1?"":"s"}.</div>
+        <div class="image-health-list" id="imageHealthList"></div>
+        <div class="image-health-empty" id="imageHealthEmpty" hidden>No matching image issues.</div>
+      </div>
+    `;
+
+    const results=new Map();
+    const search=$("imageHealthSearch");
+    const runBtn=$("imageHealthRunBtn");
+    const progress=$("imageHealthProgress");
+    const list=$("imageHealthList");
+    const empty=$("imageHealthEmpty");
+    const requestedFilter=String(currentHashParams().get("filter")||"");
+    let activeFilter=["issues","broken","single","small","external"].includes(requestedFilter)
+      ? requestedFilter
+      : "issues";
+    let scanComplete=false;
+
+    function summaryCount(key){
+      let count=0;
+      results.forEach(result=>{
+        if(key==="issues" && result.issues.length) count++;
+        else if(result.issues.some(issue=>issue.key===key)) count++;
+      });
+      return count;
+    }
+
+    function updateSummary(){
+      $("imageHealthIssuesCount").textContent=scanComplete ? summaryCount("issues") : "—";
+      $("imageHealthBrokenCount").textContent=scanComplete ? summaryCount("broken") : "—";
+      $("imageHealthSingleCount").textContent=scanComplete ? summaryCount("single") : "—";
+      $("imageHealthSmallCount").textContent=scanComplete ? summaryCount("small") : "—";
+      $("imageHealthExternalCount").textContent=scanComplete ? summaryCount("external") : "—";
+    }
+
+    function matchesFilter(result){
+      if(!scanComplete) return false;
+      if(activeFilter==="issues") return result.issues.length>0;
+      return result.issues.some(issue=>issue.key===activeFilter);
+    }
+
+    function renderResults(){
+      if(!scanComplete){
+        list.innerHTML="";
+        empty.hidden=true;
+        return;
+      }
+
+      const q=normalizeFilterValue(search.value);
+      const visible=activeCards.map(card=>results.get(String(card.id))).filter(Boolean).filter(result=>{
+        if(!matchesFilter(result)) return false;
+        if(!q) return true;
+        const c=result.card;
+        return [c.name,c.card_code,c.game,c.series,c.year,c.language]
+          .map(v=>normalizeFilterValue(v)).join(" ").includes(q);
+      });
+
+      empty.hidden=visible.length>0;
+      list.innerHTML=visible.map(result=>{
+        const card=result.card;
+        const images=getImages(card);
+        const first=images[0]||"";
+        const issueMarkup=result.issues.map(issue=>`
+          <span class="image-health-issue ${issue.severity}">
+            ${escapeHtml(issue.label)}
+          </span>
+        `).join("");
+
+        const dimensionMarkup=result.checks.length
+          ? result.checks.map((check,i)=>check.ok
+              ? `<span>${i+1}: ${check.width}×${check.height}</span>`
+              : `<span>${i+1}: unavailable</span>`
+            ).join("")
+          : `<span>No image dimensions</span>`;
+
+        return `
+          <article class="image-health-row">
+            <div class="image-health-thumb">${first?`<img src="${escapeHtml(first)}" alt="">`:"—"}</div>
+            <div class="image-health-main">
+              <div class="image-health-title">
+                <strong>${escapeHtml(card.name||"Untitled card")}</strong>
+                <span>${escapeHtml(card.availability||"Available")}</span>
+              </div>
+              <div class="image-health-meta">${escapeHtml([card.card_code,card.year,card.game,card.series].filter(Boolean).join(" · "))}</div>
+              <div class="image-health-dimensions">${dimensionMarkup}</div>
+              <div class="image-health-issues">${issueMarkup}</div>
+            </div>
+            <div class="image-health-actions">
+              <button type="button" class="btn-ghost" data-image-health-view="${escapeHtml(card.id)}">View</button>
+              <button type="button" class="btn-primary" data-image-health-edit="${escapeHtml(card.id)}">Edit Images</button>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      list.querySelectorAll("[data-image-health-view]").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          const card=cards.find(c=>String(c.id)===String(btn.dataset.imageHealthView));
+          if(card) openCardRoute(card.id);
+        });
+      });
+
+      list.querySelectorAll("[data-image-health-edit]").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          if(!requireOwner("edit image health listing")) return;
+          const card=cards.find(c=>String(c.id)===String(btn.dataset.imageHealthEdit));
+          if(card) openEditModal(card);
+        });
+      });
+    }
+
+    async function runScan(){
+      if(!requireOwner("run image health check")) return;
+
+      runBtn.disabled=true;
+      runBtn.textContent="Checking…";
+      results.clear();
+      scanComplete=false;
+      updateSummary();
+      renderResults();
+
+      let checkedImages=0;
+      const totalImages=activeCards.reduce((sum,card)=>sum+getImages(card).length,0);
+
+      try{
+        for(let i=0;i<activeCards.length;i++){
+          const card=activeCards[i];
+          const images=getImages(card);
+          const checks=[];
+
+          for(const src of images){
+            const check=await checkImageHealthSource(src);
+            checks.push(check);
+            checkedImages++;
+            progress.textContent=`Checking listing ${i+1}/${activeCards.length} · image ${checkedImages}/${Math.max(totalImages,checkedImages)}`;
+          }
+
+          const issues=imageHealthIssuesForCard(card,checks);
+          results.set(String(card.id),{card,checks,issues});
+        }
+
+        scanComplete=true;
+        updateSummary();
+        renderResults();
+
+        const issueCount=summaryCount("issues");
+        saveStoredImageHealthSummary({
+          issues:issueCount,
+          broken:summaryCount("broken"),
+          single:summaryCount("single"),
+          small:summaryCount("small"),
+          external:summaryCount("external")
+        });
+        progress.textContent=`Scan complete · ${activeCards.length} listings · ${issueCount} with image issues.`;
+        showToast(`Image check complete · ${issueCount} listing${issueCount===1?"":"s"} need review`);
+      }finally{
+        runBtn.disabled=false;
+        runBtn.textContent="Run Image Check";
+      }
+    }
+
+    document.querySelectorAll("[data-image-health-filter]").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        activeFilter=String(btn.dataset.imageHealthFilter||"issues");
+        document.querySelectorAll("[data-image-health-filter]").forEach(other=>{
+          other.classList.toggle("active",other===btn);
+        });
+        renderResults();
+      });
+    });
+
+    search.addEventListener("input",renderResults);
+    runBtn.addEventListener("click",runScan);
+
+    document.querySelectorAll("[data-image-health-filter]").forEach(btn=>{
+      btn.classList.toggle("active",btn.dataset.imageHealthFilter===activeFilter);
+    });
+
+    updateSummary();
   }
 
   // ---------------- Owner Bulk Price Editor ----------------
