@@ -6582,6 +6582,173 @@
     }
   }
 
+
+  /* ---------- Owner Inventory Health Score ---------- */
+  .owner-health-overview{
+    display:grid;
+    grid-template-columns:minmax(150px,.7fr) minmax(0,1.3fr);
+    align-items:center;
+    gap:12px;
+    margin:0 0 9px;
+    padding:11px 12px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--bg);
+  }
+  .owner-health-score strong{
+    display:block;
+    font-family:'JetBrains Mono',monospace;
+    font-size:22px;
+    line-height:1;
+  }
+  .owner-health-score span{display:block;margin-top:4px;font-size:9px;font-weight:800;}
+  .owner-health-score small{display:block;margin-top:3px;color:var(--text-muted);font-size:7px;line-height:1.35;}
+  .owner-health-overview.health-good .owner-health-score strong{color:var(--accent-teal);}
+  .owner-health-overview.health-watch .owner-health-score strong{color:var(--accent-gold);}
+  .owner-health-overview.health-needs-work .owner-health-score strong{color:#f87171;}
+
+  .owner-health-breakdown{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:6px;
+  }
+  .owner-health-breakdown>div{
+    min-width:0;
+    padding:7px 8px;
+    border:1px solid var(--border-soft);
+    border-radius:8px;
+    background:var(--surface);
+  }
+  .owner-health-breakdown span{display:block;color:var(--text-muted);font-size:7px;}
+  .owner-health-breakdown strong{display:block;margin-top:3px;font-family:'JetBrains Mono',monospace;font-size:10px;}
+
+  /* ---------- Owner Reserved Age Tracker ---------- */
+  .owner-reserved-age{
+    margin-top:2px;
+    padding-top:5px;
+    border-top:1px dashed var(--border-soft);
+    font-size:7.5px;
+    font-weight:750;
+  }
+  .owner-reserved-age-fresh{color:var(--accent-teal);}
+  .owner-reserved-age-warning{color:var(--accent-gold);}
+  .owner-reserved-age-critical{color:#f87171;}
+  .owner-reserved-age-unknown{color:var(--text-muted);font-weight:600;}
+
+  /* ---------- Sticky mobile Results · Sort · Filters ---------- */
+  .sticky-mobile-results-bar{display:none;}
+
+  @media(max-width:800px){
+    .sticky-mobile-filter-btn{display:none!important;}
+
+    .sticky-mobile-results-bar{
+      position:fixed;
+      left:12px;
+      right:12px;
+      bottom:calc(14px + env(safe-area-inset-bottom));
+      z-index:780;
+      min-height:50px;
+      display:grid;
+      grid-template-columns:.8fr 1fr 1fr;
+      align-items:stretch;
+      overflow:hidden;
+      border:1px solid rgba(95,212,196,.30);
+      border-radius:14px;
+      background:rgba(18,20,25,.95);
+      box-shadow:0 12px 30px rgba(0,0,0,.42);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+    }
+
+    body.mobile-filter-open .sticky-mobile-results-bar,
+    body.compare-tray-open .sticky-mobile-results-bar{
+      display:none!important;
+    }
+
+    .sticky-mobile-results-count{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:6px 8px;
+      border-right:1px solid var(--border);
+    }
+    .sticky-mobile-results-count strong{
+      color:var(--accent-teal);
+      font-family:'JetBrains Mono',monospace;
+      font-size:12px;
+      line-height:1;
+    }
+    .sticky-mobile-results-count span{
+      margin-top:3px;
+      color:var(--text-muted);
+      font-size:7px;
+      text-transform:uppercase;
+      letter-spacing:.4px;
+    }
+
+    .sticky-mobile-results-action{
+      appearance:none;
+      -webkit-appearance:none;
+      min-width:0;
+      border:0;
+      border-right:1px solid var(--border);
+      border-radius:0;
+      background:transparent;
+      color:var(--text);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:2px;
+      padding:6px 8px;
+      font-family:inherit;
+      cursor:pointer;
+    }
+    .sticky-mobile-results-action:last-child{border-right:0;}
+    .sticky-mobile-results-action>span{font-size:9px;font-weight:800;}
+    .sticky-mobile-results-action small{
+      display:block;
+      max-width:100%;
+      overflow:hidden;
+      color:var(--text-muted);
+      font-size:7px;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .sticky-mobile-filter-count{
+      min-width:20px;
+      height:18px;
+      margin-top:1px;
+      padding:0 5px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:999px;
+      background:var(--surface-2);
+      color:var(--text-muted);
+      font-size:8px;
+    }
+    .sticky-mobile-results-action[aria-expanded="true"]{
+      background:rgba(95,212,196,.06);
+      color:var(--accent-teal);
+    }
+
+    .owner-health-overview{grid-template-columns:1fr;gap:9px;}
+    .owner-health-breakdown{grid-template-columns:repeat(2,minmax(0,1fr));}
+
+    #invGrid{padding-bottom:68px;}
+  }
+
+  @media(max-width:390px){
+    .sticky-mobile-results-bar{
+      left:9px;
+      right:9px;
+      bottom:calc(10px + env(safe-area-inset-bottom));
+      grid-template-columns:.75fr 1fr 1fr;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -9702,6 +9869,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(!tray) return;
     const selected=compareSelectedCards();
     tray.hidden=selected.length===0;
+    document.body.classList.toggle("compare-tray-open",selected.length>0);
     $("compareTrayCount").textContent=`${selected.length} card${selected.length===1?"":"s"} selected`;
     $("compareOpenBtn").disabled=selected.length<2;
 
@@ -9906,6 +10074,9 @@ function relatedCardHTML(c){
           ${cardPriceDisplayHTML(c)}
 
           ${c.notes ? `<div class="notes clean-notes">${escapeHtml(c.notes)}</div>` : ""}
+          ${isOwnerMode() && normalizeFilterValue(c.availability)==="reserved"
+            ? `<div class="owner-reserved-age" data-owner-reserved-age-card="${escapeHtml(c.id)}">Checking reserved age…</div>`
+            : ""}
           <div class="owner-only clean-owner-views">👁 ${Number(c.view_count || 0).toLocaleString()}</div>
         </div>
       </div>
@@ -9948,6 +10119,7 @@ function wireShimmer(container){
 
     const index=cards.findIndex(c=>String(c.id)===String(card.id));
     if(index>-1) cards[index]=saved;
+    invalidateOwnerReservedAgeCache();
     showToast(`Marked ${status}`);
     router();
     return true;
@@ -10191,10 +10363,20 @@ function wireShimmer(container){
       <div class="grade-shortcuts" id="gradeShortcuts" hidden></div>
       </section>
       <div id="invGrid"></div>
-      <button type="button" class="sticky-mobile-filter-btn" id="stickyMobileFilterBtn" aria-expanded="false">
-        <span>☷ Filters</span>
-        <strong id="stickyMobileFilterCount">0</strong>
-      </button>
+      <div class="sticky-mobile-results-bar" id="stickyMobileResultsBar" aria-label="Results controls">
+        <div class="sticky-mobile-results-count">
+          <strong id="stickyMobileResultCount">0</strong>
+          <span>Results</span>
+        </div>
+        <button type="button" class="sticky-mobile-results-action" id="stickyMobileSortBtn" aria-expanded="false">
+          <span>Sort</span>
+          <small id="stickyMobileSortLabel">Name A–Z</small>
+        </button>
+        <button type="button" class="sticky-mobile-results-action" id="stickyMobileFilterBtn" aria-expanded="false">
+          <span>Filters</span>
+          <strong class="sticky-mobile-filter-count" id="stickyMobileFilterCount">0</strong>
+        </button>
+      </div>
     `;
 
     const scopedCards = cards.filter(c=>cardMatchesListingScope(c, listingAvailabilityScope));
@@ -10467,6 +10649,24 @@ function wireShimmer(container){
       return count;
     }
 
+    function currentMobileSortLabel(){
+      const value=String($("sortBy")?.value||"");
+      const labels={
+        "recent-sold":"Recent",
+        name:"Name A–Z",
+        "name-desc":"Name Z–A",
+        newest:"Newest",
+        oldest:"Oldest",
+        "year-new":"Year ↓",
+        "year-old":"Year ↑",
+        "grade-high":"Grade ↓",
+        "grade-low":"Grade ↑",
+        "price-low":"Price ↑",
+        "price-high":"Price ↓"
+      };
+      return labels[value]||"Sort";
+    }
+
     function updateActiveFilterIndicators(){
       const count=activeInventoryFilterCount();
       const badge=$("mobileFilterCountBadge");
@@ -10477,6 +10677,9 @@ function wireShimmer(container){
 
       const stickyCount=$("stickyMobileFilterCount");
       if(stickyCount) stickyCount.textContent=String(count);
+
+      const sortLabel=$("stickyMobileSortLabel");
+      if(sortLabel) sortLabel.textContent=currentMobileSortLabel();
 
       const summary=$("filterActiveSummary");
       if(summary) summary.textContent=count ? `${count} active filter${count===1?"":"s"}` : "No active filters";
@@ -10508,6 +10711,8 @@ function wireShimmer(container){
 
       if(cards.length===0){
         captureFilteredResultsBrowseContext([]);
+        const mobileResultCount=$("stickyMobileResultCount");
+        if(mobileResultCount) mobileResultCount.textContent="0";
         grid.className="";
         grid.innerHTML=`<div class="empty-state">${EMPTY_ICON}<h2>No listings yet</h2><p>The catalogue is currently empty.</p></div>`;
         return;
@@ -10515,6 +10720,8 @@ function wireShimmer(container){
 
       const list=getFiltered();
       captureFilteredResultsBrowseContext(list);
+      const mobileResultCount=$("stickyMobileResultCount");
+      if(mobileResultCount) mobileResultCount.textContent=String(list.length);
       if(list.length===0){
         const activeCount=activeInventoryFilterCount();
         const hasSearch=!!String($("search")?.value||"").trim();
@@ -10553,6 +10760,9 @@ function wireShimmer(container){
       grid.innerHTML=list.map(cardTileHTML).join("");
       wireShimmer(grid);
       updateCompareTray();
+      if(isOwnerMode() && listingAvailabilityScope==="reserved"){
+        refreshOwnerReservedAgeUI(false);
+      }
     }
 
     const searchSuggestions=$("searchSuggestions");
@@ -10674,6 +10884,7 @@ function wireShimmer(container){
       if(backdrop) backdrop.hidden=true;
       $("mobileFilterOpenBtn")?.setAttribute("aria-expanded","false");
       $("stickyMobileFilterBtn")?.setAttribute("aria-expanded","false");
+      $("stickyMobileSortBtn")?.setAttribute("aria-expanded","false");
       document.body.classList.remove("mobile-filter-open");
     }
 
@@ -10687,8 +10898,20 @@ function wireShimmer(container){
       document.body.classList.add("mobile-filter-open");
     }
 
+    function openMobileSortDrawer(){
+      openMobileFilterDrawer();
+      $("stickyMobileSortBtn")?.setAttribute("aria-expanded","true");
+      setTimeout(()=>{
+        const wrap=$("sortByWrap");
+        const btn=$("sortByBtn");
+        try{wrap?.scrollIntoView({behavior:"smooth",block:"center"});}catch{}
+        if(btn && $("sortByMenu")?.hidden) btn.click();
+      },90);
+    }
+
     $("mobileFilterOpenBtn")?.addEventListener("click",openMobileFilterDrawer);
     $("stickyMobileFilterBtn")?.addEventListener("click",openMobileFilterDrawer);
+    $("stickyMobileSortBtn")?.addEventListener("click",openMobileSortDrawer);
     $("mobileFilterCloseBtn")?.addEventListener("click",closeMobileFilterDrawer);
     $("mobileFilterBackdrop")?.addEventListener("click",closeMobileFilterDrawer);
 
@@ -13630,6 +13853,234 @@ function wireShimmer(container){
     }catch{}
   }
 
+  function ownerInventoryHealthSummary(){
+    const active=cards.filter(card=>
+      isLiveLifecycle(card) &&
+      normalizeFilterValue(card.availability||"Available")!=="sold"
+    );
+
+    if(!active.length){
+      return {overall:100,images:100,pricing:100,metadata:100,grading:100,count:0};
+    }
+
+    let imagePoints=0;
+    let pricingPoints=0;
+    let metadataPoints=0;
+    let gradingPoints=0;
+
+    active.forEach(card=>{
+      const imageCount=getImages(card).length;
+      imagePoints += imageCount>=2 ? 100 : (imageCount===1 ? 50 : 0);
+
+      const isNfs=normalizeFilterValue(card.availability)==="collection (nfs)";
+      if(isNfs){
+        pricingPoints += 100;
+      }else{
+        const priceFlags=[
+          hasListedPrice(card.price_myr),
+          hasListedPrice(card.price_usd ?? card.price),
+          hasListedPrice(card.price_sgd)
+        ];
+        pricingPoints += (priceFlags.filter(Boolean).length/priceFlags.length)*100;
+      }
+
+      const metadataFlags=[
+        String(card.card_code||"").trim(),
+        String(card.year||"").trim(),
+        String(card.series||"").trim(),
+        String(card.condition||"").trim(),
+        String(card.language||"").trim()
+      ];
+      metadataPoints += (metadataFlags.filter(Boolean).length/metadataFlags.length)*100;
+
+      if(effectiveFormat(card)==="Graded"){
+        const grades=Array.isArray(card.grading)?card.grading:[];
+        const validGrade=grades.some(g=>
+          g &&
+          String(g.company||"").trim() &&
+          String(g.grade??"").trim()
+        );
+        gradingPoints += validGrade ? 100 : 0;
+      }else{
+        gradingPoints += 100;
+      }
+    });
+
+    const divisor=active.length;
+    const images=Math.round(imagePoints/divisor);
+    const pricing=Math.round(pricingPoints/divisor);
+    const metadata=Math.round(metadataPoints/divisor);
+    const grading=Math.round(gradingPoints/divisor);
+    const overall=Math.round((images+pricing+metadata+grading)/4);
+
+    return {overall,images,pricing,metadata,grading,count:active.length};
+  }
+
+  function ownerHealthClass(score){
+    if(score>=90) return "health-good";
+    if(score>=75) return "health-watch";
+    return "health-needs-work";
+  }
+
+  let ownerReservedAgeCache={
+    loaded:false,
+    loading:false,
+    map:new Map()
+  };
+
+  function invalidateOwnerReservedAgeCache(){
+    ownerReservedAgeCache.loaded=false;
+    ownerReservedAgeCache.loading=false;
+    ownerReservedAgeCache.map=new Map();
+  }
+
+  function ownerReservedAgeDays(timestamp){
+    const ms=Date.parse(timestamp||"");
+    if(!Number.isFinite(ms)) return null;
+    return Math.max(0,Math.floor((Date.now()-ms)/(24*60*60*1000)));
+  }
+
+  function ownerReservedAgeLabel(timestamp){
+    const days=ownerReservedAgeDays(timestamp);
+    if(days==null) return "Reserved age unavailable";
+    if(days===0) return "Reserved today";
+    if(days===1) return "Reserved 1 day";
+    return `Reserved ${days} days`;
+  }
+
+  async function loadOwnerReservedAges(force=false){
+    if(!isOwnerMode() || !editHistorySupported) return ownerReservedAgeCache;
+    if(ownerReservedAgeCache.loading) return ownerReservedAgeCache;
+    if(ownerReservedAgeCache.loaded && !force) return ownerReservedAgeCache;
+
+    const reservedIds=new Set(
+      cards
+        .filter(card=>
+          isLiveLifecycle(card) &&
+          normalizeFilterValue(card.availability)==="reserved"
+        )
+        .map(card=>String(card.id))
+    );
+
+    ownerReservedAgeCache.loading=true;
+    ownerReservedAgeCache.map=new Map();
+
+    if(!reservedIds.size){
+      ownerReservedAgeCache.loaded=true;
+      ownerReservedAgeCache.loading=false;
+      return ownerReservedAgeCache;
+    }
+
+    // card_edit_history is already owner-only via RLS. We derive age only
+    // from an actual transition into Reserved. updated_at is intentionally
+    // NOT used because an unrelated edit would give a false reservation age.
+    const {data,error}=await supabaseClient
+      .from("card_edit_history")
+      .select("card_id,edited_at,before_data,after_data")
+      .eq("action","card_update")
+      .order("edited_at",{ascending:false})
+      .limit(1000);
+
+    if(error){
+      console.error("Reserved age history error:",error);
+      ownerReservedAgeCache.loaded=false;
+      ownerReservedAgeCache.loading=false;
+      return ownerReservedAgeCache;
+    }
+
+    (Array.isArray(data)?data:[]).forEach(row=>{
+      const id=String(row?.card_id||"");
+      if(!reservedIds.has(id) || ownerReservedAgeCache.map.has(id)) return;
+
+      const before=normalizeFilterValue(row?.before_data?.availability||"");
+      const after=normalizeFilterValue(row?.after_data?.availability||"");
+      if(after==="reserved" && before!=="reserved"){
+        ownerReservedAgeCache.map.set(id,row.edited_at);
+      }
+    });
+
+    ownerReservedAgeCache.loaded=true;
+    ownerReservedAgeCache.loading=false;
+    return ownerReservedAgeCache;
+  }
+
+  function ownerReservedAgeSummary(){
+    const reserved=cards.filter(card=>
+      isLiveLifecycle(card) &&
+      normalizeFilterValue(card.availability)==="reserved"
+    );
+
+    const ages=reserved
+      .map(card=>ownerReservedAgeDays(ownerReservedAgeCache.map.get(String(card.id))))
+      .filter(days=>days!=null);
+
+    return {
+      total:reserved.length,
+      known:ages.length,
+      unknown:Math.max(0,reserved.length-ages.length),
+      over7:ages.filter(days=>days>=7).length,
+      over14:ages.filter(days=>days>=14).length,
+      oldest:ages.length ? Math.max(...ages) : null
+    };
+  }
+
+  function hydrateOwnerReservedAgeUI(){
+    if(!isOwnerMode()) return;
+
+    const summary=ownerReservedAgeSummary();
+    const dashboardText=document.querySelector("[data-owner-reserved-age-summary]");
+    if(dashboardText){
+      if(!editHistorySupported){
+        dashboardText.textContent="Edit History migration required for reservation age";
+      }else if(!ownerReservedAgeCache.loaded){
+        dashboardText.textContent="Loading reservation age…";
+      }else if(summary.total===0){
+        dashboardText.textContent="No reserved listings";
+      }else if(summary.known===0){
+        dashboardText.textContent="Reservation dates unavailable for current listings";
+      }else{
+        const parts=[
+          `${summary.over7} at 7+ days`,
+          summary.oldest!=null ? `oldest ${summary.oldest}d` : "",
+          summary.unknown ? `${summary.unknown} unknown` : ""
+        ].filter(Boolean);
+        dashboardText.textContent=parts.join(" · ");
+      }
+    }
+
+    document.querySelectorAll("[data-owner-reserved-age-card]").forEach(el=>{
+      const id=safeCardId(el.dataset.ownerReservedAgeCard);
+      const timestamp=id ? ownerReservedAgeCache.map.get(id) : null;
+
+      if(!editHistorySupported){
+        el.textContent="Reserved age unavailable";
+        el.className="owner-reserved-age owner-reserved-age-unknown";
+        return;
+      }
+
+      if(!ownerReservedAgeCache.loaded){
+        el.textContent="Checking reserved age…";
+        return;
+      }
+
+      const days=ownerReservedAgeDays(timestamp);
+      el.textContent=timestamp ? ownerReservedAgeLabel(timestamp) : "Reserved age unavailable";
+      el.className="owner-reserved-age " + (
+        days==null ? "owner-reserved-age-unknown" :
+        days>=14 ? "owner-reserved-age-critical" :
+        days>=7 ? "owner-reserved-age-warning" :
+        "owner-reserved-age-fresh"
+      );
+    });
+  }
+
+  async function refreshOwnerReservedAgeUI(force=false){
+    if(!isOwnerMode()) return;
+    hydrateOwnerReservedAgeUI();
+    await loadOwnerReservedAges(force);
+    hydrateOwnerReservedAgeUI();
+  }
+
   function ownerAlertSummary(){
     const active=cards.filter(card=>isLiveLifecycle(card) && normalizeFilterValue(card.availability||"Available")!=="sold");
     const qualitySummary=dataQualitySummary(active);
@@ -13667,6 +14118,7 @@ function wireShimmer(container){
 
   function ownerAlertsDashboardHTML(){
     const s=ownerAlertSummary();
+    const health=ownerInventoryHealthSummary();
     const scanned=s.imageHealth;
     const brokenLabel=scanned ? String(scanned.broken) : "—";
     const brokenSub=scanned
@@ -13681,6 +14133,20 @@ function wireShimmer(container){
             <h3>Inventory Alerts</h3>
           </div>
           <span>${s.active} active listings</span>
+        </div>
+
+        <div class="owner-health-overview ${ownerHealthClass(health.overall)}">
+          <div class="owner-health-score">
+            <strong>${health.overall}%</strong>
+            <span>Inventory Health</span>
+            <small>${health.count} active listings · quantity is not part of this score</small>
+          </div>
+          <div class="owner-health-breakdown">
+            <div><span>Images</span><strong>${health.images}%</strong></div>
+            <div><span>Pricing</span><strong>${health.pricing}%</strong></div>
+            <div><span>Metadata</span><strong>${health.metadata}%</strong></div>
+            <div><span>Grading</span><strong>${health.grading}%</strong></div>
+          </div>
         </div>
 
         <div class="owner-alerts-grid">
@@ -13709,10 +14175,10 @@ function wireShimmer(container){
             <span>Metadata issues</span>
             <small>Open Data Quality</small>
           </a>
-          <a href="#/reserved">
+          <a href="#/reserved" class="${ownerReservedAgeSummary().over14?"needs-attention":""}">
             <strong>${s.reserved}</strong>
             <span>Reserved</span>
-            <small>View reserved listings</small>
+            <small data-owner-reserved-age-summary>Loading reservation age…</small>
           </a>
           <a href="#/inventory?quick=new">
             <strong>${s.newThisWeek}</strong>
@@ -13746,6 +14212,7 @@ function wireShimmer(container){
     const pageHead=view.querySelector(".page-head");
     if(pageHead){
       pageHead.insertAdjacentHTML("afterend",inventoryToolsSwitcher(mode,submode)+ownerAlertsDashboardHTML());
+      refreshOwnerReservedAgeUI(false);
     }
   }
 
@@ -15837,10 +16304,84 @@ function wireShimmer(container){
 
   const COLLECT_TCG_FACEBOOK_MESSENGER_URL="https://m.me/61590041416102";
 
-  function messageSellerOnFacebook(){
+  function publicContactSellerMessage(card){
+    if(!card) return "";
+
+    const status=canonicalAvailability(card.availability);
+    const gradeCondition=compareGradeLabel(card);
+    const prices=orderedCardPrices(card);
+    const priceText=status==="Collection (NFS)"
+      ? "NOT FOR SALE"
+      : (prices[0] ? formatCurrencyValue(prices[0].currency,prices[0].value) : "Please inquire");
+
+    const opening=status==="Collection (NFS)"
+      ? "Hi, I have a question about this Collection / NFS card:"
+      : (status==="Sold"
+          ? "Hi, I have a question about this sold card:"
+          : (status==="Reserved"
+              ? "Hi, I have a question about this reserved card:"
+              : "Hi, I'm interested in this card:"));
+
+    return [
+      opening,
+      "",
+      `Name: ${card.name||"Trading card"}`,
+      card.card_code ? `Card Code: ${card.card_code}` : "",
+      gradeCondition ? `Grade / Condition: ${gradeCondition}` : "",
+      `Price: ${priceText}`,
+      `Link: ${getCardShareUrl(card.id)}`
+    ].filter(line=>line!=="").join("\n");
+  }
+
+  async function copyPlainText(value){
+    const text=String(value||"");
+    if(!text) return false;
+
+    try{
+      await navigator.clipboard.writeText(text);
+      return true;
+    }catch{
+      try{
+        const input=document.createElement("textarea");
+        input.value=text;
+        input.setAttribute("readonly","");
+        input.style.position="fixed";
+        input.style.opacity="0";
+        document.body.appendChild(input);
+        input.select();
+        const ok=document.execCommand("copy");
+        input.remove();
+        return !!ok;
+      }catch{
+        return false;
+      }
+    }
+  }
+
+  async function messageSellerOnFacebook(){
     const card=cards.find(c=>String(c.id)===String(detailsCardId));
-    if(!card) return;
-    window.open(COLLECT_TCG_FACEBOOK_MESSENGER_URL,"_blank","noopener,noreferrer");
+    if(!card || (!isOwnerMode() && !isLiveLifecycle(card))) return;
+
+    // Messenger does not reliably support arbitrary prefilled text in a safe
+    // public URL. Open the fixed seller destination and copy the public card
+    // reference so the buyer can paste it. No owner-only data enters the URL.
+    const opened=window.open(
+      COLLECT_TCG_FACEBOOK_MESSENGER_URL,
+      "_blank",
+      "noopener,noreferrer"
+    );
+
+    const copied=await copyPlainText(publicContactSellerMessage(card));
+
+    if(copied){
+      showToast(opened
+        ? "Card reference copied — paste it into Facebook Messenger"
+        : "Card reference copied — allow pop-ups to open Facebook Messenger");
+    }else if(!opened){
+      showToast("Allow pop-ups to open Facebook Messenger");
+    }else{
+      showToast("Facebook Messenger opened");
+    }
   }
 
   function shareCurrentCardWhatsApp(){
@@ -16422,6 +16963,7 @@ function wireShimmer(container){
 
       const idx=cards.findIndex(c=>c.id===id);
       if(idx>-1) cards[idx]=saved;
+      invalidateOwnerReservedAgeCache();
 
       if(ownerPrivateSupported){
         await saveOwnerPrivateMeta(id,data._owner_tags,data._owner_notes);
