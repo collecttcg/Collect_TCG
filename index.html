@@ -7173,7 +7173,7 @@ function wireShimmer(container){
           <textarea id="fbPostOutput" class="fb-post-output" readonly placeholder="Select a card to generate the Facebook post…"></textarea>
 
           <div class="fb-post-bottom-actions">
-            <button type="button" class="btn-ghost" id="fbDownloadImageBtn" disabled>Download Card Image</button>
+            <button type="button" class="btn-ghost" id="fbDownloadImageBtn" disabled>Download All Images</button>
             <a class="btn-ghost" id="fbOpenCardBtn" href="#/inventory" aria-disabled="true">Open Card</a>
           </div>
         </section>
@@ -7252,7 +7252,7 @@ function wireShimmer(container){
             selectedCard.game,
             selectedCard.series
           ].filter(Boolean).join(" · "))}</span>
-          <small>${escapeHtml(selectedCard.availability || "Available")}</small>
+          <small>${escapeHtml(selectedCard.availability || "Available")} · ${getImages(selectedCard).length} image${getImages(selectedCard).length === 1 ? "" : "s"}</small>
         </div>
       `;
     }
@@ -7262,7 +7262,6 @@ function wireShimmer(container){
 
       if(!selectedCard){
         titleInput.value = "";
-        listingInput.value = "";
         openCardBtn.href = "#/inventory";
         openCardBtn.setAttribute("aria-disabled","true");
         renderSelectedCard();
@@ -7305,14 +7304,28 @@ function wireShimmer(container){
       copyPlainText(output.value, "Facebook post copied");
     });
 
-    downloadBtn.addEventListener("click", ()=>{
+    downloadBtn.addEventListener("click", async ()=>{
       if(!selectedCard) return;
+
       const images = getImages(selectedCard);
       if(!images.length){
-        showToast("No card image available");
+        showToast("No card images available");
         return;
       }
-      downloadImageSource(images[0], selectedCard.name || selectedCard.card_code || "card", 1);
+
+      const originalText = downloadBtn.textContent;
+      downloadBtn.disabled = true;
+      downloadBtn.textContent = images.length === 1
+        ? "Downloading 1 image…"
+        : `Downloading ${images.length} images…`;
+
+      try{
+        const count = await downloadAllCardImages(selectedCard);
+        showToast(count === 1 ? "Downloaded 1 image" : `Downloaded ${count} images`);
+      }finally{
+        downloadBtn.disabled = false;
+        downloadBtn.textContent = originalText;
+      }
     });
   }
 
@@ -7489,6 +7502,32 @@ function wireShimmer(container){
       window.open(src, "_blank", "noopener,noreferrer");
       showToast("Opened image in a new tab");
     }
+  }
+
+  function waitMs(ms){
+    return new Promise(resolve=>setTimeout(resolve, ms));
+  }
+
+  async function downloadAllCardImages(card){
+    if(!card) return 0;
+    const images = getImages(card);
+    if(!images.length) return 0;
+
+    // Trigger each image separately and give the browser a short gap between
+    // downloads. This keeps filenames ordered and reduces dropped downloads.
+    for(let i=0; i<images.length; i++){
+      await downloadImageSource(
+        images[i],
+        card.name || card.card_code || "card",
+        i + 1
+      );
+
+      if(i < images.length - 1){
+        await waitMs(180);
+      }
+    }
+
+    return images.length;
   }
 
   function getCardShareUrl(cardId){
