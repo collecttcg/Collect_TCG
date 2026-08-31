@@ -12147,7 +12147,9 @@ function wireShimmer(container){
               ? ["name","name-desc","newest","oldest","year-new","year-old","grade-high","grade-low"]
               : ["name","name-desc","newest","oldest","year-new","year-old","grade-high","grade-low","price-low","price-high"])
       );
-      const defaultSort = listingAvailabilityScope === "sold" ? "recent-sold" : "name";
+      const defaultSort = listingAvailabilityScope === "sold"
+        ? "recent-sold"
+        : (listingAvailabilityScope === "inventory" ? "newest" : "name");
       const sort = safeUrlFilterText(params.get("sort"), 24);
       $("sortBy").value = allowedSort.has(sort) ? sort : defaultSort;
       const sortLabel = {
