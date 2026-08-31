@@ -13720,7 +13720,7 @@ function wireShimmer(container){
 
           <div class="fb-post-bottom-actions">
             <button type="button" class="btn-ghost" id="fbDownloadImageBtn" disabled>Download Images (.ZIP)</button>
-            <a class="btn-ghost" id="fbOpenCardBtn" href="#/inventory" target="_blank" rel="noopener noreferrer" aria-disabled="true">Open Card ↗</a>
+            <button type="button" class="btn-ghost" id="fbOpenCardBtn" disabled>Open Card</button>
           </div>
         </section>
       </div>
@@ -13811,8 +13811,7 @@ function wireShimmer(container){
 
       if(!selectedCard){
         titleInput.value = "";
-        openCardBtn.href = "#/inventory";
-        openCardBtn.setAttribute("aria-disabled","true");
+        openCardBtn.disabled = true;
         renderSelectedCard();
         updateOutput();
         return;
@@ -13826,13 +13825,19 @@ function wireShimmer(container){
         ? defaultFbHashtags(selectedCard)
         : prefs.hashtags;
 
-      openCardBtn.href = getCardShareUrl(selectedCard.id);
-      openCardBtn.removeAttribute("aria-disabled");
+      openCardBtn.disabled = false;
       renderSelectedCard();
       updateOutput();
     }
 
     select.addEventListener("change", ()=>selectCard(select.value));
+
+    openCardBtn.addEventListener("click",()=>{
+      if(!selectedCard || openCardBtn.disabled) return;
+      // Show the existing card-details overlay in place. Do not change the
+      // route, so closing the details returns to this generator exactly as-is.
+      openDetailsModal(selectedCard);
+    });
 
     const requestedCardId=safeCardId(currentHashParams().get("card"));
     if(requestedCardId && selectableCards.some(card=>String(card.id)===requestedCardId)){
@@ -14683,7 +14688,7 @@ function wireShimmer(container){
 
           <div class="fb-post-bottom-actions">
             <button type="button" class="btn-ghost" id="carousellDownloadImagesBtn" disabled>Download Images (.ZIP)</button>
-            <a class="btn-ghost" id="carousellOpenCardBtn" href="#/inventory" target="_blank" rel="noopener noreferrer" aria-disabled="true">Open Card ↗</a>
+            <button type="button" class="btn-ghost" id="carousellOpenCardBtn" disabled>Open Card</button>
           </div>
         </section>
       </div>
@@ -14705,8 +14710,7 @@ function wireShimmer(container){
         selectedMount.hidden=true;
         selectedMount.innerHTML="";
         downloadBtn.disabled=true;
-        openCardBtn.href="#/inventory";
-        openCardBtn.setAttribute("aria-disabled","true");
+        openCardBtn.disabled=true;
         return;
       }
 
@@ -14723,8 +14727,7 @@ function wireShimmer(container){
         </div>
       `;
       downloadBtn.disabled=getImages(selectedCard).length===0;
-      openCardBtn.href=getCardShareUrl(selectedCard.id);
-      openCardBtn.setAttribute("aria-disabled","false");
+      openCardBtn.disabled=false;
     }
 
     function regenerate(){
@@ -14741,6 +14744,12 @@ function wireShimmer(container){
       }
       renderSelected();
       regenerate();
+    });
+
+    openCardBtn.addEventListener("click",()=>{
+      if(!selectedCard || openCardBtn.disabled) return;
+      // Reuse the normal card-details modal without leaving Post Generator Tools.
+      openDetailsModal(selectedCard);
     });
 
     detailsInput.addEventListener("input",regenerate);
