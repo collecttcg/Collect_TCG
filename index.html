@@ -7226,7 +7226,7 @@
 
 <div class="toast" id="toast" hidden></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 window.COLLECT_TCG_SUPABASE_URL = "https://cbzytysxtdcqxuckspye.supabase.co";
@@ -7279,10 +7279,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }catch{
       return [];
     }
-  }
-
-  function getRecentlyViewedIds(){
-    return getRecentlyViewedEntries().map(entry=>entry.id);
   }
 
   function rememberRecentlyViewed(cardId){
@@ -7345,15 +7341,38 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function getFavoriteIds(){
     try{
-      const raw = JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]");
-      return new Set(Array.isArray(raw) ? raw.filter(Boolean) : []);
-    }catch(e){
+      const raw=JSON.parse(localStorage.getItem(FAVORITES_KEY)||"[]");
+      if(!Array.isArray(raw)) return new Set();
+
+      const ids=[];
+      const seen=new Set();
+      raw.slice(0,500).forEach(value=>{
+        const id=safeCardId(value);
+        if(!id || seen.has(id)) return;
+        seen.add(id);
+        ids.push(id);
+      });
+      return new Set(ids);
+    }catch{
       return new Set();
     }
   }
 
   function saveFavoriteIds(set){
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(set)));
+    try{
+      const ids=[];
+      const seen=new Set();
+      Array.from(set||[]).slice(0,500).forEach(value=>{
+        const id=safeCardId(value);
+        if(!id || seen.has(id)) return;
+        seen.add(id);
+        ids.push(id);
+      });
+      localStorage.setItem(FAVORITES_KEY,JSON.stringify(ids));
+      return true;
+    }catch{
+      return false;
+    }
   }
 
   function isFavorite(cardId){
@@ -7390,21 +7409,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       })
     ].join("\n");
 
-    try{
-      await navigator.clipboard.writeText(text);
-      showToast("Inquiry list copied");
-    }catch(err){
-      const input = document.createElement("textarea");
-      input.value = text;
-      input.setAttribute("readonly", "");
-      input.style.position = "fixed";
-      input.style.opacity = "0";
-      document.body.appendChild(input);
-      input.select();
-      document.execCommand("copy");
-      input.remove();
-      showToast("Inquiry list copied");
-    }
+    const copied=await copyTextToClipboard(text);
+    showToast(copied ? "Inquiry list copied" : "Could not copy inquiry list");
   }
 
 
@@ -9828,10 +9834,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return cardLifecycle(card)==="live";
   }
 
-  function isOwnerEditableLifecycle(card){
-    return cardLifecycle(card)!=="archived";
-  }
-
   function cardMatchesListingScope(card, scope = listingAvailabilityScope){
     if(!isLiveLifecycle(card)) return false;
     const availability = normalizeFilterValue(card && card.availability ? card.availability : "Available");
@@ -11533,23 +11535,29 @@ function wireShimmer(container){
 
   function youtubeVideoId(url){
     try{
-      const u = new URL(url);
-      if(u.hostname.includes("youtu.be")){
-        return u.pathname.replace("/","").split("/")[0] || "";
+      const u=new URL(url);
+      const host=u.hostname.toLowerCase();
+      const isShortHost=host==="youtu.be" || host.endsWith(".youtu.be");
+      const isYoutubeHost=host==="youtube.com" || host.endsWith(".youtube.com");
+
+      if(isShortHost){
+        return u.pathname.replace(/^\//,"").split("/")[0]||"";
       }
-      if(u.hostname.includes("youtube.com")){
-        if(u.pathname.startsWith("/shorts/")) return u.pathname.split("/")[2] || "";
-        if(u.pathname.startsWith("/embed/")) return u.pathname.split("/")[2] || "";
-        return u.searchParams.get("v") || "";
+      if(isYoutubeHost){
+        if(u.pathname.startsWith("/shorts/")) return u.pathname.split("/")[2]||"";
+        if(u.pathname.startsWith("/embed/")) return u.pathname.split("/")[2]||"";
+        return u.searchParams.get("v")||"";
       }
-    }catch(_){}
+    }catch{}
     return "";
   }
 
   function showcaseThumbnail(v){
-    if(v.thumbnail_url) return v.thumbnail_url;
-    const yt = youtubeVideoId(v.video_url);
-    return yt ? `https://img.youtube.com/vi/${yt}/hqdefault.jpg` : "";
+    const manual=safeHttpUrl(v?.thumbnail_url||"");
+    if(manual) return manual;
+
+    const yt=youtubeVideoId(v?.video_url||"");
+    return yt ? `https://img.youtube.com/vi/${encodeURIComponent(yt)}/hqdefault.jpg` : "";
   }
 
   function openShowcaseVideo(v){
@@ -11589,11 +11597,11 @@ function wireShimmer(container){
     }
 
     if(isFacebookVideoUrl(url)){
-      window.open(cleanFacebookVideoUrl(url), "_blank", "noopener,noreferrer");
+      openSafeExternalUrl(cleanFacebookVideoUrl(url));
       return;
     }
 
-    window.open(url, "_blank", "noopener,noreferrer");
+    openSafeExternalUrl(url);
   }
 
   function closeShowcaseVideo(){
@@ -12226,13 +12234,26 @@ function wireShimmer(container){
   }
 
   function safeHttpUrl(value){
-    const raw = String(value || "").trim().slice(0,1000);
+    const raw=String(value||"").trim().slice(0,1000);
     if(!raw) return "";
     try{
-      const u = new URL(raw);
+      const u=new URL(raw);
       return ["http:","https:"].includes(u.protocol) ? u.toString() : "";
     }catch{
       return "";
+    }
+  }
+
+  function openSafeExternalUrl(value){
+    const raw=String(value||"").trim().slice(0,4096);
+    if(!raw) return null;
+
+    try{
+      const url=new URL(raw);
+      if(!["http:","https:"].includes(url.protocol)) return null;
+      return window.open(url.toString(),"_blank","noopener,noreferrer");
+    }catch{
+      return null;
     }
   }
 
@@ -16480,8 +16501,8 @@ function wireShimmer(container){
       console.warn("Direct image download failed:", err);
       // Legacy external images may block CORS. Open them safely rather than
       // weakening browser security or proxying through an owner credential.
-      window.open(src, "_blank", "noopener,noreferrer");
-      showToast("Opened image in a new tab");
+      const opened=openSafeExternalUrl(src);
+      showToast(opened ? "Opened image in a new tab" : "Image could not be opened safely");
     }
   }
 
@@ -16548,11 +16569,6 @@ function wireShimmer(container){
     return {added, failed};
   }
 
-  function waitMs(ms){
-    return new Promise(resolve=>setTimeout(resolve, ms));
-  }
-
-
   function getCardShareUrl(cardId){
     const base = `${location.origin}${location.pathname}${location.search}`;
     return `${base}${cardShareHash(cardId)}`;
@@ -16577,19 +16593,7 @@ function wireShimmer(container){
 
   async function copySharePreview(card){
     const text=`${publicCardSharePreview(card)}\n${getCardShareUrl(card.id)}`;
-    try{
-      await navigator.clipboard.writeText(text);
-    }catch{
-      const input=document.createElement("textarea");
-      input.value=text;
-      input.setAttribute("readonly","");
-      input.style.position="fixed";
-      input.style.opacity="0";
-      document.body.appendChild(input);
-      input.select();
-      document.execCommand("copy");
-      input.remove();
-    }
+    return copyTextToClipboard(text);
   }
 
   async function shareCurrentCard(){
@@ -16612,8 +16616,8 @@ function wireShimmer(container){
       }
     }
 
-    await copySharePreview(card);
-    showToast("Card preview and link copied");
+    const copied=await copySharePreview(card);
+    showToast(copied ? "Card preview and link copied" : "Could not copy card link");
   }
 
   const COLLECT_TCG_FACEBOOK_MESSENGER_URL="https://m.me/61590041416102";
@@ -16654,11 +16658,7 @@ function wireShimmer(container){
     // Messenger does not reliably support arbitrary prefilled text in a safe
     // public URL. Open the fixed seller destination and copy the public card
     // reference so the buyer can paste it. No owner-only data enters the URL.
-    const opened=window.open(
-      COLLECT_TCG_FACEBOOK_MESSENGER_URL,
-      "_blank",
-      "noopener,noreferrer"
-    );
+    const opened=openSafeExternalUrl(COLLECT_TCG_FACEBOOK_MESSENGER_URL);
 
     const copied=await copyTextToClipboard(publicContactSellerMessage(card));
 
@@ -16686,7 +16686,7 @@ function wireShimmer(container){
 
     // Fixed WhatsApp endpoint; only the encoded message is variable.
     const shareUrl=`https://wa.me/?text=${encodeURIComponent(message)}`;
-    const opened=window.open(shareUrl,"_blank","noopener,noreferrer");
+    const opened=openSafeExternalUrl(shareUrl);
     if(!opened) showToast("Allow pop-ups to share via WhatsApp");
   }
 
@@ -16812,11 +16812,17 @@ function wireShimmer(container){
     if(mobile) mobile.textContent=fav ? "Saved" : "Fav";
   }
 
-  function closeDetailsMoreMenu(){
+  function closeDetailsMoreMenu(restoreFocus=false){
     const menu=$("detailsMoreMenu");
     const btn=$("detailsMoreBtn");
+    const wasOpen=!!menu && !menu.hidden;
+
     if(menu) menu.hidden=true;
     if(btn) btn.setAttribute("aria-expanded","false");
+
+    if(restoreFocus && wasOpen && btn && !detailsOverlay.hidden){
+      try{btn.focus({preventScroll:true});}catch{btn.focus();}
+    }
   }
 
   function toggleDetailsMoreMenu(){
@@ -17171,6 +17177,33 @@ function wireShimmer(container){
     if(e.target.closest("button")) closeDetailsMoreMenu();
   });
 
+  $("detailsMoreMenu").addEventListener("keydown",e=>{
+    const menu=$("detailsMoreMenu");
+    const items=Array.from(menu.querySelectorAll('button:not([hidden])'))
+      .filter(item=>getComputedStyle(item).display!=="none");
+
+    if(!items.length) return;
+
+    const current=Math.max(0,items.indexOf(document.activeElement));
+
+    if(e.key==="ArrowDown"){
+      e.preventDefault();
+      items[(current+1)%items.length].focus();
+    }else if(e.key==="ArrowUp"){
+      e.preventDefault();
+      items[(current-1+items.length)%items.length].focus();
+    }else if(e.key==="Home"){
+      e.preventDefault();
+      items[0].focus();
+    }else if(e.key==="End"){
+      e.preventDefault();
+      items[items.length-1].focus();
+    }else if(e.key==="Escape"){
+      e.preventDefault();
+      closeDetailsMoreMenu(true);
+    }
+  });
+
   document.addEventListener("click",e=>{
     if(!e.target.closest(".details-more-wrap")) closeDetailsMoreMenu();
   });
@@ -17234,7 +17267,7 @@ function wireShimmer(container){
       if(e.key === "ArrowRight" && lightboxImages.length > 1){ renderLightboxImage(lightboxIndex + 1); return; }
     }
     if(e.key==="Escape" && !$("detailsMoreMenu").hidden){
-      closeDetailsMoreMenu();
+      closeDetailsMoreMenu(true);
       return;
     }
     if(e.key === "Escape" && !detailsOverlay.hidden) closeDetailsModal(true);
@@ -17531,8 +17564,8 @@ function wireShimmer(container){
     });
   }
 
-  function renderAppLoadingState(){
-    if(!view || view.children.length) return;
+  function renderAppLoadingState(force=false){
+    if(!view || (!force && view.children.length)) return;
 
     view.innerHTML=`
       <div class="catalogue-load-state" role="status" aria-live="polite">
@@ -17557,7 +17590,7 @@ function wireShimmer(container){
   }
 
   async function reloadCatalogueFromUi(){
-    renderAppLoadingState();
+    renderAppLoadingState(true);
 
     const [cardsResult]=await Promise.all([
       loadCards(),
