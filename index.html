@@ -6209,6 +6209,196 @@
     }
   }
 
+
+  /* ==========================================================
+     Mobile listing-page rhythm
+     Shared by Inventory / Reserved / Sold / Collection.
+     ========================================================== */
+  .copy-filter-link-mobile{display:none;}
+
+  @media(max-width:800px){
+    /* Keep the whole listing header/control area on one spacing rhythm. */
+    .listing-page-head{
+      margin-bottom:16px !important;
+      gap:8px !important;
+    }
+
+    .listing-page-head .eyebrow{
+      margin-bottom:5px !important;
+    }
+
+    .listing-page-head h2{
+      margin:0 !important;
+      line-height:1.08 !important;
+    }
+
+    .listing-page-head p{
+      margin-top:7px !important;
+      line-height:1.45 !important;
+    }
+
+    .listing-filter-tools{
+      display:flex !important;
+      flex-direction:column !important;
+      align-items:stretch !important;
+      gap:10px !important;
+      margin:0 0 14px !important;
+    }
+
+    /* Quick filters: one clean horizontal row instead of wrapping unevenly. */
+    .listing-filter-tools .quick-filters{
+      width:100% !important;
+      display:flex !important;
+      flex-wrap:nowrap !important;
+      align-items:center !important;
+      gap:8px !important;
+      margin:0 !important;
+      padding:1px 1px 4px !important;
+      overflow-x:auto !important;
+      overflow-y:hidden !important;
+      scroll-snap-type:x proximity;
+      scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    .listing-filter-tools .quick-filters::-webkit-scrollbar{
+      display:none;
+    }
+
+    .listing-filter-tools .quick-filter{
+      flex:0 0 auto !important;
+      min-height:42px !important;
+      padding:9px 13px !important;
+      border-radius:999px !important;
+      font-size:11px !important;
+      line-height:1 !important;
+      scroll-snap-align:start;
+    }
+
+    /* Currency + Filters form one balanced row.
+       Copy Filter Link uses the same height below them. */
+    .listing-filter-tools .inventory-display-tools{
+      width:100% !important;
+      display:grid !important;
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+      gap:10px !important;
+      margin:0 !important;
+      align-items:stretch !important;
+    }
+
+    .listing-filter-tools .currency-preference-control,
+    .listing-filter-tools .mobile-filter-open-btn,
+    .listing-filter-tools .copy-filter-link-btn{
+      box-sizing:border-box !important;
+      width:100% !important;
+      min-width:0 !important;
+      min-height:46px !important;
+      height:46px !important;
+      margin:0 !important;
+      border-radius:12px !important;
+    }
+
+    .listing-filter-tools .currency-preference-control{
+      grid-column:1 !important;
+      padding:5px 7px 5px 12px !important;
+      justify-content:space-between !important;
+      gap:8px !important;
+    }
+
+    .listing-filter-tools .currency-preference-control > span{
+      font-size:9px !important;
+      line-height:1 !important;
+    }
+
+    .listing-filter-tools .currency-preference-control select{
+      min-width:76px !important;
+      min-height:32px !important;
+      height:32px !important;
+      padding:4px 24px 4px 9px !important;
+      border-radius:9px !important;
+      font-size:10px !important;
+    }
+
+    .listing-filter-tools .mobile-filter-open-btn{
+      grid-column:2 !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      gap:6px !important;
+      padding:0 12px !important;
+      font-size:10.5px !important;
+    }
+
+    .listing-filter-tools .copy-filter-link-btn{
+      grid-column:1 / -1 !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      padding:0 12px !important;
+      font-size:10.5px !important;
+    }
+
+    .copy-filter-link-desktop{display:none !important;}
+    .copy-filter-link-mobile{display:inline !important;}
+
+    /* Pill summary, when present, should follow the same 10px rhythm. */
+    .pill-filter-summary:not([hidden]){
+      margin:0 0 14px !important;
+    }
+
+    /* The hidden drawer must not create visual spacing in the page flow. */
+    .filter-drawer-shell:not(.open){
+      margin:0 !important;
+    }
+
+    /* Listings start at a predictable distance from the controls. */
+    #invGrid{
+      margin-top:0 !important;
+    }
+
+    #invGrid.grid{
+      gap:12px !important;
+    }
+
+    #invGrid .card{
+      margin:0 !important;
+      border-radius:13px !important;
+    }
+
+    /* Keep the floating filter control clear of Safari's bottom bar and cards. */
+    .sticky-mobile-filter-btn{
+      right:14px !important;
+      bottom:calc(18px + env(safe-area-inset-bottom)) !important;
+    }
+  }
+
+  @media(max-width:390px){
+    .listing-filter-tools{
+      gap:9px !important;
+      margin-bottom:12px !important;
+    }
+
+    .listing-filter-tools .inventory-display-tools{
+      gap:8px !important;
+    }
+
+    .listing-filter-tools .currency-preference-control,
+    .listing-filter-tools .mobile-filter-open-btn,
+    .listing-filter-tools .copy-filter-link-btn{
+      min-height:44px !important;
+      height:44px !important;
+    }
+
+    .listing-filter-tools .quick-filter{
+      min-height:40px !important;
+      padding:8px 12px !important;
+    }
+
+    #invGrid.grid{
+      gap:10px !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -9641,9 +9831,9 @@ function wireShimmer(container){
       ? requestedQuick
       : "all";
     view.innerHTML = `
-      <div class="page-head"><div><div class="eyebrow">${escapeHtml(scopeMeta.eyebrow)}</div><h2>${escapeHtml(scopeMeta.title)}</h2><p>${escapeHtml(scopeMeta.description)}</p></div></div>
+      <div class="page-head listing-page-head"><div><div class="eyebrow">${escapeHtml(scopeMeta.eyebrow)}</div><h2>${escapeHtml(scopeMeta.title)}</h2><p>${escapeHtml(scopeMeta.description)}</p></div></div>
 
-      <div class="inventory-filter-tools">
+      <div class="inventory-filter-tools listing-filter-tools">
         <div class="quick-filters" id="quickFilters">
         <button type="button" class="quick-filter" data-quick="all">All</button>
         <button type="button" class="quick-filter" data-quick="new">New This Week</button>
@@ -9668,7 +9858,10 @@ function wireShimmer(container){
           <button type="button" class="mobile-filter-open-btn" id="mobileFilterOpenBtn" aria-expanded="false">
             Filters <span class="filter-count-badge" id="mobileFilterCountBadge" hidden>0</span>
           </button>
-          <button type="button" class="copy-filter-link-btn" id="copyFilterLinkBtn" title="Copy a link to these filters">Copy Filtered Link</button>
+          <button type="button" class="copy-filter-link-btn" id="copyFilterLinkBtn" title="Copy a link to these filters">
+            <span class="copy-filter-link-desktop">Copy Filtered Link</span>
+            <span class="copy-filter-link-mobile">Copy Filter Link</span>
+          </button>
         </div>
       </div>
 
