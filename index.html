@@ -4095,6 +4095,129 @@
     .bulk-price-footer-actions{display:grid;grid-template-columns:1fr 1fr;}
   }
 
+
+  /* ---------- Owner quick actions on inventory cards ---------- */
+  .quick-card-actions{
+    position:absolute;
+    top:8px;
+    right:8px;
+    z-index:18;
+    display:block !important;
+  }
+
+  body:not(.owner-mode) .quick-card-actions{
+    display:none !important;
+  }
+
+  .quick-card-menu-toggle{
+    width:30px !important;
+    height:30px !important;
+    min-width:30px !important;
+    padding:0 !important;
+    display:flex !important;
+    align-items:center;
+    justify-content:center;
+    border:1px solid rgba(255,255,255,.16) !important;
+    border-radius:8px !important;
+    background:rgba(8,12,15,.82) !important;
+    color:#fff !important;
+    backdrop-filter:blur(8px);
+    font-size:18px !important;
+    line-height:1 !important;
+    letter-spacing:1px;
+  }
+
+  .quick-card-menu-toggle:hover,
+  .quick-card-menu-toggle[aria-expanded="true"]{
+    border-color:var(--accent-gold) !important;
+    color:var(--accent-gold) !important;
+  }
+
+  .quick-card-menu{
+    position:absolute;
+    top:35px;
+    right:0;
+    width:164px;
+    padding:5px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--surface);
+    box-shadow:0 14px 36px rgba(0,0,0,.35);
+    z-index:30;
+  }
+
+  .quick-card-menu[hidden]{
+    display:none !important;
+  }
+
+  .quick-card-menu button{
+    width:100%;
+    min-height:32px;
+    padding:7px 8px;
+    border:0;
+    border-radius:7px;
+    background:transparent;
+    color:var(--text);
+    text-align:left;
+    font-family:'Inter',sans-serif;
+    font-size:8.5px;
+    font-weight:650;
+    cursor:pointer;
+  }
+
+  .quick-card-menu button:hover{
+    background:var(--surface-2);
+    color:var(--accent-teal);
+  }
+
+  .quick-card-menu .quick-card-danger-soft:hover{
+    color:var(--accent-gold);
+  }
+
+  .quick-card-menu .quick-card-danger{
+    color:var(--danger);
+  }
+
+  .quick-card-menu .quick-card-danger:hover{
+    background:rgba(232,96,122,.07);
+    color:var(--danger);
+  }
+
+  .quick-card-menu-separator{
+    height:1px;
+    margin:4px 3px;
+    background:var(--border);
+  }
+
+  /* NEW badge remains independently top-left; owner menu sits top-right. */
+  body.owner-mode .card .new-card-badge{
+    left:10px !important;
+    right:auto !important;
+  }
+
+  @media(max-width:800px){
+    .quick-card-actions{
+      top:6px;
+      right:6px;
+    }
+
+    .quick-card-menu-toggle{
+      width:28px !important;
+      height:28px !important;
+      min-width:28px !important;
+    }
+
+    .quick-card-menu{
+      top:33px;
+      width:158px;
+    }
+
+    body.owner-mode .card .new-card-badge{
+      left:6px !important;
+      right:auto !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -6501,9 +6624,25 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       <div class="card ${shimmer ? "shimmer" : ""}" style="--stripe:${color}" data-shimmer="${shimmer}" data-card-id="${escapeHtml(c.id)}" tabindex="0" role="button" aria-label="View details for ${escapeHtml(c.name)}">
         ${cardThumbHTML(c)}
         <div class="card-body clean-card-body">
-          <div class="card-actions owner-only">
-            <button class="icon-btn" data-action="edit" data-id="${c.id}" title="Edit" aria-label="Edit ${escapeHtml(c.name)}">✎</button>
-            <button class="icon-btn" data-action="delete" data-id="${c.id}" title="Delete" aria-label="Delete ${escapeHtml(c.name)}">✕</button>
+          <div class="card-actions owner-only quick-card-actions">
+            <button type="button"
+                    class="icon-btn quick-card-menu-toggle"
+                    data-action="quick-menu"
+                    data-id="${escapeHtml(c.id)}"
+                    title="Owner actions"
+                    aria-label="Owner actions for ${escapeHtml(c.name)}"
+                    aria-expanded="false">⋯</button>
+            <div class="quick-card-menu" data-quick-menu-for="${escapeHtml(c.id)}" hidden>
+              <button type="button" data-action="edit" data-id="${escapeHtml(c.id)}">Edit</button>
+              <button type="button" data-action="clone" data-id="${escapeHtml(c.id)}">Clone</button>
+              <button type="button" data-action="fb-post" data-id="${escapeHtml(c.id)}">Generate FB Post</button>
+              <div class="quick-card-menu-separator"></div>
+              ${normalizeFilterValue(c.availability)!=="available" ? `<button type="button" data-action="availability" data-status="Available" data-id="${escapeHtml(c.id)}">Mark Available</button>` : ""}
+              ${normalizeFilterValue(c.availability)!=="reserved" ? `<button type="button" data-action="availability" data-status="Reserved" data-id="${escapeHtml(c.id)}">Mark Reserved</button>` : ""}
+              ${normalizeFilterValue(c.availability)!=="sold" ? `<button type="button" class="quick-card-danger-soft" data-action="availability" data-status="Sold" data-id="${escapeHtml(c.id)}">Mark Sold</button>` : ""}
+              <div class="quick-card-menu-separator"></div>
+              <button type="button" class="quick-card-danger" data-action="delete" data-id="${escapeHtml(c.id)}">Delete</button>
+            </div>
           </div>
 
           <div class="clean-card-main">
@@ -6554,6 +6693,47 @@ function wireShimmer(container){
     });
   }
 
+  async function quickSetCardAvailability(card,status){
+    if(!card || !requireOwner("change card availability")) return false;
+
+    const allowed=new Set(["Available","Reserved","Sold"]);
+    if(!allowed.has(status)) return false;
+
+    const current=normalizeFilterValue(card.availability||"");
+    if(current===normalizeFilterValue(status)) return true;
+
+    if(status==="Sold"){
+      const ok=confirm(`Mark "${card.name}" as Sold?`);
+      if(!ok) return false;
+    }
+
+    const candidate={...card,availability:status};
+
+    // Let the database trigger stamp sold_at when supported. If moving out
+    // of Sold, the existing cardToDb behavior omits sold_at and the DB trigger
+    // can clear it without exposing any new public write path.
+    if(status!=="Sold") candidate.sold_at=null;
+
+    const saved=await updateCardStorage(candidate);
+    if(!saved) return false;
+
+    const index=cards.findIndex(c=>String(c.id)===String(card.id));
+    if(index>-1) cards[index]=saved;
+    showToast(`Marked ${status}`);
+    router();
+    return true;
+  }
+
+  function closeQuickCardMenus(container,except=null){
+    container.querySelectorAll(".quick-card-menu").forEach(menu=>{
+      if(menu===except) return;
+      menu.hidden=true;
+      const id=menu.dataset.quickMenuFor;
+      const toggle=id ? container.querySelector(`[data-action="quick-menu"][data-id="${CSS.escape(id)}"]`) : null;
+      if(toggle) toggle.setAttribute("aria-expanded","false");
+    });
+  }
+
   function wireCardActions(container){
     container.addEventListener("click", async (e)=>{
       const favoriteBtn = e.target.closest(".favorite-btn[data-favorite-id]");
@@ -6598,18 +6778,45 @@ function wireShimmer(container){
       const btn = e.target.closest("button[data-action]");
       if(btn){
         e.stopPropagation();
-        const id = btn.dataset.id;
-        const card = cards.find(c=>c.id === id);
+
+        const id=String(btn.dataset.id||"");
+        const action=String(btn.dataset.action||"");
+
+        if(action==="quick-menu"){
+          if(!requireOwner("open card quick actions")) return;
+          const menu=container.querySelector(`[data-quick-menu-for="${CSS.escape(id)}"]`);
+          if(!menu) return;
+          const opening=menu.hidden;
+          closeQuickCardMenus(container,opening ? menu : null);
+          menu.hidden=!opening;
+          btn.setAttribute("aria-expanded",opening ? "true" : "false");
+          return;
+        }
+
+        const card=cards.find(c=>String(c.id)===id);
         if(!card) return;
-        if(btn.dataset.action === "edit"){
-          if(!requireOwner()) return;
+
+        closeQuickCardMenus(container);
+
+        if(action==="edit"){
+          if(!requireOwner("edit card")) return;
           openEditModal(card);
-        } else if(btn.dataset.action === "delete"){
+        }else if(action==="clone"){
+          if(!requireOwner("clone card")) return;
+          openCloneOptions(card);
+        }else if(action==="fb-post"){
+          if(!requireOwner("generate Facebook post")) return;
+          location.hash=`#/fb-tools?mode=single&card=${encodeURIComponent(card.id)}`;
+        }else if(action==="availability"){
+          if(!requireOwner("change card availability")) return;
+          const status=String(btn.dataset.status||"");
+          await quickSetCardAvailability(card,status);
+        }else if(action==="delete"){
           if(confirm(`Remove "${card.name}" from your inventory?`)){
-            if(!requireOwner()) return;
-            const ok = await deleteCardStorage(id);
+            if(!requireOwner("delete card")) return;
+            const ok=await deleteCardStorage(id);
             if(ok){
-              cards = cards.filter(c=>c.id !== id);
+              cards=cards.filter(c=>String(c.id)!==id);
               router();
               showToast("Card removed");
             }
@@ -8252,6 +8459,12 @@ function wireShimmer(container){
     }
 
     select.addEventListener("change", ()=>selectCard(select.value));
+
+    const requestedCardId=safeCardId(currentHashParams().get("card"));
+    if(requestedCardId && selectableCards.some(card=>String(card.id)===requestedCardId)){
+      select.value=requestedCardId;
+      selectCard(requestedCardId);
+    }
 
     [titleInput,shopInput,instagramInput,hashtagsInput].forEach(input=>{
       input.addEventListener("input", ()=>{
