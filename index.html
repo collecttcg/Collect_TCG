@@ -14086,11 +14086,13 @@ function wireShimmer(container){
       "",
       divider,
       "",
-      "OTHER PRODUCTS INFO (CAROUSELL)",
+      "OTHER PRODUCTS INFO",
       "",
-      `MALAYSIA : ${safeHttpUrl(values.carousellMalaysiaUrl)||"[LINK NOT SET]"}`,
+      `WEBSITE : ${getWebsiteShareUrl()}`,
       "",
-      `SINGAPORE : ${safeHttpUrl(values.carousellSingaporeUrl)||"[LINK NOT SET]"}`,
+      `CAROUSELL MALAYSIA : ${safeHttpUrl(values.carousellMalaysiaUrl)||"[LINK NOT SET]"}`,
+      "",
+      `CAROUSELL SINGAPORE : ${safeHttpUrl(values.carousellSingaporeUrl)||"[LINK NOT SET]"}`,
       "",
       divider,
       "",
@@ -14598,7 +14600,7 @@ function wireShimmer(container){
     ].filter(Boolean);
 
     return [
-      `‼ CARD LIST ‼  [UPDATE : ${fbCardListDateLabel()}]`,
+      `‼️ CARD LIST ‼️  [UPDATE : ${fbCardListDateLabel()}]`,
       "",
       `WTS【CARD LIST】${String(prefs.listTitle || "AVAILABLE INVENTORY").toUpperCase()}`,
       "",
@@ -18349,6 +18351,18 @@ function wireShimmer(container){
     setTimeout(()=>URL.revokeObjectURL(href),1500);
 
     return {added, failed};
+  }
+
+  function getWebsiteShareUrl(){
+    // Keep the deployed GitHub Pages sub-path, but exclude route/hash state.
+    try{
+      const url=new URL(location.href);
+      url.hash="";
+      url.search="";
+      return url.toString();
+    }catch{
+      return `${location.origin}${location.pathname}`;
+    }
   }
 
   function getCardShareUrl(cardId){
