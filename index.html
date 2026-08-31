@@ -4043,6 +4043,58 @@
     }
   }
 
+
+  /* ---------- Clone options ---------- */
+  .clone-options-modal{max-width:620px;}
+  .clone-options-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;}
+  .clone-options-head h2{margin:2px 0 4px;}
+  .clone-options-head p{margin:0;color:var(--text-muted);font-size:9px;}
+  .clone-options-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .clone-option-card{min-height:104px;padding:13px;border:1px solid var(--border);border-radius:11px;background:var(--bg);color:var(--text);text-align:left;cursor:pointer;}
+  .clone-option-card:hover{border-color:var(--accent-teal);background:rgba(95,212,196,.045);}
+  .clone-option-card.recommended{border-color:rgba(227,179,65,.34);background:rgba(227,179,65,.045);}
+  .clone-option-card strong{display:block;font-size:10px;}
+  .clone-option-card span{display:block;margin-top:6px;color:var(--text-muted);font-size:8px;line-height:1.45;}
+  .clone-options-note{margin-top:10px;padding:9px 10px;border-radius:8px;background:var(--surface-2);color:var(--text-muted);font-size:8px;line-height:1.45;}
+
+  /* ---------- Bulk prices ---------- */
+  .bulk-price-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px;}
+  .bulk-price-summary>div{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);}
+  .bulk-price-summary strong{display:block;color:var(--accent-teal);font-family:'JetBrains Mono',monospace;font-size:16px;}
+  .bulk-price-summary span{display:block;margin-top:3px;color:var(--text-muted);font-size:8px;}
+  .bulk-price-panel{padding:14px;}
+  .bulk-price-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) minmax(150px,220px) auto;gap:8px;align-items:end;margin-bottom:10px;}
+  .bulk-price-toolbar .field{margin-bottom:0;}
+  .bulk-price-table-wrap{overflow:auto;border:1px solid var(--border);border-radius:10px;}
+  .bulk-price-table{width:100%;min-width:760px;border-collapse:collapse;}
+  .bulk-price-table th{position:sticky;top:0;z-index:2;padding:8px;background:var(--surface-2);color:var(--text-muted);font-size:7.5px;text-align:left;border-bottom:1px solid var(--border);}
+  .bulk-price-table td{padding:7px 8px;border-bottom:1px solid var(--border-soft);vertical-align:middle;}
+  .bulk-price-table tr:last-child td{border-bottom:0;}
+  .bulk-price-table tr.changed{background:rgba(95,212,196,.035);}
+  .bulk-price-table tr.changed td:first-child{box-shadow:inset 3px 0 0 rgba(95,212,196,.55);}
+  .bulk-price-card{display:flex;align-items:center;gap:8px;min-width:240px;}
+  .bulk-price-thumb{width:36px;height:44px;flex:0 0 36px;overflow:hidden;display:flex;align-items:center;justify-content:center;border-radius:5px;background:var(--surface-2);color:var(--text-muted);font-size:7px;}
+  .bulk-price-thumb img{width:100%;height:100%;object-fit:cover;}
+  .bulk-price-card strong{display:block;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-size:9px;}
+  .bulk-price-card small{display:block;margin-top:3px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted);font-size:7.5px;}
+  .bulk-price-input{width:118px;min-height:34px;padding:7px 8px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:9px;}
+  .bulk-price-input:focus{outline:2px solid var(--accent-teal);outline-offset:1px;border-color:var(--accent-teal);}
+  .bulk-price-status{display:inline-flex;padding:3px 6px;border-radius:999px;background:var(--surface-2);color:var(--text-muted);font-size:7px;font-weight:700;white-space:nowrap;}
+  .bulk-price-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;}
+  .bulk-price-save-status{color:var(--text-muted);font-size:8.5px;}
+  .bulk-price-footer-actions{display:flex;gap:6px;}
+  .bulk-price-empty{padding:24px 10px;text-align:center;color:var(--text-muted);font-size:9px;}
+  .bulk-price-empty[hidden]{display:none!important;}
+
+  @media(max-width:700px){
+    .clone-options-grid{grid-template-columns:1fr;}
+    .clone-option-card{min-height:0;}
+    .bulk-price-toolbar{grid-template-columns:1fr;}
+    .bulk-price-summary{grid-template-columns:repeat(3,minmax(0,1fr));}
+    .bulk-price-footer{align-items:stretch;flex-direction:column;}
+    .bulk-price-footer-actions{display:grid;grid-template-columns:1fr 1fr;}
+  }
+
 </style>
 </head>
 <body>
@@ -4083,6 +4135,7 @@
       <a href="#/insights" data-route="insights" class="owner-only"><span class="ic">◔</span> Insights</a>
       <a href="#/fb-tools" data-route="fb-tools" class="owner-only"><span class="ic">ƒ</span> Facebook Tools</a>
       <a href="#/quality" data-route="quality" class="owner-only"><span class="ic">✓</span> Data Quality</a>
+      <a href="#/bulk-prices" data-route="bulk-prices" class="owner-only"><span class="ic">$</span> Bulk Prices</a>
       <a href="#/add" data-route="add" class="owner-only"><span class="ic">+</span> Add Card</a>
       <a href="#/about" data-route="about" class="mobile-secondary-nav"><span class="ic">◎</span> About Us</a>
       <a href="#/contact" data-route="contact" class="mobile-secondary-nav"><span class="ic">✉</span> Contact</a>
@@ -4124,6 +4177,42 @@
       <button type="button" class="btn-primary owner-only" id="detailsEditBtn" hidden>Edit card</button>
     </div>
     <div id="detailsMount"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="cloneOptionsOverlay" hidden>
+  <div class="modal clone-options-modal" role="dialog" aria-modal="true" aria-labelledby="cloneOptionsTitle">
+    <div class="clone-options-head">
+      <div>
+        <div class="eyebrow">Owner Tool</div>
+        <h2 id="cloneOptionsTitle">Clone card</h2>
+        <p>Choose what you want to carry into the new listing.</p>
+      </div>
+      <button type="button" class="btn-ghost" id="cloneOptionsCloseBtn">Close</button>
+    </div>
+
+    <div class="clone-options-grid">
+      <button type="button" class="clone-option-card" data-clone-mode="details">
+        <strong>Details only</strong>
+        <span>Copies card information and prices. Images and grading are cleared.</span>
+      </button>
+      <button type="button" class="clone-option-card" data-clone-mode="images">
+        <strong>With images</strong>
+        <span>Copies card information, prices and existing images. Grading is cleared.</span>
+      </button>
+      <button type="button" class="clone-option-card" data-clone-mode="grading">
+        <strong>With grading</strong>
+        <span>Copies grading company and grade. Images are cleared and certificate numbers are removed.</span>
+      </button>
+      <button type="button" class="clone-option-card recommended" data-clone-mode="safe-all">
+        <strong>Everything safe</strong>
+        <span>Copies images, grade, prices and metadata while clearing listing-specific/private fields.</span>
+      </button>
+    </div>
+
+    <div class="clone-options-note">
+      Card ID, grading certificate, sold information, timestamps, view count and owner/backend identifiers are never cloned.
+    </div>
   </div>
 </div>
 
@@ -5114,6 +5203,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
     else if(route === "quality"){
       if(isOwnerMode()) renderDataQualityPage();
+      else { location.hash="#/inventory"; return; }
+    }
+    else if(route === "bulk-prices"){
+      if(isOwnerMode()) renderBulkPricePage();
       else { location.hash="#/inventory"; return; }
     }
     else if(route === "add"){
@@ -9533,27 +9626,370 @@ function wireShimmer(container){
   }
 
   let pendingCloneCard = null;
+  let cloneSourceCard = null;
 
-  function makeCloneDraft(card){
+  function cloneSafeGrading(card){
+    return Array.isArray(card?.grading)
+      ? card.grading.filter(g=>g&&g.company).map(g=>({
+          company:g.company||"PSA",
+          grade:String(g.grade||""),
+          cert:"",
+          pop_count:null,
+          pop_higher:null,
+          pop_updated_at:null
+        }))
+      : [];
+  }
+
+  function makeCloneDraft(card, mode="details"){
     if(!card) return null;
+
+    const includeImages = mode==="images" || mode==="safe-all";
+    const includeGrading = mode==="grading" || mode==="safe-all";
+
+    const copiedImages = includeImages ? getImages(card).slice() : [];
+
     const draft = {
-      ...card, id:"", availability:"Available", sold_at:null, created_at:null, updated_at:null,
-      view_count:0, featured:false, qty:1, images:[], image:"",
-      grading:Array.isArray(card.grading) ? card.grading.filter(g=>g&&g.company).map(g=>({
-        company:g.company||"PSA", grade:String(g.grade||""), cert:"",
-        pop_count:null, pop_higher:null, pop_updated_at:null
-      })) : []
+      ...card,
+      id:"",
+      availability:"Available",
+      sold_at:null,
+      created_at:null,
+      updated_at:null,
+      view_count:0,
+      featured:false,
+      qty:1,
+      images:copiedImages,
+      image:copiedImages[0] || "",
+      grading:includeGrading ? cloneSafeGrading(card) : []
     };
-    ["user_id","owner_id","created_by","updated_by","deleted_at","reserved_at","sold_to","buyer_id"].forEach(k=>delete draft[k]);
+
+    [
+      "user_id","owner_id","created_by","updated_by",
+      "deleted_at","reserved_at","sold_to","buyer_id"
+    ].forEach(key=>delete draft[key]);
+
     return draft;
   }
 
-  function beginCloneCard(card){
+  function closeCloneOptions(){
+    const overlay=$("cloneOptionsOverlay");
+    if(overlay) overlay.hidden=true;
+    cloneSourceCard=null;
+  }
+
+  function openCloneOptions(card){
     if(!requireOwner("clone card")) return;
-    pendingCloneCard = makeCloneDraft(card);
-    if(!pendingCloneCard) return;
+    cloneSourceCard=card;
+    const overlay=$("cloneOptionsOverlay");
+    if(overlay) overlay.hidden=false;
+  }
+
+  function beginCloneCard(card, mode){
+    if(!requireOwner("clone card")) return;
+    const allowed=new Set(["details","images","grading","safe-all"]);
+    const safeMode=allowed.has(mode) ? mode : "details";
+    const draft=makeCloneDraft(card,safeMode);
+    if(!draft) return;
+
+    pendingCloneCard=draft;
+    closeCloneOptions();
     closeDetailsModal(false);
-    location.hash = "#/add?clone=1";
+    location.hash="#/add?clone=1";
+  }
+
+
+  // ---------------- Owner Bulk Price Editor ----------------
+  function priceInputValue(value){
+    if(value == null || value === "" || Number(value) === 0) return "";
+    const n=Number(value);
+    return Number.isFinite(n) ? String(n) : "";
+  }
+
+  function normalizeBulkPriceValue(value){
+    const raw=String(value ?? "").trim();
+    if(raw==="") return null;
+    const n=Number(raw);
+    return Number.isFinite(n) && n>=0 ? n : NaN;
+  }
+
+  function sameNullableNumber(a,b){
+    const an=a==null||a===""||Number(a)===0 ? null : Number(a);
+    const bn=b==null||b===""||Number(b)===0 ? null : Number(b);
+    return an===bn;
+  }
+
+  function renderBulkPricePage(){
+    if(!requireOwner("open bulk price editor")) return;
+
+    const editableCards=cards.filter(card=>
+      normalizeFilterValue(card.availability||"Available")!=="sold"
+    );
+
+    view.innerHTML=`
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Owner Tool</div>
+          <h2>Bulk Price Editor</h2>
+          <p>Update MYR, USD and SGD listing prices quickly. Sold archive listings are excluded to preserve their historical listed prices.</p>
+        </div>
+      </div>
+
+      <div class="bulk-price-summary">
+        <div><strong>${editableCards.length}</strong><span>Active listings</span></div>
+        <div><strong id="bulkPriceChangedCount">0</strong><span>Changed</span></div>
+        <div><strong id="bulkPriceVisibleCount">${editableCards.length}</strong><span>Visible</span></div>
+      </div>
+
+      <div class="panel bulk-price-panel">
+        <div class="bulk-price-toolbar">
+          <div class="field bulk-price-search">
+            <label for="bulkPriceSearch">Search</label>
+            <input id="bulkPriceSearch" type="search" maxlength="100" placeholder="Name, code, game or series…">
+          </div>
+          <div class="field">
+            <label for="bulkPriceStatus">Status</label>
+            <select id="bulkPriceStatus">
+              <option value="">All active</option>
+              <option value="available">Available</option>
+              <option value="reserved">Reserved</option>
+              <option value="collection (nfs)">Collection (NFS)</option>
+            </select>
+          </div>
+          <label class="quality-clean-toggle">
+            <input type="checkbox" id="bulkPriceChangedOnly">
+            <span>Changed only</span>
+          </label>
+        </div>
+
+        <div class="bulk-price-table-wrap">
+          <table class="bulk-price-table">
+            <thead>
+              <tr>
+                <th>Card</th>
+                <th>MYR</th>
+                <th>USD</th>
+                <th>SGD</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="bulkPriceRows"></tbody>
+          </table>
+        </div>
+
+        <div class="bulk-price-empty" id="bulkPriceEmpty" hidden>No listings match the current filters.</div>
+
+        <div class="bulk-price-footer">
+          <div class="bulk-price-save-status" id="bulkPriceSaveStatus">No unsaved changes.</div>
+          <div class="bulk-price-footer-actions">
+            <button type="button" class="btn-ghost" id="bulkPriceResetBtn" disabled>Undo All Changes</button>
+            <button type="button" class="btn-primary" id="bulkPriceSaveBtn" disabled>Save Price Changes</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const search=$("bulkPriceSearch");
+    const statusFilter=$("bulkPriceStatus");
+    const changedOnly=$("bulkPriceChangedOnly");
+    const rowsMount=$("bulkPriceRows");
+    const empty=$("bulkPriceEmpty");
+    const changedCount=$("bulkPriceChangedCount");
+    const visibleCount=$("bulkPriceVisibleCount");
+    const saveBtn=$("bulkPriceSaveBtn");
+    const resetBtn=$("bulkPriceResetBtn");
+    const saveStatus=$("bulkPriceSaveStatus");
+
+    const original=new Map(editableCards.map(card=>[
+      String(card.id),
+      {
+        price_myr:card.price_myr==null?null:Number(card.price_myr),
+        price_usd:(card.price_usd ?? card.price)==null?null:Number(card.price_usd ?? card.price),
+        price_sgd:card.price_sgd==null?null:Number(card.price_sgd)
+      }
+    ]));
+
+    const drafts=new Map(editableCards.map(card=>[
+      String(card.id),
+      {...original.get(String(card.id))}
+    ]));
+
+    function isChanged(id){
+      const a=original.get(id);
+      const b=drafts.get(id);
+      if(!a||!b) return false;
+      return !sameNullableNumber(a.price_myr,b.price_myr) ||
+             !sameNullableNumber(a.price_usd,b.price_usd) ||
+             !sameNullableNumber(a.price_sgd,b.price_sgd);
+    }
+
+    function changedIds(){
+      return editableCards.map(c=>String(c.id)).filter(isChanged);
+    }
+
+    function updateSummary(){
+      const count=changedIds().length;
+      changedCount.textContent=count;
+      saveBtn.disabled=count===0;
+      resetBtn.disabled=count===0;
+      saveStatus.textContent=count
+        ? `${count} listing${count===1?"":"s"} with unsaved price changes.`
+        : "No unsaved changes.";
+    }
+
+    function cardMatches(card){
+      const q=normalizeFilterValue(search.value);
+      const status=normalizeFilterValue(statusFilter.value);
+      const id=String(card.id);
+
+      if(status && normalizeFilterValue(card.availability)!==status) return false;
+      if(changedOnly.checked && !isChanged(id)) return false;
+
+      if(q){
+        const hay=[card.name,card.card_code,card.game,card.series,card.year]
+          .map(v=>normalizeFilterValue(v)).join(" ");
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    }
+
+    function renderRows(){
+      const visible=editableCards.filter(cardMatches);
+      visibleCount.textContent=visible.length;
+      empty.hidden=visible.length>0;
+
+      rowsMount.innerHTML=visible.map(card=>{
+        const id=String(card.id);
+        const draft=drafts.get(id);
+        const image=getImages(card)[0]||"";
+        return `
+          <tr class="${isChanged(id)?"changed":""}" data-bulk-price-row="${escapeHtml(id)}">
+            <td>
+              <div class="bulk-price-card">
+                <div class="bulk-price-thumb">${image?`<img src="${escapeHtml(image)}" alt="">`:"—"}</div>
+                <div>
+                  <strong>${escapeHtml(card.name||"Untitled card")}</strong>
+                  <small>${escapeHtml([card.card_code,card.year,card.series].filter(Boolean).join(" · "))}</small>
+                </div>
+              </div>
+            </td>
+            <td><input class="bulk-price-input" data-bulk-field="price_myr" data-bulk-id="${escapeHtml(id)}" inputmode="decimal" type="number" min="0" step="0.01" value="${escapeHtml(priceInputValue(draft.price_myr))}" placeholder="—"></td>
+            <td><input class="bulk-price-input" data-bulk-field="price_usd" data-bulk-id="${escapeHtml(id)}" inputmode="decimal" type="number" min="0" step="0.01" value="${escapeHtml(priceInputValue(draft.price_usd))}" placeholder="—"></td>
+            <td><input class="bulk-price-input" data-bulk-field="price_sgd" data-bulk-id="${escapeHtml(id)}" inputmode="decimal" type="number" min="0" step="0.01" value="${escapeHtml(priceInputValue(draft.price_sgd))}" placeholder="—"></td>
+            <td><span class="bulk-price-status">${escapeHtml(card.availability||"Available")}</span></td>
+          </tr>
+        `;
+      }).join("");
+
+      rowsMount.querySelectorAll("[data-bulk-field]").forEach(input=>{
+        input.addEventListener("input",()=>{
+          const id=String(input.dataset.bulkId||"");
+          const field=String(input.dataset.bulkField||"");
+          const value=normalizeBulkPriceValue(input.value);
+          if(Number.isNaN(value)){
+            input.setCustomValidity("Enter a valid non-negative price.");
+            return;
+          }
+          input.setCustomValidity("");
+          const draft=drafts.get(id);
+          if(!draft || !["price_myr","price_usd","price_sgd"].includes(field)) return;
+          draft[field]=value;
+
+          const row=input.closest("[data-bulk-price-row]");
+          if(row) row.classList.toggle("changed",isChanged(id));
+          updateSummary();
+
+          if(changedOnly.checked && !isChanged(id)) renderRows();
+        });
+      });
+
+      updateSummary();
+    }
+
+    [search,statusFilter].forEach(el=>{
+      el.addEventListener("input",renderRows);
+      el.addEventListener("change",renderRows);
+    });
+    changedOnly.addEventListener("change",renderRows);
+
+    resetBtn.addEventListener("click",()=>{
+      editableCards.forEach(card=>{
+        const id=String(card.id);
+        drafts.set(id,{...original.get(id)});
+      });
+      renderRows();
+      showToast("Unsaved price changes cleared");
+    });
+
+    saveBtn.addEventListener("click",async()=>{
+      if(!requireOwner("save bulk price changes")) return;
+
+      const ids=changedIds();
+      if(!ids.length) return;
+
+      const invalid=Array.from(rowsMount.querySelectorAll(".bulk-price-input")).find(input=>!input.checkValidity());
+      if(invalid){
+        invalid.reportValidity();
+        return;
+      }
+
+      const originalText=saveBtn.textContent;
+      saveBtn.disabled=true;
+      resetBtn.disabled=true;
+      let savedCount=0;
+      let failedCount=0;
+
+      try{
+        for(let i=0;i<ids.length;i++){
+          const id=ids[i];
+          const card=cards.find(c=>String(c.id)===id);
+          const draft=drafts.get(id);
+          if(!card||!draft) continue;
+
+          saveBtn.textContent=`Saving ${i+1}/${ids.length}…`;
+
+          const candidate={
+            ...card,
+            price_myr:draft.price_myr,
+            price_usd:draft.price_usd,
+            price:draft.price_usd,
+            price_sgd:draft.price_sgd
+          };
+
+          const saved=await updateCardStorage(candidate);
+          if(saved){
+            const index=cards.findIndex(c=>String(c.id)===id);
+            if(index>-1) cards[index]=saved;
+
+            const newOriginal={
+              price_myr:saved.price_myr==null?null:Number(saved.price_myr),
+              price_usd:(saved.price_usd ?? saved.price)==null?null:Number(saved.price_usd ?? saved.price),
+              price_sgd:saved.price_sgd==null?null:Number(saved.price_sgd)
+            };
+            original.set(id,newOriginal);
+            drafts.set(id,{...newOriginal});
+            savedCount++;
+          }else{
+            failedCount++;
+          }
+        }
+
+        saveStatus.textContent=failedCount
+          ? `${savedCount} saved · ${failedCount} failed. Review failed listings and try again.`
+          : `${savedCount} price update${savedCount===1?"":"s"} saved successfully.`;
+
+        showToast(
+          failedCount
+            ? `Bulk prices: ${savedCount} saved · ${failedCount} failed`
+            : `Saved ${savedCount} price update${savedCount===1?"":"s"}`
+        );
+      }finally{
+        saveBtn.textContent=originalText;
+        renderRows();
+      }
+    });
+
+    renderRows();
   }
 
   // ---------------- Add page ----------------
@@ -9562,7 +9998,7 @@ function wireShimmer(container){
     pendingCloneCard = null;
     view.innerHTML = `
       <div class="page-head"><div><div class="eyebrow">${cloneDraft ? "Clone Listing" : "New listing"}</div><h2>${cloneDraft ? "Clone card" : "Add a card"}</h2><p>${cloneDraft ? "Review the copied details and add new photos before saving." : "List a new card in your inventory."}</p></div></div>
-      ${cloneDraft ? `<div class="clone-card-notice"><strong>Cloning safely</strong><span>Photos, grading certificate, sold status, timestamps and view count were cleared.</span></div>` : ""}
+      ${cloneDraft ? `<div class="clone-card-notice"><strong>Cloning safely</strong><span>Review every field before saving. Card ID, grading certificate, sold information, timestamps and view count were cleared.</span></div>` : ""}
       <form class="form-card" id="addForm">
         ${fieldsTemplate("add")}
         <div class="modal-actions">
@@ -9572,7 +10008,7 @@ function wireShimmer(container){
       </form>
     `;
     const formState = {
-      images: [],
+      images: cloneDraft ? getImages(cloneDraft).slice() : [],
       grading: cloneDraft && Array.isArray(cloneDraft.grading) ? cloneDraft.grading.map(g=>({...g})) : [],
       processingImages: 0
     };
@@ -10083,7 +10519,18 @@ function wireShimmer(container){
   $("detailsCloneBtn").addEventListener("click", ()=>{
     if(!requireOwner("clone card")) return;
     const card = cards.find(c=>c.id === detailsCardId);
-    if(card) beginCloneCard(card);
+    if(card) openCloneOptions(card);
+  });
+
+  $("cloneOptionsCloseBtn").addEventListener("click",closeCloneOptions);
+  $("cloneOptionsOverlay").addEventListener("click",e=>{
+    if(e.target===$("cloneOptionsOverlay")) closeCloneOptions();
+  });
+  $("cloneOptionsOverlay").querySelectorAll("[data-clone-mode]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      if(!cloneSourceCard || !requireOwner("clone card")) return;
+      beginCloneCard(cloneSourceCard,String(btn.dataset.cloneMode||"details"));
+    });
   });
 
   $("detailsEditBtn").addEventListener("click", ()=>{
