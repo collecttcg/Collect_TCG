@@ -13720,7 +13720,7 @@ function wireShimmer(container){
 
           <div class="fb-post-bottom-actions">
             <button type="button" class="btn-ghost" id="fbDownloadImageBtn" disabled>Download Images (.ZIP)</button>
-            <a class="btn-ghost" id="fbOpenCardBtn" href="#/inventory" aria-disabled="true">Open Card</a>
+            <a class="btn-ghost" id="fbOpenCardBtn" href="#/inventory" target="_blank" rel="noopener noreferrer" aria-disabled="true">Open Card ↗</a>
           </div>
         </section>
       </div>
@@ -13826,7 +13826,7 @@ function wireShimmer(container){
         ? defaultFbHashtags(selectedCard)
         : prefs.hashtags;
 
-      openCardBtn.href = cardShareHash(selectedCard.id);
+      openCardBtn.href = getCardShareUrl(selectedCard.id);
       openCardBtn.removeAttribute("aria-disabled");
       renderSelectedCard();
       updateOutput();
@@ -14683,7 +14683,7 @@ function wireShimmer(container){
 
           <div class="fb-post-bottom-actions">
             <button type="button" class="btn-ghost" id="carousellDownloadImagesBtn" disabled>Download Images (.ZIP)</button>
-            <a class="btn-ghost" id="carousellOpenCardBtn" href="#/inventory" aria-disabled="true">Open Card</a>
+            <a class="btn-ghost" id="carousellOpenCardBtn" href="#/inventory" target="_blank" rel="noopener noreferrer" aria-disabled="true">Open Card ↗</a>
           </div>
         </section>
       </div>
@@ -14723,7 +14723,7 @@ function wireShimmer(container){
         </div>
       `;
       downloadBtn.disabled=getImages(selectedCard).length===0;
-      openCardBtn.href=cardShareHash(selectedCard.id);
+      openCardBtn.href=getCardShareUrl(selectedCard.id);
       openCardBtn.setAttribute("aria-disabled","false");
     }
 
