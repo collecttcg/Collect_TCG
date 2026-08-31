@@ -11832,6 +11832,10 @@ function wireShimmer(container){
       {value:"",label:"All Games"},
       ...games.map(g=>({value:g,label:g}))
     ]);
+    setupOverviewSelect("filterGrade", [
+      {value:"",label:"All Grades / Conditions"},
+      ...gradeOptions.map(value=>({value,label:value}))
+    ]);
     const gradeShortcuts=$("gradeShortcuts");
     if(gradeShortcuts && shortcutValues.length){
       gradeShortcuts.hidden=false;
