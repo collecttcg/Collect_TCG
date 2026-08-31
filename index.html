@@ -6899,9 +6899,108 @@
     }
   }
 
+
+  /* ---------- Mobile pull-to-refresh ---------- */
+  .pull-refresh-indicator{
+    display:none;
+  }
+
+  @media(max-width:800px){
+    .pull-refresh-indicator{
+      --pull-offset:0px;
+      position:fixed;
+      top:calc(env(safe-area-inset-top,0px) + 8px);
+      left:50%;
+      z-index:88;
+      min-height:38px;
+      max-width:calc(100vw - 28px);
+      padding:7px 11px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:rgba(33,35,43,.96);
+      color:var(--text-muted);
+      box-shadow:0 10px 26px rgba(0,0,0,.30);
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+      opacity:0;
+      visibility:hidden;
+      pointer-events:none;
+      transform:translate(-50%,calc(-58px + var(--pull-offset)));
+      transition:opacity .12s ease,transform .12s ease,visibility .12s ease;
+    }
+
+    .pull-refresh-indicator.is-pulling,
+    .pull-refresh-indicator.is-refreshing{
+      opacity:1;
+      visibility:visible;
+    }
+
+    .pull-refresh-indicator.is-ready{
+      border-color:rgba(95,212,196,.45);
+      color:var(--accent-teal);
+    }
+
+    .pull-refresh-indicator strong{
+      min-width:0;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      font-size:9.5px;
+      font-weight:800;
+    }
+
+    .pull-refresh-spinner{
+      width:15px;
+      height:15px;
+      flex:0 0 15px;
+      border:2px solid var(--border);
+      border-top-color:var(--accent-teal);
+      border-radius:50%;
+      transform:rotate(0deg);
+    }
+
+    .pull-refresh-indicator.is-pulling .pull-refresh-spinner{
+      transform:rotate(calc(var(--pull-progress,0) * 270deg));
+      transition:transform .04s linear;
+    }
+
+    .pull-refresh-indicator.is-refreshing .pull-refresh-spinner{
+      animation:pullRefreshSpin .7s linear infinite;
+    }
+
+    @keyframes pullRefreshSpin{
+      to{transform:rotate(360deg);}
+    }
+  }
+
+  @media(max-width:800px) and (prefers-reduced-motion:reduce){
+    .pull-refresh-indicator{
+      transition:none!important;
+    }
+
+    .pull-refresh-indicator.is-refreshing .pull-refresh-spinner{
+      animation:none!important;
+      border-top-color:var(--border);
+      background:var(--accent-teal);
+    }
+  }
+
 </style>
 </head>
 <body>
+
+<div class="pull-refresh-indicator"
+     id="pullRefreshIndicator"
+     role="status"
+     aria-live="polite"
+     aria-hidden="true">
+  <span class="pull-refresh-spinner" aria-hidden="true"></span>
+  <strong id="pullRefreshText">Pull to refresh</strong>
+</div>
 
 <div class="shell">
   <aside class="sidebar">
@@ -17564,6 +17663,173 @@ function wireShimmer(container){
     });
   }
 
+  function setupMobilePullToRefresh(){
+    const shell=document.querySelector(".shell");
+    const indicator=$("pullRefreshIndicator");
+    const label=$("pullRefreshText");
+    if(!shell || !indicator || !label) return;
+
+    const threshold=72;
+    const maxOffset=104;
+
+    let startX=0;
+    let startY=0;
+    let pulling=false;
+    let directionLocked=false;
+    let refreshing=false;
+    let ready=false;
+
+    const isMobile=()=>window.matchMedia("(max-width: 800px)").matches;
+
+    const modalIsOpen=id=>{
+      const el=$(id);
+      return !!el && !el.hidden;
+    };
+
+    const canStart=target=>{
+      if(!isMobile() || refreshing || shell.scrollTop>0) return false;
+      if(modalIsOpen("detailsOverlay") ||
+         modalIsOpen("modalOverlay") ||
+         modalIsOpen("compareOverlay") ||
+         modalIsOpen("imageLightbox") ||
+         modalIsOpen("videoOverlay")) return false;
+      if(document.body.classList.contains("mobile-filter-open")) return false;
+
+      // Do not steal gestures from horizontal carousels/scrollers.
+      if(target?.closest?.(
+        ".quick-filters,.showcase-category-bar,.details-secondary-actions,.detail-slider"
+      )) return false;
+
+      return true;
+    };
+
+    const resetVisual=()=>{
+      indicator.classList.remove("is-pulling","is-ready");
+      indicator.style.setProperty("--pull-offset","0px");
+      indicator.style.setProperty("--pull-progress","0");
+      indicator.setAttribute("aria-hidden",refreshing ? "false" : "true");
+      if(!refreshing) label.textContent="Pull to refresh";
+      ready=false;
+    };
+
+    const performRefresh=async()=>{
+      if(refreshing) return;
+      refreshing=true;
+      pulling=false;
+      ready=false;
+
+      indicator.classList.remove("is-pulling","is-ready");
+      indicator.classList.add("is-refreshing");
+      indicator.style.setProperty("--pull-offset","58px");
+      indicator.setAttribute("aria-hidden","false");
+      label.textContent="Refreshing…";
+
+      try{
+        const [cardsLoaded]=await Promise.all([
+          loadCards(),
+          loadGiveaways(),
+          loadShowcases()
+        ]);
+
+        if(cardsLoaded){
+          router();
+          label.textContent="Refreshed";
+          showToast("Collection refreshed");
+        }else{
+          label.textContent="Refresh failed";
+          showToast("Could not refresh collection");
+        }
+      }catch(error){
+        console.error("Pull-to-refresh error:",error);
+        label.textContent="Refresh failed";
+        showToast("Could not refresh collection");
+      }finally{
+        await new Promise(resolve=>setTimeout(resolve,380));
+        refreshing=false;
+        indicator.classList.remove("is-refreshing");
+        resetVisual();
+      }
+    };
+
+    shell.addEventListener("touchstart",e=>{
+      if(e.touches.length!==1 || !canStart(e.target)) return;
+
+      const touch=e.touches[0];
+      startX=touch.clientX;
+      startY=touch.clientY;
+      pulling=true;
+      directionLocked=false;
+      ready=false;
+    },{passive:true});
+
+    shell.addEventListener("touchmove",e=>{
+      if(!pulling || refreshing || e.touches.length!==1) return;
+
+      const touch=e.touches[0];
+      const dx=touch.clientX-startX;
+      const dy=touch.clientY-startY;
+
+      if(!directionLocked && (Math.abs(dx)>8 || Math.abs(dy)>8)){
+        directionLocked=true;
+
+        if(Math.abs(dx)>Math.abs(dy)){
+          pulling=false;
+          resetVisual();
+          return;
+        }
+      }
+
+      if(dy<=0 || shell.scrollTop>0){
+        resetVisual();
+        return;
+      }
+
+      // The app uses its own bounded .shell scroller on mobile, so this
+      // custom gesture provides predictable pull-to-refresh across iOS/Android.
+      if(e.cancelable) e.preventDefault();
+
+      const damped=Math.min(maxOffset,dy*.55);
+      const progress=Math.min(1,damped/threshold);
+      ready=damped>=threshold;
+
+      indicator.classList.add("is-pulling");
+      indicator.classList.toggle("is-ready",ready);
+      indicator.setAttribute("aria-hidden","false");
+      indicator.style.setProperty("--pull-offset",`${Math.max(10,damped)}px`);
+      indicator.style.setProperty("--pull-progress",String(progress));
+      label.textContent=ready ? "Release to refresh" : "Pull to refresh";
+    },{passive:false});
+
+    const finishPull=()=>{
+      if(!pulling || refreshing) return;
+
+      const shouldRefresh=ready;
+      pulling=false;
+      directionLocked=false;
+
+      if(shouldRefresh){
+        performRefresh();
+      }else{
+        resetVisual();
+      }
+    };
+
+    shell.addEventListener("touchend",finishPull,{passive:true});
+    shell.addEventListener("touchcancel",()=>{
+      pulling=false;
+      directionLocked=false;
+      resetVisual();
+    },{passive:true});
+
+    window.addEventListener("resize",()=>{
+      if(!isMobile() && !refreshing){
+        pulling=false;
+        directionLocked=false;
+        resetVisual();
+      }
+    },{passive:true});
+  }
+
   function renderAppLoadingState(force=false){
     if(!view || (!force && view.children.length)) return;
 
@@ -17648,6 +17914,7 @@ function wireShimmer(container){
   });
 
   setupMobileMoreMenu();
+  setupMobilePullToRefresh();
   startApp();
 
 })();
