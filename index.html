@@ -7668,21 +7668,14 @@ function wireShimmer(container){
 
   // ---------------- Owner Card List Post Generator ----------------
   const FB_CARD_LIST_POST_PREFS_KEY = "collect_tcg_fb_card_list_post_prefs_v1";
-  const FB_CARD_LIST_LINKS = Object.freeze([
-    ["CHAMPIONSHIP","https://www.facebook.com/share/p/1C886w7YJC/?mibextid=wwXIfr"],
-    ["VINTAGE","https://www.facebook.com/share/p/1E2v2daUcb/?mibextid=wwXIfr"],
-    ["ANNIVERSARIES","https://www.facebook.com/share/p/1DDwuBRvrt/?mibextid=wwXIfr"],
-    ["ONLINE REGIONAL CHAMPION","https://www.facebook.com/share/p/1ENthmhe6X/?mibextid=wwXIfr"],
-    ["ASSORTED","https://www.facebook.com/share/p/1Ceo2zm4ms/"]
-  ]);
-
   function getFbCardListPostPrefs(){
     try{
       const p = JSON.parse(localStorage.getItem(FB_CARD_LIST_POST_PREFS_KEY) || "{}");
       return {
         listTitle:String(p.listTitle || "AVAILABLE INVENTORY").trim().slice(0,120),
         defaultTerms:["","negotiable","non-negotiable"].includes(p.defaultTerms) ? p.defaultTerms : "negotiable",
-        carousellShopUrl:safeHttpUrl(p.carousellShopUrl) || "https://www.carousell.com.my/u/collect_tcg_my_sg/",
+        carousellMalaysiaUrl:safeHttpUrl(p.carousellMalaysiaUrl || p.carousellShopUrl) || "https://www.carousell.com.my/u/collect_tcg_my_sg/",
+        carousellSingaporeUrl:safeHttpUrl(p.carousellSingaporeUrl) || "https://www.carousell.sg/u/collect_tcg_sg/",
         instagramUrl:safeHttpUrl(p.instagramUrl) || "https://www.instagram.com/collecttcg.mysg",
         hashtags:String(p.hashtags || "#tcg #onepiece #onepiecetcg #onepiececardgame #TCGCollector").trim().slice(0,500)
       };
@@ -7690,7 +7683,8 @@ function wireShimmer(container){
       return {
         listTitle:"AVAILABLE INVENTORY",
         defaultTerms:"negotiable",
-        carousellShopUrl:"https://www.carousell.com.my/u/collect_tcg_my_sg/",
+        carousellMalaysiaUrl:"https://www.carousell.com.my/u/collect_tcg_my_sg/",
+        carousellSingaporeUrl:"https://www.carousell.sg/u/collect_tcg_sg/",
         instagramUrl:"https://www.instagram.com/collecttcg.mysg",
         hashtags:"#tcg #onepiece #onepiecetcg #onepiececardgame #TCGCollector"
       };
@@ -7702,7 +7696,8 @@ function wireShimmer(container){
       localStorage.setItem(FB_CARD_LIST_POST_PREFS_KEY, JSON.stringify({
         listTitle:String(p.listTitle || "").trim().slice(0,120),
         defaultTerms:["","negotiable","non-negotiable"].includes(p.defaultTerms) ? p.defaultTerms : "negotiable",
-        carousellShopUrl:safeHttpUrl(p.carousellShopUrl),
+        carousellMalaysiaUrl:safeHttpUrl(p.carousellMalaysiaUrl),
+        carousellSingaporeUrl:safeHttpUrl(p.carousellSingaporeUrl),
         instagramUrl:safeHttpUrl(p.instagramUrl),
         hashtags:String(p.hashtags || "").trim().slice(0,500)
       }));
@@ -7834,13 +7829,6 @@ function wireShimmer(container){
       buildFbCardListSection("𝐒𝐄𝐀𝐋𝐄𝐃 𝐏𝐑𝐎𝐃𝐔𝐂𝐓𝐒",sealed,prefs)
     ].filter(Boolean);
 
-    const otherLists = FB_CARD_LIST_LINKS.flatMap(([label,url])=>[
-      `(${label})`,
-      "",
-      url,
-      ""
-    ]);
-
     return [
       `‼ CARD LIST ‼  [UPDATE : ${fbCardListDateLabel()}]`,
       "",
@@ -7872,16 +7860,15 @@ function wireShimmer(container){
       "",
       divider,
       "",
-      "OTHER CARD LIST :",
-      "",
-      ...otherLists,
-      divider,
-      "",
       "VIEW MORE OF OUR PRODUCTS :",
       "",
-      "(CAROUSELL)",
+      "(CAROUSELL MALAYSIA)",
       "",
-      safeHttpUrl(prefs.carousellShopUrl),
+      safeHttpUrl(prefs.carousellMalaysiaUrl),
+      "",
+      "(CAROUSELL SINGAPORE)",
+      "",
+      safeHttpUrl(prefs.carousellSingaporeUrl),
       "",
       "(INSTAGRAM)",
       "",
@@ -8102,8 +8089,12 @@ function wireShimmer(container){
             <summary>Links & hashtags</summary>
             <div class="fb-post-settings-body">
               <div class="field">
-                <label for="fbCardListCarousell">Carousell shop URL</label>
-                <input id="fbCardListCarousell" type="url" maxlength="1000" value="${escapeHtml(prefs.carousellShopUrl)}">
+                <label for="fbCardListCarousellMY">Carousell Malaysia URL</label>
+                <input id="fbCardListCarousellMY" type="url" maxlength="1000" value="${escapeHtml(prefs.carousellMalaysiaUrl)}">
+              </div>
+              <div class="field">
+                <label for="fbCardListCarousellSG">Carousell Singapore URL</label>
+                <input id="fbCardListCarousellSG" type="url" maxlength="1000" value="${escapeHtml(prefs.carousellSingaporeUrl)}">
               </div>
               <div class="field">
                 <label for="fbCardListInstagram">Instagram URL</label>
@@ -8144,7 +8135,8 @@ function wireShimmer(container){
 
     const titleInput=$("fbCardListTitle");
     const termsInput=$("fbCardListTerms");
-    const carousellInput=$("fbCardListCarousell");
+    const carousellMYInput=$("fbCardListCarousellMY");
+    const carousellSGInput=$("fbCardListCarousellSG");
     const instagramInput=$("fbCardListInstagram");
     const hashtagsInput=$("fbCardListHashtags");
     const output=$("fbCardListOutput");
@@ -8156,7 +8148,8 @@ function wireShimmer(container){
       return {
         listTitle:titleInput.value,
         defaultTerms:termsInput.value,
-        carousellShopUrl:carousellInput.value,
+        carousellMalaysiaUrl:carousellMYInput.value,
+        carousellSingaporeUrl:carousellSGInput.value,
         instagramUrl:instagramInput.value,
         hashtags:hashtagsInput.value
       };
@@ -8168,7 +8161,7 @@ function wireShimmer(container){
       output.value=buildFbCardListPost(availableCards,now);
     }
 
-    [titleInput,termsInput,carousellInput,instagramInput,hashtagsInput].forEach(el=>{
+    [titleInput,termsInput,carousellMYInput,carousellSGInput,instagramInput,hashtagsInput].forEach(el=>{
       el.addEventListener("input",regenerate);
       el.addEventListener("change",regenerate);
     });
