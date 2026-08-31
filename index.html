@@ -5525,6 +5525,146 @@
     }
   }
 
+
+  /* ===== Card details actions: obvious Close, Edit remains owner-rightmost ===== */
+  .modal.card-details-modal .details-top-actions{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    align-items:center !important;
+    gap:10px !important;
+    overflow:visible !important;
+  }
+
+  .modal.card-details-modal .details-secondary-actions{
+    min-width:0;
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    gap:7px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scrollbar-width:thin;
+    -webkit-overflow-scrolling:touch;
+    padding:1px 0;
+  }
+
+  .modal.card-details-modal .details-secondary-actions button{
+    flex:0 0 auto !important;
+  }
+
+  .modal.card-details-modal .details-primary-actions{
+    position:relative;
+    z-index:3;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:7px;
+    flex:0 0 auto;
+    padding-left:9px;
+    border-left:1px solid var(--border);
+    background:var(--surface-2);
+  }
+
+  .modal.card-details-modal .details-primary-actions #detailsCloseBtn{
+    min-width:82px !important;
+    border:1px solid rgba(248,113,113,.42) !important;
+    background:rgba(248,113,113,.08) !important;
+    color:#fca5a5 !important;
+    font-weight:800 !important;
+  }
+
+  .modal.card-details-modal .details-primary-actions #detailsCloseBtn span{
+    margin-right:5px;
+    font-size:16px;
+    font-weight:500;
+    line-height:1;
+  }
+
+  .modal.card-details-modal .details-primary-actions #detailsCloseBtn:hover,
+  .modal.card-details-modal .details-primary-actions #detailsCloseBtn:focus-visible{
+    border-color:#f87171 !important;
+    background:rgba(248,113,113,.15) !important;
+    color:#fff !important;
+  }
+
+  body.owner-mode .modal.card-details-modal .details-primary-actions #detailsEditBtn{
+    min-width:82px !important;
+  }
+
+  @media(max-width:760px){
+    .modal.card-details-modal .details-top-actions{
+      grid-template-columns:minmax(0,1fr) auto !important;
+      gap:7px !important;
+      padding:8px 8px !important;
+      overflow:visible !important;
+    }
+
+    .modal.card-details-modal .details-secondary-actions{
+      gap:5px;
+      padding-right:2px;
+      mask-image:linear-gradient(to right,#000 calc(100% - 20px),transparent 100%);
+      -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 20px),transparent 100%);
+    }
+
+    .modal.card-details-modal .details-secondary-actions button{
+      height:34px !important;
+      padding:0 9px !important;
+      font-size:10px !important;
+    }
+
+    .modal.card-details-modal .details-primary-actions{
+      gap:5px;
+      padding-left:7px;
+    }
+
+    .modal.card-details-modal .details-primary-actions #detailsCloseBtn{
+      min-width:42px !important;
+      width:42px !important;
+      padding:0 !important;
+      font-size:0 !important;
+      border-radius:9px !important;
+    }
+
+    .modal.card-details-modal .details-primary-actions #detailsCloseBtn span{
+      margin:0;
+      font-size:23px !important;
+      line-height:1;
+    }
+
+    body.owner-mode .modal.card-details-modal .details-primary-actions #detailsCloseBtn{
+      min-width:42px !important;
+      width:42px !important;
+    }
+
+    body.owner-mode .modal.card-details-modal .details-primary-actions #detailsEditBtn{
+      min-width:58px !important;
+      padding:0 9px !important;
+      font-size:10px !important;
+    }
+  }
+
+  @media(max-width:390px){
+    .modal.card-details-modal .details-top-actions{
+      gap:5px !important;
+      padding:7px !important;
+    }
+
+    .modal.card-details-modal .details-primary-actions{
+      padding-left:5px;
+    }
+
+    .modal.card-details-modal .details-primary-actions #detailsCloseBtn{
+      min-width:40px !important;
+      width:40px !important;
+      height:34px !important;
+    }
+
+    body.owner-mode .modal.card-details-modal .details-primary-actions #detailsEditBtn{
+      min-width:52px !important;
+      padding:0 7px !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -5600,14 +5740,18 @@
 <div class="modal-overlay" id="detailsOverlay" hidden>
   <div class="modal card-details-modal" id="detailsModal" role="dialog" aria-modal="true" aria-labelledby="detailsTitle">
     <div class="details-top-actions">
-      <button type="button" id="detailsFavoriteBtn" aria-label="Add to favorites">♡ Favorite</button>
-      <button type="button" id="detailsShareBtn" aria-label="Share this card">Share</button>
-      <button type="button" id="detailsWhatsAppBtn" aria-label="Share this card on WhatsApp">WhatsApp</button>
-      <button type="button" id="detailsFacebookBtn" aria-label="Message Collect TCG on Facebook">PM us on FB</button>
-      <button type="button" id="detailsDownloadBtn" aria-label="Download current card image">Download Image</button>
-      <button type="button" id="detailsCloseBtn">Close</button>
-      <button type="button" class="owner-only" id="detailsCloneBtn" hidden>Clone card</button>
-      <button type="button" class="btn-primary owner-only" id="detailsEditBtn" hidden>Edit card</button>
+      <div class="details-secondary-actions" aria-label="Card actions">
+        <button type="button" id="detailsFavoriteBtn" aria-label="Add to favorites">♡ Favorite</button>
+        <button type="button" id="detailsShareBtn" aria-label="Share this card">Share</button>
+        <button type="button" id="detailsWhatsAppBtn" aria-label="Share this card on WhatsApp">WhatsApp</button>
+        <button type="button" id="detailsFacebookBtn" aria-label="Message Collect TCG on Facebook">PM us on FB</button>
+        <button type="button" id="detailsDownloadBtn" aria-label="Download current card image">Download Image</button>
+        <button type="button" class="owner-only" id="detailsCloneBtn" hidden>Clone card</button>
+      </div>
+      <div class="details-primary-actions" aria-label="Close or edit card">
+        <button type="button" class="details-close-btn" id="detailsCloseBtn" aria-label="Close card details"><span aria-hidden="true">×</span> Close</button>
+        <button type="button" class="btn-primary owner-only" id="detailsEditBtn" hidden>Edit card</button>
+      </div>
     </div>
     <div id="detailsMount"></div>
   </div>
