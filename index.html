@@ -8350,7 +8350,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       id: row.id,
       name: (row.name || "").toUpperCase(),
       card_code: row.card_code || "",
-      year: row.year == null ? null : Number(row.year),
+      year: row.year == null ? "" : String(row.year),
       game: row.game === "One Piece" ? "One Piece Card Game" : (row.game || ""),
       language: row.language || "",
       era: normalizeStoredLabel(row.era || ""),
@@ -8392,7 +8392,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return {
       name: (card.name || "").toUpperCase(),
       card_code: (card.card_code || "").trim().toUpperCase(),
-      year: card.year == null || card.year === "" ? null : Number(card.year),
+      year: normalizeYearValue(card.year) || null,
       game: card.game,
       language: card.language || "",
       era: normalizeStoredLabel(card.era || ""),
@@ -10092,6 +10092,31 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   const PRICE_NEGOTIABILITY_OPTIONS=["Negotiable","Non-negotiable"];
   const PRICE_NEGOTIABILITY_MARKER_RE=/(?:^|\n)\s*Price terms:\s*(Negotiable|Non-negotiable)\s*(?=\n|$)/i;
 
+  function normalizeYearValue(value){
+    const raw=String(value??"").trim();
+    if(!raw) return "";
+
+    const single=raw.match(/^(\d{4})$/);
+    if(single) return single[1];
+
+    const range=raw.match(/^(\d{4})\s*[-–—]\s*(\d{4})$/);
+    if(range){
+      const start=Number(range[1]);
+      const end=Number(range[2]);
+      if(start<=end) return `${range[1]}-${range[2]}`;
+    }
+
+    return raw.slice(0,20);
+  }
+
+  function isValidYearValue(value){
+    const normalized=normalizeYearValue(value);
+    if(!normalized) return true;
+    if(/^\d{4}$/.test(normalized)) return true;
+    const match=normalized.match(/^(\d{4})-(\d{4})$/);
+    return !!match && Number(match[1])<=Number(match[2]);
+  }
+
   function normalizePriceNegotiability(value){
     const normalized=String(value||"").trim().toLowerCase();
     if(normalized==="negotiable") return "Negotiable";
@@ -10150,8 +10175,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           <input type="text" id="${p}CardCode" placeholder="e.g. C01, OP01-001, M-001" autocomplete="off">
         </div>
         <div class="field">
-          <label for="${p}Year">Year</label>
-          <input type="number" id="${p}Year" min="1900" max="2100" step="1" placeholder="e.g. 1999">
+          <label for="${p}Year">Year / Year Range</label>
+          <input type="text" id="${p}Year" maxlength="20" inputmode="numeric" placeholder="e.g. 2005 or 2005-2008">
         </div>
       </div>
 
@@ -10511,6 +10536,25 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const mount = $(p + "GradingRows");
     const addBtn = $(p + "AddGrade");
     const condition = $(p + "Condition");
+    const year = $(p + "Year");
+
+    if(year){
+      const validateYear=()=>{
+        year.setCustomValidity(
+          isValidYearValue(year.value)
+            ? ""
+            : "Enter a year like 2005 or a range like 2005-2008."
+        );
+      };
+
+      year.addEventListener("input",validateYear);
+      year.addEventListener("change",()=>{
+        const normalized=normalizeYearValue(year.value);
+        if(isValidYearValue(normalized)) year.value=normalized;
+        validateYear();
+      });
+      validateYear();
+    }
 
     function syncGradedCondition(){
       if(!condition) return;
@@ -11002,7 +11046,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       id: id || uid(),
       name: $(p + "Name").value.trim().toUpperCase(),
       card_code: $(p + "CardCode").value.trim().toUpperCase(),
-      year: $(p + "Year").value ? Number($(p + "Year").value) : null,
+      year: normalizeYearValue($(p + "Year").value),
       game: $(p + "Game").value.trim(),
       language: $(p + "Language").value,
       series: normalizeStoredLabel($(p + "Series").value),
