@@ -672,7 +672,7 @@
   .home-section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:10px;}
   .home-section-head h3{font-size:18px;}
   .home-section-head p{margin:0;color:var(--text-muted);font-size:11px;}
-  .home-feature-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
+  .home-feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
   .home-feature{border:1px solid var(--border);background:var(--surface);border-radius:12px;padding:15px;cursor:pointer;text-align:left;transition:transform .12s ease,border-color .12s ease,background .12s ease;}
   .home-feature:hover{transform:translateY(-1px);border-color:var(--accent-gold);background:var(--surface-2);}
   .home-feature .kicker{color:var(--accent-gold);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;}
@@ -11831,7 +11831,12 @@ function relatedCardHTML(c){
 
           ${cardPriceDisplayHTML(c)}
 
-          ${c.notes ? `<div class="notes clean-notes">${escapeHtml(c.notes)}</div>` : ""}
+          ${(() => {
+            const displayNotes=normalizeFilterValue(c.availability)==="collection (nfs)"
+              ? stripPriceNegotiabilityMarker(c.notes||"")
+              : (c.notes||"");
+            return displayNotes ? `<div class="notes clean-notes">${escapeHtml(displayNotes)}</div>` : "";
+          })()}
           ${isOwnerMode() && normalizeFilterValue(c.availability)==="reserved"
             ? `<div class="owner-reserved-age" data-owner-reserved-age-card="${escapeHtml(c.id)}">Checking reserved age…</div>`
             : ""}
@@ -17168,6 +17173,44 @@ function wireShimmer(container){
     }
   }
 
+  async function fetchCardImageStorageUsage(){
+    if(!requireOwner("check card image Storage usage")) return null;
+
+    // storage.objects metadata is protected by Storage RLS. The owner SELECT
+    // policy for card-images is already scoped to the verified owner's uid folder.
+    const {data,error}=await supabaseClient
+      .from("storage.objects")
+      .select("metadata")
+      .eq("bucket_id",CARD_IMAGE_STORAGE_BUCKET);
+
+    if(error){
+      console.warn("Storage usage read unavailable:",error);
+      return {ok:false,totalBytes:null,fileCount:null,error:String(error.message||"Storage usage unavailable")};
+    }
+
+    let totalBytes=0;
+    let fileCount=0;
+    (Array.isArray(data)?data:[]).forEach(row=>{
+      const raw=row?.metadata?.size;
+      const size=Number(raw);
+      if(Number.isFinite(size) && size>=0) totalBytes+=size;
+      fileCount++;
+    });
+
+    return {ok:true,totalBytes,fileCount};
+  }
+
+  const CARD_IMAGE_STORAGE_ASSUMED_LIMIT_BYTES=1024*1024*1024;
+
+  function storageUsageSummaryText(usage){
+    if(!usage?.ok || usage.totalBytes==null) return "Storage usage unavailable";
+    const used=Number(usage.totalBytes)||0;
+    const limit=CARD_IMAGE_STORAGE_ASSUMED_LIMIT_BYTES;
+    const left=Math.max(0,limit-used);
+    const percent=limit>0 ? (used/limit)*100 : 0;
+    return `${formatApproxBytes(used)} used · ${formatApproxBytes(left)} left · ${percent.toFixed(percent<1?2:1)}% used`;
+  }
+
   async function checkCardImageStorageReady(){
     if(!requireOwner("check card image Storage")) return {ok:false,message:"Owner login required"};
 
@@ -17233,6 +17276,8 @@ function wireShimmer(container){
         <div><strong id="migrationImagesRemaining">${initialStats.legacyImages}</strong><span>Legacy images</span></div>
         <div><strong id="migrationEstimatedSize">${escapeHtml(formatApproxBytes(initialStats.estimatedBytes))}</strong><span>Approx. embedded data</span></div>
         <div><strong id="migrationCompleted">0</strong><span>Cards migrated this run</span></div>
+        <div><strong id="migrationStorageUsed">—</strong><span>Storage used</span></div>
+        <div><strong id="migrationStorageLeft">—</strong><span>Storage left*</span></div>
       </div>
 
       <section class="panel storage-migration-panel">
@@ -17251,6 +17296,9 @@ function wireShimmer(container){
         </div>
 
         <div class="storage-migration-actions">
+          <button type="button" class="btn-ghost" id="migrationRefreshStorageBtn">
+            Refresh Storage Usage
+          </button>
           <button type="button" class="btn-ghost" id="migrationTestBtn">
             Test Storage Connection
           </button>
@@ -17271,6 +17319,7 @@ function wireShimmer(container){
             ? `This process can be safely rerun. Already migrated cards are skipped automatically. Keep this browser tab open while it runs.`
             : `All currently loaded card images are already Storage URLs or external URLs.`}
         </div>
+        <div class="hint storage-limit-note">* “Storage left” is calculated against a 1 GB reference limit. If your Supabase plan has a different Storage quota, the used amount is still accurate but the remaining amount will differ.</div>
       </section>
 
       <section class="panel storage-migration-notes">
@@ -17280,8 +17329,11 @@ function wireShimmer(container){
       </section>
     `;
 
+    const refreshStorageBtn=$("migrationRefreshStorageBtn");
     const testBtn=$("migrationTestBtn");
     const startBtn=$("migrationStartBtn");
+    const storageUsedEl=$("migrationStorageUsed");
+    const storageLeftEl=$("migrationStorageLeft");
     const stopBtn=$("migrationStopBtn");
     const preflight=$("migrationPreflight");
     const progress=$("migrationProgressBar");
@@ -17297,6 +17349,37 @@ function wireShimmer(container){
     let stopRequested=false;
     let running=false;
 
+    async function refreshStorageUsage(){
+      if(!isOwnerMode()) return;
+      const old=refreshStorageBtn?.textContent;
+      if(refreshStorageBtn){
+        refreshStorageBtn.disabled=true;
+        refreshStorageBtn.textContent="Refreshing…";
+      }
+
+      try{
+        const usage=await fetchCardImageStorageUsage();
+        if(!usage?.ok){
+          storageUsedEl.textContent="Unavailable";
+          storageLeftEl.textContent="Unavailable";
+          if(usage?.error) console.warn("Storage usage:",usage.error);
+          return;
+        }
+
+        const used=Number(usage.totalBytes)||0;
+        const left=Math.max(0,CARD_IMAGE_STORAGE_ASSUMED_LIMIT_BYTES-used);
+        storageUsedEl.textContent=formatApproxBytes(used);
+        storageLeftEl.textContent=formatApproxBytes(left);
+        storageUsedEl.title=`${usage.fileCount} file${usage.fileCount===1?"":"s"} in ${CARD_IMAGE_STORAGE_BUCKET}`;
+        storageLeftEl.title=storageUsageSummaryText(usage);
+      }finally{
+        if(refreshStorageBtn){
+          refreshStorageBtn.disabled=false;
+          refreshStorageBtn.textContent=old||"Refresh Storage Usage";
+        }
+      }
+    }
+
     function refreshStats(){
       const stats=legacyCardImageStats();
       cardsRemaining.textContent=String(stats.cardsWithLegacy);
@@ -17308,6 +17391,8 @@ function wireShimmer(container){
       }
       return stats;
     }
+
+    refreshStorageBtn.addEventListener("click",refreshStorageUsage);
 
     testBtn.addEventListener("click",async()=>{
       if(!requireOwner("test card image Storage")) return;
@@ -17415,6 +17500,8 @@ function wireShimmer(container){
         progressNumbers.textContent=`${i+1} / ${targets.length}`;
         completedEl.textContent=String(completed);
         refreshStats();
+        // Update the owner-only Storage usage periodically during migration.
+        if((i+1)%5===0 || i===targets.length-1) await refreshStorageUsage();
 
         // Yield between cards so the UI remains responsive and mobile browsers
         // are less likely to terminate a long-running migration.
@@ -17442,6 +17529,8 @@ function wireShimmer(container){
 
       startBtn.disabled=remaining.cardsWithLegacy===0;
     });
+
+    refreshStorageUsage();
   }
 
 
