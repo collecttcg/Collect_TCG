@@ -7375,7 +7375,7 @@ function wireShimmer(container){
           <span class="fb-tools-switch-icon">▣</span>
           <span>
             <strong>Single Card Post</strong>
-            <small>Choose one card · copy post · download all images</small>
+            <small>Choose one card · copy post · download all images as ZIP</small>
           </span>
         </a>
         <a href="#/fb-tools?mode=list"
@@ -7496,7 +7496,7 @@ function wireShimmer(container){
           <textarea id="fbPostOutput" class="fb-post-output" readonly placeholder="Select a card to generate the Facebook post…"></textarea>
 
           <div class="fb-post-bottom-actions">
-            <button type="button" class="btn-ghost" id="fbDownloadImageBtn" disabled>Download All Images</button>
+            <button type="button" class="btn-ghost" id="fbDownloadImageBtn" disabled>Download Images (.ZIP)</button>
             <a class="btn-ghost" id="fbOpenCardBtn" href="#/inventory" aria-disabled="true">Open Card</a>
           </div>
         </section>
@@ -7629,6 +7629,7 @@ function wireShimmer(container){
 
     downloadBtn.addEventListener("click", async ()=>{
       if(!selectedCard) return;
+      if(!requireOwner("download single-card image ZIP")) return;
 
       const images = getImages(selectedCard);
       if(!images.length){
@@ -7638,13 +7639,26 @@ function wireShimmer(container){
 
       const originalText = downloadBtn.textContent;
       downloadBtn.disabled = true;
-      downloadBtn.textContent = images.length === 1
-        ? "Downloading 1 image…"
-        : `Downloading ${images.length} images…`;
+      downloadBtn.textContent = "Preparing ZIP…";
 
       try{
-        const count = await downloadAllCardImages(selectedCard);
-        showToast(count === 1 ? "Downloaded 1 image" : `Downloaded ${count} images`);
+        const result = await downloadSingleCardImagesZip(
+          selectedCard,
+          (done,total,added,failed)=>{
+            downloadBtn.textContent = failed
+              ? `Preparing ${done}/${total} · ${failed} skipped`
+              : `Preparing ${done}/${total}`;
+          }
+        );
+
+        showToast(
+          result.failed.length
+            ? `ZIP downloaded · ${result.added} included · ${result.failed.length} skipped`
+            : `ZIP downloaded with ${result.added} image${result.added===1?"":"s"}`
+        );
+      }catch(err){
+        console.error("Single-card ZIP error:", err);
+        showToast(`Could not create image ZIP${err?.message ? `: ${String(err.message).slice(0,100)}` : ""}`);
       }finally{
         downloadBtn.disabled = false;
         downloadBtn.textContent = originalText;
@@ -8372,6 +8386,69 @@ function wireShimmer(container){
       window.open(src, "_blank", "noopener,noreferrer");
       showToast("Opened image in a new tab");
     }
+  }
+
+  async function downloadSingleCardImagesZip(card, progressCallback){
+    if(!card) return {added:0, failed:[]};
+
+    const images = getImages(card);
+    if(!images.length) return {added:0, failed:[]};
+
+    const ZipCtor = await ensureJsZip();
+    const zip = new ZipCtor();
+    const failed = [];
+    let added = 0;
+
+    for(let i=0;i<images.length;i++){
+      try{
+        const blob = await imageSourceToBlob(images[i]);
+        const ext = imageExtensionFromBlob(blob);
+        const base = safeDownloadName(
+          [card.card_code, card.name].filter(Boolean).join(" - ") || "card"
+        );
+        const filename = `${String(i+1).padStart(2,"0")} - ${base}.${ext}`;
+        zip.file(filename, blob);
+        added++;
+      }catch(err){
+        failed.push({
+          index:i+1,
+          reason:err?.message || "Image could not be read"
+        });
+        console.warn("Could not add single-card image to ZIP:", card?.id, i+1, err);
+      }
+
+      if(progressCallback) progressCallback(i+1, images.length, added, failed.length);
+    }
+
+    if(!added){
+      const error = new Error(
+        failed.length
+          ? `None of the ${failed.length} card images could be added to the ZIP.`
+          : "No downloadable card images found"
+      );
+      error.failed = failed;
+      throw error;
+    }
+
+    const blob = await zip.generateAsync({
+      type:"blob",
+      compression:"DEFLATE",
+      compressionOptions:{level:6}
+    });
+
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = href;
+    a.download = `${safeDownloadName(
+      [card.card_code, card.name].filter(Boolean).join(" - ") || "Collect-TCG-Card"
+    )}.zip`;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(href),1500);
+
+    return {added, failed};
   }
 
   function waitMs(ms){
