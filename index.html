@@ -1261,8 +1261,9 @@
 
 
   /* Detail modal: Edit is never visible to public viewers */
-  #detailsEditBtn{display:none !important;}
-  body.owner-mode #detailsEditBtn{display:inline-flex !important;}
+  #detailsEditBtn,#detailsCloneBtn{display:none !important;}
+  body.owner-mode #detailsEditBtn,
+  body.owner-mode #detailsCloneBtn{display:inline-flex !important;}
 
 
   /* ===== Responsive mobile brand + navigation sizing =====
@@ -1585,7 +1586,8 @@
   .public-card-actions{
     position:absolute;
     top:8px;
-    right:8px;
+    left:8px;
+    right:auto;
     z-index:7;
     display:flex;
     gap:5px;
@@ -1950,7 +1952,8 @@
 
   .detail-new-card-badge{
     top:12px;
-    right:12px;
+    left:12px;
+    right:auto;
     padding:7px 11px;
     font-size:14px;
   }
@@ -1958,14 +1961,16 @@
   @media(max-width:800px){
     .new-card-badge{
       top:6px;
-      right:6px;
+      left:6px;
+      right:auto;
       padding:4px 7px;
       font-size:10px;
     }
 
     .detail-new-card-badge{
       top:9px;
-      right:9px;
+      left:9px;
+      right:auto;
       padding:6px 9px;
       font-size:12px;
     }
@@ -3999,6 +4004,10 @@
   }
   @media(max-width:390px){.quality-summary-grid{grid-template-columns:1fr;}}
 
+  .clone-card-notice{display:flex;gap:8px;margin:0 0 12px;padding:10px 12px;border:1px solid rgba(95,212,196,.24);border-radius:10px;background:rgba(95,212,196,.055);}
+  .clone-card-notice strong{color:var(--accent-teal);font-size:9px;white-space:nowrap;}
+  .clone-card-notice span{color:var(--text-muted);font-size:8.5px;line-height:1.45;}
+  @media(max-width:700px){.clone-card-notice{flex-direction:column;gap:4px;}}
 </style>
 </head>
 <body>
@@ -4076,6 +4085,7 @@
       <button type="button" id="detailsShareBtn" aria-label="Share this card">Share</button>
       <button type="button" id="detailsDownloadBtn" aria-label="Download current card image">Download Image</button>
       <button type="button" id="detailsCloseBtn">Close</button>
+      <button type="button" class="owner-only" id="detailsCloneBtn" hidden>Clone card</button>
       <button type="button" class="btn-primary owner-only" id="detailsEditBtn" hidden>Edit card</button>
     </div>
     <div id="detailsMount"></div>
@@ -9372,21 +9382,53 @@ function wireShimmer(container){
     renderRows();
   }
 
+  let pendingCloneCard = null;
+
+  function makeCloneDraft(card){
+    if(!card) return null;
+    const draft = {
+      ...card, id:"", availability:"Available", sold_at:null, created_at:null, updated_at:null,
+      view_count:0, featured:false, qty:1, images:[], image:"",
+      grading:Array.isArray(card.grading) ? card.grading.filter(g=>g&&g.company).map(g=>({
+        company:g.company||"PSA", grade:String(g.grade||""), cert:"",
+        pop_count:null, pop_higher:null, pop_updated_at:null
+      })) : []
+    };
+    ["user_id","owner_id","created_by","updated_by","deleted_at","reserved_at","sold_to","buyer_id"].forEach(k=>delete draft[k]);
+    return draft;
+  }
+
+  function beginCloneCard(card){
+    if(!requireOwner("clone card")) return;
+    pendingCloneCard = makeCloneDraft(card);
+    if(!pendingCloneCard) return;
+    closeDetailsModal(false);
+    location.hash = "#/add?clone=1";
+  }
+
   // ---------------- Add page ----------------
   function renderAddPage(){
+    const cloneDraft = pendingCloneCard;
+    pendingCloneCard = null;
     view.innerHTML = `
-      <div class="page-head"><div><div class="eyebrow">New listing</div><h2>Add a card</h2><p>List a new card in your inventory.</p></div></div>
+      <div class="page-head"><div><div class="eyebrow">${cloneDraft ? "Clone Listing" : "New listing"}</div><h2>${cloneDraft ? "Clone card" : "Add a card"}</h2><p>${cloneDraft ? "Review the copied details and add new photos before saving." : "List a new card in your inventory."}</p></div></div>
+      ${cloneDraft ? `<div class="clone-card-notice"><strong>Cloning safely</strong><span>Photos, grading certificate, sold status, timestamps and view count were cleared.</span></div>` : ""}
       <form class="form-card" id="addForm">
         ${fieldsTemplate("add")}
         <div class="modal-actions">
           <a href="#/inventory" class="btn-ghost" style="text-decoration:none; display:inline-flex; align-items:center;">Cancel</a>
-          <button type="submit" class="btn-primary">Save card</button>
+          <button type="submit" class="btn-primary">${cloneDraft ? "Save cloned card" : "Save card"}</button>
         </div>
       </form>
     `;
-    const formState = { images: [], grading: [], processingImages: 0 };
+    const formState = {
+      images: [],
+      grading: cloneDraft && Array.isArray(cloneDraft.grading) ? cloneDraft.grading.map(g=>({...g})) : [],
+      processingImages: 0
+    };
     wireGameCombobox("add");
     wireSoldDateField("add");
+    if(cloneDraft) populateFields("add", cloneDraft);
     wireImageControls("add", formState);
     wireGradingControls("add", formState);
     $("addForm").addEventListener("submit", async (e)=>{
@@ -9888,6 +9930,12 @@ function wireShimmer(container){
     downloadImageSource(images[index], card.name || card.card_code || "card", index + 1);
   });
   $("detailsCloseBtn").addEventListener("click", ()=>closeDetailsModal(true));
+  $("detailsCloneBtn").addEventListener("click", ()=>{
+    if(!requireOwner("clone card")) return;
+    const card = cards.find(c=>c.id === detailsCardId);
+    if(card) beginCloneCard(card);
+  });
+
   $("detailsEditBtn").addEventListener("click", ()=>{
     if(!requireOwner()) return;
     const card = cards.find(c=>c.id === detailsCardId);
