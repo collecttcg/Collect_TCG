@@ -1431,11 +1431,11 @@
   .status-corner-sold::before{
     content:"SOLD";
     color:#fff;
-    top:29%;
-    left:2%;
-    width:70%;
-    font-size:clamp(10px, 23cqw, 34px);
-    letter-spacing:clamp(.15px, .65cqw, 1px);
+    top:30%;
+    left:4%;
+    width:66%;
+    font-size:clamp(10px, 22cqw, 33px);
+    letter-spacing:clamp(.05px, .38cqw, .7px);
     text-shadow:
       0 4px 5px rgba(0,0,0,.48),
       0 1px 2px rgba(0,0,0,.36);
@@ -1491,11 +1491,11 @@
   /* Small-card safeguard: labels scale with the ribbon and stay fully visible. */
   @container (max-width: 105px){
     .status-corner-sold::before{
-      top:30%;
-      left:3%;
-      width:68%;
-      font-size:21cqw;
-      letter-spacing:.35cqw;
+      top:31%;
+      left:5%;
+      width:64%;
+      font-size:20cqw;
+      letter-spacing:.18cqw;
     }
 
     .status-corner-reserved::before{
@@ -1509,11 +1509,11 @@
 
   @container (max-width: 75px){
     .status-corner-sold::before{
-      top:31%;
-      left:4%;
-      width:66%;
-      font-size:19cqw;
-      letter-spacing:.2cqw;
+      top:32%;
+      left:6%;
+      width:62%;
+      font-size:18cqw;
+      letter-spacing:.1cqw;
     }
 
     .status-corner-reserved::before{
@@ -9176,27 +9176,45 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function drawSoldDownloadWatermark(ctx, canvas){
     const shortSide = Math.min(canvas.width, canvas.height);
-    const bandLength = Math.max(130, Math.min(420, Math.round(shortSide * 0.72)));
-    const bandHeight = Math.max(34, Math.min(96, Math.round(shortSide * 0.16)));
-    const centerOffset = Math.round(bandLength * 0.29);
-    const fontSize = Math.max(18, Math.min(50, Math.round(bandHeight * 0.56)));
+    const triangleSize = Math.max(150, Math.min(520, Math.round(shortSide * 0.42)));
+    const center = triangleSize * 0.33;
+    const maxTextWidth = triangleSize * 0.70;
 
     ctx.save();
-    ctx.translate(centerOffset, centerOffset);
-    ctx.rotate(-Math.PI / 4);
-    ctx.shadowColor = "rgba(0,0,0,0.35)";
-    ctx.shadowBlur = Math.max(10, Math.round(bandHeight * 0.35));
+
+    ctx.shadowColor = "rgba(0,0,0,0.34)";
+    ctx.shadowBlur = Math.max(10, Math.round(triangleSize * 0.045));
     ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = Math.max(3, Math.round(bandHeight * 0.12));
+    ctx.shadowOffsetY = Math.max(4, Math.round(triangleSize * 0.02));
+
     ctx.fillStyle = "#ef4444";
-    ctx.fillRect(-bandLength / 2, -bandHeight / 2, bandLength, bandHeight);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(triangleSize, 0);
+    ctx.lineTo(0, triangleSize);
+    ctx.closePath();
+    ctx.fill();
 
     ctx.shadowColor = "transparent";
-    ctx.fillStyle = "#ffffff";
+    ctx.translate(center, center);
+    ctx.rotate(-Math.PI / 4);
+
+    let fontSize = Math.max(22, Math.min(76, Math.round(triangleSize * 0.19)));
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.font = `900 ${fontSize}px Inter, Arial, sans-serif`;
-    ctx.fillText("SOLD", 0, 1);
+    ctx.fillStyle = "#ffffff";
+
+    const applyFont = ()=>{
+      ctx.font = `900 ${fontSize}px Inter, Arial, sans-serif`;
+    };
+
+    applyFont();
+    while(fontSize > 12 && ctx.measureText("SOLD").width > maxTextWidth){
+      fontSize -= 1;
+      applyFont();
+    }
+
+    ctx.fillText("SOLD", 0, 0, maxTextWidth);
     ctx.restore();
   }
 
