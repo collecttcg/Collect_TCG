@@ -7498,6 +7498,28 @@
     .storage-migration-progress-head{flex-direction:column;}
   }
 
+
+  .storage-migration-preflight{
+    margin:10px 0 14px;
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    font-size:9px;
+    line-height:1.55;
+    color:var(--text-muted);
+    overflow-wrap:anywhere;
+  }
+  .storage-migration-preflight.ok{
+    border-color:rgba(95,212,196,.30);
+    background:rgba(95,212,196,.05);
+    color:var(--accent-teal);
+  }
+  .storage-migration-preflight.error{
+    border-color:rgba(239,68,68,.30);
+    background:rgba(239,68,68,.05);
+    color:#ef7b7b;
+  }
+
 </style>
 </head>
 <body>
@@ -9842,7 +9864,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(message.includes("row-level") || message.includes("policy") || message.includes("unauthorized")){
         throw new Error("card-images Storage permission denied");
       }
-      throw new Error("card image upload failed");
+      throw new Error(`card image upload failed: ${String(error.message||error.error||"unknown Storage error").slice(0,220)}`);
     }
 
     const {data}=supabaseClient.storage.from(CARD_IMAGE_STORAGE_BUCKET).getPublicUrl(path);
@@ -17146,6 +17168,52 @@ function wireShimmer(container){
     }
   }
 
+  async function checkCardImageStorageReady(){
+    if(!requireOwner("check card image Storage")) return {ok:false,message:"Owner login required"};
+
+    const probeBlob=new Blob(["collect-tcg-storage-probe"],{type:"image/jpeg"});
+    const randomPart=(crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2,12)}`)
+      .replace(/[^a-zA-Z0-9-]/g,"");
+    const path=`${ownerSession.user.id}/_migration-probe-${randomPart}.jpg`;
+
+    const {error:uploadError}=await supabaseClient.storage
+      .from(CARD_IMAGE_STORAGE_BUCKET)
+      .upload(path,probeBlob,{
+        cacheControl:"60",
+        upsert:false,
+        contentType:"image/jpeg"
+      });
+
+    if(uploadError){
+      const raw=[uploadError.message,uploadError.error,uploadError.statusCode]
+        .filter(Boolean).join(" · ");
+      return {
+        ok:false,
+        message:raw || "Storage upload probe failed"
+      };
+    }
+
+    const {data}=supabaseClient.storage.from(CARD_IMAGE_STORAGE_BUCKET).getPublicUrl(path);
+    const publicUrl=safeHttpUrl(data?.publicUrl||"");
+
+    const {error:removeError}=await supabaseClient.storage
+      .from(CARD_IMAGE_STORAGE_BUCKET)
+      .remove([path]);
+
+    if(!publicUrl){
+      return {ok:false,message:"Storage upload succeeded but no public URL was returned."};
+    }
+
+    if(removeError){
+      return {
+        ok:false,
+        message:`Upload works, but cleanup/delete is blocked: ${removeError.message||"unknown Storage delete error"}`
+      };
+    }
+
+    return {ok:true,message:"Storage upload and cleanup test passed."};
+  }
+
   function renderLegacyImageMigrationPage(){
     if(!requireOwner("open legacy image migration")) return;
 
@@ -17183,12 +17251,19 @@ function wireShimmer(container){
         </div>
 
         <div class="storage-migration-actions">
+          <button type="button" class="btn-ghost" id="migrationTestBtn">
+            Test Storage Connection
+          </button>
           <button type="button" class="btn-primary" id="migrationStartBtn" ${initialStats.cardsWithLegacy?"":"disabled"}>
             Migrate Existing Images
           </button>
           <button type="button" class="btn-ghost" id="migrationStopBtn" disabled>
             Stop After Current Card
           </button>
+        </div>
+
+        <div class="storage-migration-preflight" id="migrationPreflight">
+          Storage has not been tested yet.
         </div>
 
         <div class="storage-migration-result" id="migrationResult">
@@ -17205,8 +17280,10 @@ function wireShimmer(container){
       </section>
     `;
 
+    const testBtn=$("migrationTestBtn");
     const startBtn=$("migrationStartBtn");
     const stopBtn=$("migrationStopBtn");
+    const preflight=$("migrationPreflight");
     const progress=$("migrationProgressBar");
     const progressLabel=$("migrationProgressLabel");
     const progressNumbers=$("migrationProgressNumbers");
@@ -17231,6 +17308,29 @@ function wireShimmer(container){
       }
       return stats;
     }
+
+    testBtn.addEventListener("click",async()=>{
+      if(!requireOwner("test card image Storage")) return;
+      const old=testBtn.textContent;
+      testBtn.disabled=true;
+      testBtn.textContent="Testing…";
+      preflight.classList.remove("ok","error");
+      preflight.textContent="Testing upload, public URL generation and cleanup…";
+
+      try{
+        const check=await checkCardImageStorageReady();
+        preflight.textContent=check.message;
+        preflight.classList.add(check.ok?"ok":"error");
+        if(check.ok) showToast("Card image Storage is ready");
+      }catch(error){
+        const message=String(error?.message||error||"Storage test failed");
+        preflight.textContent=message;
+        preflight.classList.add("error");
+      }finally{
+        testBtn.disabled=false;
+        testBtn.textContent=old;
+      }
+    });
 
     stopBtn.addEventListener("click",()=>{
       if(!running) return;
@@ -17257,9 +17357,26 @@ function wireShimmer(container){
         `Each card is updated only after its Storage uploads succeed.`;
       if(!confirm(confirmation)) return;
 
+      startBtn.disabled=true;
+      result.textContent="Checking Storage before migration…";
+      const storageCheck=await checkCardImageStorageReady();
+
+      if(!storageCheck.ok){
+        preflight.textContent=storageCheck.message;
+        preflight.classList.remove("ok");
+        preflight.classList.add("error");
+        result.textContent=`Migration did not start because the Storage preflight failed: ${storageCheck.message}`;
+        startBtn.disabled=false;
+        showToast("Storage setup must be fixed before migration");
+        return;
+      }
+
+      preflight.textContent=storageCheck.message;
+      preflight.classList.remove("error");
+      preflight.classList.add("ok");
+
       running=true;
       stopRequested=false;
-      startBtn.disabled=true;
       stopBtn.disabled=false;
       stopBtn.textContent="Stop After Current Card";
       progress.max=Math.max(1,targets.length);
@@ -17268,6 +17385,7 @@ function wireShimmer(container){
       let completed=0;
       let failed=0;
       let migratedImages=0;
+      const failureDetails=[];
 
       for(let i=0;i<targets.length;i++){
         if(stopRequested) break;
@@ -17287,7 +17405,10 @@ function wireShimmer(container){
           migratedImages+=Number(migration.migrated||0);
         }else{
           failed++;
+          const failureMessage=String(migration.error||"Unknown migration failure").slice(0,240);
+          failureDetails.push(`${label}: ${failureMessage}`);
           console.warn("Skipped migration card:",card.id,migration.error);
+          result.textContent=`Latest failure: ${label} · ${failureMessage}`;
         }
 
         progress.value=i+1;
@@ -17310,7 +17431,8 @@ function wireShimmer(container){
         result.textContent=`Stopped after the current card · ${completed} cards migrated · ${failed} failed · ${remaining.cardsWithLegacy} remaining. You can resume anytime.`;
       }else if(failed){
         progressLabel.textContent="Migration finished with some failures";
-        result.textContent=`${completed} cards / ${migratedImages} images migrated · ${failed} cards failed · ${remaining.cardsWithLegacy} cards remain. Failed cards were left unchanged and can be retried.`;
+        const firstFailures=failureDetails.slice(0,3).join(" | ");
+        result.textContent=`${completed} cards / ${migratedImages} images migrated · ${failed} cards failed · ${remaining.cardsWithLegacy} cards remain. First error${failureDetails.length===1?"":"s"}: ${firstFailures}`;
       }else{
         progressLabel.textContent="Migration complete";
         currentCard.textContent="";
