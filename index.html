@@ -6828,6 +6828,77 @@
     }
   }
 
+
+  /* ---------- Phase 5: deterministic catalogue loading ---------- */
+  .catalogue-load-state{
+    width:min(520px,100%);
+    min-height:260px;
+    margin:8vh auto 0;
+    padding:34px 24px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    border:1px solid var(--border);
+    border-radius:14px;
+    background:var(--surface);
+    color:var(--text);
+    text-align:center;
+  }
+
+  .catalogue-load-state strong{
+    font-family:'Barlow Condensed','Inter',sans-serif;
+    font-size:20px;
+    text-transform:uppercase;
+  }
+
+  .catalogue-load-state span{
+    max-width:360px;
+    color:var(--text-muted);
+    font-size:10px;
+    line-height:1.5;
+  }
+
+  .catalogue-load-state .btn-primary{
+    margin-top:7px;
+  }
+
+  .catalogue-load-spinner{
+    width:30px;
+    height:30px;
+    border:3px solid var(--border);
+    border-top-color:var(--accent-teal);
+    border-radius:50%;
+    animation:catalogueLoadSpin .8s linear infinite;
+  }
+
+  @keyframes catalogueLoadSpin{
+    to{transform:rotate(360deg);}
+  }
+
+  .catalogue-load-error .empty-icon{
+    color:#fca5a5;
+    font:800 24px 'JetBrains Mono',monospace;
+  }
+
+  @media(max-width:800px){
+    .catalogue-load-state{
+      min-height:220px;
+      margin:28px auto 0;
+      padding:28px 18px;
+      border-radius:12px;
+    }
+  }
+
+  @media(prefers-reduced-motion:reduce){
+    .catalogue-load-spinner{
+      animation:none;
+      border-top-color:var(--border);
+      background:var(--accent-teal);
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -7720,78 +7791,105 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     };
   }
 
-  async function loadCards(){
-    // Optional schema capability probes. Missing migrations should not break
-    // the public catalogue; owner-only features degrade safely.
-    const soldAtProbe = await supabaseClient
-      .from("cards")
-      .select("sold_at")
-      .limit(1);
-    soldAtSupported = !soldAtProbe.error;
+  function optionalColumnUnavailable(error,column){
+    const message=`${error?.message||""} ${error?.details||""} ${error?.hint||""}`.toLowerCase();
+    const target=String(column||"").toLowerCase();
+    return !!target && (
+      message.includes(target) ||
+      message.includes("permission denied") ||
+      message.includes("column") ||
+      message.includes("schema cache")
+    );
+  }
 
-    const lifecycleProbe = await supabaseClient
+  async function fetchPublicCards(){
+    let result=await supabaseClient
       .from("cards")
-      .select("lifecycle_status")
-      .limit(1);
-    lifecycleSupported = !lifecycleProbe.error;
+      .select(`${CARD_PUBLIC_COLUMNS_BASE},sold_at`)
+      .order("created_at",{ascending:true});
 
-    if(isOwnerMode()){
-      const [privateProbe, historyProbe] = await Promise.all([
-        supabaseClient.from("card_owner_private").select("card_id").limit(1),
-        supabaseClient.from("card_edit_history").select("id").limit(1)
-      ]);
-      ownerPrivateSupported = !privateProbe.error;
-      editHistorySupported = !historyProbe.error;
-    }else{
-      ownerPrivateSupported = false;
-      editHistorySupported = false;
+    if(result.error && optionalColumnUnavailable(result.error,"sold_at")){
+      soldAtSupported=false;
+      result=await supabaseClient
+        .from("cards")
+        .select(CARD_PUBLIC_COLUMNS_BASE)
+        .order("created_at",{ascending:true});
+    }else if(!result.error){
+      soldAtSupported=true;
     }
 
-    const publicColumns = soldAtSupported
-      ? `${CARD_PUBLIC_COLUMNS_BASE},sold_at`
-      : CARD_PUBLIC_COLUMNS_BASE;
+    return result;
+  }
 
+  async function probeOwnerCardCapabilities(){
+    if(!isOwnerMode()){
+      lifecycleSupported=false;
+      ownerPrivateSupported=false;
+      editHistorySupported=false;
+      return;
+    }
+
+    const [lifecycleProbe,privateProbe,historyProbe]=await Promise.all([
+      supabaseClient.from("cards").select("lifecycle_status").limit(1),
+      supabaseClient.from("card_owner_private").select("card_id").limit(1),
+      supabaseClient.from("card_edit_history").select("id").limit(1)
+    ]);
+
+    lifecycleSupported=!lifecycleProbe.error;
+    ownerPrivateSupported=!privateProbe.error;
+    editHistorySupported=!historyProbe.error;
+  }
+
+  async function loadCards(){
     let data=null;
     let error=null;
 
     if(isOwnerMode()){
+      await probeOwnerCardCapabilities();
+
       const ownerResult=await supabaseClient.rpc("get_owner_cards");
       if(!ownerResult.error){
         data=ownerResult.data;
+
+        const first=Array.isArray(data) && data.length ? data[0] : null;
+        if(first && Object.prototype.hasOwnProperty.call(first,"sold_at")){
+          soldAtSupported=true;
+        }
       }else{
-        // Fail closed: never fall back to a wildcard cards read.
+        // Fail closed for owner-only reads, but keep the public catalogue usable.
         console.error("Secure owner card read failed:",ownerResult.error);
         clearOwnerOnlyClientState();
         applyOwnerMode();
 
-        const publicResult=await supabaseClient
-          .from("cards")
-          .select(publicColumns)
-          .order("created_at",{ascending:true});
+        const publicResult=await fetchPublicCards();
         data=publicResult.data;
         error=publicResult.error;
 
-        showToast("Owner data access unavailable · showing public inventory");
+        if(!error){
+          showToast("Owner data access unavailable · showing public inventory");
+        }
       }
     }else{
-      const publicResult=await supabaseClient
-        .from("cards")
-        .select(publicColumns)
-        .order("created_at",{ascending:true});
+      lifecycleSupported=false;
+      ownerPrivateSupported=false;
+      editHistorySupported=false;
+
+      const publicResult=await fetchPublicCards();
       data=publicResult.data;
       error=publicResult.error;
     }
 
     if(error){
-      console.error("Load cards error:", error);
-      cards = [];
-      showToast("Could not load inventory from Supabase");
-      router();
-      return;
+      console.error("Load cards error:",error);
+
+      // Do not destroy a catalogue that is already on screen because a later
+      // refresh/login transition encountered a temporary network error.
+      if(!cards.length) cards=[];
+      return false;
     }
 
-    cards = (data || []).map(dbToCard);
-    router();
+    cards=(data||[]).map(dbToCard);
+    return true;
   }
 
   function sanitizeOwnerTags(value){
@@ -7954,6 +8052,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
 
 
+  const GIVEAWAY_PUBLIC_COLUMNS =
+    "id,title,card_name,image_url,status,ends_at,how_to_enter,details,created_at";
+  const SHOWCASE_PUBLIC_COLUMNS =
+    "id,title,category,series,video_url,thumbnail_url,description,featured,sort_order,created_at";
+
   // ---------------- Supabase giveaways ----------------
   function giveawayFromDb(row){
     return {
@@ -7970,10 +8073,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function loadGiveaways(){
-    const { data, error } = await supabaseClient
+    const {data,error}=await supabaseClient
       .from("giveaways")
-      .select("*")
-      .order("created_at", { ascending:false });
+      .select(GIVEAWAY_PUBLIC_COLUMNS)
+      .order("created_at",{ascending:false});
 
     if(error){
       console.error("Load giveaways error:", error);
@@ -7991,13 +8094,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         .from("giveaways")
         .update(payload)
         .eq("id", id)
-        .select()
+        .select(GIVEAWAY_PUBLIC_COLUMNS)
         .single();
     }
     return await supabaseClient
       .from("giveaways")
       .insert(payload)
-      .select()
+      .select(GIVEAWAY_PUBLIC_COLUMNS)
       .single();
   }
 
@@ -8026,12 +8129,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function loadShowcases(){
-    const { data, error } = await supabaseClient
+    const {data,error}=await supabaseClient
       .from("showcases")
-      .select("*")
-      .order("featured", { ascending:false })
-      .order("sort_order", { ascending:true })
-      .order("created_at", { ascending:false });
+      .select(SHOWCASE_PUBLIC_COLUMNS)
+      .order("featured",{ascending:false})
+      .order("sort_order",{ascending:true})
+      .order("created_at",{ascending:false});
 
     if(error){
       console.error("Load showcases error:", error);
@@ -8049,13 +8152,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         .from("showcases")
         .update(payload)
         .eq("id", id)
-        .select()
+        .select(SHOWCASE_PUBLIC_COLUMNS)
         .single();
     }
     return await supabaseClient
       .from("showcases")
       .insert(payload)
-      .select()
+      .select(SHOWCASE_PUBLIC_COLUMNS)
       .single();
   }
 
@@ -17256,9 +17359,15 @@ function wireShimmer(container){
       ownerVerified=false;
       clearOwnerOnlyClientState();
       applyOwnerMode();
-      await loadCards();
-      if(currentRoute() === "add") location.hash = "#/inventory";
+      const loaded=await loadCards();
+      if(!loaded && !cards.length){
+        renderCatalogueLoadError();
+        return;
+      }
+
+      if(currentRoute()==="add") location.hash="#/inventory";
       else router();
+
       showToast("Logged out");
       return;
     }
@@ -17293,9 +17402,17 @@ function wireShimmer(container){
     }
 
     applyOwnerMode();
-    await loadCards();
+    const loaded=await loadCards();
+
+    if(!loaded && !cards.length){
+      renderCatalogueLoadError();
+      return;
+    }
+
     router();
-    showToast("Owner login successful");
+    showToast(isOwnerMode()
+      ? "Owner login successful"
+      : "Owner access unavailable · public inventory loaded");
   }
 
   // Hidden owner shortcut: Ctrl + Shift + L
@@ -17414,11 +17531,70 @@ function wireShimmer(container){
     });
   }
 
+  function renderAppLoadingState(){
+    if(!view || view.children.length) return;
+
+    view.innerHTML=`
+      <div class="catalogue-load-state" role="status" aria-live="polite">
+        <div class="catalogue-load-spinner" aria-hidden="true"></div>
+        <strong>Loading collection…</strong>
+        <span>Fetching the latest listings.</span>
+      </div>
+    `;
+  }
+
+  function renderCatalogueLoadError(){
+    if(!view) return;
+
+    view.innerHTML=`
+      <div class="catalogue-load-state catalogue-load-error" role="alert">
+        <div class="empty-icon">!</div>
+        <strong>Inventory temporarily unavailable</strong>
+        <span>We could not load the catalogue. Your local favorites and settings were not changed.</span>
+        <button type="button" class="btn-primary" data-retry-catalogue>Retry</button>
+      </div>
+    `;
+  }
+
+  async function reloadCatalogueFromUi(){
+    renderAppLoadingState();
+
+    const [cardsResult]=await Promise.all([
+      loadCards(),
+      loadGiveaways(),
+      loadShowcases()
+    ]);
+
+    if(!cardsResult){
+      renderCatalogueLoadError();
+      return false;
+    }
+
+    router();
+    return true;
+  }
+
   async function startApp(){
+    renderAppLoadingState();
+
+    // Authentication is checked first only to decide whether this session may
+    // request owner-only card data. Public catalogue loading itself does not
+    // depend on owner-only tables or owner RPCs.
     await refreshOwnerSession();
-    await loadCards();
-    await loadGiveaways();
-    await loadShowcases();
+
+    const [cardsLoaded]=await Promise.all([
+      loadCards(),
+      loadGiveaways(),
+      loadShowcases()
+    ]);
+
+    if(!cardsLoaded){
+      renderCatalogueLoadError();
+      updateSidebarFooter();
+      return;
+    }
+
+    // Single initial route render. loadCards no longer calls router internally.
     router();
   }
 
@@ -17431,6 +17607,12 @@ function wireShimmer(container){
       if(logoLink) logoLink.style.display = "none";
     }, { once:true });
   }
+
+  view.addEventListener("click",e=>{
+    if(e.target.closest("[data-retry-catalogue]")){
+      reloadCatalogueFromUi();
+    }
+  });
 
   setupMobileMoreMenu();
   startApp();
