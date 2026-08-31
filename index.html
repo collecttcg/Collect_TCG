@@ -11708,9 +11708,10 @@ function wireShimmer(container){
         gradeOptions.some(grade=>normalizeFilterValue(grade)===normalizeFilterValue(value))
       ),
       ...gradeOptions.filter(grade=>
+        normalizeFilterValue(grade)!=="not applicable" &&
         !priority.some(value=>normalizeFilterValue(value)===normalizeFilterValue(grade))
       )
-    ].slice(0,10);
+    ].filter(value=>normalizeFilterValue(value)!=="not applicable").slice(0,10);
 
     return {games,languages,eras,series,gradeOptions,shortcutValues};
   }
