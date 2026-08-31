@@ -10533,11 +10533,9 @@ function wireShimmer(container){
 
   function ownerAlertSummary(){
     const active=cards.filter(card=>normalizeFilterValue(card.availability||"Available")!=="sold");
-    const missingPrice=active.filter(card=>
-      !hasListedPrice(card.price_myr) &&
-      !hasListedPrice(card.price_usd ?? card.price) &&
-      !hasListedPrice(card.price_sgd)
-    ).length;
+    const qualitySummary=dataQualitySummary(active);
+    const missingPrice=qualitySummary.missingPrice;
+    const priceIssues=qualitySummary.priceIssues;
     const missingImage=active.filter(card=>getImages(card).length===0).length;
     const singleImage=active.filter(card=>getImages(card).length===1).length;
     const metadataIssues=active.filter(card=>
@@ -10557,6 +10555,7 @@ function wireShimmer(container){
     return {
       active:active.length,
       missingPrice,
+      priceIssues,
       missingImage,
       singleImage,
       metadataIssues,
@@ -10586,10 +10585,10 @@ function wireShimmer(container){
         </div>
 
         <div class="owner-alerts-grid">
-          <a href="#/quality?filter=price" class="${s.missingPrice?"needs-attention":""}">
-            <strong>${s.missingPrice}</strong>
-            <span>Missing price</span>
-            <small>Open Data Quality</small>
+          <a href="#/quality?filter=price" class="${s.priceIssues?"needs-attention":""}">
+            <strong>${s.priceIssues}</strong>
+            <span>Price issues</span>
+            <small>${s.missingPrice} with no price at all</small>
           </a>
           <a href="#/quality?filter=image" class="${s.missingImage?"needs-attention":""}">
             <strong>${s.missingImage}</strong>
