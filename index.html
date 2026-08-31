@@ -7334,6 +7334,33 @@
     .insights-bar-label{font-size:9px !important;}
   }
 
+
+  .fb-giveaway-condition-card{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    margin:0 0 10px;
+    padding:10px 12px;
+    border:1px solid rgba(95,212,196,.18);
+    border-radius:10px;
+    background:rgba(95,212,196,.035);
+  }
+  .fb-giveaway-condition-card strong{
+    color:var(--accent-teal);
+    font-size:10px;
+  }
+  .fb-giveaway-condition-card span{
+    color:var(--text-muted);
+    font-size:9px;
+    line-height:1.45;
+  }
+  .fb-giveaway-builder .hint a{
+    color:var(--accent-teal);
+    text-decoration:none;
+    font-weight:700;
+  }
+  .fb-giveaway-builder .hint a:hover{text-decoration:underline;}
+
 </style>
 </head>
 <body>
@@ -13884,14 +13911,8 @@ function wireShimmer(container){
     giveawayNumber:"3",
     winnerHeadline:"WIN PSA10 ONE PIECE CARD!",
     prizeLine:'[PSA10] LECAFIG GOLD TEXT LEADER "JEWELRY BONNEY" SHONEN JUMP',
-    post1Label:"CHAMPIONSHIP",
-    post1Url:"https://www.facebook.com/share/p/1Hg9VRQELL/",
-    post2Label:"VINTAGE",
-    post2Url:"https://www.facebook.com/share/p/1BXdcHjMym/",
-    post3Label:"ANNIVERSARIES",
-    post3Url:"https://www.facebook.com/share/p/1Bx3WwCGSi/",
-    post4Label:"ONELINE REGIONAL CHAMPION",
-    post4Url:"https://www.facebook.com/share/p/1PBHZ4dQ4a/",
+    facebookPageUrl:"https://www.facebook.com/profile.php?id=61590041416102",
+    instagramUrl:"https://www.instagram.com/collecttcg.mysg/",
     commentText:"That’s him officer!!! 🫵👮",
     claimHours:"24",
     winnerTool:"Wheel of Names",
@@ -13913,14 +13934,8 @@ function wireShimmer(container){
         giveawayNumber:safe(p.giveawayNumber,FB_GIVEAWAY_POST_DEFAULTS.giveawayNumber,20),
         winnerHeadline:safe(p.winnerHeadline,FB_GIVEAWAY_POST_DEFAULTS.winnerHeadline,250),
         prizeLine:safe(p.prizeLine,FB_GIVEAWAY_POST_DEFAULTS.prizeLine,350),
-        post1Label:safe(p.post1Label,FB_GIVEAWAY_POST_DEFAULTS.post1Label,80),
-        post1Url:safeHttpUrl(p.post1Url)||FB_GIVEAWAY_POST_DEFAULTS.post1Url,
-        post2Label:safe(p.post2Label,FB_GIVEAWAY_POST_DEFAULTS.post2Label,80),
-        post2Url:safeHttpUrl(p.post2Url)||FB_GIVEAWAY_POST_DEFAULTS.post2Url,
-        post3Label:safe(p.post3Label,FB_GIVEAWAY_POST_DEFAULTS.post3Label,80),
-        post3Url:safeHttpUrl(p.post3Url)||FB_GIVEAWAY_POST_DEFAULTS.post3Url,
-        post4Label:safe(p.post4Label,FB_GIVEAWAY_POST_DEFAULTS.post4Label,80),
-        post4Url:safeHttpUrl(p.post4Url)||FB_GIVEAWAY_POST_DEFAULTS.post4Url,
+        facebookPageUrl:safeHttpUrl(p.facebookPageUrl)||FB_GIVEAWAY_POST_DEFAULTS.facebookPageUrl,
+        instagramUrl:safeHttpUrl(p.instagramUrl)||FB_GIVEAWAY_POST_DEFAULTS.instagramUrl,
         commentText:safe(p.commentText,FB_GIVEAWAY_POST_DEFAULTS.commentText,250),
         claimHours:safe(p.claimHours,FB_GIVEAWAY_POST_DEFAULTS.claimHours,10),
         winnerTool:safe(p.winnerTool,FB_GIVEAWAY_POST_DEFAULTS.winnerTool,100),
@@ -13944,14 +13959,8 @@ function wireShimmer(container){
         giveawayNumber:safe(p.giveawayNumber,20),
         winnerHeadline:safe(p.winnerHeadline,250),
         prizeLine:safe(p.prizeLine,350),
-        post1Label:safe(p.post1Label,80),
-        post1Url:safeHttpUrl(p.post1Url),
-        post2Label:safe(p.post2Label,80),
-        post2Url:safeHttpUrl(p.post2Url),
-        post3Label:safe(p.post3Label,80),
-        post3Url:safeHttpUrl(p.post3Url),
-        post4Label:safe(p.post4Label,80),
-        post4Url:safeHttpUrl(p.post4Url),
+        facebookPageUrl:safeHttpUrl(p.facebookPageUrl),
+        instagramUrl:safeHttpUrl(p.instagramUrl),
         commentText:safe(p.commentText,250),
         claimHours:safe(p.claimHours,10),
         winnerTool:safe(p.winnerTool,100),
@@ -14014,17 +14023,6 @@ function wireShimmer(container){
     const postage=String(values.postage||"").trim();
     const hashtags=String(values.hashtags||"").trim();
 
-    const linkRows=[
-      [values.post1Label,values.post1Url],
-      [values.post2Label,values.post2Url],
-      [values.post3Label,values.post3Url],
-      [values.post4Label,values.post4Url]
-    ].map(([label,url])=>[
-      `(${String(label||"").trim().toUpperCase()})`,
-      "",
-      safeHttpUrl(url)||"[LINK NOT SET]"
-    ]).flat();
-
     const lines=[
       `🎁 GIVEAWAY #${number} 🎁`,
       "",
@@ -14036,21 +14034,21 @@ function wireShimmer(container){
       "",
       "📌 HOW TO ENTER:",
       "",
-      "(PLEASE MAKE SURE TO DO ALL 3 STEPS)",
+      "(PLEASE MAKE SURE TO DO BOTH STEPS)",
       "",
-      "1️⃣ FOLLOW our Facebook Page",
+      "1️⃣ LIKE this giveaway post and FOLLOW our Facebook Page + Instagram:",
       "",
-      "2️⃣ LIKE below 4 Post : “CARD LIST”",
+      `Facebook: ${safeHttpUrl(values.facebookPageUrl)||"[LINK NOT SET]"}`,
       "",
-      ...linkRows,
+      `Instagram: ${safeHttpUrl(values.instagramUrl)||"[LINK NOT SET]"}`,
       "",
-      `3️⃣ COMMENT : “${commentText}”`,
+      `2️⃣ Comment: ${commentText}`,
       "",
       divider,
       "",
       "‼️IMPORTANT:",
       "",
-      "Only followers of our Facebook Page who have followed the 3 STEPS mentioned above will be eligible for the draw.",
+      "Only participants who complete BOTH steps above will be eligible for the draw.",
       "",
       "📩 HOW THE WINNER WILL BE CONTACTED:",
       "",
@@ -14167,26 +14165,35 @@ function wireShimmer(container){
           </div>
 
           <div class="fb-card-list-settings-divider"></div>
-          <div class="eyebrow">2 · Entry Steps</div>
+          <div class="eyebrow">2 · Entry Conditions</div>
 
-          <div class="fb-giveaway-link-list">
-            ${[1,2,3,4].map(i=>`
-              <div class="fb-giveaway-link-row">
-                <div class="field">
-                  <label for="fbGiveawayPost${i}Label">Post ${i} label</label>
-                  <input id="fbGiveawayPost${i}Label" maxlength="80" value="${escapeHtml(prefs[`post${i}Label`])}">
-                </div>
-                <div class="field">
-                  <label for="fbGiveawayPost${i}Url">Facebook URL</label>
-                  <input id="fbGiveawayPost${i}Url" type="url" maxlength="1000" value="${escapeHtml(prefs[`post${i}Url`])}">
-                </div>
-              </div>
-            `).join("")}
+          <div class="fb-giveaway-condition-card">
+            <strong>Condition 1</strong>
+            <span>Like the giveaway post and follow both official social pages.</span>
+          </div>
+
+          <div class="fb-giveaway-two-col">
+            <div class="field">
+              <label for="fbGiveawayFacebookPageUrl">Facebook Page URL</label>
+              <input id="fbGiveawayFacebookPageUrl" type="url" maxlength="1000" value="${escapeHtml(prefs.facebookPageUrl)}">
+              <div class="hint"><a href="${escapeHtml(prefs.facebookPageUrl)}" target="_blank" rel="noopener noreferrer">Open Facebook Page ↗</a></div>
+            </div>
+            <div class="field">
+              <label for="fbGiveawayInstagramUrl">Instagram URL</label>
+              <input id="fbGiveawayInstagramUrl" type="url" maxlength="1000" value="${escapeHtml(prefs.instagramUrl)}">
+              <div class="hint"><a href="${escapeHtml(prefs.instagramUrl)}" target="_blank" rel="noopener noreferrer">Open Instagram ↗</a></div>
+            </div>
+          </div>
+
+          <div class="fb-giveaway-condition-card">
+            <strong>Condition 2</strong>
+            <span>Set the exact comment participants must leave.</span>
           </div>
 
           <div class="field">
-            <label for="fbGiveawayCommentText">Required comment</label>
-            <input id="fbGiveawayCommentText" maxlength="250" value="${escapeHtml(prefs.commentText)}">
+            <label for="fbGiveawayCommentText">Comment:</label>
+            <input id="fbGiveawayCommentText" maxlength="250" value="${escapeHtml(prefs.commentText)}" placeholder="Type the required comment here">
+            <div class="hint">The generated post will show this as “Comment: …”. Change it for each giveaway as needed.</div>
           </div>
 
           <div class="fb-card-list-settings-divider"></div>
@@ -14277,14 +14284,8 @@ function wireShimmer(container){
       giveawayNumber:$("fbGiveawayNumber"),
       winnerHeadline:$("fbGiveawayWinnerHeadline"),
       prizeLine:$("fbGiveawayPrizeLine"),
-      post1Label:$("fbGiveawayPost1Label"),
-      post1Url:$("fbGiveawayPost1Url"),
-      post2Label:$("fbGiveawayPost2Label"),
-      post2Url:$("fbGiveawayPost2Url"),
-      post3Label:$("fbGiveawayPost3Label"),
-      post3Url:$("fbGiveawayPost3Url"),
-      post4Label:$("fbGiveawayPost4Label"),
-      post4Url:$("fbGiveawayPost4Url"),
+      facebookPageUrl:$("fbGiveawayFacebookPageUrl"),
+      instagramUrl:$("fbGiveawayInstagramUrl"),
       commentText:$("fbGiveawayCommentText"),
       claimHours:$("fbGiveawayClaimHours"),
       winnerTool:$("fbGiveawayWinnerTool"),
@@ -14304,14 +14305,8 @@ function wireShimmer(container){
         giveawayNumber:inputs.giveawayNumber.value,
         winnerHeadline:inputs.winnerHeadline.value,
         prizeLine:inputs.prizeLine.value,
-        post1Label:inputs.post1Label.value,
-        post1Url:inputs.post1Url.value,
-        post2Label:inputs.post2Label.value,
-        post2Url:inputs.post2Url.value,
-        post3Label:inputs.post3Label.value,
-        post3Url:inputs.post3Url.value,
-        post4Label:inputs.post4Label.value,
-        post4Url:inputs.post4Url.value,
+        facebookPageUrl:inputs.facebookPageUrl.value,
+        instagramUrl:inputs.instagramUrl.value,
         commentText:inputs.commentText.value,
         claimHours:inputs.claimHours.value,
         winnerTool:inputs.winnerTool.value,
