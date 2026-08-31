@@ -4012,6 +4012,37 @@
   .clone-card-notice strong{color:var(--accent-teal);font-size:9px;white-space:nowrap;}
   .clone-card-notice span{color:var(--text-muted);font-size:8.5px;line-height:1.45;}
   @media(max-width:700px){.clone-card-notice{flex-direction:column;gap:4px;}}
+
+  /* ---------- One-click Facebook preparation ---------- */
+  .fb-prepare-btn{
+    min-width:150px;
+    font-weight:800;
+  }
+
+  .fb-post-copy-actions{
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  @media(max-width:700px){
+    .fb-post-copy-actions{
+      width:100%;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:6px;
+    }
+
+    .fb-post-copy-actions .fb-prepare-btn{
+      grid-column:1 / -1;
+      width:100%;
+      min-width:0;
+    }
+
+    .fb-post-copy-actions button{
+      justify-content:center;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -8006,7 +8037,8 @@ function wireShimmer(container){
             </div>
             <div class="fb-post-copy-actions">
               <button type="button" class="btn-ghost" id="fbCopyTitleBtn" disabled>Copy Title</button>
-              <button type="button" class="btn-primary" id="fbCopyPostBtn" disabled>Copy Full Post</button>
+              <button type="button" class="btn-ghost" id="fbCopyPostBtn" disabled>Copy Full Post</button>
+              <button type="button" class="btn-primary fb-prepare-btn" id="fbPreparePostBtn" disabled>Prepare Facebook Post</button>
             </div>
           </div>
 
@@ -8029,6 +8061,7 @@ function wireShimmer(container){
     const selectedCardMount = $("fbPostSelectedCard");
     const copyTitleBtn = $("fbCopyTitleBtn");
     const copyPostBtn = $("fbCopyPostBtn");
+    const prepareBtn = $("fbPreparePostBtn");
     const downloadBtn = $("fbDownloadImageBtn");
     const openCardBtn = $("fbOpenCardBtn");
 
@@ -8061,6 +8094,7 @@ function wireShimmer(container){
         output.value = "";
         copyTitleBtn.disabled = true;
         copyPostBtn.disabled = true;
+        prepareBtn.disabled = true;
         downloadBtn.disabled = true;
         return;
       }
@@ -8069,6 +8103,7 @@ function wireShimmer(container){
       output.value = buildFbPostText(selectedCard, values);
       copyTitleBtn.disabled = !titleInput.value.trim();
       copyPostBtn.disabled = !output.value.trim();
+      prepareBtn.disabled = !output.value.trim();
       downloadBtn.disabled = getImages(selectedCard).length === 0;
     }
 
@@ -8142,6 +8177,54 @@ function wireShimmer(container){
 
     copyPostBtn.addEventListener("click", ()=>{
       copyPlainText(output.value, "Facebook post copied");
+    });
+
+    prepareBtn.addEventListener("click", async ()=>{
+      if(!selectedCard) return;
+      if(!requireOwner("prepare single-card Facebook post")) return;
+      if(!output.value.trim()){
+        showToast("No Facebook post to prepare");
+        return;
+      }
+
+      const originalText=prepareBtn.textContent;
+      prepareBtn.disabled=true;
+      copyPostBtn.disabled=true;
+      downloadBtn.disabled=true;
+      prepareBtn.textContent="Preparing…";
+
+      try{
+        const copied=await copyPlainText(output.value,"Facebook post copied");
+        if(!copied) throw new Error("Could not copy Facebook post");
+
+        const images=getImages(selectedCard);
+        if(!images.length){
+          showToast("Post copied · no card images to download");
+          return;
+        }
+
+        prepareBtn.textContent="Creating image ZIP…";
+        const result=await downloadSingleCardImagesZip(
+          selectedCard,
+          (done,total,added,failed)=>{
+            prepareBtn.textContent=failed
+              ? `ZIP ${done}/${total} · ${failed} skipped`
+              : `ZIP ${done}/${total}`;
+          }
+        );
+
+        showToast(
+          result.failed.length
+            ? `Post ready · ${result.added} images included · ${result.failed.length} skipped`
+            : `Post ready · text copied + ${result.added} image${result.added===1?"":"s"} ZIP`
+        );
+      }catch(err){
+        console.error("Prepare single-card Facebook post error:",err);
+        showToast(`Could not fully prepare post${err?.message ? `: ${String(err.message).slice(0,100)}` : ""}`);
+      }finally{
+        prepareBtn.textContent=originalText;
+        updateOutput();
+      }
     });
 
     downloadBtn.addEventListener("click", async ()=>{
@@ -8727,7 +8810,10 @@ function wireShimmer(container){
               <div class="eyebrow">4 · Preview & Copy</div>
               <h3>Facebook Card List</h3>
             </div>
-            <button type="button" class="btn-primary" id="fbCardListCopyBtn">Copy Full Post</button>
+            <div class="fb-post-copy-actions">
+              <button type="button" class="btn-ghost" id="fbCardListCopyBtn">Copy Full Post</button>
+              <button type="button" class="btn-primary fb-prepare-btn" id="fbCardListPrepareBtn">Prepare Facebook Post</button>
+            </div>
           </div>
 
           <div class="fb-card-list-preview-summary" id="fbCardListPreviewSummary"></div>
@@ -8760,6 +8846,7 @@ function wireShimmer(container){
     const hashtagsInput=$("fbCardListHashtags");
     const output=$("fbCardListOutput");
     const copyBtn=$("fbCardListCopyBtn");
+    const prepareBtn=$("fbCardListPrepareBtn");
     const zipBtn=$("fbCardListZipBtn");
     const zipStatus=$("fbCardListZipStatus");
 
@@ -9090,6 +9177,7 @@ function wireShimmer(container){
         : "No selected listings currently have an image.";
 
       copyBtn.disabled=selected.length===0;
+      prepareBtn.disabled=selected.length===0;
     }
 
     function regenerate(){
@@ -9168,6 +9256,64 @@ function wireShimmer(container){
       }
 
       copyPlainText(output.value,"Card list post copied");
+    });
+
+    prepareBtn.addEventListener("click",async()=>{
+      if(!requireOwner("prepare card-list Facebook post")) return;
+
+      const selected=orderedSelectedCards();
+      if(!selected.length){
+        showToast("Select at least one card");
+        return;
+      }
+      if(!output.value.trim()){
+        showToast("No Facebook post to prepare");
+        return;
+      }
+
+      const originalText=prepareBtn.textContent;
+      prepareBtn.disabled=true;
+      copyBtn.disabled=true;
+      zipBtn.disabled=true;
+      prepareBtn.textContent="Preparing…";
+
+      try{
+        const copied=await copyPlainText(output.value,"Card list post copied");
+        if(!copied) throw new Error("Could not copy card list post");
+
+        const zipCards=selected.filter(c=>getImages(c).length);
+        if(!zipCards.length){
+          showToast("Post copied · selected listings have no images");
+          return;
+        }
+
+        prepareBtn.textContent="Creating image ZIP…";
+        const result=await downloadCardListFirstImagesZip(
+          zipCards,
+          (done,total,included,failed)=>{
+            prepareBtn.textContent=failed
+              ? `ZIP ${done}/${total} · ${failed} skipped`
+              : `ZIP ${done}/${total}`;
+            zipStatus.textContent=`Preparing ${done}/${total} · ${included} added${failed ? ` · ${failed} skipped` : ""}`;
+          }
+        );
+
+        zipStatus.textContent=result.failed.length
+          ? `ZIP ready · ${result.added} included · ${result.failed.length} inaccessible image${result.failed.length===1?"":"s"} skipped`
+          : `ZIP ready · ${result.added} image${result.added===1?"":"s"} included in the selected order`;
+
+        showToast(
+          result.failed.length
+            ? `Post ready · ${result.added} images included · ${result.failed.length} skipped`
+            : `Post ready · text copied + ${result.added} image${result.added===1?"":"s"} ZIP`
+        );
+      }catch(err){
+        console.error("Prepare card-list Facebook post error:",err);
+        showToast(`Could not fully prepare post${err?.message ? `: ${String(err.message).slice(0,100)}` : ""}`);
+      }finally{
+        prepareBtn.textContent=originalText;
+        updateSelectionStatus();
+      }
     });
 
     zipBtn.addEventListener("click",async()=>{
