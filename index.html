@@ -5988,6 +5988,26 @@
     }
   }
 
+
+  /* ---------- Collection (NFS) / Not For Sale ---------- */
+  .nfs-price-hint{
+    margin:-3px 0 12px;
+    padding:9px 10px;
+    border:1px solid rgba(95,212,196,.20);
+    border-radius:8px;
+    background:rgba(95,212,196,.04);
+    color:var(--text-muted);
+    font-size:8.5px;
+    line-height:1.45;
+  }
+  .nfs-price-hint[hidden]{display:none!important;}
+  .nfs-optional-price label{color:var(--accent-teal);}
+  .nfs-price-display .clean-price-primary,
+  .nfs-detail-price{
+    color:var(--accent-teal)!important;
+    letter-spacing:.4px;
+  }
+
 </style>
 </head>
 <body>
@@ -6564,6 +6584,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   function cardPriceDisplayHTML(card){
+    if(normalizeFilterValue(card?.availability)==="collection (nfs)"){
+      return `<div class="clean-price-block nfs-price-display"><div class="clean-price-primary">NOT FOR SALE</div></div>`;
+    }
     const prices=orderedCardPrices(card);
     if(!prices.length) return "";
     const [primary,...secondary]=prices;
@@ -6576,6 +6599,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   function detailPriceDisplayHTML(card){
+    if(normalizeFilterValue(card?.availability)==="collection (nfs)"){
+      return `<div class="detail-price-primary nfs-detail-price">NOT FOR SALE</div>`;
+    }
     const prices=orderedCardPrices(card);
     if(!prices.length) return `<div class="detail-price-primary">Please inquire</div>`;
     const [primary,...secondary]=prices;
@@ -7792,11 +7818,17 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         </div>
       </div>
       <div class="field-row">
-        <div class="field"><label for="${p}PriceUSD">Price (USD)</label><input type="number" id="${p}PriceUSD" min="0" step="0.01" required value="0.00"></div>
-        <div class="field"><label for="${p}PriceMYR">Price (MYR)</label><input type="number" id="${p}PriceMYR" min="0" step="0.01" required value="0.00"></div>
         <div class="field">
-          <label for="${p}PriceSGD">Price (SGD)</label>
-          <input type="number" id="${p}PriceSGD" min="0" step="1" placeholder="0">
+          <label for="${p}PriceUSD">Price (USD) <span class="field-optional">(optional)</span></label>
+          <input type="number" id="${p}PriceUSD" min="0" step="0.01" placeholder="Leave blank if not listed">
+        </div>
+        <div class="field">
+          <label for="${p}PriceMYR">Price (MYR) <span class="field-optional">(optional)</span></label>
+          <input type="number" id="${p}PriceMYR" min="0" step="0.01" placeholder="Leave blank if not listed">
+        </div>
+        <div class="field">
+          <label for="${p}PriceSGD">Price (SGD) <span class="field-optional">(optional)</span></label>
+          <input type="number" id="${p}PriceSGD" min="0" step="1" placeholder="Leave blank if not listed">
         </div>
       </div>
       <div class="grading-section">
@@ -8076,6 +8108,61 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     });
 
     refresh();
+  }
+
+  function wireAvailabilityPriceState(p){
+    const availability=$(p+"Availability");
+    const usd=$(p+"PriceUSD");
+    const myr=$(p+"PriceMYR");
+    const sgd=$(p+"PriceSGD");
+    if(!availability) return;
+
+    let hint=$(p+"NfsPriceHint");
+    if(!hint && usd?.closest(".field-row")){
+      hint=document.createElement("div");
+      hint.id=p+"NfsPriceHint";
+      hint.className="nfs-price-hint";
+      hint.hidden=true;
+      hint.textContent="Collection (NFS) can be saved without a price. Existing prices may be kept for your records, but visitors will see NOT FOR SALE instead of a sale price.";
+      usd.closest(".field-row").insertAdjacentElement("afterend",hint);
+    }
+
+    const sync=()=>{
+      const isNfs=normalizeFilterValue(availability.value)==="collection (nfs)";
+      [usd,myr,sgd].forEach(input=>{
+        if(!input) return;
+        input.required=false;
+        input.closest(".field")?.classList.toggle("nfs-optional-price",isNfs);
+      });
+      if(hint) hint.hidden=!isNfs;
+    };
+
+    availability.addEventListener("change",sync);
+    sync();
+  }
+
+  function invalidFieldLabel(form,input){
+    if(!input) return "a required field";
+    const id=String(input.id||"");
+    if(id){
+      const label=form.querySelector(`label[for="${CSS.escape(id)}"]`);
+      if(label){
+        return String(label.textContent||"")
+          .replace(/\(optional\)/gi,"")
+          .replace(/\s+/g," ")
+          .trim() || "a required field";
+      }
+    }
+    return input.getAttribute("aria-label") || input.name || "a required field";
+  }
+
+  function reportFirstInvalidField(form){
+    const invalid=Array.from(form.querySelectorAll("input,select,textarea"))
+      .find(el=>!el.disabled && !el.checkValidity());
+    if(!invalid) return "";
+    invalid.reportValidity();
+    try{ invalid.scrollIntoView({behavior:"smooth",block:"center"}); }catch{}
+    return invalidFieldLabel(form,invalid);
   }
 
   function wireSoldDateField(p){
@@ -8829,6 +8916,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   function comparePriceText(card){
+    if(normalizeFilterValue(card?.availability)==="collection (nfs)") return "Not for sale";
     const prices=orderedCardPrices(card);
     return prices.length
       ? prices.map(p=>formatCurrencyValue(p.currency,p.value)).join(" · ")
@@ -12270,17 +12358,20 @@ function wireShimmer(container){
 
     if(!images.length) add("image","Missing image","media","critical");
 
+    const isNfs=normalizeFilterValue(card.availability)==="collection (nfs)";
     const hasAnyPrice=
       hasListedPrice(card.price_myr) ||
       hasListedPrice(card.price_usd ?? card.price) ||
       hasListedPrice(card.price_sgd);
 
-    if(!hasAnyPrice){
-      add("price","No listed price","price","critical");
-    }else{
-      if(!hasListedPrice(card.price_myr)) add("price-myr","Missing MYR price","price");
-      if(!hasListedPrice(card.price_usd ?? card.price)) add("price-usd","Missing USD price","price");
-      if(!hasListedPrice(card.price_sgd)) add("price-sgd","Missing SGD price","price");
+    if(!isNfs){
+      if(!hasAnyPrice){
+        add("price","No listed price","price","critical");
+      }else{
+        if(!hasListedPrice(card.price_myr)) add("price-myr","Missing MYR price","price");
+        if(!hasListedPrice(card.price_usd ?? card.price)) add("price-usd","Missing USD price","price");
+        if(!hasListedPrice(card.price_sgd)) add("price-sgd","Missing SGD price","price");
+      }
     }
 
     if(!String(card.card_code||"").trim()) add("card-code","Missing card code","metadata");
@@ -14506,8 +14597,9 @@ function wireShimmer(container){
       processingImages: 0
     };
     wireGameCombobox("add");
-    wireSoldDateField("add");
     if(cloneDraft) populateFields("add", cloneDraft);
+    wireSoldDateField("add");
+    wireAvailabilityPriceState("add");
     wireImageControls("add", formState);
     wireGradingControls("add", formState);
     $("addForm").addEventListener("submit", async (e)=>{
@@ -14520,8 +14612,8 @@ function wireShimmer(container){
 
       const form = $("addForm");
       if(!form.checkValidity()){
-        form.reportValidity();
-        showToast("Please complete the required fields.");
+        const field=reportFirstInvalidField(form);
+        showToast(field ? `Please complete: ${field}` : "Please complete the required fields.");
         return;
       }
 
@@ -15181,6 +15273,7 @@ function wireShimmer(container){
     };
     wireGameCombobox("edit");
     wireSoldDateField("edit");
+    wireAvailabilityPriceState("edit");
     wireImageControls("edit", editFormState);
     wireGradingControls("edit", editFormState);
     overlay.hidden = false;
@@ -15200,8 +15293,8 @@ function wireShimmer(container){
     }
 
     if(!editForm.checkValidity()){
-      editForm.reportValidity();
-      showToast("Please complete the required fields.");
+      const field=reportFirstInvalidField(editForm);
+      showToast(field ? `Please complete: ${field}` : "Please complete the required fields.");
       return;
     }
 
