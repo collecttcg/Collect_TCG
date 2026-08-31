@@ -11904,7 +11904,7 @@ function wireShimmer(container){
   async function quickSetCardAvailability(card,status){
     if(!card || !requireOwner("change card availability")) return false;
 
-    const allowed=new Set(["Available","Reserved","Sold"]);
+    const allowed=new Set(["Available","Reserved","Sold","Collection (NFS)"]);
     if(!allowed.has(status)) return false;
 
     const current=normalizeFilterValue(card.availability||"");
@@ -11928,7 +11928,7 @@ function wireShimmer(container){
     const index=cards.findIndex(c=>String(c.id)===String(card.id));
     if(index>-1) cards[index]=saved;
     invalidateOwnerReservedAgeCache();
-    showToast(`Marked ${status}`);
+    showToast(status==="Collection (NFS)" ? "Marked NFS" : `Marked ${status}`);
     router();
     return true;
   }
