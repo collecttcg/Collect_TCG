@@ -7180,6 +7180,20 @@
     }
   }
 
+
+  #addPriceNegotiability,
+  #editPriceNegotiability{
+    max-width:320px;
+  }
+
+  @media(max-width:700px){
+    #addPriceNegotiability,
+    #editPriceNegotiability{
+      max-width:none;
+      width:100%;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -8020,6 +8034,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       price_sgd: row.price_sgd != null ? Number(row.price_sgd) : null,
       cost: row.cost == null ? null : Number(row.cost),
       notes: row.notes || "",
+      price_negotiability: priceNegotiabilityFromNotes(row.notes || ""),
       images: Array.isArray(row.images) ? row.images : [],
       image: Array.isArray(row.images) && row.images.length ? row.images[0] : null,
       grading: (() => {
@@ -9485,6 +9500,44 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     });
   }
 
+  const PRICE_NEGOTIABILITY_OPTIONS=["Negotiable","Non-negotiable"];
+  const PRICE_NEGOTIABILITY_MARKER_RE=/(?:^|\n)\s*Price terms:\s*(Negotiable|Non-negotiable)\s*(?=\n|$)/i;
+
+  function normalizePriceNegotiability(value){
+    const normalized=String(value||"").trim().toLowerCase();
+    if(normalized==="negotiable") return "Negotiable";
+    if(normalized==="non-negotiable" || normalized==="non negotiable") return "Non-negotiable";
+    return "";
+  }
+
+  function priceNegotiabilityFromNotes(notes){
+    const source=String(notes||"");
+    const match=source.match(PRICE_NEGOTIABILITY_MARKER_RE);
+    if(match) return normalizePriceNegotiability(match[1]);
+
+    // Backward compatibility with earlier free-text notes already used by
+    // the Facebook Card List generator.
+    if(/\bnon[- ]?negotiable\b/i.test(source)) return "Non-negotiable";
+    if(/\bnegotiable\b/i.test(source)) return "Negotiable";
+    return "";
+  }
+
+  function stripPriceNegotiabilityMarker(notes){
+    return String(notes||"")
+      .replace(PRICE_NEGOTIABILITY_MARKER_RE,"\n")
+      .replace(/\n{3,}/g,"\n\n")
+      .trim();
+  }
+
+  function notesWithPriceNegotiability(notes,term){
+    const clean=stripPriceNegotiabilityMarker(notes);
+    const normalized=normalizePriceNegotiability(term);
+    if(!normalized) return clean;
+
+    const marker=`Price terms: ${normalized}`;
+    return clean ? `${clean}\n\n${marker}` : marker;
+  }
+
   function fieldsTemplate(p){
     return `
       <div class="image-field">
@@ -9602,6 +9655,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         <span id="${p}FxRateText">Loading today's exchange rate…</span>
         <button type="button" class="btn-ghost fx-refresh-rate-btn" id="${p}FxRefreshRate">Refresh rate</button>
       </div>
+      <div class="field">
+        <label for="${p}PriceNegotiability">Pricing terms</label>
+        <select id="${p}PriceNegotiability" required>
+          ${PRICE_NEGOTIABILITY_OPTIONS.map(v=>`<option value="${v}">${v}</option>`).join("")}
+        </select>
+        <div class="hint">Choose whether the listed price is negotiable or non-negotiable. This is public listing information.</div>
+      </div>
+
       <div class="grading-section">
         <div class="grading-head">
           <h3>Grading / Condition</h3>
@@ -10289,7 +10350,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     $(p + "PriceUSD").value = card && card.price_usd != null ? card.price_usd : "";
     $(p + "PriceMYR").value = card && card.price_myr != null ? card.price_myr : "";
     $(p + "PriceSGD").value = card && card.price_sgd != null ? card.price_sgd : "";
-    $(p + "Notes").value = card ? (card.notes || "") : "";
+    $(p + "PriceNegotiability").value = card
+      ? (priceNegotiabilityFromNotes(card.notes)||"Negotiable")
+      : "Negotiable";
+    $(p + "Notes").value = card ? stripPriceNegotiabilityMarker(card.notes || "") : "";
   }
 
   function collectFields(p, id, formState){
@@ -10318,7 +10382,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       price_myr: $(p + "PriceMYR").value.trim() === "" ? null : Math.max(0, parseFloat($(p + "PriceMYR").value)),
       price_sgd: $(p + "PriceSGD").value.trim() === "" ? null : Math.max(0, parseFloat($(p + "PriceSGD").value)),
       cost: null,
-      notes: $(p + "Notes").value.trim(),
+      price_negotiability: normalizePriceNegotiability($(p + "PriceNegotiability")?.value || "Negotiable"),
+      notes: notesWithPriceNegotiability(
+        $(p + "Notes").value.trim(),
+        $(p + "PriceNegotiability")?.value || "Negotiable"
+      ),
       images: formState.images.slice(),
       image: formState.images[0] || null, // keeps compatibility with older code/data
       grading: formState.grading.map(g=>({
@@ -14219,9 +14287,10 @@ function wireShimmer(container){
     if(hasListedPrice(card.price_usd ?? card.price)) pieces.push(`$${Math.round(Number(card.price_usd ?? card.price)).toLocaleString("en-US")} USD`);
     if(hasListedPrice(card.price_sgd)) pieces.push(fmtSGD(card.price_sgd));
 
-    const terms = /\bnon[- ]?negotiable\b/i.test(card.notes || "")
-      ? "non-negotiable"
-      : (/\bnegotiable\b/i.test(card.notes || "") ? "negotiable" : defaultTerms);
+    const savedTerm=priceNegotiabilityFromNotes(card.notes||"");
+    const terms=savedTerm
+      ? savedTerm.toLowerCase()
+      : defaultTerms;
 
     const termsSuffix = terms ? ` (${terms})` : "";
     return `PRICE : ${pieces.length ? pieces.join(" / ") : "PLEASE INQUIRE"}${termsSuffix}`;
