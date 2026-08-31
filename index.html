@@ -5110,13 +5110,6 @@
       align-items:stretch;
     }
 
-    .inventory-display-tools{
-      width:100%;
-      margin-left:0;
-      display:grid;
-      grid-template-columns:1fr 1fr;
-    }
-
     .currency-preference-control{
       justify-content:space-between;
     }
@@ -5201,14 +5194,6 @@
   }
 
   @media(max-width:420px){
-    .inventory-display-tools{
-      grid-template-columns:1fr;
-    }
-
-    .copy-filter-link-btn{
-      grid-column:auto;
-    }
-
     .compare-tray-copy span{
       display:none;
     }
@@ -5521,9 +5506,6 @@
       overflow:visible !important;
     }
 
-    .inventory-display-tools{
-      grid-template-columns:1fr !important;
-    }
   }
 
 
@@ -6131,54 +6113,7 @@
   }
   .no-results-actions a{text-decoration:none;}
 
-  .sticky-mobile-filter-btn{
-    display:none;
-  }
-
   @media(max-width:800px){
-    .sticky-mobile-filter-btn{
-      position:fixed;
-      right:13px;
-      bottom:calc(13px + env(safe-area-inset-bottom));
-      z-index:780;
-      min-height:42px;
-      display:flex;
-      align-items:center;
-      gap:8px;
-      padding:7px 8px 7px 12px;
-      border:1px solid rgba(95,212,196,.34);
-      border-radius:999px;
-      background:rgba(18,20,25,.94);
-      color:var(--text);
-      box-shadow:0 10px 28px rgba(0,0,0,.38);
-      backdrop-filter:blur(10px);
-      -webkit-backdrop-filter:blur(10px);
-      font-size:10px;
-      font-weight:800;
-      cursor:pointer;
-    }
-    .sticky-mobile-filter-btn strong{
-      min-width:24px;
-      height:24px;
-      padding:0 6px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      border-radius:999px;
-      background:var(--surface-2);
-      color:var(--text-muted);
-      font-size:9px;
-    }
-    .sticky-mobile-filter-btn.has-active-filters{
-      border-color:var(--accent-teal);
-    }
-    .sticky-mobile-filter-btn.has-active-filters strong{
-      background:var(--accent-teal);
-      color:#071412;
-    }
-    body.mobile-filter-open .sticky-mobile-filter-btn{
-      display:none!important;
-    }
 
     .recent-page-head{
       align-items:flex-start!important;
@@ -6366,10 +6301,6 @@
     }
 
     /* Keep the floating filter control clear of Safari's bottom bar and cards. */
-    .sticky-mobile-filter-btn{
-      right:14px !important;
-      bottom:calc(18px + env(safe-area-inset-bottom)) !important;
-    }
   }
 
   @media(max-width:390px){
@@ -6639,7 +6570,6 @@
   .sticky-mobile-results-bar{display:none;}
 
   @media(max-width:800px){
-    .sticky-mobile-filter-btn{display:none!important;}
 
     .sticky-mobile-results-bar{
       position:fixed;
@@ -6658,6 +6588,18 @@
       box-shadow:0 12px 30px rgba(0,0,0,.42);
       backdrop-filter:blur(12px);
       -webkit-backdrop-filter:blur(12px);
+      opacity:0;
+      visibility:hidden;
+      pointer-events:none;
+      transform:translateY(8px);
+      transition:opacity .16s ease,transform .16s ease,visibility .16s ease;
+    }
+
+    .sticky-mobile-results-bar.is-visible{
+      opacity:1;
+      visibility:visible;
+      pointer-events:auto;
+      transform:translateY(0);
     }
 
     body.mobile-filter-open .sticky-mobile-results-bar,
@@ -6750,19 +6692,23 @@
   }
 
 
-  /* ---------- Refactor pass 1: listing controls ---------- */
+  /* ---------- Refactor pass 2: Collection listing controls ---------- */
   @media(max-width:800px){
-    .listing-filter-tools .inventory-display-tools:not(:has(.currency-preference-control)){
+    .listing-filter-tools .collection-display-tools{
       grid-template-columns:1fr 1fr !important;
     }
 
-    .listing-filter-tools .inventory-display-tools:not(:has(.currency-preference-control)) .mobile-filter-open-btn{
+    .listing-filter-tools .collection-display-tools .mobile-filter-open-btn{
       grid-column:1 !important;
     }
 
-    .listing-filter-tools .inventory-display-tools:not(:has(.currency-preference-control)) .copy-filter-link-btn{
+    .listing-filter-tools .collection-display-tools .copy-filter-link-btn{
       grid-column:2 !important;
     }
+  }
+
+  @media(max-width:800px) and (prefers-reduced-motion:reduce){
+    .sticky-mobile-results-bar{transition:none!important;}
   }
 
 </style>
@@ -7268,6 +7214,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   let ownerSession = null;
   let ownerVerified = false;
   let inventoryRenderController = null;
+  let inventoryStickyObserver = null;
 
   function isOwnerMode(){
     return !!ownerSession && ownerVerified === true;
@@ -7304,6 +7251,39 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       inventoryRenderController.abort();
       inventoryRenderController=null;
     }
+    if(inventoryStickyObserver){
+      inventoryStickyObserver.disconnect();
+      inventoryStickyObserver=null;
+    }
+  }
+
+  function setupInventoryStickyBarVisibility(){
+    const bar=$("stickyMobileResultsBar");
+    const controls=document.querySelector(".listing-filter-tools");
+    if(!bar || !controls) return;
+
+    const setVisible=visible=>bar.classList.toggle("is-visible",!!visible);
+
+    if(!window.matchMedia("(max-width: 800px)").matches){
+      setVisible(false);
+      return;
+    }
+
+    if(!("IntersectionObserver" in window)){
+      setVisible(true);
+      return;
+    }
+
+    inventoryStickyObserver=new IntersectionObserver(entries=>{
+      const entry=entries[0];
+      setVisible(!!entry && !entry.isIntersecting);
+    },{
+      root:null,
+      threshold:0,
+      rootMargin:"-8px 0px 0px 0px"
+    });
+
+    inventoryStickyObserver.observe(controls);
   }
 
   function applyOwnerMode(){
@@ -9273,7 +9253,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       showToast("Recently viewed history cleared");
     });
 
-    wireCardActions(view);
     wireShimmer(view);
   }
 
@@ -9305,7 +9284,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     const grid = $("favoritesGrid");
     if(grid){
-      wireCardActions(grid);
       wireShimmer(grid);
     }
 
@@ -10201,115 +10179,142 @@ function wireShimmer(container){
     });
   }
 
-  function renderInventoryPage(scope = "inventory"){
-    cleanupInventoryRenderListeners();
-    inventoryRenderController=new AbortController();
-    const inventorySignal=inventoryRenderController.signal;
+  function inventoryQuickFiltersHTML(){
+    return [
+      ["all","All"],
+      ["new","New This Week"],
+      ["graded","Slabs"],
+      ["raw","Raw"],
+      ["sealed","Sealed"],
+      ["championship","Championship"],
+      ["vintage","Vintage"]
+    ].map(([value,label])=>
+      `<button type="button" class="quick-filter" data-quick="${value}">${label}</button>`
+    ).join("");
+  }
 
-    updateStatusNavCounts();
-    listingAvailabilityScope = ["inventory","collection","reserved","sold"].includes(scope) ? scope : "inventory";
-    const scopeMeta = listingScopeMeta(listingAvailabilityScope);
-    const requestedQuick=safeUrlFilterText(currentHashParams().get("quick"),24);
-    activeQuickFilter=["all","new","graded","raw","sealed","championship","vintage"].includes(requestedQuick)
-      ? requestedQuick
-      : "all";
-    view.innerHTML = `
-      <div class="page-head listing-page-head"><div><div class="eyebrow">${escapeHtml(scopeMeta.eyebrow)}</div><h2>${escapeHtml(scopeMeta.title)}</h2><p>${escapeHtml(scopeMeta.description)}</p></div></div>
+  function inventoryPageHTML(scopeMeta,scope){
+    const isCollection=scope==="collection";
+    const compact=effectiveInventoryViewMode()==="compact";
 
-      <div class="inventory-filter-tools listing-filter-tools">
-        <div class="quick-filters" id="quickFilters">
-        <button type="button" class="quick-filter" data-quick="all">All</button>
-        <button type="button" class="quick-filter" data-quick="new">New This Week</button>
-        <button type="button" class="quick-filter" data-quick="graded">Slabs</button>
-        <button type="button" class="quick-filter" data-quick="raw">Raw</button>
-        <button type="button" class="quick-filter" data-quick="sealed">Sealed</button>
-        <button type="button" class="quick-filter" data-quick="championship">Championship</button>
-        <button type="button" class="quick-filter" data-quick="vintage">Vintage</button>
+    return `
+      <div class="page-head listing-page-head">
+        <div>
+          <div class="eyebrow">${escapeHtml(scopeMeta.eyebrow)}</div>
+          <h2>${escapeHtml(scopeMeta.title)}</h2>
+          <p>${escapeHtml(scopeMeta.description)}</p>
         </div>
-        <div class="inventory-display-tools">
-          ${listingAvailabilityScope!=="collection" ? `
-          <label class="currency-preference-control" title="Choose which stored currency is shown first. No currency conversion is performed.">
-            <span>Currency</span>
-            <select id="currencyPreference" aria-label="Preferred display currency">
-              <option value="USD" ${getPriceCurrencyPreference()==="USD"?"selected":""}>USD</option>
-              <option value="MYR" ${getPriceCurrencyPreference()==="MYR"?"selected":""}>MYR</option>
-              <option value="SGD" ${getPriceCurrencyPreference()==="SGD"?"selected":""}>SGD</option>
-            </select>
-          </label>` : ""}
-          <button type="button" class="view-mode-toggle desktop-compact-view-toggle" id="compactViewToggle" aria-pressed="${effectiveInventoryViewMode()==="compact"?"true":"false"}">
-            ${effectiveInventoryViewMode()==="compact"?"▦ Grid View":"☷ Compact View"}
+      </div>
+
+      <div class="inventory-filter-tools listing-filter-tools" data-listing-scope="${escapeHtml(scope)}">
+        <div class="quick-filters" id="quickFilters">${inventoryQuickFiltersHTML()}</div>
+
+        <div class="inventory-display-tools ${isCollection ? "collection-display-tools" : ""}">
+          ${!isCollection ? `
+            <label class="currency-preference-control" title="Choose which stored currency is shown first. No currency conversion is performed.">
+              <span>Currency</span>
+              <select id="currencyPreference" aria-label="Preferred display currency">
+                <option value="USD" ${getPriceCurrencyPreference()==="USD"?"selected":""}>USD</option>
+                <option value="MYR" ${getPriceCurrencyPreference()==="MYR"?"selected":""}>MYR</option>
+                <option value="SGD" ${getPriceCurrencyPreference()==="SGD"?"selected":""}>SGD</option>
+              </select>
+            </label>
+          ` : ""}
+
+          <button type="button"
+                  class="view-mode-toggle desktop-compact-view-toggle"
+                  id="compactViewToggle"
+                  aria-pressed="${compact?"true":"false"}">
+            ${compact?"▦ Grid View":"☷ Compact View"}
           </button>
+
           <button type="button" class="mobile-filter-open-btn" id="mobileFilterOpenBtn" aria-expanded="false">
             Filters <span class="filter-count-badge" id="mobileFilterCountBadge" hidden>0</span>
           </button>
+
           <button type="button" class="copy-filter-link-btn" id="copyFilterLinkBtn" title="Copy a link to these filters">
             <span class="copy-filter-link-desktop">Copy Filtered Link</span>
             <span class="copy-filter-link-mobile">Copy Filter Link</span>
           </button>
         </div>
-      </div>
 
-      <div class="pill-filter-summary" id="pillFilterSummary" hidden></div>
+        <div class="pill-filter-summary" id="pillFilterSummary" hidden></div>
 
-      <div class="mobile-filter-backdrop" id="mobileFilterBackdrop" hidden></div>
-      <section class="filter-drawer-shell" id="filterDrawerShell" aria-label="Inventory filters">
-        <div class="filter-drawer-head">
-          <div><strong>Filters</strong><span id="filterActiveSummary">No active filters</span></div>
-          <div>
-            <button type="button" class="btn-ghost clear-all-filters-btn" id="clearAllFiltersBtn">Clear All</button>
-            <button type="button" class="btn-ghost mobile-filter-close-btn" id="mobileFilterCloseBtn">Done</button>
+        <div class="mobile-filter-backdrop" id="mobileFilterBackdrop" hidden></div>
+        <aside class="filter-drawer-shell" id="filterDrawerShell" aria-label="Inventory filters">
+          <div class="filter-drawer-handle" aria-hidden="true"></div>
+          <div class="filter-drawer-head">
+            <div>
+              <strong>Filters</strong>
+              <span id="filterActiveSummary">No active filters</span>
+            </div>
+            <button type="button" class="filter-drawer-close" id="mobileFilterCloseBtn" aria-label="Close filters">×</button>
           </div>
-        </div>
 
-      <div class="filter-row">
-        <div class="inventory-search-wrap">
-          <input type="search" id="search" maxlength="100" autocomplete="off" placeholder="Search name, code, year or series…" aria-autocomplete="list" aria-controls="searchSuggestions">
-          <div class="search-suggestions" id="searchSuggestions" role="listbox" hidden></div>
-        </div>
-        <div class="overview-select" id="filterGameWrap">
-  <button type="button" class="overview-select-btn" id="filterGameBtn"><span>All Games</span><i></i></button>
-  <div class="overview-select-menu" id="filterGameMenu" hidden></div>
-  <input type="hidden" id="filterGame" value="">
-</div>
-        <div class="overview-select" id="filterGradeWrap">
-  <button type="button" class="overview-select-btn" id="filterGradeBtn"><span>All Grades / Conditions</span><i></i></button>
-  <div class="overview-select-menu" id="filterGradeMenu" hidden></div>
-  <input type="hidden" id="filterGrade" value="">
-</div>
-        <div class="overview-select" id="filterLanguageWrap">
-  <button type="button" class="overview-select-btn" id="filterLanguageBtn"><span>All Languages</span><i></i></button>
-  <div class="overview-select-menu" id="filterLanguageMenu" hidden></div>
-  <input type="hidden" id="filterLanguage" value="">
-</div>
-        <div class="overview-select" id="filterEraWrap">
-  <button type="button" class="overview-select-btn" id="filterEraBtn"><span>All Eras</span><i></i></button>
-  <div class="overview-select-menu" id="filterEraMenu" hidden></div>
-  <input type="hidden" id="filterEra" value="">
-</div>
-        <input type="hidden" id="filterAvailability" value="">
-        <div class="overview-select" id="filterSeriesWrap">
-  <button type="button" class="overview-select-btn" id="filterSeriesBtn"><span>All Series</span><i></i></button>
-  <div class="overview-select-menu" id="filterSeriesMenu" hidden></div>
-  <input type="hidden" id="filterSeries" value="">
-</div>
-        <div class="overview-select" id="sortByWrap">
-  <button type="button" class="overview-select-btn" id="sortByBtn"><span>${listingAvailabilityScope === "sold" ? "Sort: Recently Sold" : "Sort: Name"}</span><i></i></button>
-  <div class="overview-select-menu" id="sortByMenu" hidden></div>
-  <input type="hidden" id="sortBy" value="${listingAvailabilityScope === "sold" ? "recent-sold" : "name"}">
-</div>
-        ${listingAvailabilityScope!=="collection" ? `
-        <div class="price-range-filter">
-          <span class="price-range-label">Price (${getPriceCurrencyPreference()})</span>
-          <input type="number" id="filterPriceMin" min="0" step="1" inputmode="decimal" placeholder="Min">
-          <span>–</span>
-          <input type="number" id="filterPriceMax" min="0" step="1" inputmode="decimal" placeholder="Max">
-        </div>` : ""}
-        <a href="#/add" class="btn-primary owner-only" style="display:inline-block;">+ Add card</a>
+          <div class="filter-row">
+            <div class="inventory-search-wrap">
+              <input type="text" id="search" placeholder="Search cards..." autocomplete="off" aria-autocomplete="list" aria-controls="searchSuggestions">
+              <div class="search-suggestions" id="searchSuggestions" role="listbox" hidden></div>
+            </div>
+
+            <div class="overview-select" id="filterGameWrap">
+              <button type="button" class="overview-select-btn" id="filterGameBtn"><span>All Games</span><i></i></button>
+              <div class="overview-select-menu" id="filterGameMenu" hidden></div>
+              <input type="hidden" id="filterGame" value="">
+            </div>
+
+            <div class="overview-select" id="filterGradeWrap">
+              <button type="button" class="overview-select-btn" id="filterGradeBtn"><span>All Grades / Conditions</span><i></i></button>
+              <div class="overview-select-menu" id="filterGradeMenu" hidden></div>
+              <input type="hidden" id="filterGrade" value="">
+            </div>
+
+            <div class="overview-select" id="filterLanguageWrap">
+              <button type="button" class="overview-select-btn" id="filterLanguageBtn"><span>All Languages</span><i></i></button>
+              <div class="overview-select-menu" id="filterLanguageMenu" hidden></div>
+              <input type="hidden" id="filterLanguage" value="">
+            </div>
+
+            <div class="overview-select" id="filterEraWrap">
+              <button type="button" class="overview-select-btn" id="filterEraBtn"><span>All Eras</span><i></i></button>
+              <div class="overview-select-menu" id="filterEraMenu" hidden></div>
+              <input type="hidden" id="filterEra" value="">
+            </div>
+
+            <input type="hidden" id="filterAvailability" value="">
+
+            <div class="overview-select" id="filterSeriesWrap">
+              <button type="button" class="overview-select-btn" id="filterSeriesBtn"><span>All Series</span><i></i></button>
+              <div class="overview-select-menu" id="filterSeriesMenu" hidden></div>
+              <input type="hidden" id="filterSeries" value="">
+            </div>
+
+            <div class="overview-select" id="sortByWrap">
+              <button type="button" class="overview-select-btn" id="sortByBtn">
+                <span>${scope==="sold" ? "Sort: Recently Sold" : "Sort: Name"}</span><i></i>
+              </button>
+              <div class="overview-select-menu" id="sortByMenu" hidden></div>
+              <input type="hidden" id="sortBy" value="${scope==="sold" ? "recent-sold" : "name"}">
+            </div>
+
+            ${!isCollection ? `
+              <div class="price-range-filter">
+                <span class="price-range-label">Price (${getPriceCurrencyPreference()})</span>
+                <input type="number" id="filterPriceMin" min="0" step="1" inputmode="decimal" placeholder="Min">
+                <span>–</span>
+                <input type="number" id="filterPriceMax" min="0" step="1" inputmode="decimal" placeholder="Max">
+              </div>
+            ` : ""}
+
+            <a href="#/add" class="btn-primary owner-only" style="display:inline-block;">+ Add card</a>
+          </div>
+
+          <div class="grade-shortcuts" id="gradeShortcuts" hidden></div>
+        </aside>
       </div>
 
-      <div class="grade-shortcuts" id="gradeShortcuts" hidden></div>
-      </section>
       <div id="invGrid"></div>
+
       <div class="sticky-mobile-results-bar" id="stickyMobileResultsBar" aria-label="Results controls">
         <div class="sticky-mobile-results-count">
           <strong id="stickyMobileResultCount">0</strong>
@@ -10325,12 +10330,133 @@ function wireShimmer(container){
         </button>
       </div>
     `;
+  }
 
-    const scopedCards = cards.filter(c=>cardMatchesListingScope(c, listingAvailabilityScope));
-    const games = Array.from(new Set(scopedCards.map(c=>c.game).filter(Boolean))).sort();
+  function inventoryFilterOptions(scopedCards){
+    const games=Array.from(new Set(scopedCards.map(c=>c.game).filter(Boolean))).sort();
     const languages=["JP","ENG","KR","CN"].filter(lang=>scopedCards.some(c=>c.language===lang));
     const eras=ERA_OPTIONS.filter(era=>scopedCards.some(c=>c.era===era));
     const series=Array.from(new Set(scopedCards.map(c=>c.series).filter(Boolean))).sort();
+
+    const slabGradeOptions=Array.from(new Set(
+      scopedCards
+        .flatMap(c=>Array.isArray(c.grading)?c.grading:[])
+        .filter(g=>g && g.company && String(g.grade??"").trim())
+        .map(g=>`${String(g.company).trim().toUpperCase()} ${String(g.grade).trim()}`)
+    )).sort((a,b)=>{
+      const [companyA,...gradeA]=a.split(" ");
+      const [companyB,...gradeB]=b.split(" ");
+      if(companyA!==companyB) return companyA.localeCompare(companyB);
+
+      const numberA=parseFloat(gradeA.join(" "));
+      const numberB=parseFloat(gradeB.join(" "));
+      if(Number.isFinite(numberA) && Number.isFinite(numberB)) return numberB-numberA;
+      return a.localeCompare(b);
+    });
+
+    const rawConditionOrder=[
+      "Mint","Near Mint","Lightly Played","Moderately Played",
+      "Heavily Played","Damaged","Not Applicable"
+    ];
+
+    const rawConditionOptions=rawConditionOrder.filter(label=>
+      scopedCards.some(card=>
+        effectiveFormat(card)==="Raw" &&
+        (CONDITION_LABEL[card.condition]||card.condition||"")===label
+      )
+    );
+
+    const sealedOptions=scopedCards.some(card=>effectiveFormat(card)==="Sealed")
+      ? ["Sealed"]
+      : [];
+
+    const gradeOptions=[...slabGradeOptions,...rawConditionOptions,...sealedOptions];
+
+    const priority=[
+      "PSA 10","PSA 9","PSA 8","BGS 10","BGS 9.5","CGC 10",
+      "Near Mint","Lightly Played","Sealed"
+    ];
+
+    const shortcutValues=[
+      ...priority.filter(value=>
+        gradeOptions.some(grade=>normalizeFilterValue(grade)===normalizeFilterValue(value))
+      ),
+      ...gradeOptions.filter(grade=>
+        !priority.some(value=>normalizeFilterValue(value)===normalizeFilterValue(grade))
+      )
+    ].slice(0,10);
+
+    return {games,languages,eras,series,gradeOptions,shortcutValues};
+  }
+
+  function inventorySortOptions(scope){
+    return [
+      ...(scope==="sold" ? [{value:"recent-sold",label:"Sort: Recently Sold"}] : []),
+      {value:"name",label:"Name: A → Z"},
+      {value:"name-desc",label:"Name: Z → A"},
+      {value:"newest",label:"Newest Added"},
+      {value:"oldest",label:"Oldest Added"},
+      {value:"year-new",label:"Year: Newest → Oldest"},
+      {value:"year-old",label:"Year: Oldest → Newest"},
+      {value:"grade-high",label:"Grade: High → Low"},
+      {value:"grade-low",label:"Grade: Low → High"},
+      ...(scope!=="collection" ? [
+        {value:"price-low",label:"Price: Lowest → Highest"},
+        {value:"price-high",label:"Price: Highest → Lowest"}
+      ] : [])
+    ];
+  }
+
+  function inventoryScopeEmptyText(scope){
+    if(scope==="collection") return "There are currently no Collection / NFS cards.";
+    if(scope==="reserved") return "There are currently no reserved cards.";
+    if(scope==="sold") return "There are currently no sold cards.";
+    return "There are currently no available cards.";
+  }
+
+  function inventoryNoResultsHTML({scope,activeCount,hasSearch,hasPrice,noScopeCards}){
+    return `
+      <div class="empty-state inventory-no-results">
+        <div class="empty-icon">${activeCount ? "⌕" : "◇"}</div>
+        <h3>${noScopeCards ? escapeHtml(inventoryScopeEmptyText(scope)) : "No cards match these filters"}</h3>
+        <p>${activeCount
+          ? "Try removing one or more filters, or clear everything to see more results."
+          : "There are no listings to show in this section right now."}</p>
+        <div class="no-results-actions">
+          ${hasSearch ? `<button type="button" class="btn-ghost" data-empty-clear-search>Clear Search</button>` : ""}
+          ${hasPrice ? `<button type="button" class="btn-ghost" data-empty-clear-price>Remove Price Range</button>` : ""}
+          ${activeCount ? `<button type="button" class="btn-primary" data-empty-clear-all>Clear All Filters</button>` : ""}
+          ${scope!=="collection"
+            ? `<a href="#/collection" class="btn-ghost">Browse Collection / NFS</a>`
+            : `<a href="#/inventory" class="btn-ghost">Browse Available Cards</a>`}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderInventoryPage(scope = "inventory"){
+    cleanupInventoryRenderListeners();
+    inventoryRenderController=new AbortController();
+    const inventorySignal=inventoryRenderController.signal;
+
+    updateStatusNavCounts();
+    listingAvailabilityScope = ["inventory","collection","reserved","sold"].includes(scope) ? scope : "inventory";
+    const scopeMeta = listingScopeMeta(listingAvailabilityScope);
+    const requestedQuick=safeUrlFilterText(currentHashParams().get("quick"),24);
+    activeQuickFilter=["all","new","graded","raw","sealed","championship","vintage"].includes(requestedQuick)
+      ? requestedQuick
+      : "all";
+    view.innerHTML=inventoryPageHTML(scopeMeta,listingAvailabilityScope);
+
+    const scopedCards=cards.filter(c=>cardMatchesListingScope(c,listingAvailabilityScope));
+    const {
+      games,
+      languages,
+      eras,
+      series,
+      gradeOptions,
+      shortcutValues
+    }=inventoryFilterOptions(scopedCards);
 
     function setupOverviewSelect(id, options){
       const hidden = $(id);
@@ -10379,42 +10505,6 @@ function wireShimmer(container){
       {value:"",label:"All Games"},
       ...games.map(g=>({value:g,label:g}))
     ]);
-    const slabGradeOptions = Array.from(new Set(
-      scopedCards.flatMap(c => Array.isArray(c.grading) ? c.grading : [])
-        .filter(g => g && g.company && String(g.grade ?? "").trim())
-        .map(g => `${String(g.company).trim().toUpperCase()} ${String(g.grade).trim()}`)
-    )).sort((a,b)=>{
-      const [ca,...ga] = a.split(" ");
-      const [cb,...gb] = b.split(" ");
-      if(ca !== cb) return ca.localeCompare(cb);
-      const na = parseFloat(ga.join(" "));
-      const nb = parseFloat(gb.join(" "));
-      if(Number.isFinite(na) && Number.isFinite(nb)) return nb-na;
-      return a.localeCompare(b);
-    });
-
-    const rawConditionOrder = ["Mint","Near Mint","Lightly Played","Moderately Played","Heavily Played","Damaged","Not Applicable"];
-    const rawConditionOptions = rawConditionOrder.filter(label =>
-      scopedCards.some(c => effectiveFormat(c) === "Raw" && (CONDITION_LABEL[c.condition] || c.condition || "") === label)
-    );
-
-    const sealedOptions=scopedCards.some(c=>effectiveFormat(c)==="Sealed") ? ["Sealed"] : [];
-    const gradeOptions = [...slabGradeOptions, ...rawConditionOptions, ...sealedOptions];
-
-    setupOverviewSelect("filterGrade", [
-      {value:"",label:"All Grades / Conditions"},
-      ...gradeOptions.map(g=>({value:g,label:g}))
-    ]);
-
-    const gradeShortcutPriority=[
-      "PSA 10","PSA 9","PSA 8","BGS 10","BGS 9.5","CGC 10",
-      "Near Mint","Lightly Played","Sealed"
-    ];
-    const shortcutValues=[
-      ...gradeShortcutPriority.filter(v=>gradeOptions.some(g=>normalizeFilterValue(g)===normalizeFilterValue(v))),
-      ...gradeOptions.filter(g=>!gradeShortcutPriority.some(v=>normalizeFilterValue(v)===normalizeFilterValue(g)))
-    ].slice(0,10);
-
     const gradeShortcuts=$("gradeShortcuts");
     if(gradeShortcuts && shortcutValues.length){
       gradeShortcuts.hidden=false;
@@ -10445,21 +10535,7 @@ function wireShimmer(container){
       {value:"",label:"All Series"},
       ...series.map(s=>({value:s,label:s}))
     ]);
-    setupOverviewSelect("sortBy", [
-      ...(listingAvailabilityScope === "sold" ? [{value:"recent-sold",label:"Sort: Recently Sold"}] : []),
-      {value:"name",label:"Name: A → Z"},
-      {value:"name-desc",label:"Name: Z → A"},
-      {value:"newest",label:"Newest Added"},
-      {value:"oldest",label:"Oldest Added"},
-      {value:"year-new",label:"Year: Newest → Oldest"},
-      {value:"year-old",label:"Year: Oldest → Newest"},
-      {value:"grade-high",label:"Grade: High → Low"},
-      {value:"grade-low",label:"Grade: Low → High"},
-      ...(listingAvailabilityScope!=="collection" ? [
-        {value:"price-low",label:"Price: Lowest → Highest"},
-        {value:"price-high",label:"Price: Highest → Lowest"}
-      ] : [])
-    ]);
+    setupOverviewSelect("sortBy",inventorySortOptions(listingAvailabilityScope));
 
     function restoreListingFiltersFromUrl(){
       const params = currentHashParams();
@@ -10663,30 +10739,15 @@ function wireShimmer(container){
         const hasPrice=!!(safePriceFilterValue($("filterPriceMin")?.value)||safePriceFilterValue($("filterPriceMax")?.value));
 
         const noScopeCards=scopedCards.length===0;
-        const scopeEmptyText=listingAvailabilityScope==="collection"
-          ? "There are currently no Collection / NFS cards."
-          : (listingAvailabilityScope==="reserved"
-              ? "There are currently no reserved cards."
-              : (listingAvailabilityScope==="sold"
-                  ? "There are currently no sold cards."
-                  : "There are currently no available cards."));
 
         grid.className="";
-        grid.innerHTML=`
-          <div class="empty-state inventory-no-results">
-            <div class="empty-icon">${activeCount ? "⌕" : "◇"}</div>
-            <h3>${noScopeCards ? escapeHtml(scopeEmptyText) : "No cards match these filters"}</h3>
-            <p>${activeCount
-              ? "Try removing one or more filters, or clear everything to see more results."
-              : "There are no listings to show in this section right now."}</p>
-            <div class="no-results-actions">
-              ${hasSearch ? `<button type="button" class="btn-ghost" data-empty-clear-search>Clear Search</button>` : ""}
-              ${hasPrice ? `<button type="button" class="btn-ghost" data-empty-clear-price>Remove Price Range</button>` : ""}
-              ${activeCount ? `<button type="button" class="btn-primary" data-empty-clear-all>Clear All Filters</button>` : ""}
-              ${listingAvailabilityScope!=="collection" ? `<a href="#/collection" class="btn-ghost">Browse Collection / NFS</a>` : `<a href="#/inventory" class="btn-ghost">Browse Available Cards</a>`}
-            </div>
-          </div>
-        `;
+        grid.innerHTML=inventoryNoResultsHTML({
+          scope:listingAvailabilityScope,
+          activeCount,
+          hasSearch,
+          hasPrice,
+          noScopeCards
+        });
         wireNoResultsRecovery(grid);
         return;
       }
@@ -11000,6 +11061,7 @@ function wireShimmer(container){
     syncPillFilterSummary();
     syncQuickFilterUI();
     draw();
+    setupInventoryStickyBarVisibility();
 
     $("invGrid").addEventListener("keydown", e=>{
       if(e.key !== "Enter" && e.key !== " ") return;
