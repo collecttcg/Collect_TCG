@@ -6399,6 +6399,116 @@
     }
   }
 
+
+  /* ---------- Previous / Next through current filtered results ---------- */
+  .filtered-result-nav{
+    display:grid;
+    grid-template-columns:minmax(120px,1fr) auto minmax(120px,1fr);
+    align-items:center;
+    gap:9px;
+    margin:0 0 14px;
+    padding:8px;
+    border:1px solid var(--border);
+    border-radius:11px;
+    background:var(--surface);
+  }
+
+  .filtered-result-nav-btn{
+    min-height:37px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:7px 10px;
+    font-size:9px;
+    white-space:nowrap;
+  }
+
+  .filtered-result-nav-btn:last-child{
+    justify-self:stretch;
+  }
+
+  .filtered-result-nav-btn:disabled{
+    opacity:.35;
+    cursor:not-allowed;
+  }
+
+  .filtered-result-position{
+    min-width:84px;
+    text-align:center;
+  }
+
+  .filtered-result-position span,
+  .filtered-result-position strong{
+    display:block;
+  }
+
+  .filtered-result-position span{
+    color:var(--text-muted);
+    font-size:7px;
+    text-transform:uppercase;
+    letter-spacing:.45px;
+  }
+
+  .filtered-result-position strong{
+    margin-top:2px;
+    color:var(--accent-teal);
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+  }
+
+  @media(max-width:800px){
+    .filtered-result-nav{
+      grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+      gap:6px;
+      margin-bottom:11px;
+      padding:6px;
+      border-radius:10px;
+    }
+
+    .filtered-result-nav-btn{
+      min-width:0;
+      min-height:42px;
+      padding:7px 8px;
+      font-size:10px;
+      border-radius:8px;
+    }
+
+    .filtered-result-position{
+      min-width:62px;
+    }
+
+    .filtered-result-position span{
+      display:none;
+    }
+
+    .filtered-result-position strong{
+      margin:0;
+      font-size:10px;
+    }
+  }
+
+  @media(max-width:390px){
+    .filtered-result-nav{
+      gap:4px;
+      padding:5px;
+    }
+
+    .filtered-result-nav-btn{
+      min-height:40px;
+      font-size:9px;
+      padding:6px;
+    }
+
+    .filtered-result-position{
+      min-width:54px;
+    }
+
+    .filtered-result-position strong{
+      font-size:9px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -7684,6 +7794,79 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   // ---------------- Router ----------------
   let detailsReturnHash = "#/inventory";
   const LISTING_SCROLL_STATE_KEY="collect_tcg_listing_scroll_return_v1";
+  const FILTERED_RESULTS_BROWSE_KEY="collect_tcg_filtered_results_browse_v1";
+  let filteredResultsBrowseContext=null;
+
+  function safeListingBrowseHash(value){
+    const hash=String(value||"").slice(0,1500);
+    return /^#\/(inventory|collection|reserved|sold)(?:\?|$)/.test(hash) ? hash : "";
+  }
+
+  function clearFilteredResultsBrowseContext(){
+    filteredResultsBrowseContext=null;
+    try{sessionStorage.removeItem(FILTERED_RESULTS_BROWSE_KEY);}catch{}
+  }
+
+  function captureFilteredResultsBrowseContext(list){
+    const route=currentRoute();
+    if(!["inventory","collection","reserved","sold"].includes(route)) return;
+
+    const sourceHash=safeListingBrowseHash(location.hash||`#/${route}`);
+    if(!sourceHash) return;
+
+    const ids=[];
+    const seen=new Set();
+    (Array.isArray(list)?list:[]).forEach(card=>{
+      const id=safeCardId(card?.id);
+      if(!id || seen.has(id) || !isLiveLifecycle(card) || ids.length>=2000) return;
+      seen.add(id);
+      ids.push(id);
+    });
+
+    const context={source_hash:sourceHash,ids};
+    filteredResultsBrowseContext=context;
+    try{sessionStorage.setItem(FILTERED_RESULTS_BROWSE_KEY,JSON.stringify(context));}catch{}
+  }
+
+  function getFilteredResultsBrowseContext(){
+    let raw=filteredResultsBrowseContext;
+    if(!raw){
+      try{raw=JSON.parse(sessionStorage.getItem(FILTERED_RESULTS_BROWSE_KEY)||"null");}
+      catch{raw=null;}
+    }
+    if(!raw || !safeListingBrowseHash(raw.source_hash) || !Array.isArray(raw.ids)) return null;
+
+    const liveIds=new Set(cards.filter(isLiveLifecycle).map(card=>String(card.id)));
+    const ids=[];
+    const seen=new Set();
+    raw.ids.slice(0,2000).forEach(value=>{
+      const id=safeCardId(value);
+      if(!id || seen.has(id) || !liveIds.has(id)) return;
+      seen.add(id);
+      ids.push(id);
+    });
+
+    if(!ids.length) return null;
+    filteredResultsBrowseContext={source_hash:safeListingBrowseHash(raw.source_hash),ids};
+    return filteredResultsBrowseContext;
+  }
+
+  function getFilteredResultNavigation(cardId){
+    const id=safeCardId(cardId);
+    const context=id ? getFilteredResultsBrowseContext() : null;
+    if(!context) return null;
+
+    const index=context.ids.indexOf(id);
+    if(index<0) return null;
+
+    return {
+      index,
+      total:context.ids.length,
+      previous:index>0 ? context.ids[index-1] : "",
+      next:index<context.ids.length-1 ? context.ids[index+1] : "",
+      source_hash:context.source_hash
+    };
+  }
 
   function rememberReturnScroll(hash){
     const safeHash=String(hash||"").slice(0,1500);
@@ -7718,10 +7901,15 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const id=safeCardId(cardId);
     if(!id) return;
 
+    const route=currentRoute();
     const current=location.hash||"#/home";
-    if(!currentRoute().startsWith("card/")){
+    if(!route.startsWith("card/")){
       detailsReturnHash=current;
       rememberReturnScroll(current);
+
+      if(!["inventory","collection","reserved","sold"].includes(route)){
+        clearFilteredResultsBrowseContext();
+      }
     }
 
     const target=cardShareHash(id);
@@ -9748,7 +9936,7 @@ function wireShimmer(container){
         updateListingUrlFromControls();
 
         const route = currentRoute();
-        if(["inventory","reserved","sold"].includes(route)){
+        if(["inventory","collection","reserved","sold"].includes(route)){
           renderInventoryPage(route);
         }else{
           location.hash = "#/inventory";
@@ -10246,12 +10434,14 @@ function wireShimmer(container){
       updateActiveFilterIndicators();
 
       if(cards.length===0){
+        captureFilteredResultsBrowseContext([]);
         grid.className="";
         grid.innerHTML=`<div class="empty-state">${EMPTY_ICON}<h2>No listings yet</h2><p>The catalogue is currently empty.</p></div>`;
         return;
       }
 
       const list=getFiltered();
+      captureFilteredResultsBrowseContext(list);
       if(list.length===0){
         const activeCount=activeInventoryFilterCount();
         const hasSearch=!!String($("search")?.value||"").trim();
@@ -15656,6 +15846,7 @@ function wireShimmer(container){
     const cost = card.cost == null ? "—" : fmtMoney(card.cost);
     const isSoldListing = normalizeFilterValue(card.availability || "") === "sold";
     const isNfsListing = normalizeFilterValue(card.availability || "") === "collection (nfs)";
+    const filteredResultNav=getFilteredResultNavigation(card.id);
     const soldDateLabel = formatSoldDate(card.sold_at);
 
     const detailsFavoriteBtn = $("detailsFavoriteBtn");
@@ -15692,6 +15883,30 @@ function wireShimmer(container){
           </div>
         </div>
       ` : ""}
+
+      ${filteredResultNav && filteredResultNav.total>1 ? `
+        <nav class="filtered-result-nav" aria-label="Browse current filtered results">
+          <button type="button"
+                  class="btn-ghost filtered-result-nav-btn"
+                  data-filtered-result-id="${escapeHtml(filteredResultNav.previous)}"
+                  ${filteredResultNav.previous ? "" : "disabled"}
+                  aria-label="Previous card in current filtered results">
+            ← <span>Previous</span>
+          </button>
+          <div class="filtered-result-position">
+            <span>Current results</span>
+            <strong>${filteredResultNav.index+1} of ${filteredResultNav.total}</strong>
+          </div>
+          <button type="button"
+                  class="btn-ghost filtered-result-nav-btn"
+                  data-filtered-result-id="${escapeHtml(filteredResultNav.next)}"
+                  ${filteredResultNav.next ? "" : "disabled"}
+                  aria-label="Next card in current filtered results">
+            <span>Next</span> →
+          </button>
+        </nav>
+      ` : ""}
+
       <div class="detail-layout">
         <div>${imageHTML}</div>
         <div class="detail-info">
@@ -15771,6 +15986,18 @@ function wireShimmer(container){
         info.appendChild(panel);
       });
     }
+
+    detailsMount.querySelectorAll("[data-filtered-result-id]").forEach(el=>{
+      el.addEventListener("click",()=>{
+        const id=safeCardId(el.dataset.filteredResultId);
+        if(!id || el.disabled) return;
+        const context=getFilteredResultsBrowseContext();
+        if(!context || !context.ids.includes(id)) return;
+
+        closeDetailsModal(false);
+        openCardRoute(id);
+      });
+    });
 
     detailsMount.querySelectorAll("[data-series-card-id]").forEach(el=>{
       el.addEventListener("click",()=>{
