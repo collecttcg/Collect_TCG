@@ -4323,6 +4323,77 @@
     .export-owner-note{flex-direction:column;}
   }
 
+
+  /* ---------- Combined owner inventory tools ---------- */
+  .inventory-tools-switcher{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:7px;
+    margin:-2px 0 13px;
+    padding:5px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:var(--surface);
+  }
+
+  .inventory-tools-switcher a{
+    min-width:0;
+    padding:9px 11px;
+    border:1px solid transparent;
+    border-radius:9px;
+    color:var(--text-muted);
+    text-decoration:none;
+    transition:border-color .14s ease,background .14s ease,color .14s ease;
+  }
+
+  .inventory-tools-switcher a:hover{
+    border-color:var(--border);
+    background:var(--surface-2);
+    color:var(--text);
+  }
+
+  .inventory-tools-switcher a.active{
+    border-color:rgba(95,212,196,.34);
+    background:linear-gradient(135deg,rgba(95,212,196,.08),rgba(227,179,65,.035));
+    color:var(--text);
+  }
+
+  .inventory-tools-switcher strong{
+    display:block;
+    font-size:9px;
+    line-height:1.2;
+  }
+
+  .inventory-tools-switcher span{
+    display:block;
+    margin-top:3px;
+    overflow:hidden;
+    color:var(--text-muted);
+    font-size:7.3px;
+    line-height:1.25;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  @media(max-width:700px){
+    .inventory-tools-switcher{
+      grid-template-columns:1fr;
+    }
+
+    .inventory-tools-switcher a{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      padding:9px 10px;
+    }
+
+    .inventory-tools-switcher span{
+      margin-top:0;
+      text-align:right;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -4363,9 +4434,7 @@
       <a href="#/insights" data-route="insights" class="owner-only"><span class="ic">◔</span> Insights</a>
       <a href="#/fb-tools" data-route="fb-tools" class="owner-only"><span class="ic">ƒ</span> Facebook Tools</a>
       <a href="#/quality" data-route="quality" class="owner-only"><span class="ic">✓</span> Data Quality</a>
-      <a href="#/bulk-prices" data-route="bulk-prices" class="owner-only"><span class="ic">$</span> Bulk Prices</a>
-      <a href="#/bulk-metadata" data-route="bulk-metadata" class="owner-only"><span class="ic">≡</span> Bulk Metadata</a>
-      <a href="#/recent-edits" data-route="recent-edits" class="owner-only"><span class="ic">↺</span> Recently Edited</a>
+      <a href="#/inventory-tools" data-route="inventory-tools" class="owner-only"><span class="ic">≡</span> Inventory Tools</a>
       <a href="#/export" data-route="export" class="owner-only"><span class="ic">⇩</span> Export</a>
       <a href="#/add" data-route="add" class="owner-only"><span class="ic">+</span> Add Card</a>
       <a href="#/about" data-route="about" class="mobile-secondary-nav"><span class="ic">◎</span> About Us</a>
@@ -5436,16 +5505,20 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(isOwnerMode()) renderDataQualityPage();
       else { location.hash="#/inventory"; return; }
     }
+    else if(route === "inventory-tools"){
+      if(isOwnerMode()) renderInventoryToolsPage();
+      else { location.hash="#/inventory"; return; }
+    }
     else if(route === "bulk-prices"){
-      if(isOwnerMode()) renderBulkPricePage();
+      if(isOwnerMode()) { location.hash="#/inventory-tools?mode=prices"; return; }
       else { location.hash="#/inventory"; return; }
     }
     else if(route === "bulk-metadata"){
-      if(isOwnerMode()) renderBulkMetadataPage();
+      if(isOwnerMode()) { location.hash="#/inventory-tools?mode=metadata"; return; }
       else { location.hash="#/inventory"; return; }
     }
     else if(route === "recent-edits"){
-      if(isOwnerMode()) renderRecentlyEditedOwnerPage();
+      if(isOwnerMode()) { location.hash="#/inventory-tools?mode=recent"; return; }
       else { location.hash="#/inventory"; return; }
     }
     else if(route === "export"){
@@ -10032,6 +10105,54 @@ function wireShimmer(container){
   }
 
 
+  // ---------------- Owner Inventory Tools Hub ----------------
+  function currentInventoryToolMode(){
+    const mode=currentHashParams().get("mode");
+    return ["prices","metadata","recent"].includes(mode) ? mode : "prices";
+  }
+
+  function inventoryToolsSwitcher(mode){
+    return `
+      <div class="inventory-tools-switcher" role="tablist" aria-label="Inventory tools">
+        <a href="#/inventory-tools?mode=prices"
+           class="${mode==="prices"?"active":""}"
+           role="tab"
+           aria-selected="${mode==="prices"?"true":"false"}">
+          <strong>Bulk Prices</strong>
+          <span>MYR · USD · SGD</span>
+        </a>
+        <a href="#/inventory-tools?mode=metadata"
+           class="${mode==="metadata"?"active":""}"
+           role="tab"
+           aria-selected="${mode==="metadata"?"true":"false"}">
+          <strong>Bulk Metadata</strong>
+          <span>Series · language · status</span>
+        </a>
+        <a href="#/inventory-tools?mode=recent"
+           class="${mode==="recent"?"active":""}"
+           role="tab"
+           aria-selected="${mode==="recent"?"true":"false"}">
+          <strong>Recently Edited</strong>
+          <span>Recent owner activity</span>
+        </a>
+      </div>
+    `;
+  }
+
+  function renderInventoryToolsPage(){
+    if(!requireOwner("open inventory tools")) return;
+
+    const mode=currentInventoryToolMode();
+    if(mode==="metadata") renderBulkMetadataPage(true);
+    else if(mode==="recent") renderRecentlyEditedOwnerPage(true);
+    else renderBulkPricePage(true);
+
+    const pageHead=view.querySelector(".page-head");
+    if(pageHead){
+      pageHead.insertAdjacentHTML("afterend",inventoryToolsSwitcher(mode));
+    }
+  }
+
   // ---------------- Owner Bulk Price Editor ----------------
   function priceInputValue(value){
     if(value == null || value === "" || Number(value) === 0) return "";
@@ -10052,7 +10173,7 @@ function wireShimmer(container){
     return an===bn;
   }
 
-  function renderBulkPricePage(){
+  function renderBulkPricePage(fromInventoryTools=false){
     if(!requireOwner("open bulk price editor")) return;
 
     const editableCards=cards.filter(card=>
@@ -10062,7 +10183,7 @@ function wireShimmer(container){
     view.innerHTML=`
       <div class="page-head">
         <div>
-          <div class="eyebrow">Owner Tool</div>
+          <div class="eyebrow">Inventory Tools · Bulk Editing</div>
           <h2>Bulk Price Editor</h2>
           <p>Update MYR, USD and SGD listing prices quickly. Sold archive listings are excluded to preserve their historical listed prices.</p>
         </div>
@@ -10352,7 +10473,7 @@ function wireShimmer(container){
     return [];
   }
 
-  function renderBulkMetadataPage(){
+  function renderBulkMetadataPage(fromInventoryTools=false){
     if(!requireOwner("open bulk metadata editor")) return;
 
     const eligibleCards=cards.filter(card=>
@@ -10364,7 +10485,7 @@ function wireShimmer(container){
     view.innerHTML=`
       <div class="page-head">
         <div>
-          <div class="eyebrow">Owner Tool</div>
+          <div class="eyebrow">Inventory Tools · Bulk Editing</div>
           <h2>Bulk Metadata Editor</h2>
           <p>Select active listings, choose the fields to change, preview the update, then apply it securely.</p>
         </div>
@@ -10731,7 +10852,7 @@ function wireShimmer(container){
     });
   }
 
-  function renderRecentlyEditedOwnerPage(){
+  function renderRecentlyEditedOwnerPage(fromInventoryTools=false){
     if(!requireOwner("open recently edited")) return;
 
     const recent=cards.slice().sort((a,b)=>
@@ -10742,7 +10863,7 @@ function wireShimmer(container){
     view.innerHTML=`
       <div class="page-head">
         <div>
-          <div class="eyebrow">Owner Tool</div>
+          <div class="eyebrow">Inventory Tools · Activity</div>
           <h2>Recently Edited</h2>
           <p>Review the most recently added or updated inventory listings and jump straight into common owner actions.</p>
         </div>
