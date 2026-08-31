@@ -3617,9 +3617,7 @@
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"
-        integrity="sha384-w5Kq7oKbQWG1JTh2I7YJttwE2H8lgpqWM5GKxXMb9gVjEw6X6U6lEoMmbPHaX3hD"
-        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 window.COLLECT_TCG_SUPABASE_URL = "https://cbzytysxtdcqxuckspye.supabase.co";
 window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-Au";
@@ -7486,7 +7484,7 @@ function wireShimmer(container){
       const p = JSON.parse(localStorage.getItem(FB_CARD_LIST_POST_PREFS_KEY) || "{}");
       return {
         listTitle:String(p.listTitle || "AVAILABLE INVENTORY").trim().slice(0,120),
-        defaultTerms:["negotiable","non-negotiable"].includes(p.defaultTerms) ? p.defaultTerms : "negotiable",
+        defaultTerms:["","negotiable","non-negotiable"].includes(p.defaultTerms) ? p.defaultTerms : "negotiable",
         carousellShopUrl:safeHttpUrl(p.carousellShopUrl) || "https://www.carousell.com.my/u/collect_tcg_my_sg/",
         instagramUrl:safeHttpUrl(p.instagramUrl) || "https://www.instagram.com/collecttcg.mysg",
         hashtags:String(p.hashtags || "#tcg #onepiece #onepiecetcg #onepiececardgame #TCGCollector").trim().slice(0,500)
@@ -7506,7 +7504,7 @@ function wireShimmer(container){
     try{
       localStorage.setItem(FB_CARD_LIST_POST_PREFS_KEY, JSON.stringify({
         listTitle:String(p.listTitle || "").trim().slice(0,120),
-        defaultTerms:["negotiable","non-negotiable"].includes(p.defaultTerms) ? p.defaultTerms : "negotiable",
+        defaultTerms:["","negotiable","non-negotiable"].includes(p.defaultTerms) ? p.defaultTerms : "negotiable",
         carousellShopUrl:safeHttpUrl(p.carousellShopUrl),
         instagramUrl:safeHttpUrl(p.instagramUrl),
         hashtags:String(p.hashtags || "").trim().slice(0,500)
@@ -7562,7 +7560,8 @@ function wireShimmer(container){
       ? "non-negotiable"
       : (/\bnegotiable\b/i.test(card.notes || "") ? "negotiable" : defaultTerms);
 
-    return `PRICE : ${pieces.length ? pieces.join(" / ") : "PLEASE INQUIRE"} (${terms})`;
+    const termsSuffix = terms ? ` (${terms})` : "";
+    return `PRICE : ${pieces.length ? pieces.join(" / ") : "PLEASE INQUIRE"}${termsSuffix}`;
   }
 
   function cardListGroupHeading(card){
@@ -7700,14 +7699,23 @@ function wireShimmer(container){
   }
 
   function dataUrlToBlob(dataUrl){
-    const parts = String(dataUrl).split(",");
-    if(parts.length < 2) throw new Error("Invalid data URL");
-    const mimeMatch = parts[0].match(/^data:([^;]+);base64$/i);
-    if(!mimeMatch) throw new Error("Unsupported data URL");
-    const bytes = atob(parts[1]);
-    const arr = new Uint8Array(bytes.length);
-    for(let i=0;i<bytes.length;i++) arr[i]=bytes.charCodeAt(i);
-    return new Blob([arr],{type:mimeMatch[1]});
+    const value = String(dataUrl || "");
+    const comma = value.indexOf(",");
+    if(comma < 0) throw new Error("Invalid data URL");
+
+    const header = value.slice(0,comma);
+    const body = value.slice(comma+1);
+    const mimeMatch = header.match(/^data:([^;,]+)/i);
+    const mime = mimeMatch ? mimeMatch[1] : "application/octet-stream";
+
+    if(/;base64$/i.test(header)){
+      const bytes = atob(body);
+      const arr = new Uint8Array(bytes.length);
+      for(let i=0;i<bytes.length;i++) arr[i]=bytes.charCodeAt(i);
+      return new Blob([arr],{type:mime});
+    }
+
+    return new Blob([decodeURIComponent(body)],{type:mime});
   }
 
   async function imageSourceToBlob(src){
@@ -7734,10 +7742,59 @@ function wireShimmer(container){
     return "jpg";
   }
 
+  let jsZipLoadPromise = null;
+
+  function loadScriptOnce(src){
+    return new Promise((resolve,reject)=>{
+      const existing = Array.from(document.scripts).find(s=>s.src === src);
+      if(existing && typeof JSZip !== "undefined"){
+        resolve();
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = src;
+      script.async = true;
+      script.onload = ()=>resolve();
+      script.onerror = ()=>reject(new Error(`Could not load ${src}`));
+      document.head.appendChild(script);
+    });
+  }
+
+  async function ensureJsZip(){
+    if(typeof JSZip !== "undefined") return JSZip;
+    if(jsZipLoadPromise) return jsZipLoadPromise;
+
+    jsZipLoadPromise = (async()=>{
+      const sources = [
+        "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
+      ];
+
+      let lastError = null;
+      for(const src of sources){
+        try{
+          await loadScriptOnce(src);
+          if(typeof JSZip !== "undefined") return JSZip;
+        }catch(err){
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error("ZIP library is unavailable");
+    })().catch(err=>{
+      jsZipLoadPromise = null;
+      throw err;
+    });
+
+    return jsZipLoadPromise;
+  }
+
   async function downloadCardListFirstImagesZip(cardsForZip, progressCallback){
-    if(typeof JSZip === "undefined") throw new Error("ZIP library is unavailable");
-    const zip = new JSZip();
+    const ZipCtor = await ensureJsZip();
+    const zip = new ZipCtor();
     const usedNames = new Set();
+    const failedCards = [];
     let added = 0;
 
     for(let i=0;i<cardsForZip.length;i++){
@@ -7760,13 +7817,26 @@ function wireShimmer(container){
         zip.file(name,blob);
         added++;
       }catch(err){
+        failedCards.push({
+          id:card?.id || "",
+          name:card?.name || card?.card_code || `Card ${i+1}`,
+          reason:err?.message || "Image could not be read"
+        });
         console.warn("Could not add card-list image to ZIP:",card?.id,err);
       }
 
-      if(progressCallback) progressCallback(i+1,cardsForZip.length,added);
+      if(progressCallback) progressCallback(i+1,cardsForZip.length,added,failedCards.length);
     }
 
-    if(!added) throw new Error("No downloadable first images found");
+    if(!added){
+      const error = new Error(
+        failedCards.length
+          ? `None of the ${failedCards.length} first images could be added to the ZIP.`
+          : "No downloadable first images found"
+      );
+      error.failedCards = failedCards;
+      throw error;
+    }
 
     const blob = await zip.generateAsync({
       type:"blob",
@@ -7783,7 +7853,7 @@ function wireShimmer(container){
     a.click();
     a.remove();
     setTimeout(()=>URL.revokeObjectURL(href),1500);
-    return added;
+    return {added, failed:failedCards};
   }
 
   function renderFbCardListGeneratorPage(){
@@ -7824,10 +7894,11 @@ function wireShimmer(container){
           <div class="field">
             <label for="fbCardListTerms">Default pricing terms</label>
             <select id="fbCardListTerms">
+              <option value="" ${prefs.defaultTerms===""?"selected":""}>Empty</option>
               <option value="negotiable" ${prefs.defaultTerms==="negotiable"?"selected":""}>Negotiable</option>
               <option value="non-negotiable" ${prefs.defaultTerms==="non-negotiable"?"selected":""}>Non-negotiable</option>
             </select>
-            <div class="hint">If a card's Notes contains “negotiable” or “non-negotiable”, that card overrides this default.</div>
+            <div class="hint">Choose Empty to omit the pricing term. If a card's Notes contains “negotiable” or “non-negotiable”, that card overrides this default.</div>
           </div>
 
           <details class="fb-post-settings">
@@ -7920,14 +7991,21 @@ function wireShimmer(container){
       zipBtn.textContent="Preparing ZIP…";
 
       try{
-        const added=await downloadCardListFirstImagesZip(zipCards,(done,total,included)=>{
-          zipStatus.textContent=`Preparing ${done}/${total} · ${included} image${included===1?"":"s"} added`;
+        const result=await downloadCardListFirstImagesZip(zipCards,(done,total,included,failed)=>{
+          zipStatus.textContent=`Preparing ${done}/${total} · ${included} added${failed ? ` · ${failed} skipped` : ""}`;
         });
-        zipStatus.textContent=`ZIP ready · ${added} image${added===1?"":"s"} included`;
-        showToast(`Downloaded ZIP with ${added} image${added===1?"":"s"}`);
+        zipStatus.textContent=result.failed.length
+          ? `ZIP ready · ${result.added} included · ${result.failed.length} inaccessible image${result.failed.length===1?"":"s"} skipped`
+          : `ZIP ready · ${result.added} image${result.added===1?"":"s"} included`;
+        showToast(
+          result.failed.length
+            ? `ZIP downloaded · ${result.failed.length} image${result.failed.length===1?"":"s"} skipped`
+            : `Downloaded ZIP with ${result.added} image${result.added===1?"":"s"}`
+        );
       }catch(err){
         console.error("Card list ZIP error:",err);
-        zipStatus.textContent="Could not create ZIP. Check that images are accessible and try again.";
+        const reason = String(err?.message || "Unknown ZIP error").slice(0,180);
+        zipStatus.textContent=`Could not create ZIP: ${reason}`;
         showToast("Could not create image ZIP");
       }finally{
         zipBtn.disabled=false;
