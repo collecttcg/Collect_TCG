@@ -4269,6 +4269,60 @@
     .bulk-meta-filters{grid-template-columns:1fr;}
   }
 
+
+  /* ---------- Owner recently edited ---------- */
+  .recent-edit-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px;}
+  .recent-edit-summary>div{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);}
+  .recent-edit-summary strong{display:block;color:var(--accent-teal);font-family:'JetBrains Mono',monospace;font-size:16px;}
+  .recent-edit-summary span{display:block;margin-top:3px;color:var(--text-muted);font-size:8px;}
+  .recent-edit-panel{padding:14px;}
+  .recent-edit-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) 180px 150px;gap:8px;margin-bottom:10px;}
+  .recent-edit-toolbar .field{margin-bottom:0;}
+  .recent-edit-list{display:flex;flex-direction:column;gap:6px;}
+  .recent-edit-row{display:grid;grid-template-columns:52px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--bg);}
+  .recent-edit-thumb{width:52px;height:64px;overflow:hidden;display:flex;align-items:center;justify-content:center;border-radius:7px;background:var(--surface-2);color:var(--text-muted);font-size:7px;}
+  .recent-edit-thumb img{width:100%;height:100%;object-fit:cover;}
+  .recent-edit-main{min-width:0;}
+  .recent-edit-title{display:flex;align-items:center;gap:6px;min-width:0;}
+  .recent-edit-title strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9.5px;}
+  .recent-edit-new{padding:2px 5px;border-radius:999px;background:rgba(95,212,196,.12);color:var(--accent-teal);font-size:7px;font-weight:800;}
+  .recent-edit-meta{margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted);font-size:7.8px;}
+  .recent-edit-time{margin-top:4px;color:var(--text-muted);font-size:7.5px;}
+  .recent-edit-status{padding:3px 6px;border-radius:999px;background:var(--surface-2);color:var(--text-muted);font-size:7px;font-weight:700;white-space:nowrap;}
+  .recent-edit-actions{display:flex;gap:5px;}
+  .recent-edit-actions button{min-height:30px;padding:6px 8px;font-size:7.8px;}
+  .recent-edit-empty{padding:30px 10px;text-align:center;color:var(--text-muted);font-size:9px;}
+  .recent-edit-empty[hidden]{display:none!important;}
+
+  /* ---------- Owner export ---------- */
+  .export-owner-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .export-owner-card{padding:15px;}
+  .export-owner-card h3{margin:3px 0 5px;}
+  .export-owner-card>p{margin:0 0 13px;color:var(--text-muted);font-size:8.5px;line-height:1.5;}
+  .export-owner-check{display:flex;align-items:center;gap:7px;margin:9px 0 5px;color:var(--text);font-size:8.5px;cursor:pointer;}
+  .export-owner-check input{accent-color:var(--accent-teal);}
+  .export-owner-sensitive{margin-bottom:12px;padding:8px 9px;border:1px solid rgba(227,179,65,.17);border-radius:8px;background:rgba(227,179,65,.04);color:var(--text-muted);font-size:7.7px;line-height:1.45;}
+  .export-owner-note{display:flex;gap:8px;margin-top:12px;padding:11px 13px;}
+  .export-owner-note strong{color:var(--accent-teal);font-size:8.5px;white-space:nowrap;}
+  .export-owner-note span{color:var(--text-muted);font-size:8px;line-height:1.45;}
+
+  @media(max-width:900px){
+    .recent-edit-toolbar{grid-template-columns:1fr 1fr;}
+    .recent-edit-toolbar .field:first-child{grid-column:1/-1;}
+    .recent-edit-row{grid-template-columns:48px minmax(0,1fr) auto;}
+    .recent-edit-actions{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);}
+    .export-owner-grid{grid-template-columns:1fr;}
+  }
+  @media(max-width:520px){
+    .recent-edit-summary{grid-template-columns:1fr;}
+    .recent-edit-toolbar{grid-template-columns:1fr;}
+    .recent-edit-toolbar .field:first-child{grid-column:auto;}
+    .recent-edit-row{grid-template-columns:44px minmax(0,1fr);}
+    .recent-edit-status{grid-column:2;justify-self:start;}
+    .recent-edit-actions{grid-template-columns:1fr 1fr;}
+    .export-owner-note{flex-direction:column;}
+  }
+
 </style>
 </head>
 <body>
@@ -4311,6 +4365,8 @@
       <a href="#/quality" data-route="quality" class="owner-only"><span class="ic">✓</span> Data Quality</a>
       <a href="#/bulk-prices" data-route="bulk-prices" class="owner-only"><span class="ic">$</span> Bulk Prices</a>
       <a href="#/bulk-metadata" data-route="bulk-metadata" class="owner-only"><span class="ic">≡</span> Bulk Metadata</a>
+      <a href="#/recent-edits" data-route="recent-edits" class="owner-only"><span class="ic">↺</span> Recently Edited</a>
+      <a href="#/export" data-route="export" class="owner-only"><span class="ic">⇩</span> Export</a>
       <a href="#/add" data-route="add" class="owner-only"><span class="ic">+</span> Add Card</a>
       <a href="#/about" data-route="about" class="mobile-secondary-nav"><span class="ic">◎</span> About Us</a>
       <a href="#/contact" data-route="contact" class="mobile-secondary-nav"><span class="ic">✉</span> Contact</a>
@@ -5386,6 +5442,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
     else if(route === "bulk-metadata"){
       if(isOwnerMode()) renderBulkMetadataPage();
+      else { location.hash="#/inventory"; return; }
+    }
+    else if(route === "recent-edits"){
+      if(isOwnerMode()) renderRecentlyEditedOwnerPage();
+      else { location.hash="#/inventory"; return; }
+    }
+    else if(route === "export"){
+      if(isOwnerMode()) renderInventoryExportPage();
       else { location.hash="#/inventory"; return; }
     }
     else if(route === "add"){
@@ -10648,6 +10712,390 @@ function wireShimmer(container){
     });
 
     renderPicker();
+  }
+
+
+  // ---------------- Owner Recently Edited ----------------
+  function ownerRecentEditTime(card){
+    const updated=card?.updated_at ? new Date(card.updated_at).getTime() : 0;
+    const created=card?.created_at ? new Date(card.created_at).getTime() : 0;
+    return Math.max(Number.isFinite(updated)?updated:0,Number.isFinite(created)?created:0);
+  }
+
+  function formatOwnerTimestamp(value){
+    if(!value) return "—";
+    const d=new Date(value);
+    if(!Number.isFinite(d.getTime())) return "—";
+    return d.toLocaleString("en-US",{
+      year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"
+    });
+  }
+
+  function renderRecentlyEditedOwnerPage(){
+    if(!requireOwner("open recently edited")) return;
+
+    const recent=cards.slice().sort((a,b)=>
+      ownerRecentEditTime(b)-ownerRecentEditTime(a) ||
+      String(a.name||"").localeCompare(String(b.name||""))
+    );
+
+    view.innerHTML=`
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Owner Tool</div>
+          <h2>Recently Edited</h2>
+          <p>Review the most recently added or updated inventory listings and jump straight into common owner actions.</p>
+        </div>
+      </div>
+
+      <div class="recent-edit-summary">
+        <div><strong>${recent.length}</strong><span>Total listings</span></div>
+        <div><strong>${recent.filter(c=>isNewCard(c)).length}</strong><span>Added this week</span></div>
+        <div><strong>${recent.filter(c=>normalizeFilterValue(c.availability)==="reserved").length}</strong><span>Reserved</span></div>
+      </div>
+
+      <div class="panel recent-edit-panel">
+        <div class="recent-edit-toolbar">
+          <div class="field">
+            <label for="recentEditSearch">Search</label>
+            <input id="recentEditSearch" type="search" maxlength="100" placeholder="Name, code, game or series…">
+          </div>
+          <div class="field">
+            <label for="recentEditStatus">Status</label>
+            <select id="recentEditStatus">
+              <option value="">All statuses</option>
+              <option value="available">Available</option>
+              <option value="reserved">Reserved</option>
+              <option value="sold">Sold</option>
+              <option value="collection (nfs)">Collection (NFS)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="recentEditLimit">Show</label>
+            <select id="recentEditLimit">
+              <option value="20">20 listings</option>
+              <option value="50">50 listings</option>
+              <option value="100">100 listings</option>
+              <option value="all">All listings</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="recent-edit-list" id="recentEditList"></div>
+        <div class="recent-edit-empty" id="recentEditEmpty" hidden>No matching listings.</div>
+      </div>
+    `;
+
+    const search=$("recentEditSearch");
+    const status=$("recentEditStatus");
+    const limit=$("recentEditLimit");
+    const list=$("recentEditList");
+    const empty=$("recentEditEmpty");
+
+    function filtered(){
+      const q=normalizeFilterValue(search.value);
+      const s=normalizeFilterValue(status.value);
+
+      let rows=recent.filter(card=>{
+        if(s && normalizeFilterValue(card.availability)!==s) return false;
+        if(q){
+          const hay=[card.name,card.card_code,card.game,card.series,card.year,card.language]
+            .map(v=>normalizeFilterValue(v)).join(" ");
+          if(!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      if(limit.value!=="all"){
+        const n=Math.max(1,Number(limit.value)||20);
+        rows=rows.slice(0,n);
+      }
+      return rows;
+    }
+
+    function render(){
+      const rows=filtered();
+      empty.hidden=rows.length>0;
+
+      list.innerHTML=rows.map(card=>{
+        const image=getImages(card)[0]||"";
+        const updated=ownerRecentEditTime(card);
+        const createdTime=card.created_at ? new Date(card.created_at).getTime() : 0;
+        const isAdded=updated===createdTime || !card.updated_at;
+        const id=String(card.id);
+
+        return `
+          <article class="recent-edit-row">
+            <div class="recent-edit-thumb">${image?`<img src="${escapeHtml(image)}" alt="">`:"—"}</div>
+            <div class="recent-edit-main">
+              <div class="recent-edit-title">
+                <strong>${escapeHtml(card.name||"Untitled card")}</strong>
+                ${isNewCard(card)?`<span class="recent-edit-new">NEW</span>`:""}
+              </div>
+              <div class="recent-edit-meta">${escapeHtml([card.card_code,card.year,card.game,card.series].filter(Boolean).join(" · "))}</div>
+              <div class="recent-edit-time">${isAdded?"Added":"Updated"} ${escapeHtml(formatOwnerTimestamp(card.updated_at||card.created_at))}</div>
+            </div>
+            <div class="recent-edit-status">${escapeHtml(card.availability||"Available")}</div>
+            <div class="recent-edit-actions">
+              <button type="button" class="btn-ghost" data-recent-view="${escapeHtml(id)}">View</button>
+              <button type="button" class="btn-ghost" data-recent-clone="${escapeHtml(id)}">Clone</button>
+              <button type="button" class="btn-ghost" data-recent-fb="${escapeHtml(id)}">FB Post</button>
+              <button type="button" class="btn-primary" data-recent-edit="${escapeHtml(id)}">Edit</button>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      list.querySelectorAll("[data-recent-view]").forEach(btn=>btn.addEventListener("click",()=>{
+        const card=cards.find(c=>String(c.id)===String(btn.dataset.recentView));
+        if(card) openCardRoute(card.id);
+      }));
+      list.querySelectorAll("[data-recent-edit]").forEach(btn=>btn.addEventListener("click",()=>{
+        const card=cards.find(c=>String(c.id)===String(btn.dataset.recentEdit));
+        if(card&&requireOwner("edit recent listing")) openEditModal(card);
+      }));
+      list.querySelectorAll("[data-recent-clone]").forEach(btn=>btn.addEventListener("click",()=>{
+        const card=cards.find(c=>String(c.id)===String(btn.dataset.recentClone));
+        if(card&&requireOwner("clone recent listing")) openCloneOptions(card);
+      }));
+      list.querySelectorAll("[data-recent-fb]").forEach(btn=>btn.addEventListener("click",()=>{
+        if(!requireOwner("generate Facebook post")) return;
+        const id=String(btn.dataset.recentFb||"");
+        location.hash=`#/fb-tools?mode=single&card=${encodeURIComponent(id)}`;
+      }));
+    }
+
+    [search,status,limit].forEach(el=>{
+      el.addEventListener("input",render);
+      el.addEventListener("change",render);
+    });
+    render();
+  }
+
+  // ---------------- Owner Inventory Export / Backup ----------------
+  function csvEscape(value){
+    const s=String(value ?? "");
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+  }
+
+  function exportGradingText(card){
+    const grades=Array.isArray(card.grading)?card.grading.filter(g=>g&&g.company):[];
+    return grades.map(g=>`${g.company} ${g.grade||""}`.trim()).join(" | ");
+  }
+
+  function exportCertText(card){
+    const grades=Array.isArray(card.grading)?card.grading.filter(g=>g&&g.company):[];
+    return grades.map(g=>g.cert||"").filter(Boolean).join(" | ");
+  }
+
+  function safeExportScope(value){
+    return ["all","available","reserved","sold","collection (nfs)"].includes(value)?value:"all";
+  }
+
+  function exportCardsForScope(scope){
+    const s=safeExportScope(scope);
+    if(s==="all") return cards.slice();
+    return cards.filter(card=>normalizeFilterValue(card.availability)===s);
+  }
+
+  function downloadTextFile(filename,text,mime="text/plain;charset=utf-8"){
+    const blob=new Blob([text],{type:mime});
+    const href=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=href;
+    a.download=filename;
+    a.rel="noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(href),1200);
+  }
+
+  function buildInventoryCsv(rows,includeCert){
+    const header=[
+      "ID","Card Code","Name","Year","Game","Series","Set","Era","Language","Format",
+      "Rarity","Condition","Availability","Quantity","MYR","USD","SGD","Cost",
+      "Grading",...(includeCert?["Certificate"]:[]),"Notes","Images","Created At","Updated At","Sold At"
+    ];
+
+    const lines=[header.map(csvEscape).join(",")];
+
+    rows.forEach(card=>{
+      const values=[
+        card.id,
+        card.card_code,
+        card.name,
+        card.year,
+        card.game,
+        card.series,
+        card.set,
+        card.era,
+        card.language,
+        effectiveFormat(card),
+        card.rarity,
+        card.condition,
+        card.availability,
+        card.qty,
+        card.price_myr,
+        card.price_usd ?? card.price,
+        card.price_sgd,
+        card.cost,
+        exportGradingText(card),
+        ...(includeCert?[exportCertText(card)]:[]),
+        card.notes,
+        getImages(card).join(" | "),
+        card.created_at,
+        card.updated_at,
+        card.sold_at
+      ];
+      lines.push(values.map(csvEscape).join(","));
+    });
+
+    return "\uFEFF"+lines.join("\r\n");
+  }
+
+  function buildInventoryBackupJson(rows,includePrivate){
+    const safeRows=rows.map(card=>{
+      const backup={
+        id:card.id,
+        name:card.name,
+        card_code:card.card_code,
+        year:card.year,
+        game:card.game,
+        language:card.language,
+        era:card.era,
+        availability:card.availability,
+        set:card.set,
+        series:card.series,
+        format:card.format,
+        rarity:card.rarity,
+        condition:card.condition,
+        qty:card.qty,
+        price_myr:card.price_myr,
+        price_usd:card.price_usd ?? card.price ?? null,
+        price_sgd:card.price_sgd,
+        cost:card.cost,
+        notes:card.notes,
+        images:getImages(card).slice(),
+        grading:Array.isArray(card.grading)?card.grading.map(g=>({
+          company:g.company||"",
+          grade:g.grade||"",
+          ...(includePrivate?{cert:g.cert||""}:{}),
+          pop_count:g.pop_count==null?null:Number(g.pop_count),
+          pop_higher:g.pop_higher==null?null:Number(g.pop_higher),
+          pop_updated_at:g.pop_updated_at||null
+        })):[],
+        sold_at:card.sold_at||null,
+        created_at:card.created_at||null,
+        updated_at:card.updated_at||null
+      };
+      return backup;
+    });
+
+    return JSON.stringify({
+      format:"collect-tcg-inventory-backup",
+      version:1,
+      exported_at:new Date().toISOString(),
+      count:safeRows.length,
+      cards:safeRows
+    },null,2);
+  }
+
+  function renderInventoryExportPage(){
+    if(!requireOwner("open inventory export")) return;
+
+    view.innerHTML=`
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Owner Tool</div>
+          <h2>Inventory Export & Backup</h2>
+          <p>Download an offline copy of your inventory for analysis, record-keeping or disaster recovery.</p>
+        </div>
+      </div>
+
+      <div class="export-owner-grid">
+        <section class="panel export-owner-card">
+          <div class="eyebrow">CSV Export</div>
+          <h3>Spreadsheet Export</h3>
+          <p>Exports inventory as UTF-8 CSV for Excel, Numbers or Google Sheets.</p>
+
+          <div class="field">
+            <label for="exportCsvScope">Listings</label>
+            <select id="exportCsvScope">
+              <option value="all">All listings</option>
+              <option value="available">Available</option>
+              <option value="reserved">Reserved</option>
+              <option value="sold">Sold</option>
+              <option value="collection (nfs)">Collection (NFS)</option>
+            </select>
+          </div>
+
+          <label class="export-owner-check">
+            <input type="checkbox" id="exportCsvCert">
+            <span>Include grading certificate numbers</span>
+          </label>
+          <div class="export-owner-sensitive">Certificate numbers are owner-private data. Leave this off unless you specifically need them in the export.</div>
+
+          <button type="button" class="btn-primary" id="exportCsvBtn">Download CSV</button>
+          <div class="hint" id="exportCsvStatus"></div>
+        </section>
+
+        <section class="panel export-owner-card">
+          <div class="eyebrow">JSON Backup</div>
+          <h3>Full Inventory Backup</h3>
+          <p>Creates a structured JSON backup containing inventory metadata, prices, images and grading data.</p>
+
+          <div class="field">
+            <label for="exportJsonScope">Listings</label>
+            <select id="exportJsonScope">
+              <option value="all">All listings</option>
+              <option value="available">Available</option>
+              <option value="reserved">Reserved</option>
+              <option value="sold">Sold</option>
+              <option value="collection (nfs)">Collection (NFS)</option>
+            </select>
+          </div>
+
+          <label class="export-owner-check">
+            <input type="checkbox" id="exportJsonPrivate">
+            <span>Include grading certificate numbers</span>
+          </label>
+          <div class="export-owner-sensitive">The backup never includes authentication tokens, passwords, Supabase keys, visitor IDs or owner-session data.</div>
+
+          <button type="button" class="btn-primary" id="exportJsonBtn">Download JSON Backup</button>
+          <div class="hint" id="exportJsonStatus"></div>
+        </section>
+      </div>
+
+      <div class="panel export-owner-note">
+        <strong>Backup recommendation</strong>
+        <span>Keep periodic copies somewhere separate from the website. Export files are generated locally in your browser and do not create a new database write.</span>
+      </div>
+    `;
+
+    $("exportCsvBtn").addEventListener("click",()=>{
+      if(!requireOwner("export inventory CSV")) return;
+      const scope=safeExportScope($("exportCsvScope").value);
+      const includeCert=$("exportCsvCert").checked;
+      const rows=exportCardsForScope(scope);
+      const csv=buildInventoryCsv(rows,includeCert);
+      const stamp=new Date().toISOString().slice(0,10);
+      downloadTextFile(`Collect-TCG-Inventory-${scope.replace(/[^a-z0-9]+/gi,"-")}-${stamp}.csv`,csv,"text/csv;charset=utf-8");
+      $("exportCsvStatus").textContent=`Exported ${rows.length} listing${rows.length===1?"":"s"}.`;
+      showToast(`CSV downloaded · ${rows.length} listings`);
+    });
+
+    $("exportJsonBtn").addEventListener("click",()=>{
+      if(!requireOwner("export inventory backup")) return;
+      const scope=safeExportScope($("exportJsonScope").value);
+      const includePrivate=$("exportJsonPrivate").checked;
+      const rows=exportCardsForScope(scope);
+      const json=buildInventoryBackupJson(rows,includePrivate);
+      const stamp=new Date().toISOString().slice(0,10);
+      downloadTextFile(`Collect-TCG-Backup-${scope.replace(/[^a-z0-9]+/gi,"-")}-${stamp}.json`,json,"application/json;charset=utf-8");
+      $("exportJsonStatus").textContent=`Backed up ${rows.length} listing${rows.length===1?"":"s"}.`;
+      showToast(`JSON backup downloaded · ${rows.length} listings`);
+    });
   }
 
   // ---------------- Add page ----------------
