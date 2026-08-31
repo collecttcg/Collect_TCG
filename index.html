@@ -7096,6 +7096,71 @@
     cursor:wait;
   }
 
+
+  /* ---------- Owner card pricing: MYR base + automatic FX ---------- */
+  .field-required-note{
+    color:var(--accent-gold);
+    font-size:8px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.35px;
+  }
+
+  .field-required-note.is-optional{
+    color:var(--text-muted);
+  }
+
+  .fx-auto-rate{
+    margin:-3px 0 14px;
+    padding:8px 10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    border:1px solid rgba(95,212,196,.20);
+    border-radius:9px;
+    background:rgba(95,212,196,.045);
+    color:var(--text-muted);
+    font-size:8.5px;
+    line-height:1.4;
+  }
+
+  .fx-auto-rate:not(.fx-rate-error) span{
+    color:var(--accent-teal);
+  }
+
+  .fx-auto-rate.fx-rate-error{
+    border-color:rgba(227,179,65,.24);
+    background:rgba(227,179,65,.045);
+  }
+
+  .fx-refresh-rate-btn{
+    min-height:30px;
+    flex:0 0 auto;
+    padding:5px 8px;
+    font-size:8px;
+  }
+
+  #addPriceUSD[data-fx-auto="1"],
+  #addPriceSGD[data-fx-auto="1"],
+  #editPriceUSD[data-fx-auto="1"],
+  #editPriceSGD[data-fx-auto="1"]{
+    border-color:rgba(95,212,196,.30);
+    background:rgba(95,212,196,.035);
+  }
+
+  @media(max-width:700px){
+    .fx-auto-rate{
+      align-items:flex-start;
+      flex-direction:column;
+    }
+
+    .fx-refresh-rate-btn{
+      width:100%;
+      justify-content:center;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -9394,17 +9459,21 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       </div>
       <div class="field-row">
         <div class="field">
-          <label for="${p}PriceUSD">Price (USD) <span class="field-optional">(optional)</span></label>
-          <input type="number" id="${p}PriceUSD" min="0" step="0.01" placeholder="Leave blank if not listed">
+          <label for="${p}PriceMYR">Price (MYR) <span class="field-required-note">required*</span></label>
+          <input type="number" id="${p}PriceMYR" min="0" step="0.01" inputmode="decimal" placeholder="Enter MYR price">
         </div>
         <div class="field">
-          <label for="${p}PriceMYR">Price (MYR) <span class="field-optional">(optional)</span></label>
-          <input type="number" id="${p}PriceMYR" min="0" step="0.01" placeholder="Leave blank if not listed">
+          <label for="${p}PriceUSD">Price (USD) <span class="field-optional">(auto from MYR)</span></label>
+          <input type="number" id="${p}PriceUSD" min="0" step="0.01" inputmode="decimal" placeholder="Auto converted">
         </div>
         <div class="field">
-          <label for="${p}PriceSGD">Price (SGD) <span class="field-optional">(optional)</span></label>
-          <input type="number" id="${p}PriceSGD" min="0" step="1" placeholder="Leave blank if not listed">
+          <label for="${p}PriceSGD">Price (SGD) <span class="field-optional">(auto from MYR)</span></label>
+          <input type="number" id="${p}PriceSGD" min="0" step="0.01" inputmode="decimal" placeholder="Auto converted">
         </div>
+      </div>
+      <div class="fx-auto-rate" id="${p}FxRateStatus" aria-live="polite">
+        <span id="${p}FxRateText">Loading today's exchange rate…</span>
+        <button type="button" class="btn-ghost fx-refresh-rate-btn" id="${p}FxRefreshRate">Refresh rate</button>
       </div>
       <div class="grading-section">
         <div class="grading-head">
@@ -9685,6 +9754,270 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     refresh();
   }
 
+  const FX_RATE_CACHE_KEY="collect_tcg_myr_fx_rates_v1";
+  const FX_RATE_CACHE_TTL_MS=12*60*60*1000;
+  const FX_RATE_STALE_FALLBACK_MS=7*24*60*60*1000;
+  const FX_RATE_ENDPOINT="https://open.er-api.com/v6/latest/USD";
+  let fxRateFetchPromise=null;
+
+  function validMyrFxRates(value){
+    if(!value || typeof value!=="object") return false;
+
+    const usd=Number(value.usdPerMyr);
+    const sgd=Number(value.sgdPerMyr);
+    const fetchedAt=Number(value.fetchedAt);
+
+    return Number.isFinite(usd) && usd>0.05 && usd<1 &&
+           Number.isFinite(sgd) && sgd>0.1 && sgd<1 &&
+           Number.isFinite(fetchedAt) && fetchedAt>0;
+  }
+
+  function readCachedMyrFxRates(maxAge=FX_RATE_CACHE_TTL_MS){
+    try{
+      const parsed=JSON.parse(localStorage.getItem(FX_RATE_CACHE_KEY)||"null");
+      if(!validMyrFxRates(parsed)) return null;
+      if(Date.now()-parsed.fetchedAt>maxAge) return null;
+      return parsed;
+    }catch{
+      return null;
+    }
+  }
+
+  function saveCachedMyrFxRates(rates){
+    if(!validMyrFxRates(rates)) return;
+    try{
+      localStorage.setItem(FX_RATE_CACHE_KEY,JSON.stringify(rates));
+    }catch{}
+  }
+
+  async function fetchCurrentMyrFxRates(force=false){
+    if(!force){
+      const cached=readCachedMyrFxRates();
+      if(cached) return {...cached,cacheState:"fresh"};
+    }
+
+    if(fxRateFetchPromise) return fxRateFetchPromise;
+
+    fxRateFetchPromise=(async()=>{
+      const controller=new AbortController();
+      const timeout=setTimeout(()=>controller.abort(),8000);
+
+      try{
+        const response=await fetch(FX_RATE_ENDPOINT,{
+          method:"GET",
+          mode:"cors",
+          credentials:"omit",
+          cache:"no-store",
+          referrerPolicy:"no-referrer",
+          signal:controller.signal
+        });
+
+        if(!response.ok) throw new Error(`FX HTTP ${response.status}`);
+
+        const data=await response.json();
+        if(data?.result && data.result!=="success"){
+          throw new Error("FX provider returned an error");
+        }
+
+        const myrPerUsd=Number(data?.rates?.MYR);
+        const sgdPerUsd=Number(data?.rates?.SGD);
+
+        if(!Number.isFinite(myrPerUsd) || myrPerUsd<=0 ||
+           !Number.isFinite(sgdPerUsd) || sgdPerUsd<=0){
+          throw new Error("FX rates missing");
+        }
+
+        const rates={
+          usdPerMyr:1/myrPerUsd,
+          sgdPerMyr:sgdPerUsd/myrPerUsd,
+          fetchedAt:Date.now(),
+          providerUpdatedAt:String(
+            data?.time_last_update_utc ||
+            data?.time_last_update_unix ||
+            ""
+          ).slice(0,100),
+          source:"ExchangeRate-API daily reference"
+        };
+
+        if(!validMyrFxRates(rates)){
+          throw new Error("FX rates outside expected range");
+        }
+
+        saveCachedMyrFxRates(rates);
+        return {...rates,cacheState:"live"};
+      }catch(error){
+        console.warn("Live FX rate unavailable:",error);
+
+        const stale=readCachedMyrFxRates(FX_RATE_STALE_FALLBACK_MS);
+        if(stale) return {...stale,cacheState:"stale"};
+
+        return null;
+      }finally{
+        clearTimeout(timeout);
+      }
+    })().finally(()=>{
+      fxRateFetchPromise=null;
+    });
+
+    return fxRateFetchPromise;
+  }
+
+  function fxRateDateLabel(rates){
+    if(!rates) return "";
+    const timestamp=Number(rates.fetchedAt||0);
+    if(!timestamp) return "";
+
+    try{
+      return new Date(timestamp).toLocaleString([],{
+        month:"short",
+        day:"numeric",
+        hour:"numeric",
+        minute:"2-digit"
+      });
+    }catch{
+      return "";
+    }
+  }
+
+  function convertedPriceValue(amount,rate){
+    const result=Number(amount)*Number(rate);
+    if(!Number.isFinite(result) || result<0) return "";
+    return result.toFixed(2);
+  }
+
+  function applyMyrConversionToFields(p,rates){
+    const myr=$(p+"PriceMYR");
+    const usd=$(p+"PriceUSD");
+    const sgd=$(p+"PriceSGD");
+    if(!myr || !usd || !sgd || !rates) return false;
+
+    const myrValue=Number(myr.value);
+    if(!Number.isFinite(myrValue) || myrValue<0 || myr.value.trim()===""){
+      if(usd.dataset.fxAuto==="1") usd.value="";
+      if(sgd.dataset.fxAuto==="1") sgd.value="";
+      return false;
+    }
+
+    usd.value=convertedPriceValue(myrValue,rates.usdPerMyr);
+    sgd.value=convertedPriceValue(myrValue,rates.sgdPerMyr);
+    usd.dataset.fxAuto="1";
+    sgd.dataset.fxAuto="1";
+    return true;
+  }
+
+  function updateFxRateStatus(p,rates,message=""){
+    const mount=$(p+"FxRateStatus");
+    const text=$(p+"FxRateText");
+    if(!mount || !text) return;
+
+    mount.classList.toggle("fx-rate-error",!rates);
+
+    if(message){
+      text.textContent=message;
+      return;
+    }
+
+    if(!rates){
+      text.textContent="Live conversion unavailable. Enter MYR; USD/SGD can be entered manually.";
+      return;
+    }
+
+    const sourceState=rates.cacheState==="stale"
+      ? "cached fallback"
+      : (rates.cacheState==="fresh" ? "cached today" : "latest");
+
+    text.textContent=
+      `1 MYR ≈ USD ${Number(rates.usdPerMyr).toFixed(4)} · SGD ${Number(rates.sgdPerMyr).toFixed(4)} · ${sourceState} · ${fxRateDateLabel(rates)}`;
+  }
+
+  function wireAutoCurrencyConversion(p){
+    const myr=$(p+"PriceMYR");
+    const usd=$(p+"PriceUSD");
+    const sgd=$(p+"PriceSGD");
+    const refresh=$(p+"FxRefreshRate");
+    if(!myr || !usd || !sgd) return;
+
+    let currentRates=null;
+    let myrTouched=false;
+
+    const loadRates=async(force=false)=>{
+      if(refresh){
+        refresh.disabled=true;
+        refresh.textContent=force ? "Refreshing…" : "Loading…";
+      }
+
+      updateFxRateStatus(p,currentRates,"Loading today's exchange rate…");
+      const rates=await fetchCurrentMyrFxRates(force);
+      currentRates=rates;
+      updateFxRateStatus(p,rates);
+
+      if(rates && myrTouched && myr.value.trim()!==""){
+        applyMyrConversionToFields(p,rates);
+      }
+
+      if(refresh){
+        refresh.disabled=false;
+        refresh.textContent="Refresh rate";
+      }
+      return rates;
+    };
+
+    myr.addEventListener("input",()=>{
+      myrTouched=true;
+
+      if(myr.value.trim()===""){
+        if(usd.dataset.fxAuto==="1") usd.value="";
+        if(sgd.dataset.fxAuto==="1") sgd.value="";
+        return;
+      }
+
+      if(currentRates) applyMyrConversionToFields(p,currentRates);
+    });
+
+    myr.addEventListener("change",async()=>{
+      myrTouched=true;
+      if(!currentRates) currentRates=await loadRates(false);
+      if(currentRates) applyMyrConversionToFields(p,currentRates);
+    });
+
+    [usd,sgd].forEach(input=>{
+      input.addEventListener("input",()=>{
+        input.dataset.fxAuto="0";
+      });
+    });
+
+    refresh?.addEventListener("click",async()=>{
+      currentRates=await loadRates(true);
+      if(currentRates && myr.value.trim()!==""){
+        myrTouched=true;
+        applyMyrConversionToFields(p,currentRates);
+      }
+    });
+
+    loadRates(false);
+  }
+
+  async function ensureMyrConversionBeforeSave(p){
+    const myr=$(p+"PriceMYR");
+    const usd=$(p+"PriceUSD");
+    const sgd=$(p+"PriceSGD");
+    if(!myr || !usd || !sgd || myr.value.trim()==="") return true;
+
+    // If both converted fields already contain values, do not overwrite a
+    // deliberate manual adjustment just before saving.
+    if(usd.value.trim()!=="" && sgd.value.trim()!=="") return true;
+
+    const rates=await fetchCurrentMyrFxRates(false);
+    if(!rates){
+      updateFxRateStatus(p,null);
+      return true;
+    }
+
+    applyMyrConversionToFields(p,rates);
+    updateFxRateStatus(p,rates);
+    return true;
+  }
+
   function wireAvailabilityPriceState(p){
     const availability=$(p+"Availability");
     const usd=$(p+"PriceUSD");
@@ -9693,27 +10026,41 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(!availability) return;
 
     let hint=$(p+"NfsPriceHint");
-    if(!hint && usd?.closest(".field-row")){
+    if(!hint && myr?.closest(".field-row")){
       hint=document.createElement("div");
       hint.id=p+"NfsPriceHint";
       hint.className="nfs-price-hint";
       hint.hidden=true;
-      hint.textContent="Collection (NFS) can be saved without a price. Existing prices may be kept for your records, but visitors will see NOT FOR SALE instead of a sale price.";
-      usd.closest(".field-row").insertAdjacentElement("afterend",hint);
+      hint.textContent="Collection (NFS) can be saved without a price. If you enter MYR anyway, USD and SGD will still be converted automatically.";
+      myr.closest(".field-row").insertAdjacentElement("afterend",hint);
     }
 
     const sync=()=>{
       const isNfs=normalizeFilterValue(availability.value)==="collection (nfs)";
-      [usd,myr,sgd].forEach(input=>{
+
+      if(myr){
+        myr.required=!isNfs;
+        myr.closest(".field")?.classList.toggle("nfs-optional-price",isNfs);
+      }
+
+      [usd,sgd].forEach(input=>{
         if(!input) return;
         input.required=false;
         input.closest(".field")?.classList.toggle("nfs-optional-price",isNfs);
       });
+
+      const requiredNote=myr?.closest(".field")?.querySelector(".field-required-note");
+      if(requiredNote){
+        requiredNote.textContent=isNfs ? "optional for NFS" : "required*";
+        requiredNote.classList.toggle("is-optional",isNfs);
+      }
+
       if(hint) hint.hidden=!isNfs;
     };
 
     availability.addEventListener("change",sync);
     sync();
+    wireAutoCurrencyConversion(p);
   }
 
   function invalidFieldLabel(form,input){
@@ -17248,6 +17595,8 @@ function wireShimmer(container){
         return;
       }
 
+      await ensureMyrConversionBeforeSave("add");
+
       const data = collectFields("add", null, formState);
       if(!data.name || !data.game){
         showToast("Card name and game are required.");
@@ -18231,6 +18580,8 @@ function wireShimmer(container){
       showToast(field ? `Please complete: ${field}` : "Please complete the required fields.");
       return;
     }
+
+    await ensureMyrConversionBeforeSave("edit");
 
     const id = $("editId").value;
     const data = collectFields("edit", id, editFormState);
