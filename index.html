@@ -6008,6 +6008,25 @@
     letter-spacing:.4px;
   }
 
+
+  /* ---------- Collection (NFS) pill ----------
+     Canonical NFS styling must win over generic availability/selected-pill rules. */
+  .clean-availability-pill[data-pill-value="Collection (NFS)"],
+  .clean-availability-pill[data-pill-value="Collection (NFS)"].pill-selected{
+    color:#d8b4fe !important;
+    border-color:rgba(192,132,252,.58) !important;
+    background:rgba(147,51,234,.18) !important;
+    box-shadow:inset 0 0 0 1px rgba(192,132,252,.08) !important;
+    text-transform:none !important;
+  }
+
+  .clean-availability-pill[data-pill-value="Collection (NFS)"]:hover,
+  .clean-availability-pill[data-pill-value="Collection (NFS)"]:focus-visible{
+    color:#ead7ff !important;
+    border-color:#c084fc !important;
+    background:rgba(147,51,234,.26) !important;
+  }
+
 </style>
 </head>
 <body>
@@ -9090,7 +9109,7 @@ function relatedCardHTML(c){
               ${(grades.length || format === "Raw" || format === "Sealed")
                 ? `<button type="button" class="clean-grade-badge filter-pill-btn ${pillFilterState.grade.has(gradeText) ? "pill-selected" : ""}" data-pill-filter="grade" data-pill-value="${escapeHtml(gradeText)}" title="Filter by ${escapeHtml(gradeText)}">${escapeHtml(gradeText)}</button>`
                 : `<span class="clean-grade-badge">${escapeHtml(gradeText)}</span>`}
-              ${c.availability ? `<button type="button" class="clean-meta-pill clean-availability-pill filter-pill-btn ${selectedSetMatches(pillFilterState.availability, c.availability) && pillFilterState.availability.size ? "pill-selected" : ""}" data-pill-filter="availability" data-pill-value="${escapeHtml(normalizeStoredLabel(c.availability))}" title="Filter by ${escapeHtml(normalizeStoredLabel(c.availability))}">${escapeHtml(normalizeStoredLabel(c.availability))}</button>` : ""}
+              ${c.availability ? `<button type="button" class="clean-meta-pill clean-availability-pill filter-pill-btn ${selectedSetMatches(pillFilterState.availability, c.availability) && pillFilterState.availability.size ? "pill-selected" : ""}" data-pill-filter="availability" data-pill-value="${escapeHtml(canonicalAvailability(c.availability))}" title="Filter by ${escapeHtml(canonicalAvailability(c.availability))}">${escapeHtml(canonicalAvailability(c.availability))}</button>` : ""}
               ${c.language ? `<button type="button" class="clean-meta-pill clean-language-pill filter-pill-btn ${selectedSetMatches(pillFilterState.language, c.language) && pillFilterState.language.size ? "pill-selected" : ""}" data-pill-filter="language" data-pill-value="${escapeHtml(String(c.language).toUpperCase())}" title="Filter by ${escapeHtml(String(c.language).toUpperCase())}">${escapeHtml(String(c.language).toUpperCase())}</button>` : ""}
               ${c.era ? `<button type="button" class="clean-meta-pill clean-era-pill filter-pill-btn ${selectedSetMatches(pillFilterState.era, c.era) && pillFilterState.era.size ? "pill-selected" : ""}" data-pill-filter="era" data-pill-value="${escapeHtml(normalizeStoredLabel(c.era))}" title="Filter by ${escapeHtml(normalizeStoredLabel(c.era))}">${escapeHtml(normalizeStoredLabel(c.era))}</button>` : ""}
               ${seriesText ? `<button type="button" class="clean-meta-pill clean-series-pill filter-pill-btn ${selectedSetMatches(pillFilterState.series, seriesText) && pillFilterState.series.size ? "pill-selected" : ""}" data-pill-filter="series" data-pill-value="${escapeHtml(seriesText)}" title="Filter by ${escapeHtml(seriesText)}">${escapeHtml(seriesText)}</button>` : ""}
@@ -15272,8 +15291,17 @@ function wireShimmer(container){
   const editForm = $("editForm");
   let editFormState = { images: [], grading: [], processingImages: 0 };
 
+  function resetEditSubmitButton(){
+    const submitBtn=editForm.querySelector('button[type="submit"]');
+    if(!submitBtn) return;
+    submitBtn.disabled=false;
+    submitBtn.textContent="Save changes";
+    submitBtn.removeAttribute("aria-busy");
+  }
+
   async function openEditModal(card){
     if(!requireOwner()) return;
+    resetEditSubmitButton();
     const privateMeta=await fetchOwnerPrivateMeta(card.id);
     $("editId").value = card.id;
     $("editFieldsMount").innerHTML = fieldsTemplate("edit");
@@ -15299,7 +15327,11 @@ function wireShimmer(container){
     wireGradingControls("edit", editFormState);
     overlay.hidden = false;
   }
-  function closeEditModal(){ overlay.hidden = true; editForm.reset(); }
+  function closeEditModal(){
+    overlay.hidden=true;
+    editForm.reset();
+    resetEditSubmitButton();
+  }
 
   $("cancelBtn").addEventListener("click", closeEditModal);
   overlay.addEventListener("click", (e)=>{ if(e.target === overlay) closeEditModal(); });
@@ -15327,30 +15359,40 @@ function wireShimmer(container){
     }
     if(!requireOwner()) return;
 
-    const submitBtn = editForm.querySelector('button[type="submit"]');
+    const submitBtn=editForm.querySelector('button[type="submit"]');
     if(submitBtn){
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Saving…";
+      submitBtn.disabled=true;
+      submitBtn.textContent="Saving…";
+      submitBtn.setAttribute("aria-busy","true");
     }
 
-    const saved = await updateCardStorage(data);
-    if(saved){
-      const idx = cards.findIndex(c=>c.id === id);
-      if(idx > -1) cards[idx] = saved;
+    try{
+      const saved=await updateCardStorage(data);
+      if(!saved){
+        resetEditSubmitButton();
+        return;
+      }
+
+      const idx=cards.findIndex(c=>c.id===id);
+      if(idx>-1) cards[idx]=saved;
+
       if(ownerPrivateSupported){
         await saveOwnerPrivateMeta(id,data._owner_tags,data._owner_notes);
       }
+
       if(hasPsaCert(data)){
         showToast("Card updated · syncing PSA POP…");
-        await refreshPsaPopForCard(id, false);
+        await refreshPsaPopForCard(id,false);
       }else{
         showToast("Card updated");
       }
+
       closeEditModal();
       router();
-    }else if(submitBtn){
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Save changes";
+    }catch(error){
+      console.error("Edit save flow error:",error);
+      resetEditSubmitButton();
+      showToast("Card was not fully saved. Please try again.");
     }
   });
 
