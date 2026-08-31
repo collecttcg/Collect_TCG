@@ -3501,6 +3501,247 @@
     }
   }
 
+
+  /* ---------- Card List bulk selection ---------- */
+  .fb-card-list-control-heading{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin:2px 0 12px;
+  }
+
+  .fb-card-list-control-heading h3{
+    margin:0;
+  }
+
+  .fb-card-list-selection-count{
+    flex:0 0 auto;
+    padding:4px 8px;
+    border:1px solid rgba(95,212,196,.24);
+    border-radius:999px;
+    background:rgba(95,212,196,.06);
+    color:var(--accent-teal);
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px;
+    font-weight:700;
+  }
+
+  .fb-card-list-selection-toolbar{
+    margin-bottom:10px;
+  }
+
+  .fb-card-list-search-field{
+    margin-bottom:8px !important;
+  }
+
+  .fb-card-list-filter-row{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:7px;
+  }
+
+  .fb-card-list-filter-row .field{
+    margin-bottom:8px;
+  }
+
+  .fb-card-list-bulk-actions{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:6px;
+    margin-bottom:9px;
+  }
+
+  .fb-card-list-bulk-actions button{
+    min-height:34px;
+    justify-content:center;
+    padding:7px 8px;
+    font-size:9px;
+  }
+
+  .fb-card-list-picker{
+    max-height:390px;
+    overflow:auto;
+    padding:3px;
+    border:1px solid var(--border);
+    border-radius:11px;
+    background:var(--bg);
+  }
+
+  .fb-card-list-picker-row{
+    display:grid;
+    grid-template-columns:18px 42px minmax(0,1fr) auto;
+    gap:8px;
+    align-items:center;
+    padding:7px;
+    border:1px solid transparent;
+    border-radius:8px;
+    cursor:pointer;
+    transition:background .12s ease,border-color .12s ease;
+  }
+
+  .fb-card-list-picker-row + .fb-card-list-picker-row{
+    margin-top:2px;
+  }
+
+  .fb-card-list-picker-row:hover{
+    background:var(--surface);
+  }
+
+  .fb-card-list-picker-row.selected{
+    border-color:rgba(95,212,196,.20);
+    background:rgba(95,212,196,.045);
+  }
+
+  .fb-card-list-picker-row input{
+    width:15px;
+    height:15px;
+    margin:0;
+    accent-color:var(--accent-teal);
+  }
+
+  .fb-card-list-picker-thumb{
+    width:42px;
+    height:52px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:6px;
+    background:var(--surface-2);
+    color:var(--text-muted);
+    font-size:7px;
+  }
+
+  .fb-card-list-picker-thumb img{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:cover;
+  }
+
+  .fb-card-list-picker-copy{
+    min-width:0;
+  }
+
+  .fb-card-list-picker-copy strong{
+    display:block;
+    overflow:hidden;
+    color:var(--text);
+    font-size:9.5px;
+    line-height:1.25;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
+
+  .fb-card-list-picker-copy small{
+    display:block;
+    margin-top:3px;
+    overflow:hidden;
+    color:var(--text-muted);
+    font-size:7.6px;
+    line-height:1.25;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
+
+  .fb-card-list-picker-type{
+    max-width:78px;
+    overflow:hidden;
+    padding:3px 5px;
+    border-radius:6px;
+    background:var(--surface-2);
+    color:var(--accent-gold);
+    font-size:7.5px;
+    font-weight:700;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
+
+  .fb-card-list-picker-empty{
+    padding:18px 10px;
+    border:1px dashed var(--border);
+    border-radius:10px;
+    color:var(--text-muted);
+    text-align:center;
+    font-size:9px;
+  }
+
+  .fb-card-list-picker-empty[hidden]{
+    display:none !important;
+  }
+
+  .fb-card-list-settings-divider{
+    height:1px;
+    margin:16px 0;
+    background:var(--border);
+  }
+
+  .fb-card-list-preview-summary{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:9px;
+  }
+
+  .fb-card-list-preview-summary span{
+    padding:5px 7px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    background:var(--surface-2);
+    color:var(--text-muted);
+    font-size:8px;
+  }
+
+  .fb-card-list-preview-summary strong{
+    color:var(--accent-teal);
+    font-family:'JetBrains Mono',monospace;
+  }
+
+  @media(max-width:700px){
+    .fb-card-list-filter-row{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .fb-card-list-filter-row .field:last-child{
+      grid-column:1 / -1;
+    }
+
+    .fb-card-list-picker{
+      max-height:330px;
+    }
+
+    .fb-card-list-picker-row{
+      grid-template-columns:18px 38px minmax(0,1fr);
+    }
+
+    .fb-card-list-picker-thumb{
+      width:38px;
+      height:48px;
+    }
+
+    .fb-card-list-picker-type{
+      grid-column:3;
+      justify-self:start;
+      margin-top:-3px;
+      max-width:100%;
+    }
+  }
+
+  @media(max-width:390px){
+    .fb-card-list-bulk-actions{
+      grid-template-columns:1fr;
+    }
+
+    .fb-card-list-filter-row{
+      grid-template-columns:1fr;
+    }
+
+    .fb-card-list-filter-row .field:last-child{
+      grid-column:auto;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -7385,7 +7626,7 @@ function wireShimmer(container){
           <span class="fb-tools-switch-icon">☷</span>
           <span>
             <strong>Card List Post</strong>
-            <small>All available cards · full list · first images ZIP</small>
+            <small>Choose available cards · full list · first images ZIP</small>
           </span>
         </a>
       </div>
@@ -8047,28 +8288,86 @@ function wireShimmer(container){
     const availableCards = cards.filter(c=>
       normalizeFilterValue(c.availability || "Available") === "available"
     );
+    const selectedIds = new Set(availableCards.map(c=>String(c.id)));
+
+    const gameOptions = [...new Set(
+      availableCards.map(c=>String(c.game || "").trim()).filter(Boolean)
+    )].sort((a,b)=>a.localeCompare(b));
+
+    const eraOptions = [...new Set(
+      availableCards.map(c=>String(c.era || "").trim()).filter(Boolean)
+    )].sort((a,b)=>a.localeCompare(b));
 
     view.innerHTML = `
       <div class="page-head">
         <div>
           <div class="eyebrow">Owner Tool</div>
           <h2>Card List Post Generator</h2>
-          <p>Generate a Facebook sales list from every currently available inventory listing and download one cover image per listing as a ZIP.</p>
+          <p>Select exactly which available listings to include, generate the Facebook sales list, and download the first image from each selected listing as a ZIP.</p>
         </div>
       </div>
 
       <div class="card-list-generator-stats">
-        <div><strong>${availableCards.length}</strong><span>Available listings</span></div>
+        <div><strong id="fbCardListSelectedStat">${availableCards.length}</strong><span>Selected</span></div>
+        <div><strong>${availableCards.length}</strong><span>Available</span></div>
         <div><strong>${availableCards.filter(c=>cardListFormat(c)==="graded").length}</strong><span>Graded</span></div>
         <div><strong>${availableCards.filter(c=>cardListFormat(c)==="raw").length}</strong><span>Raw</span></div>
         <div><strong>${availableCards.filter(c=>cardListFormat(c)==="sealed").length}</strong><span>Sealed</span></div>
-        <div><strong>${availableCards.filter(c=>getImages(c).length).length}</strong><span>With image</span></div>
       </div>
 
       <div class="fb-card-list-layout">
         <section class="panel fb-card-list-controls">
-          <div class="eyebrow">Post Settings</div>
-          <h3>Card List</h3>
+          <div class="eyebrow">1 · Choose Listings</div>
+          <div class="fb-card-list-control-heading">
+            <h3>Cards to Include</h3>
+            <span class="fb-card-list-selection-count" id="fbCardListSelectionCount">${availableCards.length} / ${availableCards.length}</span>
+          </div>
+
+          <div class="fb-card-list-selection-toolbar">
+            <div class="field fb-card-list-search-field">
+              <label for="fbCardListSearch">Search</label>
+              <input id="fbCardListSearch" type="search" maxlength="100" placeholder="Name, code or series…">
+            </div>
+
+            <div class="fb-card-list-filter-row">
+              <div class="field">
+                <label for="fbCardListGameFilter">Game</label>
+                <select id="fbCardListGameFilter">
+                  <option value="">All games</option>
+                  ${gameOptions.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+                </select>
+              </div>
+              <div class="field">
+                <label for="fbCardListEraFilter">Era</label>
+                <select id="fbCardListEraFilter">
+                  <option value="">All eras</option>
+                  ${eraOptions.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+                </select>
+              </div>
+              <div class="field">
+                <label for="fbCardListFormatFilter">Type</label>
+                <select id="fbCardListFormatFilter">
+                  <option value="">All types</option>
+                  <option value="graded">Graded</option>
+                  <option value="raw">Raw</option>
+                  <option value="sealed">Sealed</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="fb-card-list-bulk-actions">
+              <button type="button" class="btn-ghost" id="fbCardListSelectAllBtn">Select All</button>
+              <button type="button" class="btn-ghost" id="fbCardListClearAllBtn">Clear All</button>
+              <button type="button" class="btn-ghost" id="fbCardListSelectFilteredBtn">Select Filtered</button>
+              <button type="button" class="btn-ghost" id="fbCardListClearFilteredBtn">Clear Filtered</button>
+            </div>
+          </div>
+
+          <div class="fb-card-list-picker" id="fbCardListPicker" aria-label="Available cards"></div>
+          <div class="fb-card-list-picker-empty" id="fbCardListPickerEmpty" hidden>No cards match the current filters.</div>
+
+          <div class="fb-card-list-settings-divider"></div>
+          <div class="eyebrow">2 · Post Settings</div>
 
           <div class="field">
             <label for="fbCardListTitle">List title</label>
@@ -8109,29 +8408,40 @@ function wireShimmer(container){
 
           <div class="fb-card-list-image-note">
             <strong>ZIP image rule</strong>
-            <span>Only the first image from each available listing is included. Existing watermarked images remain unchanged.</span>
+            <span>Only the first image from each selected listing is included. Existing watermarked images remain unchanged.</span>
           </div>
 
-          <button type="button" class="btn-primary fb-card-list-zip-btn" id="fbCardListZipBtn" ${availableCards.some(c=>getImages(c).length)?"":"disabled"}>
-            Download First Images (.ZIP)
+          <button type="button" class="btn-primary fb-card-list-zip-btn" id="fbCardListZipBtn">
+            Download Selected First Images (.ZIP)
           </button>
-          <div class="hint" id="fbCardListZipStatus">${availableCards.filter(c=>getImages(c).length).length} first image${availableCards.filter(c=>getImages(c).length).length===1?"":"s"} ready for ZIP.</div>
+          <div class="hint" id="fbCardListZipStatus"></div>
         </section>
 
         <section class="panel fb-card-list-preview-panel">
           <div class="fb-post-section-title">
             <div>
-              <div class="eyebrow">Post Preview</div>
+              <div class="eyebrow">3 · Preview & Copy</div>
               <h3>Facebook Card List</h3>
             </div>
             <button type="button" class="btn-primary" id="fbCardListCopyBtn">Copy Full Post</button>
           </div>
 
+          <div class="fb-card-list-preview-summary" id="fbCardListPreviewSummary"></div>
           <textarea id="fbCardListOutput" class="fb-post-output fb-card-list-output"></textarea>
-          <div class="hint">The preview is editable. Changing the settings regenerates it.</div>
+          <div class="hint">The preview is editable. Changing the selection or settings regenerates it.</div>
         </section>
       </div>
     `;
+
+    const searchInput=$("fbCardListSearch");
+    const gameFilter=$("fbCardListGameFilter");
+    const eraFilter=$("fbCardListEraFilter");
+    const formatFilter=$("fbCardListFormatFilter");
+    const picker=$("fbCardListPicker");
+    const pickerEmpty=$("fbCardListPickerEmpty");
+    const selectionCount=$("fbCardListSelectionCount");
+    const selectedStat=$("fbCardListSelectedStat");
+    const previewSummary=$("fbCardListPreviewSummary");
 
     const titleInput=$("fbCardListTitle");
     const termsInput=$("fbCardListTerms");
@@ -8155,24 +8465,170 @@ function wireShimmer(container){
       };
     }
 
+    function selectedCards(){
+      return availableCards.filter(c=>selectedIds.has(String(c.id)));
+    }
+
+    function matchesPickerFilters(card){
+      const q=normalizeFilterValue(searchInput.value);
+      const game=normalizeFilterValue(gameFilter.value);
+      const era=normalizeFilterValue(eraFilter.value);
+      const type=normalizeFilterValue(formatFilter.value);
+
+      if(game && normalizeFilterValue(card.game)!==game) return false;
+      if(era && normalizeFilterValue(card.era)!==era) return false;
+      if(type && cardListFormat(card)!==type) return false;
+
+      if(q){
+        const hay=[
+          card.name,
+          card.card_code,
+          card.series,
+          card.year,
+          card.game,
+          card.era,
+          card.language
+        ].map(v=>normalizeFilterValue(v)).join(" ");
+        if(!hay.includes(q)) return false;
+      }
+
+      return true;
+    }
+
+    function filteredCards(){
+      return availableCards.filter(matchesPickerFilters);
+    }
+
+    function renderPicker(){
+      const visible=filteredCards();
+      pickerEmpty.hidden=visible.length>0;
+
+      picker.innerHTML=visible.map(card=>{
+        const id=String(card.id);
+        const checked=selectedIds.has(id);
+        const image=getImages(card)[0] || "";
+        const type=cardListFormat(card);
+        const grade=type==="graded" ? gradedPostLabel(card) : (type==="sealed" ? "SEALED" : rawConditionPostLabel(card));
+        const meta=[
+          card.card_code,
+          card.year,
+          card.series,
+          card.game
+        ].filter(Boolean).join(" · ");
+
+        return `
+          <label class="fb-card-list-picker-row ${checked?"selected":""}">
+            <input type="checkbox" data-card-list-id="${escapeHtml(id)}" ${checked?"checked":""}>
+            <span class="fb-card-list-picker-thumb">
+              ${image ? `<img src="${escapeHtml(image)}" alt="">` : `<span>No image</span>`}
+            </span>
+            <span class="fb-card-list-picker-copy">
+              <strong>${escapeHtml(card.name || "Untitled card")}</strong>
+              <small>${escapeHtml(meta)}</small>
+            </span>
+            <span class="fb-card-list-picker-type">${escapeHtml(grade)}</span>
+          </label>
+        `;
+      }).join("");
+
+      picker.querySelectorAll("[data-card-list-id]").forEach(input=>{
+        input.addEventListener("change",()=>{
+          const id=String(input.dataset.cardListId || "");
+          if(input.checked) selectedIds.add(id);
+          else selectedIds.delete(id);
+          input.closest(".fb-card-list-picker-row")?.classList.toggle("selected",input.checked);
+          refreshSelectionOutputs();
+        });
+      });
+    }
+
+    function updateSelectionStatus(){
+      const selected=selectedCards();
+      const selectedWithImage=selected.filter(c=>getImages(c).length);
+      selectionCount.textContent=`${selected.length} / ${availableCards.length}`;
+      selectedStat.textContent=selected.length;
+      previewSummary.innerHTML=`
+        <span><strong>${selected.length}</strong> listing${selected.length===1?"":"s"} selected</span>
+        <span><strong>${selected.filter(c=>cardListFormat(c)==="graded").length}</strong> graded</span>
+        <span><strong>${selected.filter(c=>cardListFormat(c)==="raw").length}</strong> raw</span>
+        <span><strong>${selected.filter(c=>cardListFormat(c)==="sealed").length}</strong> sealed</span>
+      `;
+
+      zipBtn.disabled=selectedWithImage.length===0;
+      zipStatus.textContent=selectedWithImage.length
+        ? `${selectedWithImage.length} selected first image${selectedWithImage.length===1?"":"s"} ready for ZIP.`
+        : "No selected listings currently have an image.";
+
+      copyBtn.disabled=selected.length===0;
+    }
+
     function regenerate(){
       const now=currentPrefs();
       saveFbCardListPostPrefs(now);
-      output.value=buildFbCardListPost(availableCards,now);
+      const selected=selectedCards();
+      output.value=selected.length
+        ? buildFbCardListPost(selected,now)
+        : "";
+      updateSelectionStatus();
     }
+
+    function refreshSelectionOutputs(){
+      regenerate();
+    }
+
+    function setSelectionForCards(cardList,selected){
+      cardList.forEach(card=>{
+        const id=String(card.id);
+        if(selected) selectedIds.add(id);
+        else selectedIds.delete(id);
+      });
+      renderPicker();
+      refreshSelectionOutputs();
+    }
+
+    [searchInput,gameFilter,eraFilter,formatFilter].forEach(el=>{
+      el.addEventListener("input",renderPicker);
+      el.addEventListener("change",renderPicker);
+    });
+
+    $("fbCardListSelectAllBtn").addEventListener("click",()=>{
+      setSelectionForCards(availableCards,true);
+    });
+
+    $("fbCardListClearAllBtn").addEventListener("click",()=>{
+      setSelectionForCards(availableCards,false);
+    });
+
+    $("fbCardListSelectFilteredBtn").addEventListener("click",()=>{
+      setSelectionForCards(filteredCards(),true);
+    });
+
+    $("fbCardListClearFilteredBtn").addEventListener("click",()=>{
+      setSelectionForCards(filteredCards(),false);
+    });
 
     [titleInput,termsInput,carousellMYInput,carousellSGInput,instagramInput,hashtagsInput].forEach(el=>{
       el.addEventListener("input",regenerate);
       el.addEventListener("change",regenerate);
     });
 
-    copyBtn.addEventListener("click",()=>copyPlainText(output.value,"Card list post copied"));
+    copyBtn.addEventListener("click",()=>{
+      if(!selectedCards().length){
+        showToast("Select at least one card");
+        return;
+      }
+      copyPlainText(output.value,"Card list post copied");
+    });
 
     zipBtn.addEventListener("click",async()=>{
       if(!requireOwner("download card list ZIP")) return;
-      const zipCards=sortCardListCards(availableCards.filter(c=>getImages(c).length));
+
+      const zipCards=sortCardListCards(
+        selectedCards().filter(c=>getImages(c).length)
+      );
+
       if(!zipCards.length){
-        showToast("No available card images to download");
+        showToast("No selected card images to download");
         return;
       }
 
@@ -8194,15 +8650,16 @@ function wireShimmer(container){
         );
       }catch(err){
         console.error("Card list ZIP error:",err);
-        const reason = String(err?.message || "Unknown ZIP error").slice(0,180);
+        const reason=String(err?.message || "Unknown ZIP error").slice(0,180);
         zipStatus.textContent=`Could not create ZIP: ${reason}`;
         showToast("Could not create image ZIP");
       }finally{
-        zipBtn.disabled=false;
+        zipBtn.disabled=selectedCards().filter(c=>getImages(c).length).length===0;
         zipBtn.textContent=old;
       }
     });
 
+    renderPicker();
     regenerate();
   }
 
