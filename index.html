@@ -524,18 +524,6 @@
   .detail-price-values span{color:var(--accent-gold);font-size:16px;font-weight:700;}
 
   .owner-view-count{margin-top:4px;color:var(--accent-gold);font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:600;}
-  .details-top-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:12px;position:sticky;top:0;z-index:8;padding:2px 0 8px;background:var(--surface);}
-  .details-top-actions button{white-space:nowrap;}
-
-
-  /* ---------- Subtle integrated card-detail controls ---------- */
-  .details-top-actions{position:sticky;top:0;z-index:8;display:flex;justify-content:flex-end;align-items:center;gap:5px;margin:-6px -6px 8px;padding:4px 4px 8px;background:linear-gradient(to bottom,var(--surface) 78%,transparent);border-bottom:1px solid var(--border-soft);}
-  .details-top-actions button{width:auto;min-width:0;padding:5px 9px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--text-muted);font-family:'Inter',sans-serif;font-size:10px;font-weight:600;box-shadow:none;white-space:nowrap;}
-  .details-top-actions button:hover{background:var(--surface-2);border-color:var(--border);color:var(--text);transform:none;}
-  .details-top-actions #detailsEditBtn{background:transparent;border-color:var(--border);color:var(--text);}
-  .details-top-actions #detailsEditBtn:hover{background:var(--surface-2);border-color:var(--accent-gold);color:var(--accent-gold);}
-
-
   /* ---------- Consistent owner-only detail fields ---------- */
   body.owner-mode .detail-item.owner-only{display:block !important;}
   body.owner-mode .detail-item.owner-only .detail-label{display:block;margin-bottom:3px;}
@@ -1154,33 +1142,7 @@
   
 
 
-  /* ===== Card detail window: integrated top action bar =====
-     Close/Edit are part of the modal header instead of floating/sticky controls. */
-  .modal.card-details-modal{padding:0 !important;}
-
-  .modal.card-details-modal .details-top-actions{position:static !important;top:auto !important;z-index:auto !important;display:flex !important;justify-content:flex-end !important;align-items:center !important;gap:7px !important;width:100% !important;margin:0 !important;padding:11px 13px !important;background:var(--surface-2) !important;border-bottom:1px solid var(--border) !important;border-radius:15px 15px 0 0 !important;}
-
-  .modal.card-details-modal .details-top-actions button{position:static !important;width:auto !important;min-width:0 !important;height:32px !important;margin:0 !important;padding:0 11px !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;border:1px solid var(--border) !important;border-radius:8px !important;background:var(--surface) !important;color:var(--text-muted) !important;box-shadow:none !important;font-family:'Inter',sans-serif !important;font-size:10.5px !important;font-weight:600 !important;line-height:1 !important;cursor:pointer !important;transform:none !important;}
-
-  .modal.card-details-modal .details-top-actions button:hover{color:var(--text) !important;background:var(--surface-3,var(--surface)) !important;border-color:var(--text-muted) !important;transform:none !important;}
-
-  .modal.card-details-modal .details-top-actions #detailsEditBtn{color:#17130a !important;background:var(--accent-gold) !important;border-color:var(--accent-gold) !important;}
-
-  .modal.card-details-modal .details-top-actions #detailsEditBtn:hover{color:#17130a !important;background:var(--accent-gold-soft) !important;border-color:var(--accent-gold-soft) !important;}
-
-  /* The modal content starts cleanly underneath the integrated header. */
-  .modal.card-details-modal #detailsMount{padding:18px 22px 22px !important;}
-
-  @media(max-width:760px){
-    .modal.card-details-modal .details-top-actions{padding:9px 10px !important;border-radius:11px 11px 0 0 !important;}
-
-    .modal.card-details-modal .details-top-actions button{height:34px !important;padding:0 10px !important;font-size:10.5px !important;}
-
-    .modal.card-details-modal #detailsMount{padding:12px 14px calc(88px + env(safe-area-inset-bottom,0px)) !important;}
-  }
-
-
-/* ===== Responsive desktop card layout fix =====
+  /* ===== Responsive desktop card layout fix =====
    Prevent card information from being squeezed on narrower PC/browser widths. */
 
 /* Let CSS decide how many cards actually fit instead of forcing too many columns. */
@@ -2962,14 +2924,6 @@
   }
 
   @media(max-width:700px){
-    .details-top-actions{
-      flex-wrap:wrap;
-    }
-
-    .details-top-actions #detailsDownloadBtn{
-      order:3;
-    }
-
     .image-lightbox-download{
       top:16px;
       right:62px;
@@ -2980,11 +2934,6 @@
   }
 
   @media(max-width:390px){
-    .details-top-actions button{
-      padding:5px 7px;
-      font-size:9.5px;
-    }
-
     .image-lightbox-download{
       top:14px;
       right:56px;
@@ -5149,17 +5098,6 @@
       font-size:7px;
     }
 
-    .details-top-actions{
-      justify-content:flex-start !important;
-      flex-wrap:nowrap !important;
-      overflow-x:auto;
-      scrollbar-width:thin;
-    }
-
-    .details-top-actions button{
-      flex:0 0 auto;
-    }
-
     .compare-tray{
       bottom:10px;
       width:calc(100vw - 20px);
@@ -5506,146 +5444,6 @@
       overflow:visible !important;
     }
 
-  }
-
-
-  /* ===== Card details actions: obvious Close, Edit remains owner-rightmost ===== */
-  .modal.card-details-modal .details-top-actions{
-    display:grid !important;
-    grid-template-columns:minmax(0,1fr) auto !important;
-    align-items:center !important;
-    gap:10px !important;
-    overflow:visible !important;
-  }
-
-  .modal.card-details-modal .details-secondary-actions{
-    min-width:0;
-    display:flex;
-    align-items:center;
-    justify-content:flex-start;
-    gap:7px;
-    overflow-x:auto;
-    overflow-y:hidden;
-    scrollbar-width:thin;
-    -webkit-overflow-scrolling:touch;
-    padding:1px 0;
-  }
-
-  .modal.card-details-modal .details-secondary-actions button{
-    flex:0 0 auto !important;
-  }
-
-  .modal.card-details-modal .details-primary-actions{
-    position:relative;
-    z-index:3;
-    display:flex;
-    align-items:center;
-    justify-content:flex-end;
-    gap:7px;
-    flex:0 0 auto;
-    padding-left:9px;
-    border-left:1px solid var(--border);
-    background:var(--surface-2);
-  }
-
-  .modal.card-details-modal .details-primary-actions #detailsCloseBtn{
-    min-width:82px !important;
-    border:1px solid rgba(248,113,113,.42) !important;
-    background:rgba(248,113,113,.08) !important;
-    color:#fca5a5 !important;
-    font-weight:800 !important;
-  }
-
-  .modal.card-details-modal .details-primary-actions #detailsCloseBtn span{
-    margin-right:5px;
-    font-size:16px;
-    font-weight:500;
-    line-height:1;
-  }
-
-  .modal.card-details-modal .details-primary-actions #detailsCloseBtn:hover,
-  .modal.card-details-modal .details-primary-actions #detailsCloseBtn:focus-visible{
-    border-color:#f87171 !important;
-    background:rgba(248,113,113,.15) !important;
-    color:#fff !important;
-  }
-
-  body.owner-mode .modal.card-details-modal .details-primary-actions #detailsEditBtn{
-    min-width:82px !important;
-  }
-
-  @media(max-width:760px){
-    .modal.card-details-modal .details-top-actions{
-      grid-template-columns:minmax(0,1fr) auto !important;
-      gap:7px !important;
-      padding:8px 8px !important;
-      overflow:visible !important;
-    }
-
-    .modal.card-details-modal .details-secondary-actions{
-      gap:5px;
-      padding-right:2px;
-      mask-image:linear-gradient(to right,#000 calc(100% - 20px),transparent 100%);
-      -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 20px),transparent 100%);
-    }
-
-    .modal.card-details-modal .details-secondary-actions button{
-      height:34px !important;
-      padding:0 9px !important;
-      font-size:10px !important;
-    }
-
-    .modal.card-details-modal .details-primary-actions{
-      gap:5px;
-      padding-left:7px;
-    }
-
-    .modal.card-details-modal .details-primary-actions #detailsCloseBtn{
-      min-width:42px !important;
-      width:42px !important;
-      padding:0 !important;
-      font-size:0 !important;
-      border-radius:9px !important;
-    }
-
-    .modal.card-details-modal .details-primary-actions #detailsCloseBtn span{
-      margin:0;
-      font-size:23px !important;
-      line-height:1;
-    }
-
-    body.owner-mode .modal.card-details-modal .details-primary-actions #detailsCloseBtn{
-      min-width:42px !important;
-      width:42px !important;
-    }
-
-    body.owner-mode .modal.card-details-modal .details-primary-actions #detailsEditBtn{
-      min-width:58px !important;
-      padding:0 9px !important;
-      font-size:10px !important;
-    }
-  }
-
-  @media(max-width:390px){
-    .modal.card-details-modal .details-top-actions{
-      gap:5px !important;
-      padding:7px !important;
-    }
-
-    .modal.card-details-modal .details-primary-actions{
-      padding-left:5px;
-    }
-
-    .modal.card-details-modal .details-primary-actions #detailsCloseBtn{
-      min-width:40px !important;
-      width:40px !important;
-      height:34px !important;
-    }
-
-    body.owner-mode .modal.card-details-modal .details-primary-actions #detailsEditBtn{
-      min-width:52px !important;
-      padding:0 7px !important;
-    }
   }
 
 
@@ -6711,6 +6509,296 @@
     .sticky-mobile-results-bar{transition:none!important;}
   }
 
+
+  /* ==========================================================
+     Card Details action bar — authoritative Phase 3 rules
+     Public: Close remains far-right.
+     Owner: Close sits immediately left of Edit; Edit is far-right.
+     ========================================================== */
+  .modal.card-details-modal{
+    padding:0 !important;
+  }
+
+  .modal.card-details-modal .details-top-actions{
+    position:sticky;
+    top:0;
+    z-index:28;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:center;
+    gap:10px;
+    width:100%;
+    margin:0;
+    padding:10px 12px;
+    border-bottom:1px solid var(--border);
+    border-radius:15px 15px 0 0;
+    background:rgba(33,35,43,.97);
+    box-shadow:0 6px 16px rgba(0,0,0,.10);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    overflow:visible;
+  }
+
+  .modal.card-details-modal .details-secondary-actions,
+  .modal.card-details-modal .details-primary-actions{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+
+  .modal.card-details-modal .details-secondary-actions{
+    min-width:0;
+    justify-content:flex-start;
+    overflow:visible;
+  }
+
+  .modal.card-details-modal .details-primary-actions{
+    position:relative;
+    z-index:3;
+    justify-content:flex-end;
+    flex:0 0 auto;
+    padding-left:9px;
+    border-left:1px solid var(--border);
+  }
+
+  .modal.card-details-modal .details-top-actions button{
+    position:static;
+    min-width:0;
+    min-height:36px;
+    margin:0;
+    padding:0 10px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:var(--surface);
+    color:var(--text-muted);
+    box-shadow:none;
+    font-family:'Inter',sans-serif;
+    font-size:10px;
+    font-weight:700;
+    line-height:1;
+    white-space:nowrap;
+    cursor:pointer;
+    transform:none;
+  }
+
+  .modal.card-details-modal .details-top-actions button:hover,
+  .modal.card-details-modal .details-top-actions button:focus-visible{
+    border-color:var(--text-muted);
+    background:var(--surface-2);
+    color:var(--text);
+    transform:none;
+  }
+
+  .modal.card-details-modal #detailsFavoriteBtn.active{
+    border-color:rgba(248,113,113,.32);
+    background:rgba(248,113,113,.07);
+    color:#fca5a5;
+  }
+
+  .modal.card-details-modal .details-contact-btn{
+    border-color:rgba(95,212,196,.35) !important;
+    background:rgba(95,212,196,.07) !important;
+    color:var(--accent-teal) !important;
+  }
+
+  .modal.card-details-modal .details-contact-btn:hover,
+  .modal.card-details-modal .details-contact-btn:focus-visible{
+    border-color:var(--accent-teal) !important;
+    background:rgba(95,212,196,.12) !important;
+  }
+
+  .details-action-label-mobile{
+    display:none;
+  }
+
+  .details-more-wrap{
+    position:relative;
+    flex:0 0 auto;
+  }
+
+  .modal.card-details-modal .details-more-menu{
+    position:absolute;
+    top:calc(100% + 7px);
+    right:0;
+    z-index:48;
+    width:max-content;
+    min-width:190px;
+    max-width:min(270px,calc(100vw - 28px));
+    padding:5px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--surface-2);
+    box-shadow:0 16px 36px rgba(0,0,0,.38);
+  }
+
+  .modal.card-details-modal .details-more-menu[hidden]{
+    display:none !important;
+  }
+
+  .modal.card-details-modal .details-more-menu button{
+    width:100% !important;
+    min-height:38px;
+    justify-content:flex-start;
+    padding:0 10px;
+    border-color:transparent;
+    background:transparent;
+    color:var(--text);
+    text-align:left;
+  }
+
+  .modal.card-details-modal .details-more-menu button:hover,
+  .modal.card-details-modal .details-more-menu button:focus-visible{
+    border-color:transparent;
+    background:var(--surface);
+    color:var(--accent-teal);
+  }
+
+  .modal.card-details-modal .details-primary-actions #detailsCloseBtn{
+    min-width:80px;
+    border-color:rgba(248,113,113,.42);
+    background:rgba(248,113,113,.08);
+    color:#fca5a5;
+    font-weight:800;
+  }
+
+  .modal.card-details-modal .details-primary-actions #detailsCloseBtn span{
+    margin-right:1px;
+    font-size:16px;
+    font-weight:500;
+    line-height:1;
+  }
+
+  .modal.card-details-modal .details-primary-actions #detailsCloseBtn:hover,
+  .modal.card-details-modal .details-primary-actions #detailsCloseBtn:focus-visible{
+    border-color:#f87171;
+    background:rgba(248,113,113,.15);
+    color:#fff;
+  }
+
+  .modal.card-details-modal .details-primary-actions #detailsEditBtn{
+    min-width:80px;
+    border-color:var(--accent-gold) !important;
+    background:var(--accent-gold) !important;
+    color:#17130a !important;
+  }
+
+  .modal.card-details-modal .details-primary-actions #detailsEditBtn:hover,
+  .modal.card-details-modal .details-primary-actions #detailsEditBtn:focus-visible{
+    border-color:var(--accent-gold-soft) !important;
+    background:var(--accent-gold-soft) !important;
+    color:#17130a !important;
+  }
+
+  .modal.card-details-modal #detailsMount{
+    padding:18px 22px 22px !important;
+  }
+
+  @media(max-width:800px){
+    .modal.card-details-modal .details-top-actions{
+      gap:6px;
+      padding:7px 8px;
+      border-radius:11px 11px 0 0;
+    }
+
+    .modal.card-details-modal .details-secondary-actions{
+      gap:4px;
+    }
+
+    .modal.card-details-modal .details-primary-actions{
+      gap:4px;
+      padding-left:6px;
+    }
+
+    .modal.card-details-modal .details-top-actions button{
+      min-height:38px;
+      padding:0 7px;
+      border-radius:8px;
+      font-size:9.5px;
+    }
+
+    .details-action-label-desktop{
+      display:none;
+    }
+
+    .details-action-label-mobile{
+      display:inline;
+    }
+
+    .modal.card-details-modal .details-more-menu{
+      right:0;
+      min-width:180px;
+    }
+
+    .modal.card-details-modal .details-primary-actions #detailsCloseBtn{
+      width:42px;
+      min-width:42px;
+      padding:0;
+      font-size:0;
+    }
+
+    .modal.card-details-modal .details-primary-actions #detailsCloseBtn span{
+      margin:0;
+      font-size:22px;
+    }
+
+    body.owner-mode .modal.card-details-modal .details-primary-actions #detailsEditBtn{
+      min-width:56px;
+      padding:0 8px;
+    }
+
+    .modal.card-details-modal #detailsMount{
+      padding:12px 14px calc(88px + env(safe-area-inset-bottom,0px)) !important;
+    }
+  }
+
+  @media(max-width:430px){
+    .modal.card-details-modal .details-top-actions{
+      gap:4px;
+      padding:6px;
+    }
+
+    .modal.card-details-modal .details-secondary-actions,
+    .modal.card-details-modal .details-primary-actions{
+      gap:3px;
+    }
+
+    .modal.card-details-modal .details-primary-actions{
+      padding-left:4px;
+    }
+
+    .modal.card-details-modal .details-top-actions button{
+      min-height:36px;
+      padding:0 6px;
+      font-size:9px;
+    }
+
+    .modal.card-details-modal .details-primary-actions #detailsCloseBtn{
+      width:39px;
+      min-width:39px;
+      height:36px;
+    }
+
+    body.owner-mode .modal.card-details-modal .details-primary-actions #detailsEditBtn{
+      min-width:50px;
+      padding:0 6px;
+      font-size:9px;
+    }
+
+    .modal.card-details-modal .details-more-menu{
+      min-width:172px;
+    }
+  }
+
+  @media(prefers-reduced-motion:reduce){
+    .modal.card-details-modal .details-top-actions button{
+      transition:none !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -6789,15 +6877,40 @@
   <div class="modal card-details-modal" id="detailsModal" role="dialog" aria-modal="true" aria-labelledby="detailsTitle">
     <div class="details-top-actions">
       <div class="details-secondary-actions" aria-label="Card actions">
-        <button type="button" id="detailsFavoriteBtn" aria-label="Add to favorites">♡ Favorite</button>
+        <button type="button" id="detailsFavoriteBtn" aria-label="Add to favorites">
+          <span class="details-favorite-icon" data-favorite-icon aria-hidden="true">♡</span>
+          <span class="details-action-label-desktop" data-favorite-label-desktop>Favorite</span>
+          <span class="details-action-label-mobile" data-favorite-label-mobile>Fav</span>
+        </button>
+
+        <button type="button" class="details-contact-btn" id="detailsFacebookBtn" aria-label="Message Collect TCG on Facebook">
+          <span class="details-action-label-desktop">PM us on FB</span>
+          <span class="details-action-label-mobile">Message</span>
+        </button>
+
         <button type="button" id="detailsShareBtn" aria-label="Share this card">Share</button>
-        <button type="button" id="detailsWhatsAppBtn" aria-label="Share this card on WhatsApp">WhatsApp</button>
-        <button type="button" id="detailsFacebookBtn" aria-label="Message Collect TCG on Facebook">PM us on FB</button>
-        <button type="button" id="detailsDownloadBtn" aria-label="Download current card image">Download Image</button>
-        <button type="button" class="owner-only" id="detailsCloneBtn" hidden>Clone card</button>
+
+        <div class="details-more-wrap">
+          <button type="button"
+                  id="detailsMoreBtn"
+                  aria-haspopup="menu"
+                  aria-expanded="false"
+                  aria-controls="detailsMoreMenu">
+            More <span aria-hidden="true">▾</span>
+          </button>
+
+          <div class="details-more-menu" id="detailsMoreMenu" role="menu" hidden>
+            <button type="button" id="detailsWhatsAppBtn" role="menuitem">Share on WhatsApp</button>
+            <button type="button" id="detailsDownloadBtn" role="menuitem">Download current image</button>
+            <button type="button" class="owner-only" id="detailsCloneBtn" role="menuitem" hidden>Clone card</button>
+          </div>
+        </div>
       </div>
+
       <div class="details-primary-actions" aria-label="Close or edit card">
-        <button type="button" class="details-close-btn" id="detailsCloseBtn" aria-label="Close card details"><span aria-hidden="true">×</span> Close</button>
+        <button type="button" class="details-close-btn" id="detailsCloseBtn" aria-label="Close card details">
+          <span aria-hidden="true">×</span> Close
+        </button>
         <button type="button" class="btn-primary owner-only" id="detailsEditBtn" hidden>Edit card</button>
       </div>
     </div>
@@ -16370,8 +16483,19 @@ function wireShimmer(container){
       previous:index>0 ? list[index-1] : null,
       next:index>=0 && index<list.length-1 ? list[index+1] : null,
       total:list.length,
-      index
+      index,
+      ids:list.map(item=>String(item.id))
     };
+  }
+
+  function sameSeriesNavigationIsRedundant(seriesNav,filteredNav){
+    if(!seriesNav || !filteredNav || seriesNav.total<=1 || filteredNav.total<=1) return false;
+    if(seriesNav.total!==filteredNav.total) return false;
+
+    const context=getFilteredResultsBrowseContext();
+    if(!context || context.ids.length!==seriesNav.ids.length) return false;
+
+    return seriesNav.ids.every((id,index)=>id===context.ids[index]);
   }
 
   let detailsCardTransitionTimer=null;
@@ -16446,6 +16570,45 @@ function wireShimmer(container){
     },105);
   }
 
+  function syncDetailsFavoriteButton(card){
+    const btn=$("detailsFavoriteBtn");
+    if(!btn || !card) return;
+
+    const fav=isFavorite(card.id);
+    btn.classList.toggle("active",fav);
+    btn.setAttribute("aria-label",fav ? "Remove from favorites" : "Add to favorites");
+
+    const icon=btn.querySelector("[data-favorite-icon]");
+    const desktop=btn.querySelector("[data-favorite-label-desktop]");
+    const mobile=btn.querySelector("[data-favorite-label-mobile]");
+
+    if(icon) icon.textContent=fav ? "♥" : "♡";
+    if(desktop) desktop.textContent=fav ? "Favorited" : "Favorite";
+    if(mobile) mobile.textContent=fav ? "Saved" : "Fav";
+  }
+
+  function closeDetailsMoreMenu(){
+    const menu=$("detailsMoreMenu");
+    const btn=$("detailsMoreBtn");
+    if(menu) menu.hidden=true;
+    if(btn) btn.setAttribute("aria-expanded","false");
+  }
+
+  function toggleDetailsMoreMenu(){
+    const menu=$("detailsMoreMenu");
+    const btn=$("detailsMoreBtn");
+    if(!menu || !btn) return;
+
+    const willOpen=menu.hidden;
+    menu.hidden=!willOpen;
+    btn.setAttribute("aria-expanded",willOpen ? "true" : "false");
+
+    if(willOpen){
+      const first=menu.querySelector('button:not([hidden])');
+      first?.focus({preventScroll:true});
+    }
+  }
+
   function openDetailsModal(card){
     if(!card) return;
     if(!isOwnerMode() && !isLiveLifecycle(card)){
@@ -16486,13 +16649,8 @@ function wireShimmer(container){
     const filteredResultNav=getFilteredResultNavigation(card.id);
     const soldDateLabel = formatSoldDate(card.sold_at);
 
-    const detailsFavoriteBtn = $("detailsFavoriteBtn");
-    if(detailsFavoriteBtn){
-      const fav = isFavorite(card.id);
-      detailsFavoriteBtn.textContent = fav ? "♥ Favorited" : "♡ Favorite";
-      detailsFavoriteBtn.classList.toggle("active", fav);
-      detailsFavoriteBtn.setAttribute("aria-label", fav ? "Remove from favorites" : "Add to favorites");
-    }
+    syncDetailsFavoriteButton(card);
+    closeDetailsMoreMenu();
 
     detailsMount.innerHTML = `
       <div class="detail-header">
@@ -16575,7 +16733,7 @@ function wireShimmer(container){
 
       ${(()=>{
         const nav=getSameSeriesNeighbors(card);
-        if(nav.total<=1) return "";
+        if(nav.total<=1 || sameSeriesNavigationIsRedundant(nav,filteredResultNav)) return "";
         return `
           <section class="same-series-nav">
             <div>
@@ -16700,6 +16858,8 @@ function wireShimmer(container){
   }
 
   function closeDetailsModal(navigateBack = true){
+    closeDetailsMoreMenu();
+
     if(detailsCardTransitionTimer){
       clearTimeout(detailsCardTransitionTimer);
       detailsCardTransitionTimer=null;
@@ -16753,18 +16913,29 @@ function wireShimmer(container){
     }
     lightboxTouchStartX = null;
   }, {passive:true});
-  $("detailsFavoriteBtn").addEventListener("click", ()=>{
-    const card = cards.find(c=>c.id === detailsCardId);
+  $("detailsFavoriteBtn").addEventListener("click",()=>{
+    const card=cards.find(c=>c.id===detailsCardId);
     if(!card) return;
-    const active = toggleFavorite(card.id);
-    const btn = $("detailsFavoriteBtn");
-    btn.textContent = active ? "♥ Favorited" : "♡ Favorite";
-    btn.classList.toggle("active", active);
-    btn.setAttribute("aria-label", active ? "Remove from favorites" : "Add to favorites");
+    toggleFavorite(card.id);
+    syncDetailsFavoriteButton(card);
   });
-  $("detailsShareBtn").addEventListener("click", shareCurrentCard);
-  $("detailsWhatsAppBtn").addEventListener("click", shareCurrentCardWhatsApp);
-  $("detailsFacebookBtn").addEventListener("click", messageSellerOnFacebook);
+  $("detailsShareBtn").addEventListener("click",shareCurrentCard);
+  $("detailsFacebookBtn").addEventListener("click",messageSellerOnFacebook);
+
+  $("detailsMoreBtn").addEventListener("click",e=>{
+    e.stopPropagation();
+    toggleDetailsMoreMenu();
+  });
+
+  $("detailsMoreMenu").addEventListener("click",e=>{
+    if(e.target.closest("button")) closeDetailsMoreMenu();
+  });
+
+  document.addEventListener("click",e=>{
+    if(!e.target.closest(".details-more-wrap")) closeDetailsMoreMenu();
+  });
+
+  $("detailsWhatsAppBtn").addEventListener("click",shareCurrentCardWhatsApp);
   $("compareOpenBtn").addEventListener("click",renderCompareModal);
   $("compareClearBtn").addEventListener("click",()=>{
     compareSelectedIds.clear();
@@ -16821,6 +16992,10 @@ function wireShimmer(container){
       if(e.key === "Escape"){ closeImageLightbox(); return; }
       if(e.key === "ArrowLeft" && lightboxImages.length > 1){ renderLightboxImage(lightboxIndex - 1); return; }
       if(e.key === "ArrowRight" && lightboxImages.length > 1){ renderLightboxImage(lightboxIndex + 1); return; }
+    }
+    if(e.key==="Escape" && !$("detailsMoreMenu").hidden){
+      closeDetailsMoreMenu();
+      return;
     }
     if(e.key === "Escape" && !detailsOverlay.hidden) closeDetailsModal(true);
   });
