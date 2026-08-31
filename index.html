@@ -12489,10 +12489,14 @@ function wireShimmer(container){
         if(btn) btn.querySelector("span").textContent=label;
       });
 
-      const defaultSort=listingAvailabilityScope==="sold" ? "recent-sold" : "name";
+      const defaultSort=listingAvailabilityScope==="sold"
+        ? "recent-sold"
+        : (listingAvailabilityScope==="inventory" ? "newest" : "name");
       $("sortBy").value=defaultSort;
       $("sortByBtn").querySelector("span").textContent=
-        defaultSort==="recent-sold" ? "Sort: Recently Sold" : "Name: A → Z";
+        defaultSort==="recent-sold"
+          ? "Sort: Recently Sold"
+          : (defaultSort==="newest" ? "Newest Added" : "Name: A → Z");
 
       activeQuickFilter="all";
       Object.values(pillFilterState).forEach(set=>set.clear());
