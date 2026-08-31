@@ -3742,6 +3742,216 @@
     }
   }
 
+
+  /* ---------- Card List custom ordering ---------- */
+  .fb-card-list-order-mode{
+    flex:0 0 auto;
+    padding:4px 8px;
+    border:1px solid rgba(227,179,65,.26);
+    border-radius:999px;
+    background:rgba(227,179,65,.07);
+    color:var(--accent-gold);
+    font-size:8.5px;
+    font-weight:700;
+  }
+
+  .fb-card-list-order-list{
+    max-height:410px;
+    overflow:auto;
+    padding:3px;
+    border:1px solid var(--border);
+    border-radius:11px;
+    background:var(--bg);
+  }
+
+  .fb-card-list-order-empty{
+    padding:18px 10px;
+    border:1px dashed var(--border);
+    border-radius:10px;
+    color:var(--text-muted);
+    text-align:center;
+    font-size:9px;
+  }
+
+  .fb-card-list-order-empty[hidden]{
+    display:none !important;
+  }
+
+  .fb-card-order-row{
+    display:grid;
+    grid-template-columns:22px 26px 38px minmax(0,1fr) auto auto;
+    gap:7px;
+    align-items:center;
+    min-height:52px;
+    padding:6px;
+    border:1px solid transparent;
+    border-radius:8px;
+    background:transparent;
+    cursor:grab;
+    transition:background .12s ease,border-color .12s ease,opacity .12s ease;
+  }
+
+  .fb-card-order-row + .fb-card-order-row{
+    margin-top:2px;
+  }
+
+  .fb-card-order-row:hover,
+  .fb-card-order-row:focus{
+    outline:none;
+    border-color:var(--border);
+    background:var(--surface);
+  }
+
+  .fb-card-order-row.dragging{
+    opacity:.45;
+  }
+
+  .fb-card-order-row.drag-over{
+    border-color:var(--accent-gold);
+    background:rgba(227,179,65,.06);
+  }
+
+  .fb-card-order-grip{
+    color:var(--text-muted);
+    text-align:center;
+    font-size:14px;
+    letter-spacing:-3px;
+    cursor:grab;
+    user-select:none;
+  }
+
+  .fb-card-order-number{
+    color:var(--accent-teal);
+    font-family:'JetBrains Mono',monospace;
+    font-size:8px;
+    font-weight:700;
+    text-align:center;
+  }
+
+  .fb-card-order-thumb{
+    width:38px;
+    height:46px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:5px;
+    background:var(--surface-2);
+    color:var(--text-muted);
+    font-size:8px;
+  }
+
+  .fb-card-order-thumb img{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:cover;
+  }
+
+  .fb-card-order-copy{
+    min-width:0;
+  }
+
+  .fb-card-order-copy strong{
+    display:block;
+    overflow:hidden;
+    color:var(--text);
+    font-size:9.5px;
+    line-height:1.25;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
+
+  .fb-card-order-copy small{
+    display:block;
+    margin-top:3px;
+    overflow:hidden;
+    color:var(--text-muted);
+    font-size:7.5px;
+    line-height:1.2;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
+
+  .fb-card-order-type{
+    padding:3px 5px;
+    border-radius:6px;
+    background:var(--surface-2);
+    color:var(--accent-gold);
+    font-size:7px;
+    font-weight:700;
+    text-transform:uppercase;
+  }
+
+  .fb-card-order-buttons{
+    display:flex;
+    gap:3px;
+  }
+
+  .fb-card-order-move{
+    width:25px;
+    height:25px;
+    padding:0;
+    border:1px solid var(--border);
+    border-radius:6px;
+    background:var(--surface-2);
+    color:var(--text-muted);
+    cursor:pointer;
+    line-height:1;
+  }
+
+  .fb-card-order-move:hover:not(:disabled){
+    border-color:var(--accent-gold);
+    color:var(--accent-gold);
+  }
+
+  .fb-card-order-move:disabled{
+    opacity:.28;
+    cursor:not-allowed;
+  }
+
+  @media(max-width:700px){
+    .fb-card-list-order-list{
+      max-height:350px;
+    }
+
+    .fb-card-order-row{
+      grid-template-columns:20px 22px 34px minmax(0,1fr) auto;
+      gap:6px;
+      cursor:default;
+    }
+
+    .fb-card-order-thumb{
+      width:34px;
+      height:42px;
+    }
+
+    .fb-card-order-type{
+      display:none;
+    }
+
+    .fb-card-order-grip{
+      font-size:12px;
+    }
+  }
+
+  @media(max-width:390px){
+    .fb-card-order-row{
+      grid-template-columns:20px 20px 30px minmax(0,1fr);
+    }
+
+    .fb-card-order-thumb{
+      width:30px;
+      height:38px;
+    }
+
+    .fb-card-order-buttons{
+      grid-column:4;
+      justify-self:start;
+      margin-top:-2px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -8045,7 +8255,7 @@ function wireShimmer(container){
     const lines = [divider,"",title,"",divider,""];
 
     let lastHeading = null;
-    sortCardListCards(cardsInSection).forEach(card=>{
+    cardsInSection.forEach(card=>{
       const heading = cardListGroupHeading(card);
       if(heading !== lastHeading){
         if(lastHeading !== null) lines.push("");
@@ -8288,7 +8498,11 @@ function wireShimmer(container){
     const availableCards = cards.filter(c=>
       normalizeFilterValue(c.availability || "Available") === "available"
     );
+
     const selectedIds = new Set(availableCards.map(c=>String(c.id)));
+    let orderedIds = sortCardListCards(availableCards).map(c=>String(c.id));
+    let activeOrderMode = "default";
+    let draggedOrderId = null;
 
     const gameOptions = [...new Set(
       availableCards.map(c=>String(c.game || "").trim()).filter(Boolean)
@@ -8303,7 +8517,7 @@ function wireShimmer(container){
         <div>
           <div class="eyebrow">Owner Tool</div>
           <h2>Card List Post Generator</h2>
-          <p>Select exactly which available listings to include, generate the Facebook sales list, and download the first image from each selected listing as a ZIP.</p>
+          <p>Select the listings to include, control their order, generate the Facebook sales list, and download the first image from each selected listing as a ZIP.</p>
         </div>
       </div>
 
@@ -8367,7 +8581,31 @@ function wireShimmer(container){
           <div class="fb-card-list-picker-empty" id="fbCardListPickerEmpty" hidden>No cards match the current filters.</div>
 
           <div class="fb-card-list-settings-divider"></div>
-          <div class="eyebrow">2 · Post Settings</div>
+
+          <div class="eyebrow">2 · Arrange Order</div>
+          <div class="fb-card-list-control-heading">
+            <h3>Selected Card Order</h3>
+            <span class="fb-card-list-order-mode" id="fbCardListOrderModeLabel">Default</span>
+          </div>
+
+          <div class="field">
+            <label for="fbCardListOrderPreset">Sort preset</label>
+            <select id="fbCardListOrderPreset">
+              <option value="default">Default</option>
+              <option value="price-high">Price: High → Low</option>
+              <option value="year-old">Year: Oldest → Newest</option>
+              <option value="grade-high">Grade: High → Low</option>
+              <option value="series">Series A → Z</option>
+              <option value="manual">Manual</option>
+            </select>
+            <div class="hint">Drag cards below to arrange them manually. On mobile, use the ↑ and ↓ buttons.</div>
+          </div>
+
+          <div class="fb-card-list-order-list" id="fbCardListOrderList" aria-label="Selected card order"></div>
+          <div class="fb-card-list-order-empty" id="fbCardListOrderEmpty" hidden>Select at least one card to arrange the post order.</div>
+
+          <div class="fb-card-list-settings-divider"></div>
+          <div class="eyebrow">3 · Post Settings</div>
 
           <div class="field">
             <label for="fbCardListTitle">List title</label>
@@ -8408,7 +8646,7 @@ function wireShimmer(container){
 
           <div class="fb-card-list-image-note">
             <strong>ZIP image rule</strong>
-            <span>Only the first image from each selected listing is included. Existing watermarked images remain unchanged.</span>
+            <span>Only the first image from each selected listing is included. ZIP filenames follow the selected card order.</span>
           </div>
 
           <button type="button" class="btn-primary fb-card-list-zip-btn" id="fbCardListZipBtn">
@@ -8420,7 +8658,7 @@ function wireShimmer(container){
         <section class="panel fb-card-list-preview-panel">
           <div class="fb-post-section-title">
             <div>
-              <div class="eyebrow">3 · Preview & Copy</div>
+              <div class="eyebrow">4 · Preview & Copy</div>
               <h3>Facebook Card List</h3>
             </div>
             <button type="button" class="btn-primary" id="fbCardListCopyBtn">Copy Full Post</button>
@@ -8428,7 +8666,7 @@ function wireShimmer(container){
 
           <div class="fb-card-list-preview-summary" id="fbCardListPreviewSummary"></div>
           <textarea id="fbCardListOutput" class="fb-post-output fb-card-list-output"></textarea>
-          <div class="hint">The preview is editable. Changing the selection or settings regenerates it.</div>
+          <div class="hint">The preview is editable. Changing the selection, order or settings regenerates it.</div>
         </section>
       </div>
     `;
@@ -8443,6 +8681,11 @@ function wireShimmer(container){
     const selectedStat=$("fbCardListSelectedStat");
     const previewSummary=$("fbCardListPreviewSummary");
 
+    const orderPreset=$("fbCardListOrderPreset");
+    const orderList=$("fbCardListOrderList");
+    const orderEmpty=$("fbCardListOrderEmpty");
+    const orderModeLabel=$("fbCardListOrderModeLabel");
+
     const titleInput=$("fbCardListTitle");
     const termsInput=$("fbCardListTerms");
     const carousellMYInput=$("fbCardListCarousellMY");
@@ -8453,6 +8696,8 @@ function wireShimmer(container){
     const copyBtn=$("fbCardListCopyBtn");
     const zipBtn=$("fbCardListZipBtn");
     const zipStatus=$("fbCardListZipStatus");
+
+    const byId=new Map(availableCards.map(card=>[String(card.id),card]));
 
     function currentPrefs(){
       return {
@@ -8465,8 +8710,125 @@ function wireShimmer(container){
       };
     }
 
-    function selectedCards(){
-      return availableCards.filter(c=>selectedIds.has(String(c.id)));
+    function ensureOrderHasSelected(){
+      const selectedSet=new Set(selectedIds);
+      orderedIds=orderedIds.filter(id=>selectedSet.has(id) && byId.has(id));
+
+      availableCards.forEach(card=>{
+        const id=String(card.id);
+        if(selectedSet.has(id) && !orderedIds.includes(id)){
+          orderedIds.push(id);
+        }
+      });
+    }
+
+    function orderedSelectedCards(){
+      ensureOrderHasSelected();
+      return orderedIds.map(id=>byId.get(id)).filter(Boolean);
+    }
+
+    function cardPrimaryPrice(card){
+      const candidates=[
+        Number(card.price_myr),
+        Number(card.price_usd ?? card.price),
+        Number(card.price_sgd)
+      ];
+      return candidates.find(Number.isFinite) || 0;
+    }
+
+    function cardGradeNumber(card){
+      const grade=Array.isArray(card.grading) ? card.grading.find(g=>g && g.company)?.grade : null;
+      const n=Number(grade);
+      return Number.isFinite(n) ? n : -1;
+    }
+
+    function applyOrderPreset(mode){
+      activeOrderMode=mode;
+      ensureOrderHasSelected();
+      const current=orderedSelectedCards();
+
+      if(mode==="manual"){
+        orderModeLabel.textContent="Manual";
+        renderOrderList();
+        regenerate();
+        return;
+      }
+
+      let sorted=current.slice();
+
+      if(mode==="default"){
+        sorted=sortCardListCards(current);
+      }else if(mode==="price-high"){
+        sorted.sort((a,b)=>
+          cardPrimaryPrice(b)-cardPrimaryPrice(a) ||
+          String(a.name||"").localeCompare(String(b.name||""))
+        );
+      }else if(mode==="year-old"){
+        sorted.sort((a,b)=>
+          Number(a.year||9999)-Number(b.year||9999) ||
+          String(a.series||"").localeCompare(String(b.series||"")) ||
+          String(a.name||"").localeCompare(String(b.name||""))
+        );
+      }else if(mode==="grade-high"){
+        sorted.sort((a,b)=>
+          cardGradeNumber(b)-cardGradeNumber(a) ||
+          Number(a.year||9999)-Number(b.year||9999) ||
+          String(a.name||"").localeCompare(String(b.name||""))
+        );
+      }else if(mode==="series"){
+        sorted.sort((a,b)=>
+          String(a.series||"").localeCompare(String(b.series||"")) ||
+          Number(a.year||9999)-Number(b.year||9999) ||
+          String(a.name||"").localeCompare(String(b.name||""))
+        );
+      }
+
+      orderedIds=sorted.map(c=>String(c.id));
+      const labelMap={
+        "default":"Default",
+        "price-high":"Price: High → Low",
+        "year-old":"Year: Oldest → Newest",
+        "grade-high":"Grade: High → Low",
+        "series":"Series A → Z",
+        "manual":"Manual"
+      };
+      orderModeLabel.textContent=labelMap[mode] || "Manual";
+      renderOrderList();
+      regenerate();
+    }
+
+    function switchToManual(){
+      activeOrderMode="manual";
+      orderPreset.value="manual";
+      orderModeLabel.textContent="Manual";
+    }
+
+    function moveOrderId(id,direction){
+      ensureOrderHasSelected();
+      const index=orderedIds.indexOf(id);
+      if(index<0) return;
+      const next=index+direction;
+      if(next<0 || next>=orderedIds.length) return;
+      [orderedIds[index],orderedIds[next]]=[orderedIds[next],orderedIds[index]];
+      switchToManual();
+      renderOrderList();
+      regenerate();
+    }
+
+    function moveOrderIdBefore(sourceId,targetId){
+      if(!sourceId || !targetId || sourceId===targetId) return;
+      ensureOrderHasSelected();
+      const sourceIndex=orderedIds.indexOf(sourceId);
+      const targetIndex=orderedIds.indexOf(targetId);
+      if(sourceIndex<0 || targetIndex<0) return;
+
+      orderedIds.splice(sourceIndex,1);
+      const updatedTargetIndex=orderedIds.indexOf(targetId);
+      orderedIds.splice(updatedTargetIndex,0,sourceId);
+
+      switchToManual();
+      renderOrderList();
+      regenerate();
     }
 
     function matchesPickerFilters(card){
@@ -8534,29 +8896,131 @@ function wireShimmer(container){
       picker.querySelectorAll("[data-card-list-id]").forEach(input=>{
         input.addEventListener("change",()=>{
           const id=String(input.dataset.cardListId || "");
-          if(input.checked) selectedIds.add(id);
-          else selectedIds.delete(id);
+          if(input.checked){
+            selectedIds.add(id);
+            if(!orderedIds.includes(id)) orderedIds.push(id);
+          }else{
+            selectedIds.delete(id);
+            orderedIds=orderedIds.filter(x=>x!==id);
+          }
+
           input.closest(".fb-card-list-picker-row")?.classList.toggle("selected",input.checked);
-          refreshSelectionOutputs();
+
+          if(activeOrderMode!=="manual"){
+            applyOrderPreset(activeOrderMode);
+          }else{
+            renderOrderList();
+            regenerate();
+          }
+        });
+      });
+    }
+
+    function renderOrderList(){
+      const ordered=orderedSelectedCards();
+      orderEmpty.hidden=ordered.length>0;
+
+      orderList.innerHTML=ordered.map((card,index)=>{
+        const id=String(card.id);
+        const image=getImages(card)[0] || "";
+        const type=cardListFormat(card);
+        const meta=[
+          card.card_code,
+          card.year,
+          card.series
+        ].filter(Boolean).join(" · ");
+
+        return `
+          <div class="fb-card-order-row"
+               draggable="true"
+               data-order-id="${escapeHtml(id)}"
+               tabindex="0">
+            <span class="fb-card-order-grip" title="Drag to reorder" aria-hidden="true">⋮⋮</span>
+            <span class="fb-card-order-number">${index+1}</span>
+            <span class="fb-card-order-thumb">
+              ${image ? `<img src="${escapeHtml(image)}" alt="">` : `<span>—</span>`}
+            </span>
+            <span class="fb-card-order-copy">
+              <strong>${escapeHtml(card.name || "Untitled card")}</strong>
+              <small>${escapeHtml(meta)}</small>
+            </span>
+            <span class="fb-card-order-type">${escapeHtml(type)}</span>
+            <span class="fb-card-order-buttons">
+              <button type="button"
+                      class="fb-card-order-move"
+                      data-order-up="${escapeHtml(id)}"
+                      aria-label="Move ${escapeHtml(card.name || "card")} up"
+                      ${index===0?"disabled":""}>↑</button>
+              <button type="button"
+                      class="fb-card-order-move"
+                      data-order-down="${escapeHtml(id)}"
+                      aria-label="Move ${escapeHtml(card.name || "card")} down"
+                      ${index===ordered.length-1?"disabled":""}>↓</button>
+            </span>
+          </div>
+        `;
+      }).join("");
+
+      orderList.querySelectorAll("[data-order-up]").forEach(btn=>{
+        btn.addEventListener("click",()=>moveOrderId(String(btn.dataset.orderUp),-1));
+      });
+
+      orderList.querySelectorAll("[data-order-down]").forEach(btn=>{
+        btn.addEventListener("click",()=>moveOrderId(String(btn.dataset.orderDown),1));
+      });
+
+      orderList.querySelectorAll("[data-order-id]").forEach(row=>{
+        row.addEventListener("dragstart",e=>{
+          draggedOrderId=String(row.dataset.orderId || "");
+          row.classList.add("dragging");
+          if(e.dataTransfer){
+            e.dataTransfer.effectAllowed="move";
+            e.dataTransfer.setData("text/plain",draggedOrderId);
+          }
+        });
+
+        row.addEventListener("dragend",()=>{
+          draggedOrderId=null;
+          orderList.querySelectorAll(".fb-card-order-row").forEach(r=>{
+            r.classList.remove("dragging","drag-over");
+          });
+        });
+
+        row.addEventListener("dragover",e=>{
+          e.preventDefault();
+          if(!draggedOrderId || draggedOrderId===String(row.dataset.orderId || "")) return;
+          orderList.querySelectorAll(".fb-card-order-row").forEach(r=>r.classList.remove("drag-over"));
+          row.classList.add("drag-over");
+          if(e.dataTransfer) e.dataTransfer.dropEffect="move";
+        });
+
+        row.addEventListener("drop",e=>{
+          e.preventDefault();
+          const sourceId=draggedOrderId || e.dataTransfer?.getData("text/plain") || "";
+          const targetId=String(row.dataset.orderId || "");
+          moveOrderIdBefore(sourceId,targetId);
         });
       });
     }
 
     function updateSelectionStatus(){
-      const selected=selectedCards();
+      const selected=orderedSelectedCards();
       const selectedWithImage=selected.filter(c=>getImages(c).length);
+
       selectionCount.textContent=`${selected.length} / ${availableCards.length}`;
       selectedStat.textContent=selected.length;
+
       previewSummary.innerHTML=`
         <span><strong>${selected.length}</strong> listing${selected.length===1?"":"s"} selected</span>
         <span><strong>${selected.filter(c=>cardListFormat(c)==="graded").length}</strong> graded</span>
         <span><strong>${selected.filter(c=>cardListFormat(c)==="raw").length}</strong> raw</span>
         <span><strong>${selected.filter(c=>cardListFormat(c)==="sealed").length}</strong> sealed</span>
+        <span><strong>${escapeHtml(orderModeLabel.textContent || "Default")}</strong> order</span>
       `;
 
       zipBtn.disabled=selectedWithImage.length===0;
       zipStatus.textContent=selectedWithImage.length
-        ? `${selectedWithImage.length} selected first image${selectedWithImage.length===1?"":"s"} ready for ZIP.`
+        ? `${selectedWithImage.length} selected first image${selectedWithImage.length===1?"":"s"} ready for ZIP in the displayed order.`
         : "No selected listings currently have an image.";
 
       copyBtn.disabled=selected.length===0;
@@ -8565,25 +9029,40 @@ function wireShimmer(container){
     function regenerate(){
       const now=currentPrefs();
       saveFbCardListPostPrefs(now);
-      const selected=selectedCards();
+      const selected=orderedSelectedCards();
+
       output.value=selected.length
         ? buildFbCardListPost(selected,now)
         : "";
+
       updateSelectionStatus();
     }
 
     function refreshSelectionOutputs(){
+      renderOrderList();
       regenerate();
     }
 
     function setSelectionForCards(cardList,selected){
       cardList.forEach(card=>{
         const id=String(card.id);
-        if(selected) selectedIds.add(id);
-        else selectedIds.delete(id);
+
+        if(selected){
+          selectedIds.add(id);
+          if(!orderedIds.includes(id)) orderedIds.push(id);
+        }else{
+          selectedIds.delete(id);
+          orderedIds=orderedIds.filter(x=>x!==id);
+        }
       });
+
       renderPicker();
-      refreshSelectionOutputs();
+
+      if(activeOrderMode!=="manual"){
+        applyOrderPreset(activeOrderMode);
+      }else{
+        refreshSelectionOutputs();
+      }
     }
 
     [searchInput,gameFilter,eraFilter,formatFilter].forEach(el=>{
@@ -8607,25 +9086,28 @@ function wireShimmer(container){
       setSelectionForCards(filteredCards(),false);
     });
 
+    orderPreset.addEventListener("change",()=>{
+      applyOrderPreset(orderPreset.value);
+    });
+
     [titleInput,termsInput,carousellMYInput,carousellSGInput,instagramInput,hashtagsInput].forEach(el=>{
       el.addEventListener("input",regenerate);
       el.addEventListener("change",regenerate);
     });
 
     copyBtn.addEventListener("click",()=>{
-      if(!selectedCards().length){
+      if(!orderedSelectedCards().length){
         showToast("Select at least one card");
         return;
       }
+
       copyPlainText(output.value,"Card list post copied");
     });
 
     zipBtn.addEventListener("click",async()=>{
       if(!requireOwner("download card list ZIP")) return;
 
-      const zipCards=sortCardListCards(
-        selectedCards().filter(c=>getImages(c).length)
-      );
+      const zipCards=orderedSelectedCards().filter(c=>getImages(c).length);
 
       if(!zipCards.length){
         showToast("No selected card images to download");
@@ -8640,9 +9122,11 @@ function wireShimmer(container){
         const result=await downloadCardListFirstImagesZip(zipCards,(done,total,included,failed)=>{
           zipStatus.textContent=`Preparing ${done}/${total} · ${included} added${failed ? ` · ${failed} skipped` : ""}`;
         });
+
         zipStatus.textContent=result.failed.length
           ? `ZIP ready · ${result.added} included · ${result.failed.length} inaccessible image${result.failed.length===1?"":"s"} skipped`
-          : `ZIP ready · ${result.added} image${result.added===1?"":"s"} included`;
+          : `ZIP ready · ${result.added} image${result.added===1?"":"s"} included in the selected order`;
+
         showToast(
           result.failed.length
             ? `ZIP downloaded · ${result.failed.length} image${result.failed.length===1?"":"s"} skipped`
@@ -8654,13 +9138,13 @@ function wireShimmer(container){
         zipStatus.textContent=`Could not create ZIP: ${reason}`;
         showToast("Could not create image ZIP");
       }finally{
-        zipBtn.disabled=selectedCards().filter(c=>getImages(c).length).length===0;
+        zipBtn.disabled=orderedSelectedCards().filter(c=>getImages(c).length).length===0;
         zipBtn.textContent=old;
       }
     });
 
     renderPicker();
-    regenerate();
+    applyOrderPreset("default");
   }
 
   // ---------------- Add page ----------------
