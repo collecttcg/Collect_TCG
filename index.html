@@ -329,7 +329,7 @@
   .insights-controls input{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:8px;font-size:12px;}
   .insights-range-custom{display:none;gap:8px;align-items:center;}
   .insights-range-custom.show{display:flex;}
-  .insights-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px;}
+  .insights-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px;}
   .insights-stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;}
   .insights-stat .k{color:var(--text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;}
   .insights-stat .v{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;}
@@ -7281,6 +7281,59 @@
     background:rgba(95,212,196,.035);
   }
 
+
+  /* ---------- Insights chart spacing ---------- */
+  .insights-chart{
+    display:flex !important;
+    align-items:flex-end !important;
+    gap:18px !important;
+    min-height:210px !important;
+    overflow-x:auto !important;
+    padding:12px 4px 6px !important;
+  }
+
+  .insights-bar-wrap{
+    flex:0 0 46px !important;
+    width:46px !important;
+    min-width:46px !important;
+    height:190px !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    gap:8px !important;
+  }
+
+  .insights-bar{
+    width:24px !important;
+    max-width:24px !important;
+    min-width:24px !important;
+    min-height:2px !important;
+    border-radius:6px 6px 2px 2px !important;
+  }
+
+  .insights-bar-site{
+    background:var(--accent-teal) !important;
+  }
+
+  .insights-bar-label{
+    transform:none !important;
+    margin-top:2px !important;
+    font-size:10px !important;
+    text-align:center !important;
+  }
+
+  @media(max-width:560px){
+    .insights-chart{gap:12px !important;}
+    .insights-bar-wrap{
+      flex-basis:40px !important;
+      width:40px !important;
+      min-width:40px !important;
+    }
+    .insights-bar{width:20px !important;max-width:20px !important;min-width:20px !important;}
+    .insights-bar-label{font-size:9px !important;}
+  }
+
 </style>
 </head>
 <body>
@@ -8680,6 +8733,48 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }catch(e){
       console.error("Record view event error:", e);
     }
+  }
+
+  const WEBSITE_VISIT_SESSION_KEY="collect_tcg_website_visit_recorded_v1";
+
+  async function recordWebsiteVisit(){
+    // Owner activity should not inflate buyer-facing traffic analytics.
+    if(isOwnerMode()) return false;
+
+    try{
+      if(sessionStorage.getItem(WEBSITE_VISIT_SESSION_KEY)==="1") return true;
+
+      const visitorId=getVisitorId();
+      const {error}=await supabaseClient.rpc("record_site_visit",{
+        p_visitor_id:visitorId
+      });
+
+      if(error){
+        // Migration may not have been installed yet. Fail quietly for visitors.
+        console.warn("Website visit tracking unavailable:",error);
+        return false;
+      }
+
+      sessionStorage.setItem(WEBSITE_VISIT_SESSION_KEY,"1");
+      return true;
+    }catch(error){
+      console.warn("Website visit tracking unavailable:",error);
+      return false;
+    }
+  }
+
+  async function fetchWebsiteVisitSeries(start,end){
+    const {data,error}=await supabaseClient.rpc("get_site_visit_series",{
+      p_start:start.toISOString(),
+      p_end:end.toISOString()
+    });
+
+    if(error){
+      console.warn("Website visit insights unavailable:",error);
+      return [];
+    }
+
+    return Array.isArray(data) ? data : [];
   }
 
   function dateRangeForPreset(preset){
@@ -12966,8 +13061,13 @@ function wireShimmer(container){
       <div class="insights-stats" id="insightsStats"></div>
 
       <div class="insights-panel">
-        <h3>Views Over Time</h3>
+        <h3>Card Views Over Time</h3>
         <div id="insightsChart" class="insights-chart"></div>
+      </div>
+
+      <div class="insights-panel">
+        <h3>Website Visits Over Time</h3>
+        <div id="insightsWebsiteChart" class="insights-chart"></div>
       </div>
 
       <div class="insights-panel">
@@ -13012,20 +13112,23 @@ function wireShimmer(container){
         ({start,end} = dateRangeForPreset(rangeSel.value));
       }
 
-      const [rows, series] = await Promise.all([
+      const [rows, series, websiteSeries] = await Promise.all([
         fetchInsights(start,end),
-        fetchViewSeries(start,end)
+        fetchViewSeries(start,end),
+        fetchWebsiteVisitSeries(start,end)
       ]);
 
       const totalViews = rows.reduce((s,r)=>s+Number(r.views||0),0);
       const totalUnique = rows.reduce((s,r)=>s+Number(r.unique_views||0),0);
+      const totalWebsiteVisits = websiteSeries.reduce((s,r)=>s+Number(r.visits||0),0);
       const viewedCards = rows.filter(r=>Number(r.views||0)>0).length;
       const top = rows.slice().sort((a,b)=>Number(b.views||0)-Number(a.views||0))[0];
       const avg = rows.length ? totalViews / rows.length : 0;
 
       $("insightsStats").innerHTML = `
-        <div class="insights-stat"><div class="k">Total Views</div><div class="v">${totalViews.toLocaleString()}</div></div>
-        <div class="insights-stat"><div class="k">Unique Views</div><div class="v">${totalUnique.toLocaleString()}</div></div>
+        <div class="insights-stat"><div class="k">Total Card Views</div><div class="v">${totalViews.toLocaleString()}</div></div>
+        <div class="insights-stat"><div class="k">Website Visits</div><div class="v">${totalWebsiteVisits.toLocaleString()}</div></div>
+        <div class="insights-stat"><div class="k">Unique Card Views</div><div class="v">${totalUnique.toLocaleString()}</div></div>
         <div class="insights-stat"><div class="k">Cards Viewed</div><div class="v">${viewedCards.toLocaleString()}</div></div>
         <div class="insights-stat"><div class="k">Most Viewed Card</div><div class="v" style="font-size:15px">${top ? escapeHtml(top.name) : "—"}</div></div>
       `;
@@ -13038,6 +13141,15 @@ function wireShimmer(container){
           <div class="insights-bar-label">${escapeHtml(String(x.label || x.bucket))}</div>
         </div>`;
       }).join("") : `<div class="hint">No views recorded for this period.</div>`;
+
+      const maxWebsiteSeries=Math.max(1,...websiteSeries.map(x=>Number(x.visits||0)));
+      $("insightsWebsiteChart").innerHTML=websiteSeries.length ? websiteSeries.map(x=>{
+        const pct=Math.max(2,Number(x.visits||0)/maxWebsiteSeries*100);
+        return `<div class="insights-bar-wrap" title="${escapeHtml(String(x.bucket))}: ${Number(x.visits||0)} website visits">
+          <div class="insights-bar insights-bar-site" style="height:${pct}%"></div>
+          <div class="insights-bar-label">${escapeHtml(String(x.label || x.bucket))}</div>
+        </div>`;
+      }).join("") : `<div class="hint">No website visits recorded for this period.</div>`;
 
       let sorted = rows.slice();
       switch(sortSel.value){
@@ -19458,6 +19570,10 @@ function wireShimmer(container){
     // request owner-only card data. Public catalogue loading itself does not
     // depend on owner-only tables or owner RPCs.
     await refreshOwnerSession();
+
+    // Record a single website visit per browser tab/session for non-owner users.
+    // The database function stores only a one-way hash of the local visitor ID.
+    if(!isOwnerMode()) recordWebsiteVisit();
 
     const [cardsLoaded]=await Promise.all([
       loadCards(),
