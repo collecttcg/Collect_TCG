@@ -3352,7 +3352,7 @@
 
   .fb-tools-switcher{
     display:grid;
-    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-template-columns:repeat(3,minmax(0,1fr));
     gap:10px;
     margin:0 0 16px;
     padding:5px;
@@ -3429,7 +3429,8 @@
   /* The inner generator headings are replaced by the shared heading above,
      so both workflows feel like one tool instead of two separate pages. */
   #view:has(.fb-tools-switcher) .fb-post-layout,
-  #view:has(.fb-tools-switcher) .fb-card-list-layout{
+  #view:has(.fb-tools-switcher) .fb-card-list-layout,
+  #view:has(.fb-tools-switcher) .fb-giveaway-layout{
     margin-top:0;
   }
 
@@ -6989,6 +6990,112 @@
     }
   }
 
+
+  /* ---------- Facebook Giveaway Post Generator ---------- */
+  .fb-giveaway-two-col{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+  }
+
+  .fb-giveaway-link-list{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    margin:10px 0 12px;
+  }
+
+  .fb-giveaway-link-row{
+    display:grid;
+    grid-template-columns:minmax(150px,.65fr) minmax(240px,1.35fr);
+    gap:8px;
+    padding:9px;
+    border:1px solid var(--border-soft);
+    border-radius:10px;
+    background:var(--bg);
+  }
+
+  .fb-giveaway-link-row .field{
+    margin-bottom:0;
+  }
+
+  .fb-giveaway-check{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    cursor:pointer;
+    color:var(--text);
+    font-size:9.5px;
+    line-height:1.4;
+  }
+
+  .fb-giveaway-check input{
+    width:16px;
+    height:16px;
+    margin:0;
+    flex:0 0 16px;
+    accent-color:var(--accent-teal);
+  }
+
+  .fb-giveaway-template-note{
+    margin-top:12px;
+    padding:9px 10px;
+    border:1px solid rgba(95,212,196,.18);
+    border-radius:9px;
+    background:rgba(95,212,196,.04);
+    color:var(--text-muted);
+    font-size:8.5px;
+    line-height:1.45;
+  }
+
+  .fb-giveaway-output{
+    min-height:840px;
+  }
+
+  @media(max-width:1100px){
+    .fb-tools-switcher{
+      grid-template-columns:1fr 1fr 1fr;
+      gap:6px;
+    }
+
+    .fb-tools-switch{
+      padding:9px;
+      gap:8px;
+    }
+
+    .fb-tools-switch small{
+      font-size:8px;
+    }
+  }
+
+  @media(max-width:700px){
+    .fb-giveaway-two-col,
+    .fb-giveaway-link-row{
+      grid-template-columns:1fr;
+    }
+
+    .fb-giveaway-link-row{
+      gap:4px;
+    }
+
+    .fb-giveaway-output{
+      min-height:680px;
+    }
+  }
+
+
+  .add-save-hint{
+    margin-top:8px;
+    color:var(--text-muted);
+    font-size:8.5px;
+    line-height:1.45;
+  }
+
+  #addForm button[type="submit"][aria-busy="true"]{
+    opacity:.72;
+    cursor:wait;
+  }
+
 </style>
 </head>
 <body>
@@ -8084,75 +8191,157 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return true;
   }
 
-  async function createCardStorage(card){
-    if(!requireOwner("createCard")) return false;
-
-    const payload = cardToDb(card);
-    let result = await supabaseClient
-      .from("cards")
-      .insert(payload)
-      .select(cardMutationReturnColumns())
-      .single();
-
-    // sold_at is an optional enhancement. It must never prevent the owner
-    // from creating an otherwise valid card.
-    if(result.error && Object.prototype.hasOwnProperty.call(payload, "sold_at")){
-      const message = `${result.error.message || ""} ${result.error.details || ""}`.toLowerCase();
-      if(message.includes("sold_at") || message.includes("permission") || message.includes("column")){
-        const retryPayload = {...payload};
-        delete retryPayload.sold_at;
-        result = await supabaseClient
-          .from("cards")
-          .insert(retryPayload)
-          .select(cardMutationReturnColumns())
-          .single();
-      }
+  function newDatabaseCardId(){
+    if(globalThis.crypto?.randomUUID){
+      return globalThis.crypto.randomUUID();
     }
 
-    if(result.error){
-      console.error("Create card error:", result.error);
-      showToast("Could not save card. Check the required fields and try again.");
+    // UUID v4 fallback for older browsers. Uses cryptographic randomness when
+    // available and never reuses the old UI-only "c_*" identifier format.
+    const bytes=new Uint8Array(16);
+    if(globalThis.crypto?.getRandomValues){
+      globalThis.crypto.getRandomValues(bytes);
+    }else{
+      for(let i=0;i<bytes.length;i++) bytes[i]=Math.floor(Math.random()*256);
+    }
+
+    bytes[6]=(bytes[6]&0x0f)|0x40;
+    bytes[8]=(bytes[8]&0x3f)|0x80;
+    const hex=Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");
+    return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+  }
+
+  function cardWriteErrorText(error,action="save"){
+    const message=`${error?.message||""} ${error?.details||""} ${error?.hint||""}`.toLowerCase();
+
+    if(message.includes("row-level security") || message.includes("42501") || message.includes("permission")){
+      return "Owner permission was rejected by Supabase. Please log out, log in again, and retry.";
+    }
+    if(message.includes("availability") || message.includes("cards_availability_check")){
+      return "The selected availability is not accepted by the current database schema.";
+    }
+    if(message.includes("grading_private")){
+      return "The private grading migration is required before this card can be saved.";
+    }
+    if(message.includes("lifecycle_status")){
+      return "The lifecycle migration is required before this listing visibility can be saved.";
+    }
+    if(message.includes("duplicate") || message.includes("unique")){
+      return "A card with the same unique database value already exists.";
+    }
+    if(message.includes("failed to fetch") || message.includes("network") || message.includes("fetch")){
+      return "Network error while saving. Please check the connection and retry.";
+    }
+    return action==="create"
+      ? "Could not save card. Please retry or check the browser console for the Supabase error."
+      : "Could not update card. Please retry.";
+  }
+
+  async function createCardStorage(card){
+    if(!requireOwner("createCard")) return null;
+
+    const databaseId=newDatabaseCardId();
+    const createdAt=new Date().toISOString();
+    let payload={
+      id:databaseId,
+      ...cardToDb(card)
+    };
+
+    async function insertCurrentPayload(){
+      return supabaseClient
+        .from("cards")
+        .insert(payload);
+    }
+
+    try{
+      let result=await insertCurrentPayload();
+
+      // sold_at is optional. A schema that does not yet include it should not
+      // block creation of an otherwise valid listing.
+      if(result.error &&
+         Object.prototype.hasOwnProperty.call(payload,"sold_at") &&
+         optionalColumnUnavailable(result.error,"sold_at")){
+        payload={...payload};
+        delete payload.sold_at;
+        soldAtSupported=false;
+        result=await insertCurrentPayload();
+      }
+
+      // Same defensive behavior for lifecycle_status only when the database
+      // explicitly reports that the optional column itself is unavailable.
+      if(result.error &&
+         Object.prototype.hasOwnProperty.call(payload,"lifecycle_status") &&
+         optionalColumnUnavailable(result.error,"lifecycle_status")){
+        payload={...payload};
+        delete payload.lifecycle_status;
+        lifecycleSupported=false;
+        result=await insertCurrentPayload();
+      }
+
+      if(result.error){
+        console.error("Create card error:",result.error);
+        showToast(cardWriteErrorText(result.error,"create"));
+        return null;
+      }
+
+      // Do not make a successful INSERT depend on a follow-up SELECT. This
+      // prevents an RLS/RETURNING mismatch from making the UI report failure
+      // after the row was already created.
+      return {
+        ...card,
+        id:databaseId,
+        sold_at:Object.prototype.hasOwnProperty.call(payload,"sold_at") ? card.sold_at : null,
+        lifecycle_status:Object.prototype.hasOwnProperty.call(payload,"lifecycle_status")
+          ? cardLifecycle(card)
+          : "live",
+        created_at:card.created_at||createdAt,
+        updated_at:createdAt
+      };
+    }catch(error){
+      console.error("Create card request failed:",error);
+      showToast(cardWriteErrorText(error,"create"));
       return null;
     }
-    return mergeOwnerOnlyCardFields(dbToCard(result.data),card);
   }
 
   async function updateCardStorage(card){
-    if(!requireOwner("updateCard")) return false;
+    if(!requireOwner("updateCard")) return null;
 
-    const payload = cardToDb(card);
-    let result = await supabaseClient
-      .from("cards")
-      .update(payload)
-      .eq("id", card.id)
-      .select(cardMutationReturnColumns())
-      .single();
+    let payload=cardToDb(card);
 
-    if(result.error && Object.prototype.hasOwnProperty.call(payload, "sold_at")){
-      const message = `${result.error.message || ""} ${result.error.details || ""}`.toLowerCase();
-      if(message.includes("sold_at") || message.includes("permission") || message.includes("column")){
-        const retryPayload = {...payload};
-        delete retryPayload.sold_at;
-        result = await supabaseClient
-          .from("cards")
-          .update(retryPayload)
-          .eq("id", card.id)
-          .select(cardMutationReturnColumns())
-          .single();
-      }
+    async function updateCurrentPayload(){
+      return supabaseClient
+        .from("cards")
+        .update(payload)
+        .eq("id",card.id)
+        .select(cardMutationReturnColumns())
+        .single();
     }
 
-    if(result.error){
-      console.error("Update card error:", result.error);
-      const message=`${result.error.message||""} ${result.error.details||""}`.toLowerCase();
-      if(message.includes("availability") || message.includes("cards_availability_check")){
-        showToast("Could not update availability. Please refresh and try again.");
-      }else{
-        showToast("Could not update card. Check the required fields and try again.");
+    try{
+      let result=await updateCurrentPayload();
+
+      if(result.error &&
+         Object.prototype.hasOwnProperty.call(payload,"sold_at") &&
+         optionalColumnUnavailable(result.error,"sold_at")){
+        payload={...payload};
+        delete payload.sold_at;
+        soldAtSupported=false;
+        result=await updateCurrentPayload();
       }
+
+      if(result.error){
+        console.error("Update card error:",result.error);
+        showToast(cardWriteErrorText(result.error,"update"));
+        return null;
+      }
+
+      return mergeOwnerOnlyCardFields(dbToCard(result.data),card);
+    }catch(error){
+      console.error("Update card request failed:",error);
+      showToast(cardWriteErrorText(error,"update"));
       return null;
     }
-    return mergeOwnerOnlyCardFields(dbToCard(result.data),card);
   }
 
 
@@ -12497,40 +12686,56 @@ function wireShimmer(container){
   }
 
   function currentFacebookToolMode(){
-    const mode = currentHashParams().get("mode");
-    return mode === "list" ? "list" : "single";
+    const mode=currentHashParams().get("mode");
+    return ["single","list","giveaway"].includes(mode) ? mode : "single";
   }
 
   function facebookToolsHeaderHTML(mode){
+    const descriptions={
+      single:"Create a ready-to-post Facebook listing for one card.",
+      list:"Create a complete Facebook sales list from your available inventory.",
+      giveaway:"Create a reusable Facebook giveaway post from your giveaway template."
+    };
+
     return `
       <div class="page-head fb-tools-page-head">
         <div>
           <div class="eyebrow">Owner Tools</div>
           <h2>Facebook Post Tools</h2>
-          <p>${mode === "list"
-            ? "Create a complete Facebook sales list from your available inventory."
-            : "Create a ready-to-post Facebook listing for one card."}</p>
+          <p>${escapeHtml(descriptions[mode]||descriptions.single)}</p>
         </div>
       </div>
       <div class="fb-tools-switcher" role="tablist" aria-label="Facebook post generator type">
         <a href="#/fb-tools?mode=single"
-           class="fb-tools-switch ${mode === "single" ? "active" : ""}"
+           class="fb-tools-switch ${mode==="single" ? "active" : ""}"
            role="tab"
-           aria-selected="${mode === "single" ? "true" : "false"}">
+           aria-selected="${mode==="single" ? "true" : "false"}">
           <span class="fb-tools-switch-icon">▣</span>
           <span>
             <strong>Single Card Post</strong>
             <small>Choose one card · copy post · download all images as ZIP</small>
           </span>
         </a>
+
         <a href="#/fb-tools?mode=list"
-           class="fb-tools-switch ${mode === "list" ? "active" : ""}"
+           class="fb-tools-switch ${mode==="list" ? "active" : ""}"
            role="tab"
-           aria-selected="${mode === "list" ? "true" : "false"}">
+           aria-selected="${mode==="list" ? "true" : "false"}">
           <span class="fb-tools-switch-icon">☷</span>
           <span>
             <strong>Card List Post</strong>
             <small>Choose available cards · full list · first images ZIP</small>
+          </span>
+        </a>
+
+        <a href="#/fb-tools?mode=giveaway"
+           class="fb-tools-switch ${mode==="giveaway" ? "active" : ""}"
+           role="tab"
+           aria-selected="${mode==="giveaway" ? "true" : "false"}">
+          <span class="fb-tools-switch-icon">🎁</span>
+          <span>
+            <strong>Giveaway Post</strong>
+            <small>Load a giveaway · edit entry links · copy ready-to-post text</small>
           </span>
         </a>
       </div>
@@ -12542,8 +12747,10 @@ function wireShimmer(container){
 
     const mode = currentFacebookToolMode();
 
-    if(mode === "list"){
+    if(mode==="list"){
       renderFbCardListGeneratorPage();
+    }else if(mode==="giveaway"){
+      renderFbGiveawayPostGeneratorPage();
     }else{
       renderFbPostGeneratorPage();
     }
@@ -12867,6 +13074,570 @@ function wireShimmer(container){
         downloadBtn.textContent = originalText;
       }
     });
+  }
+
+
+  // ---------------- Owner Facebook Giveaway Post Generator ----------------
+  const FB_GIVEAWAY_POST_PREFS_KEY="collect_tcg_fb_giveaway_post_prefs_v1";
+
+  const FB_GIVEAWAY_POST_DEFAULTS=Object.freeze({
+    giveawayNumber:"3",
+    winnerHeadline:"WIN PSA10 ONE PIECE CARD!",
+    prizeLine:'[PSA10] LECAFIG GOLD TEXT LEADER "JEWELRY BONNEY" SHONEN JUMP',
+    post1Label:"CHAMPIONSHIP",
+    post1Url:"https://www.facebook.com/share/p/1Hg9VRQELL/",
+    post2Label:"VINTAGE",
+    post2Url:"https://www.facebook.com/share/p/1BXdcHjMym/",
+    post3Label:"ANNIVERSARIES",
+    post3Url:"https://www.facebook.com/share/p/1Bx3WwCGSi/",
+    post4Label:"ONELINE REGIONAL CHAMPION",
+    post4Url:"https://www.facebook.com/share/p/1PBHZ4dQ4a/",
+    commentText:"That’s him officer!!! 🫵👮",
+    claimHours:"24",
+    winnerTool:"Wheel of Names",
+    giveawayEnds:"23 August at 10:00 PM GMT+8 (Sunday)",
+    cod:"KL — TRX / KLCC / Pavilion KL",
+    postage:"Available",
+    carousellMalaysiaUrl:"https://sl1nk.com/nezhxv2",
+    carousellSingaporeUrl:"https://l1nq.com/i7eq8mx",
+    hashtags:"#tcg #onepiece #onepiecetcg #onepiecetradingcardgame #tcgcommunity #tcgcollector",
+    includeMultiGroupNotice:true
+  });
+
+  function getFbGiveawayPostPrefs(){
+    try{
+      const p=JSON.parse(localStorage.getItem(FB_GIVEAWAY_POST_PREFS_KEY)||"{}");
+      const safe=(value,fallback,max=500)=>String(value??fallback).trim().slice(0,max);
+
+      return {
+        giveawayNumber:safe(p.giveawayNumber,FB_GIVEAWAY_POST_DEFAULTS.giveawayNumber,20),
+        winnerHeadline:safe(p.winnerHeadline,FB_GIVEAWAY_POST_DEFAULTS.winnerHeadline,250),
+        prizeLine:safe(p.prizeLine,FB_GIVEAWAY_POST_DEFAULTS.prizeLine,350),
+        post1Label:safe(p.post1Label,FB_GIVEAWAY_POST_DEFAULTS.post1Label,80),
+        post1Url:safeHttpUrl(p.post1Url)||FB_GIVEAWAY_POST_DEFAULTS.post1Url,
+        post2Label:safe(p.post2Label,FB_GIVEAWAY_POST_DEFAULTS.post2Label,80),
+        post2Url:safeHttpUrl(p.post2Url)||FB_GIVEAWAY_POST_DEFAULTS.post2Url,
+        post3Label:safe(p.post3Label,FB_GIVEAWAY_POST_DEFAULTS.post3Label,80),
+        post3Url:safeHttpUrl(p.post3Url)||FB_GIVEAWAY_POST_DEFAULTS.post3Url,
+        post4Label:safe(p.post4Label,FB_GIVEAWAY_POST_DEFAULTS.post4Label,80),
+        post4Url:safeHttpUrl(p.post4Url)||FB_GIVEAWAY_POST_DEFAULTS.post4Url,
+        commentText:safe(p.commentText,FB_GIVEAWAY_POST_DEFAULTS.commentText,250),
+        claimHours:safe(p.claimHours,FB_GIVEAWAY_POST_DEFAULTS.claimHours,10),
+        winnerTool:safe(p.winnerTool,FB_GIVEAWAY_POST_DEFAULTS.winnerTool,100),
+        giveawayEnds:safe(p.giveawayEnds,FB_GIVEAWAY_POST_DEFAULTS.giveawayEnds,180),
+        cod:safe(p.cod,FB_GIVEAWAY_POST_DEFAULTS.cod,180),
+        postage:safe(p.postage,FB_GIVEAWAY_POST_DEFAULTS.postage,100),
+        carousellMalaysiaUrl:safeHttpUrl(p.carousellMalaysiaUrl)||FB_GIVEAWAY_POST_DEFAULTS.carousellMalaysiaUrl,
+        carousellSingaporeUrl:safeHttpUrl(p.carousellSingaporeUrl)||FB_GIVEAWAY_POST_DEFAULTS.carousellSingaporeUrl,
+        hashtags:safe(p.hashtags,FB_GIVEAWAY_POST_DEFAULTS.hashtags,500),
+        includeMultiGroupNotice:p.includeMultiGroupNotice!==false
+      };
+    }catch{
+      return {...FB_GIVEAWAY_POST_DEFAULTS};
+    }
+  }
+
+  function saveFbGiveawayPostPrefs(p){
+    try{
+      const safe=(value,max)=>String(value||"").trim().slice(0,max);
+      localStorage.setItem(FB_GIVEAWAY_POST_PREFS_KEY,JSON.stringify({
+        giveawayNumber:safe(p.giveawayNumber,20),
+        winnerHeadline:safe(p.winnerHeadline,250),
+        prizeLine:safe(p.prizeLine,350),
+        post1Label:safe(p.post1Label,80),
+        post1Url:safeHttpUrl(p.post1Url),
+        post2Label:safe(p.post2Label,80),
+        post2Url:safeHttpUrl(p.post2Url),
+        post3Label:safe(p.post3Label,80),
+        post3Url:safeHttpUrl(p.post3Url),
+        post4Label:safe(p.post4Label,80),
+        post4Url:safeHttpUrl(p.post4Url),
+        commentText:safe(p.commentText,250),
+        claimHours:safe(p.claimHours,10),
+        winnerTool:safe(p.winnerTool,100),
+        giveawayEnds:safe(p.giveawayEnds,180),
+        cod:safe(p.cod,180),
+        postage:safe(p.postage,100),
+        carousellMalaysiaUrl:safeHttpUrl(p.carousellMalaysiaUrl),
+        carousellSingaporeUrl:safeHttpUrl(p.carousellSingaporeUrl),
+        hashtags:safe(p.hashtags,500),
+        includeMultiGroupNotice:!!p.includeMultiGroupNotice
+      }));
+    }catch{}
+  }
+
+  function giveawayNumberFromTitle(title){
+    const match=String(title||"").match(/giveaway\s*#?\s*(\d+)/i);
+    return match ? match[1] : "";
+  }
+
+  function formatGiveawayEndsGmt8(value){
+    if(!value) return "";
+    const date=new Date(value);
+    if(Number.isNaN(date.getTime())) return "";
+
+    try{
+      const datePart=new Intl.DateTimeFormat("en-GB",{
+        timeZone:"Asia/Kuala_Lumpur",
+        day:"numeric",
+        month:"long"
+      }).format(date);
+
+      const timePart=new Intl.DateTimeFormat("en-US",{
+        timeZone:"Asia/Kuala_Lumpur",
+        hour:"numeric",
+        minute:"2-digit",
+        hour12:true
+      }).format(date);
+
+      const weekday=new Intl.DateTimeFormat("en-US",{
+        timeZone:"Asia/Kuala_Lumpur",
+        weekday:"long"
+      }).format(date);
+
+      return `${datePart} at ${timePart} GMT+8 (${weekday})`;
+    }catch{
+      return "";
+    }
+  }
+
+  function buildFbGiveawayPost(values){
+    const divider="━━━━━━━━━━━━━━━━━━━━━━━━";
+    const number=String(values.giveawayNumber||"").trim().replace(/^#/,"")||"1";
+    const winnerHeadline=String(values.winnerHeadline||"").trim();
+    const prizeLine=String(values.prizeLine||"").trim();
+    const commentText=String(values.commentText||"").trim();
+    const claimHours=String(values.claimHours||"24").trim()||"24";
+    const winnerTool=String(values.winnerTool||"Wheel of Names").trim()||"Wheel of Names";
+    const giveawayEnds=String(values.giveawayEnds||"").trim();
+    const cod=String(values.cod||"").trim();
+    const postage=String(values.postage||"").trim();
+    const hashtags=String(values.hashtags||"").trim();
+
+    const linkRows=[
+      [values.post1Label,values.post1Url],
+      [values.post2Label,values.post2Url],
+      [values.post3Label,values.post3Url],
+      [values.post4Label,values.post4Url]
+    ].map(([label,url])=>[
+      `(${String(label||"").trim().toUpperCase()})`,
+      "",
+      safeHttpUrl(url)||"[LINK NOT SET]"
+    ]).flat();
+
+    const lines=[
+      `🎁 GIVEAWAY #${number} 🎁`,
+      "",
+      `🏆 ${winnerHeadline}`,
+      "",
+      `🥇 ${prizeLine}`,
+      "",
+      divider,
+      "",
+      "📌 HOW TO ENTER:",
+      "",
+      "(PLEASE MAKE SURE TO DO ALL 3 STEPS)",
+      "",
+      "1️⃣ FOLLOW our Facebook Page",
+      "",
+      "2️⃣ LIKE below 4 Post : “CARD LIST”",
+      "",
+      ...linkRows,
+      "",
+      `3️⃣ COMMENT : “${commentText}”`,
+      "",
+      divider,
+      "",
+      "‼️IMPORTANT:",
+      "",
+      "Only followers of our Facebook Page who have followed the 3 STEPS mentioned above will be eligible for the draw.",
+      "",
+      "📩 HOW THE WINNER WILL BE CONTACTED:",
+      "",
+      `Facebook Pages cannot send the first message to personal accounts. We will reply to the winner’s comment, and the winner must PM our Facebook Page within ${claimHours} hours to claim the prize.`,
+      ""
+    ];
+
+    if(values.includeMultiGroupNotice){
+      lines.push(
+        "📢 IMPORTANT:",
+        "",
+        "This giveaway post has been shared across multiple groups. All eligible entries from every group will be combined into one single pool for the final draw.",
+        ""
+      );
+    }
+
+    lines.push(
+      "🎲 WINNER SELECTION:",
+      "",
+      `The winner will be selected randomly using ${winnerTool}.`,
+      "",
+      "🔎 WINNER VERIFICATION:",
+      "",
+      "When the winner is announced, we will also include the winner’s Facebook profile URL for transparency and verification purposes.",
+      "",
+      "🍀 GOOD LUCK, EVERYONE!",
+      "",
+      divider,
+      "",
+      `🗓️ GIVEAWAY ENDS: ${giveawayEnds}`,
+      "",
+      `📍 COD: ${cod}`,
+      "",
+      `📦 Postage: ${postage}`,
+      "",
+      divider,
+      "",
+      "OTHER PRODUCTS INFO (CAROUSELL)",
+      "",
+      `MALAYSIA : ${safeHttpUrl(values.carousellMalaysiaUrl)||"[LINK NOT SET]"}`,
+      "",
+      `SINGAPORE : ${safeHttpUrl(values.carousellSingaporeUrl)||"[LINK NOT SET]"}`,
+      "",
+      divider,
+      "",
+      "HASHTAG :",
+      "",
+      hashtags
+    );
+
+    return lines.join("\n");
+  }
+
+  function renderFbGiveawayPostGeneratorPage(){
+    if(!requireOwner("open giveaway post generator")) return;
+
+    const prefs=getFbGiveawayPostPrefs();
+    const giveawayRows=giveaways
+      .slice()
+      .sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+
+    view.innerHTML=`
+      <div class="page-head fb-post-page-head">
+        <div>
+          <div class="eyebrow">Owner Tool</div>
+          <h2>Facebook Giveaway Post Generator</h2>
+          <p>Load an existing giveaway if useful, then edit the reusable Facebook giveaway template.</p>
+        </div>
+      </div>
+
+      <div class="fb-post-layout fb-giveaway-layout">
+        <section class="panel fb-post-builder fb-giveaway-builder">
+          <div class="fb-post-section-title">
+            <div>
+              <div class="eyebrow">1 · Giveaway</div>
+              <h3>Prize & Headline</h3>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="fbGiveawaySourceSelect">Load existing Giveaway <span class="field-optional">(optional)</span></label>
+            <select id="fbGiveawaySourceSelect">
+              <option value="">Manual template</option>
+              ${giveawayRows.map(g=>`
+                <option value="${escapeHtml(g.id)}">
+                  ${escapeHtml([g.title,g.card_name].filter(Boolean).join(" · ")||"Giveaway")}
+                </option>
+              `).join("")}
+            </select>
+            <div class="hint">Loading a giveaway can fill the prize name, giveaway number and GMT+8 end time. The Facebook template remains editable.</div>
+          </div>
+
+          <div id="fbGiveawaySelected" class="fb-post-selected-card" hidden></div>
+
+          <div class="fb-giveaway-two-col">
+            <div class="field">
+              <label for="fbGiveawayNumber">Giveaway number</label>
+              <input id="fbGiveawayNumber" maxlength="20" value="${escapeHtml(prefs.giveawayNumber)}">
+            </div>
+            <div class="field">
+              <label for="fbGiveawayClaimHours">Claim window (hours)</label>
+              <input id="fbGiveawayClaimHours" inputmode="numeric" maxlength="10" value="${escapeHtml(prefs.claimHours)}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="fbGiveawayWinnerHeadline">Winner headline</label>
+            <input id="fbGiveawayWinnerHeadline" maxlength="250" value="${escapeHtml(prefs.winnerHeadline)}">
+          </div>
+
+          <div class="field">
+            <label for="fbGiveawayPrizeLine">Prize line</label>
+            <input id="fbGiveawayPrizeLine" maxlength="350" value="${escapeHtml(prefs.prizeLine)}">
+          </div>
+
+          <div class="fb-card-list-settings-divider"></div>
+          <div class="eyebrow">2 · Entry Steps</div>
+
+          <div class="fb-giveaway-link-list">
+            ${[1,2,3,4].map(i=>`
+              <div class="fb-giveaway-link-row">
+                <div class="field">
+                  <label for="fbGiveawayPost${i}Label">Post ${i} label</label>
+                  <input id="fbGiveawayPost${i}Label" maxlength="80" value="${escapeHtml(prefs[`post${i}Label`])}">
+                </div>
+                <div class="field">
+                  <label for="fbGiveawayPost${i}Url">Facebook URL</label>
+                  <input id="fbGiveawayPost${i}Url" type="url" maxlength="1000" value="${escapeHtml(prefs[`post${i}Url`])}">
+                </div>
+              </div>
+            `).join("")}
+          </div>
+
+          <div class="field">
+            <label for="fbGiveawayCommentText">Required comment</label>
+            <input id="fbGiveawayCommentText" maxlength="250" value="${escapeHtml(prefs.commentText)}">
+          </div>
+
+          <div class="fb-card-list-settings-divider"></div>
+          <div class="eyebrow">3 · Draw & Fulfilment</div>
+
+          <div class="field">
+            <label for="fbGiveawayWinnerTool">Winner selection tool</label>
+            <input id="fbGiveawayWinnerTool" maxlength="100" value="${escapeHtml(prefs.winnerTool)}">
+          </div>
+
+          <div class="field">
+            <label for="fbGiveawayEnds">Giveaway ends text</label>
+            <input id="fbGiveawayEnds" maxlength="180" value="${escapeHtml(prefs.giveawayEnds)}">
+            <div class="hint">Example: 23 August at 10:00 PM GMT+8 (Sunday)</div>
+          </div>
+
+          <div class="field">
+            <label class="fb-giveaway-check">
+              <input id="fbGiveawayMultiGroup" type="checkbox" ${prefs.includeMultiGroupNotice?"checked":""}>
+              <span>Include the “shared across multiple groups” notice</span>
+            </label>
+          </div>
+
+          <div class="fb-giveaway-two-col">
+            <div class="field">
+              <label for="fbGiveawayCod">COD</label>
+              <input id="fbGiveawayCod" maxlength="180" value="${escapeHtml(prefs.cod)}">
+            </div>
+            <div class="field">
+              <label for="fbGiveawayPostage">Postage</label>
+              <input id="fbGiveawayPostage" maxlength="100" value="${escapeHtml(prefs.postage)}">
+            </div>
+          </div>
+
+          <details class="fb-post-settings">
+            <summary>Carousell links & hashtags</summary>
+            <div class="fb-post-settings-body">
+              <div class="field">
+                <label for="fbGiveawayCarousellMY">Carousell Malaysia URL</label>
+                <input id="fbGiveawayCarousellMY" type="url" maxlength="1000" value="${escapeHtml(prefs.carousellMalaysiaUrl)}">
+              </div>
+              <div class="field">
+                <label for="fbGiveawayCarousellSG">Carousell Singapore URL</label>
+                <input id="fbGiveawayCarousellSG" type="url" maxlength="1000" value="${escapeHtml(prefs.carousellSingaporeUrl)}">
+              </div>
+              <div class="field">
+                <label for="fbGiveawayHashtags">Hashtags</label>
+                <textarea id="fbGiveawayHashtags" rows="3" maxlength="500">${escapeHtml(prefs.hashtags)}</textarea>
+              </div>
+            </div>
+          </details>
+
+          <div class="fb-giveaway-template-note">
+            Facebook output uses normal emoji characters. The copied fbcdn emoji-image URLs are intentionally not included.
+          </div>
+        </section>
+
+        <section class="panel fb-post-output-panel fb-giveaway-preview">
+          <div class="fb-post-section-title">
+            <div>
+              <div class="eyebrow">4 · Preview & Copy</div>
+              <h3>Giveaway Post</h3>
+            </div>
+            <div class="fb-post-copy-actions">
+              <button type="button" class="btn-ghost" id="fbGiveawayCopyBtn">Copy Full Post</button>
+              <button type="button" class="btn-primary fb-prepare-btn" id="fbGiveawayPrepareBtn">Prepare Facebook Post</button>
+            </div>
+          </div>
+
+          <textarea id="fbGiveawayOutput" class="fb-post-output fb-giveaway-output" readonly></textarea>
+
+          <div class="fb-post-bottom-actions">
+            <button type="button" class="btn-ghost" id="fbGiveawayDownloadImageBtn" disabled>Download Giveaway Image</button>
+            <a class="btn-ghost" href="#/giveaway">Open Giveaway Page</a>
+          </div>
+        </section>
+      </div>
+    `;
+
+    const sourceSelect=$("fbGiveawaySourceSelect");
+    const output=$("fbGiveawayOutput");
+    const selectedMount=$("fbGiveawaySelected");
+    const copyBtn=$("fbGiveawayCopyBtn");
+    const prepareBtn=$("fbGiveawayPrepareBtn");
+    const downloadBtn=$("fbGiveawayDownloadImageBtn");
+
+    const inputs={
+      giveawayNumber:$("fbGiveawayNumber"),
+      winnerHeadline:$("fbGiveawayWinnerHeadline"),
+      prizeLine:$("fbGiveawayPrizeLine"),
+      post1Label:$("fbGiveawayPost1Label"),
+      post1Url:$("fbGiveawayPost1Url"),
+      post2Label:$("fbGiveawayPost2Label"),
+      post2Url:$("fbGiveawayPost2Url"),
+      post3Label:$("fbGiveawayPost3Label"),
+      post3Url:$("fbGiveawayPost3Url"),
+      post4Label:$("fbGiveawayPost4Label"),
+      post4Url:$("fbGiveawayPost4Url"),
+      commentText:$("fbGiveawayCommentText"),
+      claimHours:$("fbGiveawayClaimHours"),
+      winnerTool:$("fbGiveawayWinnerTool"),
+      giveawayEnds:$("fbGiveawayEnds"),
+      cod:$("fbGiveawayCod"),
+      postage:$("fbGiveawayPostage"),
+      carousellMalaysiaUrl:$("fbGiveawayCarousellMY"),
+      carousellSingaporeUrl:$("fbGiveawayCarousellSG"),
+      hashtags:$("fbGiveawayHashtags"),
+      includeMultiGroupNotice:$("fbGiveawayMultiGroup")
+    };
+
+    let selectedGiveaway=null;
+
+    function currentValues(){
+      return {
+        giveawayNumber:inputs.giveawayNumber.value,
+        winnerHeadline:inputs.winnerHeadline.value,
+        prizeLine:inputs.prizeLine.value,
+        post1Label:inputs.post1Label.value,
+        post1Url:inputs.post1Url.value,
+        post2Label:inputs.post2Label.value,
+        post2Url:inputs.post2Url.value,
+        post3Label:inputs.post3Label.value,
+        post3Url:inputs.post3Url.value,
+        post4Label:inputs.post4Label.value,
+        post4Url:inputs.post4Url.value,
+        commentText:inputs.commentText.value,
+        claimHours:inputs.claimHours.value,
+        winnerTool:inputs.winnerTool.value,
+        giveawayEnds:inputs.giveawayEnds.value,
+        cod:inputs.cod.value,
+        postage:inputs.postage.value,
+        carousellMalaysiaUrl:inputs.carousellMalaysiaUrl.value,
+        carousellSingaporeUrl:inputs.carousellSingaporeUrl.value,
+        hashtags:inputs.hashtags.value,
+        includeMultiGroupNotice:inputs.includeMultiGroupNotice.checked
+      };
+    }
+
+    function updateOutput(){
+      const values=currentValues();
+      saveFbGiveawayPostPrefs(values);
+      output.value=buildFbGiveawayPost(values);
+      copyBtn.disabled=!output.value.trim();
+      prepareBtn.disabled=!output.value.trim();
+      downloadBtn.disabled=!safeHttpUrl(selectedGiveaway?.image_url||"");
+    }
+
+    function renderSelectedGiveaway(){
+      if(!selectedGiveaway){
+        selectedMount.hidden=true;
+        selectedMount.innerHTML="";
+        return;
+      }
+
+      const image=safeHttpUrl(selectedGiveaway.image_url||"");
+      selectedMount.hidden=false;
+      selectedMount.innerHTML=`
+        <div class="fb-post-card-image">
+          ${image
+            ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(selectedGiveaway.card_name||selectedGiveaway.title||"Giveaway")}">`
+            : `<div class="fb-post-no-image">No image</div>`}
+        </div>
+        <div class="fb-post-card-copy">
+          <strong>${escapeHtml(selectedGiveaway.title||"Giveaway")}</strong>
+          <span>${escapeHtml(selectedGiveaway.card_name||"No prize name")}</span>
+          <small>${escapeHtml(selectedGiveaway.status||"active")}${selectedGiveaway.ends_at ? ` · ${escapeHtml(formatGiveawayEndsGmt8(selectedGiveaway.ends_at))}` : ""}</small>
+        </div>
+      `;
+    }
+
+    function loadGiveaway(id){
+      selectedGiveaway=giveaways.find(g=>String(g.id)===String(id))||null;
+
+      if(selectedGiveaway){
+        const parsedNumber=giveawayNumberFromTitle(selectedGiveaway.title);
+        if(parsedNumber) inputs.giveawayNumber.value=parsedNumber;
+        if(selectedGiveaway.card_name) inputs.prizeLine.value=selectedGiveaway.card_name;
+
+        const ends=formatGiveawayEndsGmt8(selectedGiveaway.ends_at);
+        if(ends) inputs.giveawayEnds.value=ends;
+      }
+
+      renderSelectedGiveaway();
+      updateOutput();
+    }
+
+    sourceSelect.addEventListener("change",()=>loadGiveaway(sourceSelect.value));
+
+    Object.values(inputs).forEach(input=>{
+      const eventName=input.type==="checkbox" ? "change" : "input";
+      input.addEventListener(eventName,updateOutput);
+      if(eventName!=="change") input.addEventListener("change",updateOutput);
+    });
+
+    copyBtn.addEventListener("click",()=>{
+      copyPlainText(output.value,"Giveaway post copied");
+    });
+
+    downloadBtn.addEventListener("click",async()=>{
+      if(!selectedGiveaway || !requireOwner("download giveaway image")) return;
+      const image=safeHttpUrl(selectedGiveaway.image_url||"");
+      if(!image){
+        showToast("No giveaway image available");
+        return;
+      }
+      await downloadImageSource(
+        image,
+        selectedGiveaway.card_name||selectedGiveaway.title||"Collect-TCG-Giveaway",
+        1
+      );
+    });
+
+    prepareBtn.addEventListener("click",async()=>{
+      if(!requireOwner("prepare giveaway Facebook post")) return;
+      if(!output.value.trim()){
+        showToast("No giveaway post to prepare");
+        return;
+      }
+
+      const original=prepareBtn.textContent;
+      prepareBtn.disabled=true;
+      copyBtn.disabled=true;
+      downloadBtn.disabled=true;
+      prepareBtn.textContent="Preparing…";
+
+      try{
+        const copied=await copyPlainText(output.value,"Giveaway post copied");
+        if(!copied) throw new Error("Could not copy giveaway post");
+
+        const image=safeHttpUrl(selectedGiveaway?.image_url||"");
+        if(image){
+          prepareBtn.textContent="Downloading giveaway image…";
+          await downloadImageSource(
+            image,
+            selectedGiveaway.card_name||selectedGiveaway.title||"Collect-TCG-Giveaway",
+            1
+          );
+          showToast("Giveaway post ready · text copied + image download started");
+        }else{
+          showToast("Giveaway post copied");
+        }
+      }catch(error){
+        console.error("Prepare giveaway Facebook post error:",error);
+        showToast("Could not fully prepare giveaway post");
+      }finally{
+        prepareBtn.textContent=original;
+        updateOutput();
+      }
+    });
+
+    updateOutput();
   }
 
   // ---------------- Owner Card List Post Generator ----------------
@@ -16448,6 +17219,7 @@ function wireShimmer(container){
           <a href="#/inventory" class="btn-ghost" style="text-decoration:none; display:inline-flex; align-items:center;">Cancel</a>
           <button type="submit" class="btn-primary">${cloneDraft ? "Save cloned card" : "Save card"}</button>
         </div>
+        <div class="add-save-hint">A successful card insert no longer depends on a follow-up SELECT response. If Supabase rejects the write, the specific category of error will be shown.</div>
       </form>
     `;
     const formState = {
@@ -16483,28 +17255,51 @@ function wireShimmer(container){
       }
       if(!requireOwner()) return;
 
-      const submitBtn = form.querySelector('button[type="submit"]');
+      const submitBtn=form.querySelector('button[type="submit"]');
+      const originalSubmitText=submitBtn?.textContent||"Save card";
+
       if(submitBtn){
-        submitBtn.disabled = true;
-        submitBtn.textContent = "Saving…";
+        submitBtn.disabled=true;
+        submitBtn.textContent="Saving…";
+        submitBtn.setAttribute("aria-busy","true");
       }
 
-      const saved = await createCardStorage(data);
-      if(saved){
+      try{
+        const saved=await createCardStorage(data);
+        if(!saved) return;
+
         cards.push(saved);
+
+        let privateMetaSaved=true;
         if(ownerPrivateSupported && (data._owner_tags.length || data._owner_notes)){
-          await saveOwnerPrivateMeta(saved.id,data._owner_tags,data._owner_notes);
+          privateMetaSaved=await saveOwnerPrivateMeta(
+            saved.id,
+            data._owner_tags,
+            data._owner_notes
+          );
         }
+
         if(hasPsaCert(data)){
-          showToast("Card added · syncing PSA POP…");
-          await refreshPsaPopForCard(saved.id, false);
+          showToast(privateMetaSaved
+            ? "Card added · syncing PSA POP…"
+            : "Card added · private notes/tags were not saved");
+          await refreshPsaPopForCard(saved.id,false);
         }else{
-          showToast("Card added");
+          showToast(privateMetaSaved
+            ? "Card added"
+            : "Card added · private notes/tags were not saved");
         }
-        location.hash = "#/inventory";
-      }else if(submitBtn){
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Save card";
+
+        location.hash="#/inventory";
+      }catch(error){
+        console.error("Add card submit error:",error);
+        showToast(cardWriteErrorText(error,"create"));
+      }finally{
+        if(submitBtn && document.body.contains(submitBtn)){
+          submitBtn.disabled=false;
+          submitBtn.textContent=originalSubmitText;
+          submitBtn.removeAttribute("aria-busy");
+        }
       }
     });
   }
