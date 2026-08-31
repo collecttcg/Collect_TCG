@@ -7361,6 +7361,35 @@
   }
   .fb-giveaway-builder .hint a:hover{text-decoration:underline;}
 
+
+  .carousell-template-links{
+    display:grid;
+    gap:7px;
+    margin-top:10px;
+  }
+  .carousell-template-links>div{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    padding:9px 10px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:var(--surface-2);
+    font-size:9px;
+  }
+  .carousell-template-links strong{color:var(--accent-teal);}
+  .carousell-template-links span{
+    color:var(--text-muted);
+    overflow-wrap:anywhere;
+    text-align:right;
+  }
+  .carousell-post-output{min-height:720px !important;}
+  @media(max-width:700px){
+    .carousell-template-links>div{flex-direction:column;}
+    .carousell-template-links span{text-align:left;}
+    .carousell-post-output{min-height:620px !important;}
+  }
+
 </style>
 </head>
 <body>
@@ -13514,25 +13543,26 @@ function wireShimmer(container){
 
   function currentFacebookToolMode(){
     const mode=currentHashParams().get("mode");
-    return ["single","list","giveaway"].includes(mode) ? mode : "single";
+    return ["single","list","giveaway","carousell"].includes(mode) ? mode : "single";
   }
 
   function facebookToolsHeaderHTML(mode){
     const descriptions={
       single:"Create a ready-to-post Facebook listing for one card.",
       list:"Create a complete Facebook sales list from your available inventory.",
-      giveaway:"Create a reusable Facebook giveaway post from your giveaway template."
+      giveaway:"Create a reusable Facebook giveaway post from your giveaway template.",
+      carousell:"Create a ready-to-copy Carousell listing description from your card inventory."
     };
 
     return `
       <div class="page-head fb-tools-page-head">
         <div>
           <div class="eyebrow">Owner Tools</div>
-          <h2>Facebook Post Tools</h2>
+          <h2>Post Generator Tools</h2>
           <p>${escapeHtml(descriptions[mode]||descriptions.single)}</p>
         </div>
       </div>
-      <div class="fb-tools-switcher" role="tablist" aria-label="Facebook post generator type">
+      <div class="fb-tools-switcher" role="tablist" aria-label="Post generator type">
         <a href="#/fb-tools?mode=single"
            class="fb-tools-switch ${mode==="single" ? "active" : ""}"
            role="tab"
@@ -13540,7 +13570,7 @@ function wireShimmer(container){
           <span class="fb-tools-switch-icon">▣</span>
           <span>
             <strong>Single Card Post</strong>
-            <small>Choose one card · copy post · download all images as ZIP (Sold listings get a SOLD ribbon automatically)</small>
+            <small>Choose one card · copy post · download all images as ZIP (Sold listings get a SOLD marker automatically)</small>
           </span>
         </a>
 
@@ -13565,6 +13595,17 @@ function wireShimmer(container){
             <small>Load a giveaway · edit entry links · copy ready-to-post text</small>
           </span>
         </a>
+
+        <a href="#/fb-tools?mode=carousell"
+           class="fb-tools-switch ${mode==="carousell" ? "active" : ""}"
+           role="tab"
+           aria-selected="${mode==="carousell" ? "true" : "false"}">
+          <span class="fb-tools-switch-icon">C</span>
+          <span>
+            <strong>Carousell Post</strong>
+            <small>Choose a card · edit Product Details · copy listing template</small>
+          </span>
+        </a>
       </div>
     `;
   }
@@ -13578,6 +13619,8 @@ function wireShimmer(container){
       renderFbCardListGeneratorPage();
     }else if(mode==="giveaway"){
       renderFbGiveawayPostGeneratorPage();
+    }else if(mode==="carousell"){
+      renderCarousellPostGeneratorPage();
     }else{
       renderFbPostGeneratorPage();
     }
@@ -14436,6 +14479,348 @@ function wireShimmer(container){
 
     updateOutput();
   }
+
+
+  // ---------------- Owner Carousell Post Generator ----------------
+  const CAROUSELL_POST_PREFS_KEY="collect_tcg_carousell_post_prefs_v1";
+
+  function defaultCarousellProductDetails(card){
+    if(!card) return "";
+
+    const lines=[];
+    const grade=Array.isArray(card.grading)
+      ? card.grading.find(g=>g && String(g.company||"").trim())
+      : null;
+
+    if(card.name) lines.push(`Card: ${String(card.name).trim()}`);
+    if(card.card_code) lines.push(`Card Code: ${String(card.card_code).trim()}`);
+    if(card.year) lines.push(`Year: ${card.year}`);
+    if(card.series) lines.push(`Series: ${String(card.series).trim()}`);
+    if(card.game) lines.push(`Game: ${String(card.game).trim()}`);
+    if(card.language) lines.push(`Language: ${String(card.language).trim()}`);
+
+    if(grade){
+      lines.push(`Grade: ${String(grade.company||"").trim().toUpperCase()} ${String(grade.grade||"").trim()}`.trim());
+    }else if(card.condition){
+      lines.push(`Condition: ${CONDITION_LABEL[card.condition]||card.condition}`);
+    }
+
+    const savedTerm=normalizePriceNegotiability(
+      card.price_negotiability || priceNegotiabilityFromNotes(card.notes||"")
+    );
+    if(savedTerm) lines.push(`Price Terms: ${savedTerm}`);
+
+    const publicNotes=stripPriceNegotiabilityMarker(card.notes||"");
+    if(publicNotes) lines.push("",publicNotes);
+
+    return lines.join("\n");
+  }
+
+  function getCarousellPostPrefs(){
+    try{
+      const parsed=JSON.parse(localStorage.getItem(CAROUSELL_POST_PREFS_KEY)||"{}");
+      return {
+        productDetails:String(parsed.productDetails||"").slice(0,5000)
+      };
+    }catch{
+      return {productDetails:""};
+    }
+  }
+
+  function saveCarousellPostPrefs(values){
+    try{
+      localStorage.setItem(CAROUSELL_POST_PREFS_KEY,JSON.stringify({
+        productDetails:String(values.productDetails||"").slice(0,5000)
+      }));
+    }catch{}
+  }
+
+  function buildCarousellPostText(productDetails){
+    const details=String(productDetails||"").trim()||"[Add product/card explanation here]";
+
+    return [
+      "NO TRADE, ONLY SELL",
+      "",
+      "[FB PAGE]",
+      "",
+      "Facebook.com/61590041416102/",
+      "",
+      "[INSTA ID]",
+      "",
+      "collector.tcg_my.sg",
+      "",
+      "[Product Details]",
+      "",
+      details,
+      "",
+      "[Caution]",
+      "",
+      "There may be initial scratches or manufacturing defects.",
+      "",
+      "Please purchase for play/use purposes only.",
+      "",
+      "As these items are stored by an amateur, please refrain from purchasing if you are overly sensitive about condition.",
+      "",
+      "Please do not leave reviews based on the contents/condition alone.",
+      "",
+      "Thank you for viewing.",
+      "",
+      "[Important Notes]",
+      "",
+      "- For both buyer and seller protections, only COD",
+      "",
+      "- Price may subject to change from listing to match the market.",
+      "",
+      "- No trades. Listing are for sales only.",
+      "",
+      "- Please carefully review the photos before purchasing.",
+      "",
+      "- Feel free to ask if you would like additional photos.",
+      "",
+      "- Even PSA 10 cards may contain scratches, dents, holo chipping, whitening, print lines, etc.",
+      "",
+      "- The case itself may have scratches, dirt, embedded dust, or other damage. If you are concerned about such issues, please refrain from purchasing.",
+      "",
+      "[COD Rules]",
+      "",
+      "1. COD only in public places within Kuala Lumpur & Singapore. ONLY on weekends.",
+      "",
+      "2. Final price must be agreed upon before the meetup, no changes will be accepted during the transaction.",
+      "",
+      "3. If a buyer fails to show up after confirming the deal, future transactions with that party will not be accepted.",
+      "",
+      "4. Please be punctual. A grace period of up to 15 minutes will be given, after that, the meetup may be cancelled.",
+      "",
+      "5. Items will only be reserved upon confirmation from the buyer.",
+      "",
+      "6. Buyer is allowed to inspect the item during the meetup before making payment.",
+      "",
+      "7. Payment must be made during the meetup via instant bank transfer.",
+      "",
+      "8. For both buyer and seller protection, a photo of the item together with the bank transfer receipt/payment proof will be taken upon completion of the transaction to avoid any future disputes.",
+      "",
+      "Thank you for your interest.",
+      "",
+      "Please make an offer so that we may consider it.",
+      "",
+      "Basic negotiation rules we follow:",
+      "",
+      "1. No lowball offers. Please check the market value beforehand. We recommend using SNKRDUNK and 130 Point for listing and actual sold listings.",
+      "",
+      "2. Please be respectful during negotiations.",
+      "",
+      "3. In good faith, we do not require deposits or advance payments for reservations. However, any backout after confirmation will result in being blacklisted from future dealings."
+    ].join("\n");
+  }
+
+  function renderCarousellPostGeneratorPage(){
+    if(!requireOwner("open Carousell post generator")) return;
+
+    const prefs=getCarousellPostPrefs();
+    const selectableCards=cards
+      .filter(card=>cardLifecycle(card)!=="archived")
+      .slice()
+      .sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
+
+    view.innerHTML=`
+      <div class="page-head fb-post-page-head">
+        <div>
+          <div class="eyebrow">Owner Tool</div>
+          <h2>Carousell Post Generator</h2>
+          <p>Choose a card, review/edit the Product Details section, then copy the complete Carousell listing template.</p>
+        </div>
+      </div>
+
+      <div class="fb-post-layout carousell-post-layout">
+        <section class="panel fb-post-builder">
+          <div class="fb-post-section-title">
+            <div>
+              <div class="eyebrow">1 · Select Card</div>
+              <h3>Product Details</h3>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="carousellPostCardSelect">Card <span class="field-optional">(optional)</span></label>
+            <select id="carousellPostCardSelect">
+              <option value="">Manual product details</option>
+              ${selectableCards.map(card=>`
+                <option value="${escapeHtml(card.id)}">
+                  ${escapeHtml(`${card.card_code ? card.card_code+" · " : ""}${card.name}${card.year ? " · "+card.year : ""}`)}
+                </option>
+              `).join("")}
+            </select>
+            <div class="hint">Selecting a card fills Product Details from your inventory. You can still edit the text before copying.</div>
+          </div>
+
+          <div id="carousellPostSelectedCard" class="fb-post-selected-card" hidden></div>
+
+          <div class="field">
+            <label for="carousellProductDetails">Product Details / card explanation</label>
+            <textarea id="carousellProductDetails" rows="12" maxlength="5000" placeholder="Explain the card/product here…">${escapeHtml(prefs.productDetails)}</textarea>
+            <div class="hint">This is the only product-specific section. The caution, COD and negotiation rules remain fixed in the template.</div>
+          </div>
+
+          <div class="carousell-template-links">
+            <div><strong>Facebook</strong><span>Facebook.com/61590041416102/</span></div>
+            <div><strong>Instagram</strong><span>collector.tcg_my.sg</span></div>
+          </div>
+        </section>
+
+        <section class="panel fb-post-output-panel">
+          <div class="fb-post-section-title">
+            <div>
+              <div class="eyebrow">2 · Preview & Copy</div>
+              <h3>Carousell Listing Description</h3>
+            </div>
+            <div class="fb-post-copy-actions">
+              <button type="button" class="btn-ghost" id="carousellCopyPostBtn">Copy Full Post</button>
+              <button type="button" class="btn-primary" id="carousellPreparePostBtn">Prepare Carousell Post</button>
+            </div>
+          </div>
+
+          <textarea id="carousellPostOutput" class="fb-post-output carousell-post-output" readonly></textarea>
+
+          <div class="fb-post-bottom-actions">
+            <button type="button" class="btn-ghost" id="carousellDownloadImagesBtn" disabled>Download Images (.ZIP)</button>
+            <a class="btn-ghost" id="carousellOpenCardBtn" href="#/inventory" aria-disabled="true">Open Card</a>
+          </div>
+        </section>
+      </div>
+    `;
+
+    const select=$("carousellPostCardSelect");
+    const detailsInput=$("carousellProductDetails");
+    const selectedMount=$("carousellPostSelectedCard");
+    const output=$("carousellPostOutput");
+    const copyBtn=$("carousellCopyPostBtn");
+    const prepareBtn=$("carousellPreparePostBtn");
+    const downloadBtn=$("carousellDownloadImagesBtn");
+    const openCardBtn=$("carousellOpenCardBtn");
+
+    let selectedCard=null;
+
+    function renderSelected(){
+      if(!selectedCard){
+        selectedMount.hidden=true;
+        selectedMount.innerHTML="";
+        downloadBtn.disabled=true;
+        openCardBtn.href="#/inventory";
+        openCardBtn.setAttribute("aria-disabled","true");
+        return;
+      }
+
+      const image=getImages(selectedCard)[0]||"";
+      selectedMount.hidden=false;
+      selectedMount.innerHTML=`
+        <div class="fb-post-card-image">
+          ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(selectedCard.name)}">` : `<div class="fb-post-no-image">No image</div>`}
+        </div>
+        <div class="fb-post-card-copy">
+          <strong>${escapeHtml(selectedCard.name||"Untitled card")}</strong>
+          <span>${escapeHtml([selectedCard.card_code,selectedCard.year,selectedCard.series].filter(Boolean).join(" · "))}</span>
+          <small>${escapeHtml(selectedCard.availability||"Available")}</small>
+        </div>
+      `;
+      downloadBtn.disabled=getImages(selectedCard).length===0;
+      openCardBtn.href=cardShareHash(selectedCard.id);
+      openCardBtn.setAttribute("aria-disabled","false");
+    }
+
+    function regenerate(){
+      saveCarousellPostPrefs({productDetails:detailsInput.value});
+      output.value=buildCarousellPostText(detailsInput.value);
+      copyBtn.disabled=!output.value.trim();
+      prepareBtn.disabled=!output.value.trim();
+    }
+
+    select.addEventListener("change",()=>{
+      selectedCard=cards.find(card=>String(card.id)===String(select.value))||null;
+      if(selectedCard){
+        detailsInput.value=defaultCarousellProductDetails(selectedCard);
+      }
+      renderSelected();
+      regenerate();
+    });
+
+    detailsInput.addEventListener("input",regenerate);
+    detailsInput.addEventListener("change",regenerate);
+
+    copyBtn.addEventListener("click",()=>{
+      copyPlainText(output.value,"Carousell post copied");
+    });
+
+    downloadBtn.addEventListener("click",async()=>{
+      if(!selectedCard || !requireOwner("download Carousell listing images")) return;
+      const images=getImages(selectedCard);
+      if(!images.length){
+        showToast("No card images available");
+        return;
+      }
+
+      const old=downloadBtn.textContent;
+      downloadBtn.disabled=true;
+      downloadBtn.textContent="Preparing ZIP…";
+      try{
+        await downloadSingleCardImagesZip(selectedCard,(done,total)=>{
+          downloadBtn.textContent=`Preparing ${done}/${total}`;
+        });
+        showToast("Carousell images ZIP downloaded");
+      }catch(error){
+        console.error("Carousell image ZIP error:",error);
+        showToast("Could not create image ZIP");
+      }finally{
+        downloadBtn.textContent=old;
+        downloadBtn.disabled=!selectedCard || getImages(selectedCard).length===0;
+      }
+    });
+
+    prepareBtn.addEventListener("click",async()=>{
+      if(!requireOwner("prepare Carousell post")) return;
+      if(!output.value.trim()){
+        showToast("No Carousell post to prepare");
+        return;
+      }
+
+      const old=prepareBtn.textContent;
+      prepareBtn.disabled=true;
+      copyBtn.disabled=true;
+      prepareBtn.textContent="Preparing…";
+
+      try{
+        const copied=await copyPlainText(output.value,"Carousell post copied");
+        if(!copied) throw new Error("Could not copy Carousell post");
+
+        if(selectedCard && getImages(selectedCard).length){
+          prepareBtn.textContent="Creating image ZIP…";
+          await downloadSingleCardImagesZip(selectedCard);
+          showToast("Carousell post ready · text copied + image ZIP downloaded");
+        }else{
+          showToast("Carousell post copied");
+        }
+      }catch(error){
+        console.error("Prepare Carousell post error:",error);
+        showToast("Could not fully prepare Carousell post");
+      }finally{
+        prepareBtn.textContent=old;
+        regenerate();
+        if(selectedCard) downloadBtn.disabled=getImages(selectedCard).length===0;
+      }
+    });
+
+    const requestedCard=safeCardId(currentHashParams().get("card"));
+    if(requestedCard){
+      const match=selectableCards.find(card=>String(card.id)===requestedCard);
+      if(match){
+        select.value=requestedCard;
+        select.dispatchEvent(new Event("change"));
+        return;
+      }
+    }
+
+    regenerate();
+  }
+
 
   // ---------------- Owner Card List Post Generator ----------------
   const FB_CARD_LIST_POST_PREFS_KEY = "collect_tcg_fb_card_list_post_prefs_v1";
