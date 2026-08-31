@@ -6749,6 +6749,22 @@
     }
   }
 
+
+  /* ---------- Refactor pass 1: listing controls ---------- */
+  @media(max-width:800px){
+    .listing-filter-tools .inventory-display-tools:not(:has(.currency-preference-control)){
+      grid-template-columns:1fr 1fr !important;
+    }
+
+    .listing-filter-tools .inventory-display-tools:not(:has(.currency-preference-control)) .mobile-filter-open-btn{
+      grid-column:1 !important;
+    }
+
+    .listing-filter-tools .inventory-display-tools:not(:has(.currency-preference-control)) .copy-filter-link-btn{
+      grid-column:2 !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -7250,8 +7266,45 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     window.COLLECT_TCG_SUPABASE_KEY
   );
   let ownerSession = null;
+  let ownerVerified = false;
+  let inventoryRenderController = null;
 
-  function isOwnerMode(){ return !!ownerSession; }
+  function isOwnerMode(){
+    return !!ownerSession && ownerVerified === true;
+  }
+
+  async function verifyOwnerSession(session){
+    if(!session?.user?.id) return false;
+
+    const {data,error}=await supabaseClient.rpc("is_app_owner");
+    if(error){
+      console.error("Owner verification error:",error);
+      return false;
+    }
+    return data === true;
+  }
+
+  function clearOwnerOnlyClientState(){
+    cards=cards.filter(isLiveLifecycle);
+    ownerPrivateSupported=false;
+    editHistorySupported=false;
+    ownerVerified=false;
+    if(typeof invalidateOwnerReservedAgeCache==="function"){
+      invalidateOwnerReservedAgeCache();
+    }
+
+    if(!detailsOverlay.hidden){
+      const current=cards.find(c=>String(c.id)===String(detailsCardId));
+      if(!current) closeDetailsModal(false);
+    }
+  }
+
+  function cleanupInventoryRenderListeners(){
+    if(inventoryRenderController){
+      inventoryRenderController.abort();
+      inventoryRenderController=null;
+    }
+  }
 
   function applyOwnerMode(){
     document.body.classList.toggle("owner-mode", isOwnerMode());
@@ -7274,9 +7327,15 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function refreshOwnerSession(){
-    const { data, error } = await supabaseClient.auth.getSession();
-    if(error) console.error("Auth session error:", error);
-    ownerSession = data ? data.session : null;
+    const {data,error}=await supabaseClient.auth.getSession();
+    if(error) console.error("Auth session error:",error);
+
+    ownerSession=data?.session||null;
+    ownerVerified=await verifyOwnerSession(ownerSession);
+
+    if(ownerSession && !ownerVerified){
+      console.warn("Authenticated session is not authorized as an app owner.");
+    }
     applyOwnerMode();
   }
 
@@ -7391,10 +7450,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       .filter(entry=>hasListedPrice(entry.value));
   }
 
-  function preferredCardPriceNumber(card){
-    const prices=orderedCardPrices(card);
-    return prices.length ? Number(prices[0].value) : 0;
-  }
 
   function cardPriceDisplayHTML(card){
     if(normalizeFilterValue(card?.availability)==="collection (nfs)"){
@@ -7580,13 +7635,19 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(!ownerResult.error){
         data=ownerResult.data;
       }else{
-        // Upgrade compatibility before the migration is applied.
-        const legacyResult=await supabaseClient
+        // Fail closed: never fall back to a wildcard cards read.
+        console.error("Secure owner card read failed:",ownerResult.error);
+        clearOwnerOnlyClientState();
+        applyOwnerMode();
+
+        const publicResult=await supabaseClient
           .from("cards")
-          .select("*")
+          .select(publicColumns)
           .order("created_at",{ascending:true});
-        data=legacyResult.data;
-        error=legacyResult.error;
+        data=publicResult.data;
+        error=publicResult.error;
+
+        showToast("Owner data access unavailable · showing public inventory");
       }
     }else{
       const publicResult=await supabaseClient
@@ -7767,22 +7828,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return mergeOwnerOnlyCardFields(dbToCard(result.data),card);
   }
 
-  async function saveIndex(){ return true; }
 
-  async function deleteCardStorage(id){
-    if(!requireOwner("deleteCard")) return false;
-    const { error } = await supabaseClient
-      .from("cards")
-      .delete()
-      .eq("id", id);
-
-    if(error){
-      console.error("Delete card error:", error);
-      showToast("Could not delete card");
-      return false;
-    }
-    return true;
-  }
 
   // ---------------- Supabase giveaways ----------------
   function giveawayFromDb(row){
@@ -7897,20 +7943,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       .eq("id", id);
   }
 
-  async function recordCardView(card){
-    try{
-      const { error } = await supabaseClient.rpc("increment_card_view", { p_card_id: card.id });
-      if(error){
-        console.error("Record card view error:", error);
-        return;
-      }
-      if(isOwnerMode()){
-        card.view_count = Number(card.view_count || 0) + 1;
-      }
-    }catch(e){
-      console.error("Record card view error:", e);
-    }
-  }
 
   // ---------------- Analytics / view events ----------------
   const VISITOR_ID_KEY = "collect-tcg-visitor-id";
@@ -8285,8 +8317,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function router(){
     updateStatusNavCounts();
-    const route = currentRoute();
-    const isCardRoute = route.startsWith("card/");
+    const route=currentRoute();
+    const isCardRoute=route.startsWith("card/");
+    const listingRoutes=new Set(["inventory","collection","reserved","sold"]);
+    if(!isCardRoute && !listingRoutes.has(route)){
+      cleanupInventoryRenderListeners();
+    }
     const routedCardCandidate = isCardRoute ? cards.find(c=>c.id === decodeURIComponent(route.slice(5))) : null;
     const routedCard = routedCardCandidate && (isOwnerMode() || isLiveLifecycle(routedCardCandidate))
       ? routedCardCandidate
@@ -8566,16 +8602,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return `<div class="thumb-placeholder" style="--stripe:${color}">${initial}</div>`;
   }
 
-  function gradingSummaryHTML(c){
-    const grades = Array.isArray(c.grading) ? c.grading.filter(g=>g && g.company) : [];
-    if(!grades.length) return "";
-    return `<div class="grade-summary">Graded: ${grades.map(g =>{
-      const pop = g.company === "PSA" && g.pop_count != null
-        ? `<span class="pop-summary">POP ${Number(g.pop_count).toLocaleString()}${g.pop_higher != null && Number(g.pop_higher) > 0 ? ` · ${Number(g.pop_higher).toLocaleString()} Higher` : ""}</span>`
-        : "";
-      return `${escapeHtml(g.company)} ${escapeHtml(g.grade || "")}${pop}`;
-    }).join(" · ")}</div>`;
-  }
 
   // ---------------- Card form (shared by Add page + Edit modal) ----------------
   const GAME_CHOICES = [
@@ -9200,69 +9226,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   // ---------------- Dashboard ----------------
-  function renderDashboardPage(){
-    const totalCount = cards.reduce((s,c)=>s+Number(c.qty||0),0);
-    const totalValue = cards.reduce((s,c)=>s+Number(c.qty||0)*Number(c.price||0),0);
-    const totalCost = cards.reduce((s,c)=>s+Number(c.qty||0)*Number(c.cost||0),0);
-
-    const byGame = {};
-    cards.forEach(c=>{
-      byGame[c.game] = byGame[c.game] || {count:0, value:0};
-      byGame[c.game].count += Number(c.qty||0);
-      byGame[c.game].value += Number(c.qty||0)*Number(c.price||0);
-    });
-    const gameRows = Object.entries(byGame).sort((a,b)=>b[1].value - a[1].value);
-    const maxGameVal = Math.max(1, ...gameRows.map(r=>r[1].value));
-
-    const byRarity = {};
-    cards.forEach(c=>{
-      byRarity[c.rarity] = byRarity[c.rarity] || {count:0, value:0};
-      byRarity[c.rarity].count += Number(c.qty||0);
-      byRarity[c.rarity].value += Number(c.qty||0)*Number(c.price||0);
-    });
-    const rarityRows = RARITY_LIST.filter(r=>byRarity[r]).map(r=>[r, byRarity[r]]);
-    const maxRarityVal = Math.max(1, ...rarityRows.map(r=>r[1].value));
-
-    const recent = cards.slice(-5).reverse();
-
-    view.innerHTML = `
-      <div class="page-head"><div><div class="eyebrow">Overview</div><h2>Dashboard</h2><p>An overview of Collect TCG MY & SG stock and value.</p></div></div>
-      <div class="stat-strip">
-        <div class="stat-card"><div class="stat-value mono">${totalCount}</div><div class="stat-label">Cards in stock</div></div>
-        <div class="stat-card"><div class="stat-value mono">${cards.length}</div><div class="stat-label">Unique listings</div></div>
-        <div class="stat-card"><div class="stat-value mono">${fmtMoney(totalValue)}</div><div class="stat-label">Total sale value</div></div>
-        <div class="stat-card"><div class="stat-value mono">${fmtMoney(totalValue - totalCost)}</div><div class="stat-label">Potential profit</div></div>
-      </div>
-      <div class="dashboard-grid">
-        <div class="panel">
-          <h3>Value by game</h3>
-          ${gameRows.length ? gameRows.map(([g,d])=>`
-            <div class="bar-row">
-              <div class="lbl">${escapeHtml(g)}</div>
-              <div class="bar-track"><div class="bar-fill" style="width:${(d.value/maxGameVal*100).toFixed(1)}%"></div></div>
-              <div class="bar-val">${fmtMoney(d.value)}</div>
-            </div>`).join("") : `<div class="hint">No cards yet.</div>`}
-        </div>
-        <div class="panel">
-          <h3>Value by rarity</h3>
-          ${rarityRows.length ? rarityRows.map(([r,d])=>`
-            <div class="bar-row">
-              <div class="lbl">${r}</div>
-              <div class="bar-track"><div class="bar-fill" style="width:${(d.value/maxRarityVal*100).toFixed(1)}%; background:${RARITY_COLOR[r]}"></div></div>
-              <div class="bar-val">${fmtMoney(d.value)}</div>
-            </div>`).join("") : `<div class="hint">No cards yet.</div>`}
-        </div>
-      </div>
-      <div class="panel">
-        <h3>Recently added</h3>
-        ${recent.length ? recent.map(c=>`
-          <div class="recent-row">
-            <div><div class="rn">${escapeHtml(c.name)}</div><div class="rm">${escapeHtml(c.game)}${c.set ? " · "+escapeHtml(c.set) : ""}</div></div>
-            <div class="price">${fmtMoney(c.price)}</div>
-          </div>`).join("") : `<div class="hint">Nothing added yet — <a href="#/add" style="color:var(--accent-teal)">add your first card</a>.</div>`}
-      </div>
-    `;
-  }
 
   // ---------------- Favorites / Shortlist ----------------
   function renderRecentlyViewedPage(){
@@ -9566,23 +9529,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
            availability !== "collection (nfs)";
   }
 
-  function getListingOverview(scope = listingAvailabilityScope){
-    const scoped = cards.filter(c=>cardMatchesListingScope(c, scope));
-
-    return scoped.reduce((acc, card)=>{
-      const format = normalizeFilterValue(effectiveFormat(card));
-      const era = normalizeFilterValue(card.era || "");
-
-      acc.total += 1;
-      if(isNewCard(card)) acc.new += 1;
-      if(format === "graded") acc.graded += 1;
-      if(format === "raw") acc.raw += 1;
-      if(format === "sealed") acc.sealed += 1;
-      if(era === "vintage") acc.vintage += 1;
-
-      return acc;
-    }, {total:0,new:0,graded:0,raw:0,sealed:0,vintage:0});
-  }
 
   function listingScopeMeta(scope){
     if(scope === "collection"){
@@ -10256,6 +10202,10 @@ function wireShimmer(container){
   }
 
   function renderInventoryPage(scope = "inventory"){
+    cleanupInventoryRenderListeners();
+    inventoryRenderController=new AbortController();
+    const inventorySignal=inventoryRenderController.signal;
+
     updateStatusNavCounts();
     listingAvailabilityScope = ["inventory","collection","reserved","sold"].includes(scope) ? scope : "inventory";
     const scopeMeta = listingScopeMeta(listingAvailabilityScope);
@@ -10277,6 +10227,7 @@ function wireShimmer(container){
         <button type="button" class="quick-filter" data-quick="vintage">Vintage</button>
         </div>
         <div class="inventory-display-tools">
+          ${listingAvailabilityScope!=="collection" ? `
           <label class="currency-preference-control" title="Choose which stored currency is shown first. No currency conversion is performed.">
             <span>Currency</span>
             <select id="currencyPreference" aria-label="Preferred display currency">
@@ -10284,7 +10235,7 @@ function wireShimmer(container){
               <option value="MYR" ${getPriceCurrencyPreference()==="MYR"?"selected":""}>MYR</option>
               <option value="SGD" ${getPriceCurrencyPreference()==="SGD"?"selected":""}>SGD</option>
             </select>
-          </label>
+          </label>` : ""}
           <button type="button" class="view-mode-toggle desktop-compact-view-toggle" id="compactViewToggle" aria-pressed="${effectiveInventoryViewMode()==="compact"?"true":"false"}">
             ${effectiveInventoryViewMode()==="compact"?"▦ Grid View":"☷ Compact View"}
           </button>
@@ -10335,11 +10286,7 @@ function wireShimmer(container){
   <div class="overview-select-menu" id="filterEraMenu" hidden></div>
   <input type="hidden" id="filterEra" value="">
 </div>
-        ${listingAvailabilityScope === "inventory" ? `<div class="overview-select" id="filterAvailabilityWrap">
-  <button type="button" class="overview-select-btn" id="filterAvailabilityBtn"><span>All Availability</span><i></i></button>
-  <div class="overview-select-menu" id="filterAvailabilityMenu" hidden></div>
-  <input type="hidden" id="filterAvailability" value="">
-</div>` : `<input type="hidden" id="filterAvailability" value="">`}
+        <input type="hidden" id="filterAvailability" value="">
         <div class="overview-select" id="filterSeriesWrap">
   <button type="button" class="overview-select-btn" id="filterSeriesBtn"><span>All Series</span><i></i></button>
   <div class="overview-select-menu" id="filterSeriesMenu" hidden></div>
@@ -10381,9 +10328,9 @@ function wireShimmer(container){
 
     const scopedCards = cards.filter(c=>cardMatchesListingScope(c, listingAvailabilityScope));
     const games = Array.from(new Set(scopedCards.map(c=>c.game).filter(Boolean))).sort();
-    const languages = ["JP","ENG","KR","CN"].filter(lang=>cards.some(c=>c.language===lang));
-    const eras = ERA_OPTIONS.filter(era=>cards.some(c=>c.era===era));
-    const series = Array.from(new Set(cards.map(c=>c.series).filter(Boolean))).sort();
+    const languages=["JP","ENG","KR","CN"].filter(lang=>scopedCards.some(c=>c.language===lang));
+    const eras=ERA_OPTIONS.filter(era=>scopedCards.some(c=>c.era===era));
+    const series=Array.from(new Set(scopedCards.map(c=>c.series).filter(Boolean))).sort();
 
     function setupOverviewSelect(id, options){
       const hidden = $(id);
@@ -10423,9 +10370,9 @@ function wireShimmer(container){
         hidden.dispatchEvent(new Event("change", {bubbles:true}));
       });
 
-      document.addEventListener("click", e=>{
-        if(!wrap.contains(e.target)) menu.hidden = true;
-      });
+      document.addEventListener("click",e=>{
+        if(!wrap.contains(e.target)) menu.hidden=true;
+      },{signal:inventorySignal});
     }
 
     setupOverviewSelect("filterGame", [
@@ -10433,7 +10380,7 @@ function wireShimmer(container){
       ...games.map(g=>({value:g,label:g}))
     ]);
     const slabGradeOptions = Array.from(new Set(
-      cards.flatMap(c => Array.isArray(c.grading) ? c.grading : [])
+      scopedCards.flatMap(c => Array.isArray(c.grading) ? c.grading : [])
         .filter(g => g && g.company && String(g.grade ?? "").trim())
         .map(g => `${String(g.company).trim().toUpperCase()} ${String(g.grade).trim()}`)
     )).sort((a,b)=>{
@@ -10448,10 +10395,10 @@ function wireShimmer(container){
 
     const rawConditionOrder = ["Mint","Near Mint","Lightly Played","Moderately Played","Heavily Played","Damaged","Not Applicable"];
     const rawConditionOptions = rawConditionOrder.filter(label =>
-      cards.some(c => effectiveFormat(c) === "Raw" && (CONDITION_LABEL[c.condition] || c.condition || "") === label)
+      scopedCards.some(c => effectiveFormat(c) === "Raw" && (CONDITION_LABEL[c.condition] || c.condition || "") === label)
     );
 
-    const sealedOptions = cards.some(c => effectiveFormat(c) === "Sealed") ? ["Sealed"] : [];
+    const sealedOptions=scopedCards.some(c=>effectiveFormat(c)==="Sealed") ? ["Sealed"] : [];
     const gradeOptions = [...slabGradeOptions, ...rawConditionOptions, ...sealedOptions];
 
     setupOverviewSelect("filterGrade", [
@@ -10494,15 +10441,6 @@ function wireShimmer(container){
       {value:"",label:"All Eras"},
       ...eras.map(e=>({value:e,label:e}))
     ]);
-    if($("filterAvailabilityWrap")){
-      const availabilityOptions = listingAvailabilityScope === "inventory"
-        ? AVAILABILITY_OPTIONS.filter(v=>!["Reserved","Sold"].includes(v))
-        : [];
-      setupOverviewSelect("filterAvailability", [
-        {value:"",label:"All Availability"},
-        ...availabilityOptions.map(v=>({value:v,label:v}))
-      ]);
-    }
     setupOverviewSelect("filterSeries", [
       {value:"",label:"All Series"},
       ...series.map(s=>({value:s,label:s}))
@@ -10517,8 +10455,10 @@ function wireShimmer(container){
       {value:"year-old",label:"Year: Oldest → Newest"},
       {value:"grade-high",label:"Grade: High → Low"},
       {value:"grade-low",label:"Grade: Low → High"},
-      {value:"price-low",label:"Price: Lowest → Highest"},
-      {value:"price-high",label:"Price: Highest → Lowest"}
+      ...(listingAvailabilityScope!=="collection" ? [
+        {value:"price-low",label:"Price: Lowest → Highest"},
+        {value:"price-high",label:"Price: Highest → Lowest"}
+      ] : [])
     ]);
 
     function restoreListingFiltersFromUrl(){
@@ -10553,15 +10493,17 @@ function wireShimmer(container){
 
       $("search").value = safeUrlFilterText(params.get("q"), 100);
 
-      const urlCurrency=String(params.get("pc")||"").toUpperCase();
-      if(["USD","MYR","SGD"].includes(urlCurrency)){
-        setPriceCurrencyPreference(urlCurrency);
-        if($("currencyPreference")) $("currencyPreference").value=urlCurrency;
-        const priceLabel=document.querySelector(".price-range-label");
-        if(priceLabel) priceLabel.textContent=`Price (${urlCurrency})`;
+      if(listingAvailabilityScope!=="collection"){
+        const urlCurrency=String(params.get("pc")||"").toUpperCase();
+        if(["USD","MYR","SGD"].includes(urlCurrency)){
+          setPriceCurrencyPreference(urlCurrency);
+          if($("currencyPreference")) $("currencyPreference").value=urlCurrency;
+          const priceLabel=document.querySelector(".price-range-label");
+          if(priceLabel) priceLabel.textContent=`Price (${urlCurrency})`;
+        }
+        if($("filterPriceMin")) $("filterPriceMin").value=safePriceFilterValue(params.get("pmin"));
+        if($("filterPriceMax")) $("filterPriceMax").value=safePriceFilterValue(params.get("pmax"));
       }
-      if($("filterPriceMin")) $("filterPriceMin").value=safePriceFilterValue(params.get("pmin"));
-      if($("filterPriceMax")) $("filterPriceMax").value=safePriceFilterValue(params.get("pmax"));
 
       setSelect("filterGame","game",valid.game,"All Games");
       setSelect("filterGrade","grade",valid.grade,"All Grades / Conditions");
@@ -10569,21 +10511,14 @@ function wireShimmer(container){
       setSelect("filterEra","era",valid.era,"All Eras");
       setSelect("filterSeries","series",valid.series,"All Series");
 
-      if(listingAvailabilityScope === "inventory" && $("filterAvailabilityWrap")){
-        const allowedAvailability = new Set(
-          AVAILABILITY_OPTIONS
-            .filter(v=>!["Reserved","Sold"].includes(v))
-            .map(normalizeFilterValue)
-        );
-        setSelect("filterAvailability","availability",allowedAvailability,"All Availability");
-      }else if($("filterAvailability")){
-        $("filterAvailability").value = "";
-      }
+      if($("filterAvailability")) $("filterAvailability").value="";
 
-      const allowedSort = new Set(
-        listingAvailabilityScope === "sold"
+      const allowedSort=new Set(
+        listingAvailabilityScope==="sold"
           ? ["recent-sold","name","name-desc","newest","oldest","year-new","year-old","grade-high","grade-low","price-low","price-high"]
-          : ["name","name-desc","newest","oldest","year-new","year-old","grade-high","grade-low","price-low","price-high"]
+          : (listingAvailabilityScope==="collection"
+              ? ["name","name-desc","newest","oldest","year-new","year-old","grade-high","grade-low"]
+              : ["name","name-desc","newest","oldest","year-new","year-old","grade-high","grade-low","price-low","price-high"])
       );
       const defaultSort = listingAvailabilityScope === "sold" ? "recent-sold" : "name";
       const sort = safeUrlFilterText(params.get("sort"), 24);
@@ -10839,7 +10774,7 @@ function wireShimmer(container){
       if(!e.target.closest(".inventory-search-wrap") && searchSuggestions){
         searchSuggestions.hidden=true;
       }
-    });
+    },{signal:inventorySignal});
 
     $("currencyPreference")?.addEventListener("change",e=>{
       setPriceCurrencyPreference(e.target.value);
@@ -10875,7 +10810,10 @@ function wireShimmer(container){
       }
       draw();
     };
-    window.addEventListener("resize",inventoryLayoutResizeHandler,{passive:true});
+    window.addEventListener("resize",inventoryLayoutResizeHandler,{
+      passive:true,
+      signal:inventorySignal
+    });
 
     function closeMobileFilterDrawer(){
       const shell=$("filterDrawerShell");
@@ -11166,15 +11104,6 @@ function wireShimmer(container){
     }
   }
 
-  function isFacebookEmbeddableVideoUrl(url){
-    try{
-      const u = new URL(url);
-      const hostOk = /(^|\.)facebook\.com$/i.test(u.hostname);
-      return hostOk && /\/videos\//i.test(u.pathname);
-    }catch(_){
-      return false;
-    }
-  }
 
   function isFacebookVideoUrl(url){
     try{
@@ -11186,11 +11115,6 @@ function wireShimmer(container){
     }
   }
 
-  function facebookEmbedUrl(url){
-    return "https://www.facebook.com/plugins/video.php?href=" +
-      encodeURIComponent(url) +
-      "&show_text=false&autoplay=false&width=900";
-  }
 
   function youtubeVideoId(url){
     try{
@@ -11219,8 +11143,12 @@ function wireShimmer(container){
     const title = $("videoModalTitle");
     const copy = $("videoModalCopy");
 
-    const url = v.video_url || "";
-    const yt = youtubeVideoId(url);
+    const url=safeHttpUrl(v.video_url||"");
+    if(!url){
+      showToast("Unsupported video URL");
+      return;
+    }
+    const yt=youtubeVideoId(url);
 
     title.textContent = v.title || "Showcase";
     copy.innerHTML = `
@@ -12002,26 +11930,35 @@ function wireShimmer(container){
     return lines.join("\n");
   }
 
-  async function copyPlainText(text, successMessage){
-    const value = String(text || "");
+  async function copyTextToClipboard(text){
+    const value=String(text||"");
     if(!value) return false;
+
     try{
       await navigator.clipboard.writeText(value);
-      showToast(successMessage || "Copied");
       return true;
     }catch{
-      const ta = document.createElement("textarea");
-      ta.value = value;
-      ta.setAttribute("readonly","");
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      const ok = document.execCommand("copy");
-      ta.remove();
-      showToast(ok ? (successMessage || "Copied") : "Could not copy");
-      return ok;
+      try{
+        const ta=document.createElement("textarea");
+        ta.value=value;
+        ta.setAttribute("readonly","");
+        ta.style.position="fixed";
+        ta.style.opacity="0";
+        document.body.appendChild(ta);
+        ta.select();
+        const ok=document.execCommand("copy");
+        ta.remove();
+        return !!ok;
+      }catch{
+        return false;
+      }
     }
+  }
+
+  async function copyPlainText(text,successMessage){
+    const ok=await copyTextToClipboard(text);
+    showToast(ok ? (successMessage||"Copied") : "Could not copy");
+    return ok;
   }
 
   function currentFacebookToolMode(){
@@ -16043,23 +15980,6 @@ function wireShimmer(container){
   let detailsCardId = null;
   let detailsImageIndex = 0;
 
-  function gradingDetailsHTML(card){
-    const grades = Array.isArray(card.grading) ? card.grading.filter(g=>g && g.company) : [];
-    if(!grades.length){
-      return `<div class="detail-section"><h3>Grading</h3><div class="hint">Raw / ungraded card — no grading entry recorded.</div></div>`;
-    }
-    return `<div class="detail-section"><h3>Grading</h3>${
-      grades.map(g=>{
-        const popLine = g.company === "PSA" && g.pop_count != null
-          ? `<div class="grade-cert">POP ${Number(g.pop_count).toLocaleString()}${g.pop_higher != null && Number(g.pop_higher) > 0 ? ` · ${Number(g.pop_higher).toLocaleString()} Higher` : ""}</div>`
-          : "";
-        return `<div class="grade-entry">
-          <div><span class="grade-main">${escapeHtml(g.company)} ${escapeHtml(g.grade || "")}</span></div>
-          ${popLine}
-        </div>`;
-      }).join("")
-    }</div>`;
-  }
 
   let lightboxImages = [];
   let lightboxIndex = 0;
@@ -16217,27 +16137,6 @@ function wireShimmer(container){
     return new Promise(resolve=>setTimeout(resolve, ms));
   }
 
-  async function downloadAllCardImages(card){
-    if(!card) return 0;
-    const images = getImages(card);
-    if(!images.length) return 0;
-
-    // Trigger each image separately and give the browser a short gap between
-    // downloads. This keeps filenames ordered and reduces dropped downloads.
-    for(let i=0; i<images.length; i++){
-      await downloadImageSource(
-        images[i],
-        card.name || card.card_code || "card",
-        i + 1
-      );
-
-      if(i < images.length - 1){
-        await waitMs(180);
-      }
-    }
-
-    return images.length;
-  }
 
   function getCardShareUrl(cardId){
     const base = `${location.origin}${location.pathname}${location.search}`;
@@ -16333,31 +16232,6 @@ function wireShimmer(container){
     ].filter(line=>line!=="").join("\n");
   }
 
-  async function copyPlainText(value){
-    const text=String(value||"");
-    if(!text) return false;
-
-    try{
-      await navigator.clipboard.writeText(text);
-      return true;
-    }catch{
-      try{
-        const input=document.createElement("textarea");
-        input.value=text;
-        input.setAttribute("readonly","");
-        input.style.position="fixed";
-        input.style.opacity="0";
-        document.body.appendChild(input);
-        input.select();
-        const ok=document.execCommand("copy");
-        input.remove();
-        return !!ok;
-      }catch{
-        return false;
-      }
-    }
-  }
-
   async function messageSellerOnFacebook(){
     const card=cards.find(c=>String(c.id)===String(detailsCardId));
     if(!card || (!isOwnerMode() && !isLiveLifecycle(card))) return;
@@ -16371,7 +16245,7 @@ function wireShimmer(container){
       "noopener,noreferrer"
     );
 
-    const copied=await copyPlainText(publicContactSellerMessage(card));
+    const copied=await copyTextToClipboard(publicContactSellerMessage(card));
 
     if(copied){
       showToast(opened
@@ -16989,7 +16863,9 @@ function wireShimmer(container){
   async function openOwnerAccess(){
     if(isOwnerMode()){
       await supabaseClient.auth.signOut();
-      ownerSession = null;
+      ownerSession=null;
+      ownerVerified=false;
+      clearOwnerOnlyClientState();
       applyOwnerMode();
       await loadCards();
       if(currentRoute() === "add") location.hash = "#/inventory";
@@ -17014,7 +16890,19 @@ function wireShimmer(container){
       return;
     }
 
-    ownerSession = data.session;
+    ownerSession=data.session;
+    ownerVerified=await verifyOwnerSession(ownerSession);
+
+    if(!ownerVerified){
+      await supabaseClient.auth.signOut();
+      ownerSession=null;
+      ownerVerified=false;
+      clearOwnerOnlyClientState();
+      applyOwnerMode();
+      showToast("This account is not authorized as owner");
+      return;
+    }
+
     applyOwnerMode();
     await loadCards();
     router();
@@ -17029,20 +16917,50 @@ function wireShimmer(container){
     }
   });
 
-  supabaseClient.auth.onAuthStateChange((_event, session)=>{
-    const wasOwner=!!ownerSession;
-    ownerSession = session;
+  supabaseClient.auth.onAuthStateChange((_event,session)=>{
+    const previousUserId=ownerSession?.user?.id||"";
+    const wasOwner=isOwnerMode();
+
+    ownerSession=session;
+
+    if(!session){
+      clearOwnerOnlyClientState();
+      applyOwnerMode();
+      return;
+    }
+
+    if(session.user?.id!==previousUserId){
+      ownerVerified=false;
+    }
     applyOwnerMode();
 
-    if(wasOwner && !session){
-      cards=cards.filter(isLiveLifecycle);
-      ownerPrivateSupported=false;
-      editHistorySupported=false;
-      if(!detailsOverlay.hidden){
-        const current=cards.find(c=>String(c.id)===String(detailsCardId));
-        if(!current) closeDetailsModal(false);
+    // Verify outside the auth callback so the auth client is not re-entered.
+    setTimeout(async()=>{
+      if(ownerSession?.access_token!==session.access_token) return;
+
+      const verified=await verifyOwnerSession(session);
+      if(ownerSession?.access_token!==session.access_token) return;
+
+      ownerVerified=verified;
+      if(!verified){
+        clearOwnerOnlyClientState();
+
+        const ownerOnlyRoutes=new Set([
+          "by-game","insights","fb-tools","fb-posts","fb-card-list",
+          "quality","inventory-tools","bulk-prices","bulk-metadata",
+          "recent-edits","export","add"
+        ]);
+        if(ownerOnlyRoutes.has(currentRoute())){
+          location.hash="#/inventory";
+        }
       }
-    }
+
+      applyOwnerMode();
+
+      if(wasOwner && !verified){
+        showToast("Owner authorization could not be verified");
+      }
+    },0);
   });
 
   // ---------------- Theme ----------------
