@@ -9145,6 +9145,94 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     ctx.restore();
   }
 
+  function shouldApplySoldDownloadWatermark(card){
+    return canonicalAvailability(card?.availability) === "Sold";
+  }
+
+  function drawSoldDownloadWatermark(ctx, canvas){
+    const shortSide = Math.min(canvas.width, canvas.height);
+    const bandLength = Math.max(130, Math.min(420, Math.round(shortSide * 0.72)));
+    const bandHeight = Math.max(34, Math.min(96, Math.round(shortSide * 0.16)));
+    const centerOffset = Math.round(bandLength * 0.29);
+    const fontSize = Math.max(18, Math.min(50, Math.round(bandHeight * 0.56)));
+
+    ctx.save();
+    ctx.translate(centerOffset, centerOffset);
+    ctx.rotate(-Math.PI / 4);
+    ctx.shadowColor = "rgba(0,0,0,0.35)";
+    ctx.shadowBlur = Math.max(10, Math.round(bandHeight * 0.35));
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = Math.max(3, Math.round(bandHeight * 0.12));
+    ctx.fillStyle = "#ef4444";
+    ctx.fillRect(-bandLength / 2, -bandHeight / 2, bandLength, bandHeight);
+
+    ctx.shadowColor = "transparent";
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `900 ${fontSize}px Inter, Arial, sans-serif`;
+    ctx.fillText("SOLD", 0, 1);
+    ctx.restore();
+  }
+
+  function canvasToBlob(canvas, quality = 0.9, type = "image/jpeg"){
+    return new Promise((resolve,reject)=>{
+      canvas.toBlob(blob=>{
+        if(blob) resolve(blob);
+        else reject(new Error("Could not create image blob"));
+      }, type, quality);
+    });
+  }
+
+  async function loadImageElementFromSource(src){
+    const blob = await imageSourceToBlob(src);
+    const objectUrl = URL.createObjectURL(blob);
+
+    try{
+      const img = await new Promise((resolve,reject)=>{
+        const image = new Image();
+        image.onload = ()=>resolve(image);
+        image.onerror = ()=>reject(new Error("Could not decode image"));
+        image.src = objectUrl;
+      });
+      return {img, originalBlob: blob};
+    }finally{
+      setTimeout(()=>URL.revokeObjectURL(objectUrl), 0);
+    }
+  }
+
+  async function renderSoldDownloadBlob(src, card, maxDim = 1600, quality = 0.9){
+    const {img} = await loadImageElementFromSource(src);
+
+    let w = img.naturalWidth || img.width;
+    let h = img.naturalHeight || img.height;
+    if(!w || !h) throw new Error("invalid image dimensions");
+
+    if(w > h && w > maxDim){
+      h = Math.round(h * maxDim / w);
+      w = maxDim;
+    }else if(h >= w && h > maxDim){
+      w = Math.round(w * maxDim / h);
+      h = maxDim;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d", {alpha:false});
+    if(!ctx) throw new Error("canvas unavailable");
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0,0,w,h);
+    ctx.drawImage(img, 0, 0, w, h);
+
+    if(shouldApplySoldDownloadWatermark(card)){
+      drawSoldDownloadWatermark(ctx, canvas);
+    }
+
+    return canvasToBlob(canvas, quality, "image/jpeg");
+  }
+
   async function renderWatermarkedImage(img, maxDim = 900, quality = 0.82){
     let w = img.naturalWidth || img.width;
     let h = img.naturalHeight || img.height;
@@ -13079,7 +13167,7 @@ function wireShimmer(container){
           <span class="fb-tools-switch-icon">▣</span>
           <span>
             <strong>Single Card Post</strong>
-            <small>Choose one card · copy post · download all images as ZIP</small>
+            <small>Choose one card · copy post · download all images as ZIP (Sold listings get a SOLD ribbon automatically)</small>
           </span>
         </a>
 
@@ -14327,8 +14415,11 @@ function wireShimmer(container){
       if(!firstImage) continue;
 
       try{
-        const blob = await imageSourceToBlob(firstImage);
-        const ext = imageExtensionFromBlob(blob);
+        const soldWatermark = shouldApplySoldDownloadWatermark(card);
+        const blob = soldWatermark
+          ? await renderSoldDownloadBlob(firstImage, card)
+          : await imageSourceToBlob(firstImage);
+        const ext = soldWatermark ? "jpg" : imageExtensionFromBlob(blob);
         let base = safeDownloadName(
           [card.card_code,card.name].filter(Boolean).join(" - ") || `card-${i+1}`
         );
@@ -14406,7 +14497,7 @@ function wireShimmer(container){
         <div>
           <div class="eyebrow">Owner Tool</div>
           <h2>Card List Post Generator</h2>
-          <p>Select the listings to include, control their order, generate the Facebook sales list, and download the first image from each selected listing as a ZIP.</p>
+          <p>Select the listings to include, control their order, generate the Facebook sales list, and download the first image from each selected listing as a ZIP. Sold listings are exported with a SOLD ribbon automatically.</p>
         </div>
       </div>
 
@@ -17788,11 +17879,14 @@ function wireShimmer(container){
     const zip = new ZipCtor();
     const failed = [];
     let added = 0;
+    const soldWatermark = shouldApplySoldDownloadWatermark(card);
 
     for(let i=0;i<images.length;i++){
       try{
-        const blob = await imageSourceToBlob(images[i]);
-        const ext = imageExtensionFromBlob(blob);
+        const blob = soldWatermark
+          ? await renderSoldDownloadBlob(images[i], card)
+          : await imageSourceToBlob(images[i]);
+        const ext = soldWatermark ? "jpg" : imageExtensionFromBlob(blob);
         const base = safeDownloadName(
           [card.card_code, card.name].filter(Boolean).join(" - ") || "card"
         );
