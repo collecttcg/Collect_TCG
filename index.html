@@ -4170,6 +4170,31 @@
   }
 
 
+  /* ---------- Bulk status / Supabase health ---------- */
+  .bulk-status-layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(300px,.7fr);gap:12px;align-items:start;}
+  .bulk-status-panel,.supabase-health-panel{padding:14px;}
+  .bulk-status-toolbar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:10px;}
+  .bulk-status-list{display:flex;flex-direction:column;gap:5px;max-height:620px;overflow:auto;padding-right:2px;}
+  .bulk-status-card{display:grid;grid-template-columns:auto 42px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px;border:1px solid var(--border);border-radius:9px;background:var(--bg);cursor:pointer;}
+  .bulk-status-card.selected{border-color:rgba(95,212,196,.42);background:rgba(95,212,196,.035);}
+  .bulk-status-card input{accent-color:var(--accent-teal);}
+  .bulk-status-thumb{width:42px;height:52px;border-radius:6px;overflow:hidden;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:7px;}
+  .bulk-status-thumb img{width:100%;height:100%;object-fit:cover;}
+  .bulk-status-copy{min-width:0;}
+  .bulk-status-copy strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:9px;}
+  .bulk-status-copy small{display:block;margin-top:3px;color:var(--text-muted);font-size:7.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .bulk-status-badge{padding:3px 6px;border-radius:999px;background:var(--surface-2);color:var(--text-muted);font-size:7px;font-weight:700;white-space:nowrap;}
+  .bulk-status-actions{display:flex;flex-direction:column;gap:8px;}
+  .bulk-status-actions .btn-primary{width:100%;}
+  .supabase-health-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0;}
+  .supabase-health-grid>div{padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--surface);}
+  .supabase-health-grid strong{display:block;font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--accent-teal);}
+  .supabase-health-grid span{display:block;margin-top:3px;color:var(--text-muted);font-size:8px;}
+  .capacity-warning{margin-top:10px;padding:9px 10px;border:1px solid rgba(227,179,65,.24);border-radius:8px;background:rgba(227,179,65,.06);color:var(--text-muted);font-size:8px;line-height:1.45;}
+  .capacity-warning.danger{border-color:rgba(232,96,122,.35);background:rgba(232,96,122,.07);color:#fca5a5;}
+  @media(max-width:800px){.bulk-status-layout{grid-template-columns:1fr}.supabase-health-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:450px){.supabase-health-grid{grid-template-columns:1fr}.bulk-status-card{grid-template-columns:auto 38px minmax(0,1fr)}.bulk-status-badge{grid-column:3}}
+
   /* ---------- Bulk metadata editor ---------- */
   .bulk-meta-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px;}
   .bulk-meta-summary>div{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);}
@@ -16662,11 +16687,11 @@ function wireShimmer(container){
   function currentInventoryToolSubmode(mode){
     const requested=String(currentHashParams().get("sub")||"");
     const allowed={
-      bulk:["prices","metadata"],
+      bulk:["prices","metadata","status"],
       activity:["recent","history"],
       quality:["images","duplicates"],
       lifecycle:["lifecycle"],
-      storage:["migration"]
+      storage:["health","migration"]
     };
     if(allowed[mode]?.includes(requested)) return requested;
 
@@ -16678,19 +16703,19 @@ function wireShimmer(container){
 
   function inventoryToolsSwitcher(mode,submode){
     const tabs=[
-      ["bulk","Bulk Edit","Prices · metadata","prices"],
+      ["bulk","Bulk Edit","Prices · metadata · status","prices"],
       ["activity","Activity","Recent · history","recent"],
       ["quality","Quality","Images · duplicates","images"],
       ["lifecycle","Lifecycle","Drafts · archive","lifecycle"],
-      ["storage","Storage","Migrate legacy images","migration"]
+      ["storage","Storage","Capacity · image migration","health"]
     ];
 
     const subtabs={
-      bulk:[["prices","Bulk Prices"],["metadata","Bulk Metadata"]],
+      bulk:[["prices","Bulk Prices"],["metadata","Bulk Metadata"],["status","Bulk Status"]],
       activity:[["recent","Recently Edited"],["history","Edit History"]],
       quality:[["images","Image Health"],["duplicates","Duplicates"]],
       lifecycle:[["lifecycle","Drafts & Archive"]],
-      storage:[["migration","Image Migration"]]
+      storage:[["health","Database & Storage"],["migration","Image Migration"]]
     };
 
     return `
@@ -17097,6 +17122,8 @@ function wireShimmer(container){
     const submode=currentInventoryToolSubmode(mode);
 
     if(submode==="metadata") renderBulkMetadataPage(true);
+    else if(submode==="status") renderBulkStatusPage();
+    else if(submode==="health") renderSupabaseHealthPage();
     else if(submode==="recent") renderRecentlyEditedOwnerPage(true);
     else if(submode==="history") renderEditHistoryPage();
     else if(submode==="images") renderImageHealthPage(true);
@@ -17113,7 +17140,7 @@ function wireShimmer(container){
   }
 
 
-  // ---------------- Owner Legacy Image Migration ----------------
+  // ---------------- Owner Bulk Status ----------------\n  function renderBulkStatusPage(){\n    if(!requireOwner("bulk update availability")) return;\n\n    const eligible=cards.filter(card=>isLiveLifecycle(card));\n    const selected=new Set();\n\n    view.innerHTML=`\n      <div class="page-head">\n        <div>\n          <div class="eyebrow">Inventory Tools · Bulk Edit</div>\n          <h2>Bulk Status</h2>\n          <p>Select listings and move them to Available, Reserved, Collection (NFS), or Sold.</p>\n        </div>\n      </div>\n      <div class="bulk-status-layout">\n        <section class="panel bulk-status-panel">\n          <div class="bulk-status-toolbar">\n            <button class="btn-ghost" type="button" id="bulkStatusSelectAll">Select All</button>\n            <button class="btn-ghost" type="button" id="bulkStatusClear">Clear</button>\n            <span class="hint" id="bulkStatusCount">0 selected</span>\n          </div>\n          <div class="bulk-status-list" id="bulkStatusList">\n            ${eligible.map(card=>{\n              const img=getImages(card)[0];\n              return `<label class="bulk-status-card" data-bulk-status-id="${escapeHtml(card.id)}">\n                <input type="checkbox" value="${escapeHtml(card.id)}">\n                <span class="bulk-status-thumb">${img?`<img src="${escapeHtml(img)}" alt="" loading="lazy" decoding="async">`:"No image"}</span>\n                <span class="bulk-status-copy"><strong>${escapeHtml(card.name)}</strong><small>${escapeHtml([card.card_code,card.series,card.year].filter(Boolean).join(" · "))}</small></span>\n                <span class="bulk-status-badge">${escapeHtml(card.availability||"Available")}</span>\n              </label>`;\n            }).join("")}\n          </div>\n        </section>\n        <section class="panel bulk-status-panel bulk-status-actions">\n          <h3>Set selected listings to</h3>\n          <button class="btn-primary" type="button" data-bulk-set-status="Available">Mark Available</button>\n          <button class="btn-primary" type="button" data-bulk-set-status="Reserved">Mark Reserved</button>\n          <button class="btn-primary" type="button" data-bulk-set-status="Collection (NFS)">Mark NFS</button>\n          <button class="btn-ghost" type="button" data-bulk-set-status="Sold">Mark Sold</button>\n          <div class="bulk-meta-warning">Only the <strong>availability</strong> field is changed. Images, grading, prices, notes, year, and other listing data are left untouched.</div>\n        </section>\n      </div>`;\n\n    const list=$("bulkStatusList");\n    const count=$("bulkStatusCount");\n    const sync=()=>{\n      selected.clear();\n      list.querySelectorAll('input[type="checkbox"]:checked').forEach(cb=>selected.add(String(cb.value)));\n      list.querySelectorAll(".bulk-status-card").forEach(row=>row.classList.toggle("selected",selected.has(String(row.dataset.bulkStatusId))));\n      count.textContent=`${selected.size} selected`;\n    };\n    list.addEventListener("change",sync);\n    $("bulkStatusSelectAll").addEventListener("click",()=>{list.querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.checked=true);sync();});\n    $("bulkStatusClear").addEventListener("click",()=>{list.querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.checked=false);sync();});\n\n    view.querySelectorAll("[data-bulk-set-status]").forEach(btn=>btn.addEventListener("click",async()=>{\n      if(!requireOwner("bulk update availability")) return;\n      const status=String(btn.dataset.bulkSetStatus||"");\n      const allowed=new Set(["Available","Reserved","Sold","Collection (NFS)"]);\n      if(!allowed.has(status) || !selected.size){ showToast("Select at least one listing"); return; }\n      if(status==="Sold" && !confirm(`Mark ${selected.size} selected listing${selected.size===1?"":"s"} as Sold?`)) return;\n\n      const ids=[...selected];\n      const original=btn.textContent;\n      view.querySelectorAll("[data-bulk-set-status]").forEach(b=>b.disabled=true);\n      let done=0,failed=0;\n      try{\n        for(const id of ids){\n          const card=cards.find(c=>String(c.id)===id);\n          if(!card){ failed++; continue; }\n          const candidate={...card,availability:status};\n          if(status!=="Sold") candidate.sold_at=null;\n          const saved=await updateCardStorage(candidate);\n          if(saved){\n            const index=cards.findIndex(c=>String(c.id)===id);\n            if(index>-1) cards[index]=saved;\n            done++;\n          }else failed++;\n          btn.textContent=`Updating ${done+failed}/${ids.length}…`;\n        }\n        invalidateOwnerReservedAgeCache();\n        showToast(failed?`${done} updated · ${failed} failed`:`${done} marked ${status==="Collection (NFS)"?"NFS":status}`);\n        renderInventoryToolsPage();\n      }finally{\n        btn.textContent=original;\n        view.querySelectorAll("[data-bulk-set-status]").forEach(b=>b.disabled=false);\n      }\n    }));\n  }\n\n  // ---------------- Owner Supabase Health ----------------\n  function renderSupabaseHealthPage(){\n    if(!requireOwner("view Supabase health")) return;\n\n    view.innerHTML=`\n      <div class="page-head">\n        <div>\n          <div class="eyebrow">Inventory Tools · Storage</div>\n          <h2>Database & Storage</h2>\n          <p>Owner-only capacity overview for the Supabase Free-plan reference limits used by this site.</p>\n        </div>\n      </div>\n      <section class="panel supabase-health-panel">\n        <div class="supabase-health-grid">\n          <div><strong id="healthDbUsed">—</strong><span>Database used</span></div>\n          <div><strong id="healthDbLeft">—</strong><span>Database left · 500 MB</span></div>\n          <div><strong id="healthStorageUsed">—</strong><span>File Storage used</span></div>\n          <div><strong id="healthStorageLeft">—</strong><span>File Storage left · 1 GB</span></div>\n          <div><strong id="healthHistoryRows">—</strong><span>Edit history rows · max 100</span></div>\n        </div>\n        <button class="btn-primary" type="button" id="healthRefreshBtn">Refresh Supabase Usage</button>\n        <div id="healthCapacityWarning" class="capacity-warning" hidden></div>\n        <div class="hint" style="margin-top:10px">Database and file usage are read through the owner-only <code>get_owner_capacity_usage()</code> RPC. Remaining values use the 500 MB database and 1 GB file Storage Free-plan reference limits.</div>\n      </section>`;\n\n    const refresh=async()=>{\n      const btn=$("healthRefreshBtn");\n      btn.disabled=true;\n      btn.textContent="Refreshing…";\n      try{\n        const [usage,historyResult]=await Promise.all([\n          fetchSupabaseCapacityUsage(),\n          supabaseClient.from("card_edit_history").select("id",{count:"exact",head:true})\n        ]);\n        if(!usage?.ok){\n          ["healthDbUsed","healthDbLeft","healthStorageUsed","healthStorageLeft"].forEach(id=>$(id).textContent="Unavailable");\n        }else{\n          const dbLeft=capacityLeft(usage.databaseBytes,SUPABASE_FREE_DATABASE_LIMIT_BYTES);\n          const storageLeft=capacityLeft(usage.storageBytes,SUPABASE_FREE_STORAGE_LIMIT_BYTES);\n          $("healthDbUsed").textContent=formatApproxBytes(usage.databaseBytes);\n          $("healthDbLeft").textContent=formatApproxBytes(dbLeft);\n          $("healthStorageUsed").textContent=formatApproxBytes(usage.storageBytes);\n          $("healthStorageLeft").textContent=formatApproxBytes(storageLeft);\n\n          const dbPct=capacityPercent(usage.databaseBytes,SUPABASE_FREE_DATABASE_LIMIT_BYTES);\n          const storagePct=capacityPercent(usage.storageBytes,SUPABASE_FREE_STORAGE_LIMIT_BYTES);\n          const warning=$("healthCapacityWarning");\n          const parts=[];\n          if(dbPct>=80) parts.push(`Database is ${dbPct.toFixed(1)}% of the 500 MB reference limit.`);\n          if(storagePct>=80) parts.push(`File Storage is ${storagePct.toFixed(1)}% of the 1 GB reference limit.`);\n          warning.hidden=!parts.length;\n          warning.classList.toggle("danger",dbPct>=90||storagePct>=90);\n          warning.textContent=parts.join(" ");\n        }\n        $("healthHistoryRows").textContent=historyResult.error?"Unavailable":Number(historyResult.count||0).toLocaleString();\n      }finally{\n        btn.disabled=false;\n        btn.textContent="Refresh Supabase Usage";\n      }\n    };\n    $("healthRefreshBtn").addEventListener("click",refresh);\n    refresh();\n  }\n\n  // ---------------- Owner Legacy Image Migration ----------------
   function legacyCardImageStats(){
     let cardsWithLegacy=0;
     let legacyImages=0;
