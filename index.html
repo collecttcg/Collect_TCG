@@ -10034,7 +10034,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       : (rates.cacheState==="fresh" ? "cached today" : "latest");
 
     text.textContent=
-      `1 MYR ≈ USD ${Number(rates.usdPerMyr).toFixed(4)} · SGD ${Number(rates.sgdPerMyr).toFixed(4)} · auto prices never round down; round up to 50, or up to the next 100 when within ${FX_CLEAN_HUNDRED_TOLERANCE} · ${sourceState} · ${fxRateDateLabel(rates)}`;
+      `1 MYR ≈ USD ${Number(rates.usdPerMyr).toFixed(4)} · SGD ${Number(rates.sgdPerMyr).toFixed(4)} · existing MYR is checked automatically · auto prices never round down; round up to 50, or up to the next 100 when within ${FX_CLEAN_HUNDRED_TOLERANCE} · ${sourceState} · ${fxRateDateLabel(rates)}`;
   }
 
   function wireAutoCurrencyConversion(p){
@@ -10046,8 +10046,15 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     let currentRates=null;
     let myrTouched=false;
+    let manualUsd=false;
+    let manualSgd=false;
 
-    const loadRates=async(force=false)=>{
+    const applyCurrentRates=()=>{
+      if(!currentRates || myr.value.trim()==="") return false;
+      return applyMyrConversionToFields(p,currentRates);
+    };
+
+    const loadRates=async(force=false,{applyExisting=true}={})=>{
       if(refresh){
         refresh.disabled=true;
         refresh.textContent=force ? "Refreshing…" : "Loading…";
@@ -10058,7 +10065,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       currentRates=rates;
       updateFxRateStatus(p,rates);
 
-      if(rates && myrTouched && myr.value.trim()!==""){
+      // Important: if an existing listing already has MYR stored, update
+      // USD/SGD immediately when the editor opens. The owner no longer has
+      // to delete/re-enter MYR just to trigger today's conversion.
+      if(rates && applyExisting && myr.value.trim()!=="" && !manualUsd && !manualSgd){
+        applyMyrConversionToFields(p,rates);
+      }else if(rates && myrTouched && myr.value.trim()!==""){
         applyMyrConversionToFields(p,rates);
       }
 
@@ -10071,6 +10083,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     myr.addEventListener("input",()=>{
       myrTouched=true;
+      manualUsd=false;
+      manualSgd=false;
 
       if(myr.value.trim()===""){
         if(usd.dataset.fxAuto==="1") usd.value="";
@@ -10078,30 +10092,41 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         return;
       }
 
-      if(currentRates) applyMyrConversionToFields(p,currentRates);
+      if(currentRates) applyCurrentRates();
     });
 
     myr.addEventListener("change",async()=>{
       myrTouched=true;
-      if(!currentRates) currentRates=await loadRates(false);
-      if(currentRates) applyMyrConversionToFields(p,currentRates);
+      manualUsd=false;
+      manualSgd=false;
+      if(!currentRates) currentRates=await loadRates(false,{applyExisting:false});
+      if(currentRates) applyCurrentRates();
     });
 
-    [usd,sgd].forEach(input=>{
-      input.addEventListener("input",()=>{
-        input.dataset.fxAuto="0";
-      });
+    usd.addEventListener("input",()=>{
+      manualUsd=true;
+      usd.dataset.fxAuto="0";
+    });
+
+    sgd.addEventListener("input",()=>{
+      manualSgd=true;
+      sgd.dataset.fxAuto="0";
     });
 
     refresh?.addEventListener("click",async()=>{
-      currentRates=await loadRates(true);
+      manualUsd=false;
+      manualSgd=false;
+      currentRates=await loadRates(true,{applyExisting:false});
       if(currentRates && myr.value.trim()!==""){
         myrTouched=true;
-        applyMyrConversionToFields(p,currentRates);
+        applyCurrentRates();
       }
     });
 
-    loadRates(false);
+    // Auto-check and update an already-entered MYR price as soon as the form
+    // opens. This affects only the form values; nothing is written to Supabase
+    // until the owner explicitly presses Save.
+    loadRates(false,{applyExisting:true});
   }
 
   async function ensureMyrConversionBeforeSave(p){
