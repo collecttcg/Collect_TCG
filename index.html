@@ -5470,6 +5470,61 @@
     white-space:pre-wrap;color:var(--text-muted);font-size:8.5px;line-height:1.5;
   }
 
+
+  /* ---------- Mobile inventory view fix ----------
+     Mobile already uses one horizontal card per row. The optional compact
+     view is desktop-only so it cannot shrink/reflow mobile cards. */
+  @media(max-width:800px){
+    .desktop-compact-view-toggle{
+      display:none !important;
+    }
+
+    #invGrid.grid.compact-list{
+      grid-template-columns:1fr !important;
+      gap:12px !important;
+    }
+
+    #invGrid.grid.compact-list .card{
+      display:grid !important;
+      grid-template-columns:minmax(112px,36%) minmax(0,1fr) !important;
+      min-height:0 !important;
+      width:100% !important;
+      gap:0 !important;
+    }
+
+    #invGrid.grid.compact-list .card>.thumb-wrap,
+    #invGrid.grid.compact-list .card>.thumb-placeholder{
+      width:100% !important;
+      height:100% !important;
+      min-height:210px !important;
+      aspect-ratio:auto !important;
+      border:0 !important;
+      border-right:1px solid var(--border) !important;
+    }
+
+    #invGrid.grid.compact-list .card>.thumb-wrap .thumb{
+      width:100% !important;
+      height:100% !important;
+      min-height:210px !important;
+      aspect-ratio:auto !important;
+      object-fit:cover !important;
+    }
+
+    #invGrid.grid.compact-list .card .clean-card-body{
+      padding:15px 14px !important;
+      gap:9px !important;
+    }
+
+    #invGrid.grid.compact-list .clean-all-pills{
+      max-height:none !important;
+      overflow:visible !important;
+    }
+
+    .inventory-display-tools{
+      grid-template-columns:1fr !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -6003,6 +6058,17 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const safe=mode==="compact" ? "compact" : "grid";
     try{ localStorage.setItem(INVENTORY_VIEW_KEY,safe); }catch{}
     return safe;
+  }
+
+  function isMobileInventoryLayout(){
+    return window.matchMedia("(max-width: 800px)").matches;
+  }
+
+  function effectiveInventoryViewMode(){
+    // The existing mobile inventory layout is already intentionally compact:
+    // one horizontal card per row. Never apply the desktop compact-list
+    // transformation on phones/tablets at or below 800px.
+    return isMobileInventoryLayout() ? "grid" : getInventoryViewMode();
   }
 
   function cardCurrencyValue(card,currency){
@@ -8660,8 +8726,8 @@ function wireShimmer(container){
               <option value="SGD" ${getPriceCurrencyPreference()==="SGD"?"selected":""}>SGD</option>
             </select>
           </label>
-          <button type="button" class="view-mode-toggle" id="compactViewToggle" aria-pressed="${getInventoryViewMode()==="compact"?"true":"false"}">
-            ${getInventoryViewMode()==="compact"?"▦ Grid View":"☷ Compact View"}
+          <button type="button" class="view-mode-toggle desktop-compact-view-toggle" id="compactViewToggle" aria-pressed="${effectiveInventoryViewMode()==="compact"?"true":"false"}">
+            ${effectiveInventoryViewMode()==="compact"?"▦ Grid View":"☷ Compact View"}
           </button>
           <button type="button" class="mobile-filter-open-btn" id="mobileFilterOpenBtn" aria-expanded="false">Filters</button>
           <button type="button" class="copy-filter-link-btn" id="copyFilterLinkBtn" title="Copy a link to these filters">Copy Filtered Link</button>
@@ -9006,7 +9072,7 @@ function wireShimmer(container){
         grid.innerHTML = `<div style="color:var(--text-muted); padding:30px 0; text-align:center; font-size:13.5px;">${emptyText}</div>`;
         return;
       }
-      grid.className = getInventoryViewMode()==="compact" ? "grid compact-list" : "grid";
+      grid.className = effectiveInventoryViewMode()==="compact" ? "grid compact-list" : "grid";
       grid.innerHTML = list.map(cardTileHTML).join("");
       wireShimmer(grid);
       updateCompareTray();
@@ -9099,6 +9165,7 @@ function wireShimmer(container){
     });
 
     $("compactViewToggle")?.addEventListener("click",()=>{
+      if(isMobileInventoryLayout()) return;
       const next=getInventoryViewMode()==="compact" ? "grid" : "compact";
       setInventoryViewMode(next);
       const compact=next==="compact";
@@ -9106,6 +9173,22 @@ function wireShimmer(container){
       $("compactViewToggle").textContent=compact ? "▦ Grid View" : "☷ Compact View";
       draw();
     });
+
+    let lastMobileInventoryLayout=isMobileInventoryLayout();
+    const inventoryLayoutResizeHandler=()=>{
+      const mobileNow=isMobileInventoryLayout();
+      if(mobileNow===lastMobileInventoryLayout) return;
+      lastMobileInventoryLayout=mobileNow;
+
+      const toggle=$("compactViewToggle");
+      if(toggle){
+        const compact=effectiveInventoryViewMode()==="compact";
+        toggle.setAttribute("aria-pressed",compact?"true":"false");
+        toggle.textContent=compact ? "▦ Grid View" : "☷ Compact View";
+      }
+      draw();
+    };
+    window.addEventListener("resize",inventoryLayoutResizeHandler,{passive:true});
 
     function closeMobileFilterDrawer(){
       const shell=$("filterDrawerShell");
