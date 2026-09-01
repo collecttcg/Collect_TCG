@@ -250,6 +250,14 @@
   .detail-slider-dot{width:7px;height:7px;border-radius:50%;background:var(--border);border:0;padding:0;cursor:pointer;}
   .detail-slider-dot.active{background:var(--accent-gold);}
   .detail-slider-count{position:absolute;right:8px;bottom:8px;padding:3px 6px;border-radius:6px;background:rgba(0,0,0,.65);color:#fff;font:9px 'JetBrains Mono',monospace;}
+  .detail-thumb-strip-wrap{margin-top:10px;}
+  .detail-thumb-strip-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px;color:var(--text-muted);font-size:10px;}
+  .detail-thumb-strip-head strong{color:var(--text);font-size:10.5px;}
+  .detail-thumb-strip{display:flex;gap:8px;overflow-x:auto;padding:2px 1px 6px;scrollbar-width:thin;}
+  .detail-thumb-strip-btn{width:58px;height:74px;flex:0 0 auto;padding:0;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);overflow:hidden;cursor:pointer;opacity:.62;transition:opacity .15s ease,border-color .15s ease,transform .15s ease;}
+  .detail-thumb-strip-btn:hover{opacity:.95;border-color:var(--accent-gold);transform:translateY(-1px);}
+  .detail-thumb-strip-btn.active{opacity:1;border-color:var(--accent-gold);box-shadow:0 0 0 1px var(--accent-gold);}
+  .detail-thumb-strip-btn img{width:100%;height:100%;display:block;object-fit:cover;}
 
   /* ---------- About page ---------- */
   .about-copy p{margin:0 0 13px;color:var(--text-muted);font-size:13.5px;line-height:1.75;}
@@ -20915,6 +20923,12 @@ function wireShimmer(container){
             <div class="detail-slider-count">1 / ${images.length}</div>
             <div class="detail-slider-dots">
               ${images.map((_,i)=>`<button type="button" class="detail-slider-dot ${i===0?"active":""}" data-slide="${i}" aria-label="Image ${i+1}"></button>`).join("")}
+            </div>
+            <div class="detail-thumb-strip-wrap">
+              <div class="detail-thumb-strip-head"><strong>More photos</strong><span>${images.length} photos · Tap a thumbnail</span></div>
+              <div class="detail-thumb-strip" aria-label="Card photo thumbnails">
+                ${images.map((src,i)=>`<button type="button" class="detail-thumb-strip-btn ${i===0?"active":""}" data-detail-thumb="${i}" aria-label="Show image ${i+1}"><img src="${escapeHtml(src)}" alt="${escapeHtml(card.name)} thumbnail ${i+1}" loading="lazy" decoding="async"></button>`).join("")}
+              </div>
             </div>` : ""}
         </div>`
       : `<div class="detail-empty-image">No uploaded pictures</div>`;
@@ -21107,6 +21121,7 @@ function wireShimmer(container){
       const slideImg = slider.querySelector(".detail-slider-image");
       const countEl = slider.querySelector(".detail-slider-count");
       const dots = Array.from(slider.querySelectorAll(".detail-slider-dot"));
+      const thumbs = Array.from(slider.querySelectorAll(".detail-thumb-strip-btn"));
 
       function showSlide(index){
         slideIndex = (index + images.length) % images.length;
@@ -21115,6 +21130,11 @@ function wireShimmer(container){
         slideImg.alt = `${card.name} image ${slideIndex + 1}`;
         if(countEl) countEl.textContent = `${slideIndex + 1} / ${images.length}`;
         dots.forEach((d,i)=>d.classList.toggle("active", i === slideIndex));
+        thumbs.forEach((thumb,i)=>thumb.classList.toggle("active", i === slideIndex));
+        const activeThumb=thumbs[slideIndex];
+        if(activeThumb){
+          try{activeThumb.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});}catch{}
+        }
       }
 
       const prev = slider.querySelector(".detail-slider-btn.prev");
@@ -21124,6 +21144,10 @@ function wireShimmer(container){
       dots.forEach(d=>d.addEventListener("click", e=>{
         e.stopPropagation();
         showSlide(Number(d.dataset.slide));
+      }));
+      thumbs.forEach(thumb=>thumb.addEventListener("click", e=>{
+        e.stopPropagation();
+        showSlide(Number(thumb.dataset.detailThumb));
       }));
 
       slideImg.addEventListener("click", ()=>{
