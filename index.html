@@ -7,6 +7,8 @@
 <!-- UX PHASE 4: accessibility, touch ergonomics and rendering performance -->
 <!-- UX PHASE 5: premium storefront and buyer confidence -->
 <!-- UX PHASE 6: technical cleanup and performance -->
+<!-- SECURITY STAGE 1: strict image validation + URL hardening; authorization remains enforced by Supabase RLS -->
+<!-- REFACTOR STAGE 1: canonical IDs/card lookup/constants; no functional or visual changes -->
 <!-- OWNER TOOL: permanent listing deletion with double confirmation -->
 <!-- MOBILE FIX: compact metadata pills + 44px invisible hit targets across iOS/Android -->
 <!-- DESKTOP NAV FIX: Reserved stays primary; duplicate hidden from More -->
@@ -10710,7 +10712,7 @@ input:focus-visible{
 
     <div class="field">
       <label for="giveawayImageFile">Giveaway image</label>
-      <input id="giveawayImageFile" type="file" accept="image/*">
+      <input id="giveawayImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
       <input id="giveawayImage" type="hidden">
       <div id="giveawayImagePreview" style="margin-top:8px;"></div>
       <div class="hint">Choose an image from your device. The image will be uploaded to Supabase Storage.</div>
@@ -10793,7 +10795,7 @@ input:focus-visible{
 
     <div class="field">
       <label for="showcaseThumbnailFile">Thumbnail image (optional)</label>
-      <input id="showcaseThumbnailFile" type="file" accept="image/*">
+      <input id="showcaseThumbnailFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
       <input id="showcaseThumbnail" type="hidden">
       <div id="showcaseThumbnailPreview" style="margin-top:8px;"></div>
       <div class="hint">Upload a thumbnail image from your device. It will be stored in Supabase Storage.</div>
@@ -10879,13 +10881,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   const ERA_OPTIONS = ["Modern","Mid-Era","Vintage"];
   // Keep these canonical values exact. The Supabase availability CHECK
   // constraint is case-sensitive, especially "Collection (NFS)".
-  const AVAILABILITY_OPTIONS = ["Available","Reserved","Sold","Collection (NFS)"];
+  const AVAILABILITY_OPTIONS = Object.freeze(["Available","Reserved","Sold","Collection (NFS)"]);
+  const LIFECYCLE_OPTIONS = Object.freeze(["live","draft","archived"]);
   const RARITY_LIST = ["Common","Uncommon","Rare","Rare Holo","Ultra Rare","Secret Rare","Promo"];
   const INDEX_KEY = "card-index";
   const RECENTLY_VIEWED_KEY = "collect_tcg_recently_viewed_v1";
   const RECENTLY_VIEWED_LIMIT = 12;
+  function normalizeEntityId(value){
+    return String(value||"").trim();
+  }
+
   function safeCardId(value){
-    const id=String(value||"").trim();
+    const id=normalizeEntityId(value);
     return /^[0-9a-fA-F-]{20,40}$/.test(id) ? id : "";
   }
   function getRecentlyViewedEntries(){
@@ -11077,6 +11084,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return !!ownerSession && ownerVerified === true;
   }
 
+  function getCardById(id){
+    const target=String(id||"");
+    if(!target) return null;
+    return cards.find(card=>String(card.id)===target) || null;
+  }
+
+  function getCardIndexById(id){
+    const target=String(id||"");
+    if(!target) return -1;
+    return cards.findIndex(card=>String(card.id)===target);
+  }
+
   async function verifyOwnerSession(session){
     if(!session?.user?.id) return false;
 
@@ -11100,7 +11119,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
 
     if(!detailsOverlay.hidden){
-      const current=cards.find(c=>String(c.id)===String(detailsCardId));
+      const current=getCardById(detailsCardId);
       if(!current) closeDetailsModal(false);
     }
   }
@@ -11221,6 +11240,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     console.warn(`Blocked non-owner attempt to ${action}.`);
     showToast("Owner login required");
     return false;
+  }
+
+  async function runOwnerAction(action,callback){
+    if(!requireOwner(action)) return false;
+    try{
+      return await callback();
+    }catch(error){
+      console.error(`Owner action failed: ${action}`,error);
+      throw error;
+    }
   }
 
   async function refreshOwnerSession(){
@@ -11470,7 +11499,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       })(),
       view_count: Number(row.view_count || 0),
       sold_at: row.sold_at || null,
-      lifecycle_status: ["live","draft","archived"].includes(String(row.lifecycle_status||"").toLowerCase())
+      lifecycle_status: LIFECYCLE_OPTIONS.includes(String(row.lifecycle_status||"").toLowerCase())
         ? String(row.lifecycle_status).toLowerCase()
         : "live",
       created_at: row.created_at || null,
@@ -11857,14 +11886,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       return false;
     }
 
-    const safeStatus=["live","draft","archived"].includes(status) ? status : "";
+    const safeStatus=LIFECYCLE_OPTIONS.includes(status) ? status : "";
     if(!safeStatus) return false;
 
     const candidate={...card,lifecycle_status:safeStatus};
     const saved=await updateCardStorage(candidate);
     if(!saved) return false;
 
-    const index=cards.findIndex(c=>String(c.id)===String(card.id));
+    const index=getCardIndexById(card.id);
     if(index>-1) cards[index]=saved;
     return true;
   }
@@ -12680,7 +12709,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     const target=cardShareHash(id);
     if(location.hash===target){
-      const card=cards.find(c=>String(c.id)===id);
+      const card=getCardById(id);
       if(card && (isOwnerMode() || isLiveLifecycle(card))) openDetailsModal(card);
     }else{
       location.hash=target;
@@ -12839,7 +12868,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       closeDetailsModal(false);
     }
     const routedCardCandidate = isCardRoute
-      ? cards.find(c=>String(c.id) === String(decodeURIComponent(route.slice(5))))
+      ? getCardById(decodeURIComponent(route.slice(5)))
       : null;
     const routedCard = routedCardCandidate && (isOwnerMode() || isLiveLifecycle(routedCardCandidate))
       ? routedCardCandidate
@@ -13284,13 +13313,78 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     });
   }
 
+
+  const SAFE_CARD_IMAGE_MIMES=new Set(["image/jpeg","image/png","image/webp"]);
+  const SAFE_GENERIC_IMAGE_MIMES=new Set(["image/jpeg","image/png","image/webp","image/gif"]);
+  const GENERIC_OWNER_IMAGE_MAX_BYTES=5*1024*1024;
+
+  function normalizedImageMime(value){
+    const mime=String(value||"").trim().toLowerCase();
+    return mime==="image/jpg" ? "image/jpeg" : mime;
+  }
+
+  function imageExtensionMatchesMime(file,mime){
+    const ext=String(file?.name||"").split(".").pop()?.toLowerCase()||"";
+    const expected={
+      "image/jpeg":new Set(["jpg","jpeg"]),
+      "image/png":new Set(["png"]),
+      "image/webp":new Set(["webp"]),
+      "image/gif":new Set(["gif"])
+    };
+    return !!expected[mime]?.has(ext);
+  }
+
+  async function verifyImageDecodes(file){
+    // MIME and filename are attacker-controlled metadata. Decode the bytes too.
+    // createImageBitmap avoids executing active content and works on modern
+    // iOS Safari / Android Chrome; Image is a compatibility fallback.
+    if(typeof createImageBitmap==="function"){
+      const bitmap=await createImageBitmap(file);
+      const valid=bitmap.width>0 && bitmap.height>0;
+      try{ bitmap.close(); }catch{}
+      if(!valid) throw new Error("invalid image dimensions");
+      return true;
+    }
+
+    const objectUrl=URL.createObjectURL(file);
+    try{
+      await new Promise((resolve,reject)=>{
+        const img=new Image();
+        img.onload=()=>img.naturalWidth>0 && img.naturalHeight>0
+          ? resolve()
+          : reject(new Error("invalid image dimensions"));
+        img.onerror=()=>reject(new Error("image decode failed"));
+        img.src=objectUrl;
+      });
+      return true;
+    }finally{
+      URL.revokeObjectURL(objectUrl);
+    }
+  }
+
+  async function validateOwnerImageFile(file,{
+    allowedMimes=SAFE_GENERIC_IMAGE_MIMES,
+    maxBytes=GENERIC_OWNER_IMAGE_MAX_BYTES
+  }={}){
+    if(!file) throw new Error("No image selected");
+    if(file.size<=0) throw new Error("Image file is empty");
+    if(file.size>maxBytes) throw new Error(`Image is too large (max ${Math.round(maxBytes/1024/1024)} MB)`);
+
+    const mime=normalizedImageMime(file.type);
+    if(!allowedMimes.has(mime)) throw new Error("Unsupported image format");
+    if(!imageExtensionMatchesMime(file,mime)) throw new Error("Image filename does not match its format");
+
+    await verifyImageDecodes(file);
+    return mime;
+  }
+
   async function resizeImageFile(file, maxDim = 1800, quality = 0.94, applyWatermark = false){
     if(!requireOwner("process card image")) throw new Error("Owner login required");
     if(!file) throw new Error("no file");
-    const mime = String(file.type || "").toLowerCase();
-    if(mime === "image/svg+xml") throw new Error("unsupported image type");
-    if(mime && !mime.startsWith("image/")) throw new Error("unsupported image type");
-    if(file.size > CARD_IMAGE_MAX_BYTES) throw new Error("image too large");
+    await validateOwnerImageFile(file,{
+      allowedMimes:SAFE_CARD_IMAGE_MIMES,
+      maxBytes:CARD_IMAGE_MAX_BYTES
+    });
 
     const dataUrl = await new Promise((resolve,reject)=>{
       const reader = new FileReader();
@@ -13844,7 +13938,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             <div class="image-watermark-all-status" id="${p}WatermarkAllStatus" hidden></div>
           </div>
 
-          <input type="file" id="${p}ImageFile" accept="image/*" multiple>
+          <input type="file" id="${p}ImageFile" accept="image/jpeg,image/png,image/webp" multiple>
           <div class="image-url-row">
             <input type="text" id="${p}ImageUrl" placeholder="Paste an image URL, then click Add URL">
             <button type="button" class="btn-ghost" id="${p}AddImageUrl">Add URL</button>
@@ -15923,7 +16017,7 @@ function wireShimmer(container){
     const saved=await updateCardStorage(candidate);
     if(!saved) return false;
 
-    const index=cards.findIndex(c=>String(c.id)===String(card.id));
+    const index=getCardIndexById(card.id);
     if(index>-1) cards[index]=saved;
     invalidateOwnerReservedAgeCache();
     showToast(status==="Collection (NFS)" ? "Marked NFS" : `Marked ${status}`);
@@ -15996,7 +16090,7 @@ function wireShimmer(container){
       if(galleryBtn){
         e.preventDefault();
         e.stopPropagation();
-        const card=cards.find(c=>String(c.id)===String(galleryBtn.dataset.id||""));
+        const card=getCardById(galleryBtn.dataset.id||"");
         const wrap=galleryBtn.closest("[data-listing-gallery]");
         if(card&&wrap){
           await stepListingGallery(wrap,card,Number(galleryBtn.dataset.listingGalleryStep||1));
@@ -16082,7 +16176,7 @@ function wireShimmer(container){
           return;
         }
 
-        const card=cards.find(c=>String(c.id)===id);
+        const card=getCardById(id);
         if(!card) return;
 
         closeQuickCardMenus(container);
@@ -16120,7 +16214,7 @@ function wireShimmer(container){
 
       const tile = e.target.closest(".card[data-card-id]");
       if(!tile) return;
-      const card = cards.find(c=>String(c.id) === String(tile.dataset.cardId||""));
+      const card = getCardById(tile.dataset.cardId||"");
       if(card) openCardRoute(card.id);
     });
   }
@@ -16147,7 +16241,7 @@ function wireShimmer(container){
     // left untouched so Safari can emit the standard click event, which is
     // handled by the delegated card click listener above.
     if(Math.abs(dx)>=44 && Math.abs(dx)>Math.abs(dy)){
-      const card=cards.find(c=>String(c.id)===String(state.wrap.dataset.listingGallery||""));
+      const card=getCardById(state.wrap.dataset.listingGallery||"");
       if(!card) return;
 
       if(e.cancelable) e.preventDefault();
@@ -17383,7 +17477,7 @@ function wireShimmer(container){
       const tile = e.target.closest(".card[data-card-id]");
       if(!tile) return;
       e.preventDefault();
-      const card = cards.find(c=>String(c.id) === String(tile.dataset.cardId||""));
+      const card = getCardById(tile.dataset.cardId||"");
       if(card) openCardRoute(card.id);
     });
   }
@@ -17423,16 +17517,37 @@ function wireShimmer(container){
     if(!file) return null;
     if(!requireOwner(`upload to ${bucket}`)) return null;
 
-    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-    const safeExt = ["jpg","jpeg","png","webp","gif"].includes(ext) ? ext : "jpg";
-    const path = `${ownerSession.user.id}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${safeExt}`;
+    let verifiedMime="";
+    try{
+      verifiedMime=await validateOwnerImageFile(file,{
+        allowedMimes:SAFE_GENERIC_IMAGE_MIMES,
+        maxBytes:GENERIC_OWNER_IMAGE_MAX_BYTES
+      });
+    }catch(error){
+      console.warn(`${errorLabel} validation rejected:`,error);
+      showToast(error?.message || `Invalid ${errorLabel.toLowerCase()}`);
+      return null;
+    }
+
+    const extensionByMime={
+      "image/jpeg":"jpg",
+      "image/png":"png",
+      "image/webp":"webp",
+      "image/gif":"gif"
+    };
+    const safeExt=extensionByMime[verifiedMime];
+    if(!safeExt) return null;
+
+    const randomPart=(crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2,12)}`)
+      .replace(/[^a-zA-Z0-9-]/g,"");
+    const path = `${ownerSession.user.id}/${Date.now()}-${randomPart}.${safeExt}`;
 
     const { error: uploadError } = await supabaseClient.storage
       .from(bucket)
       .upload(path, file, {
         cacheControl:"3600",
         upsert:false,
-        contentType:file.type || undefined
+        contentType:verifiedMime
       });
 
     if(uploadError){
@@ -17442,7 +17557,13 @@ function wireShimmer(container){
     }
 
     const { data } = supabaseClient.storage.from(bucket).getPublicUrl(path);
-    return data?.publicUrl || null;
+    const publicUrl=safeHttpUrl(data?.publicUrl||"");
+    if(!publicUrl){
+      await supabaseClient.storage.from(bucket).remove([path]);
+      showToast(`Could not validate uploaded ${errorLabel.toLowerCase()}`);
+      return null;
+    }
+    return publicUrl;
   }
 
   async function uploadGiveawayImage(file){
@@ -18791,7 +18912,7 @@ function wireShimmer(container){
     }
 
     function selectCard(cardId){
-      selectedCard = cards.find(c=>String(c.id) === String(cardId)) || null;
+      selectedCard = getCardById(cardId) || null;
 
       if(!selectedCard){
         titleInput.value = "";
@@ -21063,12 +21184,12 @@ function wireShimmer(container){
       }).join("");
 
       list.querySelectorAll("[data-quality-view]").forEach(btn=>btn.addEventListener("click",()=>{
-        const card=cards.find(c=>String(c.id)===String(btn.dataset.qualityView));
+        const card=getCardById(btn.dataset.qualityView);
         if(card) openCardRoute(card.id);
       }));
 
       list.querySelectorAll("[data-quality-edit]").forEach(btn=>btn.addEventListener("click",()=>{
-        const card=cards.find(c=>String(c.id)===String(btn.dataset.qualityEdit));
+        const card=getCardById(btn.dataset.qualityEdit);
         if(card&&requireOwner("edit data-quality listing")) openEditModal(card);
       }));
     }
@@ -22022,7 +22143,7 @@ function wireShimmer(container){
           const saved=await updateCardMetadataFields(card,{availability:newStatus});
 
           if(saved){
-            const index=cards.findIndex(c=>String(c.id)===String(card.id));
+            const index=getCardIndexById(card.id);
             if(index>-1) cards[index]=saved;
             byId.set(String(card.id),saved);
             savedCount++;
@@ -22163,7 +22284,7 @@ function wireShimmer(container){
           <button type="button" class="btn-ghost" data-audit-edit="${escapeHtml(card.id)}">Edit</button>
         </div>`).join(""):`<div class="quality-empty"><strong>No matching issues</strong><span>Your catalogue looks clean for this filter.</span></div>`;
       $("catalogueAuditList").querySelectorAll("[data-audit-edit]").forEach(btn=>btn.addEventListener("click",()=>{
-        const card=cards.find(c=>String(c.id)===String(btn.dataset.auditEdit||""));
+        const card=getCardById(btn.dataset.auditEdit||"");
         if(card) openEditModal(card);
       }));
     };
@@ -23060,13 +23181,13 @@ function wireShimmer(container){
     `;
 
     view.querySelectorAll("[data-life-edit]").forEach(btn=>btn.addEventListener("click",()=>{
-      const card=cards.find(c=>String(c.id)===String(btn.dataset.lifeEdit));
+      const card=getCardById(btn.dataset.lifeEdit);
       if(card) openEditModal(card);
     }));
 
     view.querySelectorAll("[data-life-publish]").forEach(btn=>btn.addEventListener("click",async()=>{
       if(!requireOwner("publish draft")) return;
-      const card=cards.find(c=>String(c.id)===String(btn.dataset.lifePublish));
+      const card=getCardById(btn.dataset.lifePublish);
       if(!card) return;
       if(!confirm(`Publish "${card.name}"? It will become visible to normal visitors immediately.`)) return;
       if(await setCardLifecycle(card,"live")){
@@ -23077,7 +23198,7 @@ function wireShimmer(container){
 
     view.querySelectorAll("[data-life-archive]").forEach(btn=>btn.addEventListener("click",async()=>{
       if(!requireOwner("archive draft")) return;
-      const card=cards.find(c=>String(c.id)===String(btn.dataset.lifeArchive));
+      const card=getCardById(btn.dataset.lifeArchive);
       if(!card) return;
       if(!confirm(`Archive "${card.name}"?`)) return;
       if(await setCardLifecycle(card,"archived")){
@@ -23088,7 +23209,7 @@ function wireShimmer(container){
 
     view.querySelectorAll("[data-life-restore]").forEach(btn=>btn.addEventListener("click",async()=>{
       if(!requireOwner("restore archived listing")) return;
-      const card=cards.find(c=>String(c.id)===String(btn.dataset.lifeRestore));
+      const card=getCardById(btn.dataset.lifeRestore);
       if(!card) return;
       if(await setCardLifecycle(card,"draft")){
         showToast("Restored to Draft");
@@ -23180,11 +23301,11 @@ function wireShimmer(container){
     `;
 
     view.querySelectorAll("[data-duplicate-view]").forEach(btn=>btn.addEventListener("click",()=>{
-      const card=cards.find(c=>String(c.id)===String(btn.dataset.duplicateView));
+      const card=getCardById(btn.dataset.duplicateView);
       if(card) openCardRoute(card.id);
     }));
     view.querySelectorAll("[data-duplicate-edit]").forEach(btn=>btn.addEventListener("click",()=>{
-      const card=cards.find(c=>String(c.id)===String(btn.dataset.duplicateEdit));
+      const card=getCardById(btn.dataset.duplicateEdit);
       if(card) openEditModal(card);
     }));
   }
@@ -23203,7 +23324,7 @@ function wireShimmer(container){
 
   function historyCardLabel(entry){
     const data=entry?.after_data||entry?.before_data||{};
-    return data.name || cards.find(c=>String(c.id)===String(entry.card_id))?.name || "Card";
+    return data.name || getCardById(entry.card_id)?.name || "Card";
   }
 
   async function fetchEditHistory(){
@@ -23304,7 +23425,7 @@ function wireShimmer(container){
     loading.replaceWith(holder);
 
     holder.querySelectorAll("[data-history-view]").forEach(btn=>btn.addEventListener("click",()=>{
-      const card=cards.find(c=>String(c.id)===String(btn.dataset.historyView));
+      const card=getCardById(btn.dataset.historyView);
       if(card) openCardRoute(card.id);
       else showToast("Card is no longer loaded");
     }));
@@ -23585,7 +23706,7 @@ function wireShimmer(container){
 
       list.querySelectorAll("[data-image-health-view]").forEach(btn=>{
         btn.addEventListener("click",()=>{
-          const card=cards.find(c=>String(c.id)===String(btn.dataset.imageHealthView));
+          const card=getCardById(btn.dataset.imageHealthView);
           if(card) openCardRoute(card.id);
         });
       });
@@ -23593,7 +23714,7 @@ function wireShimmer(container){
       list.querySelectorAll("[data-image-health-edit]").forEach(btn=>{
         btn.addEventListener("click",()=>{
           if(!requireOwner("edit image health listing")) return;
-          const card=cards.find(c=>String(c.id)===String(btn.dataset.imageHealthEdit));
+          const card=getCardById(btn.dataset.imageHealthEdit);
           if(card) openEditModal(card);
         });
       });
@@ -23997,7 +24118,7 @@ function wireShimmer(container){
       try{
         for(let i=0;i<ids.length;i++){
           const id=ids[i];
-          const card=cards.find(c=>String(c.id)===id);
+          const card=getCardById(id);
           const draft=drafts.get(id);
           if(!card||!draft) continue;
 
@@ -24582,7 +24703,7 @@ function wireShimmer(container){
 
           const saved=await updateCardMetadataFields(card,changes);
           if(saved){
-            const index=cards.findIndex(c=>String(c.id)===String(card.id));
+            const index=getCardIndexById(card.id);
             if(index>-1) cards[index]=saved;
             byId.set(String(card.id),saved);
             savedCount++;
@@ -24746,15 +24867,15 @@ function wireShimmer(container){
       }).join("");
 
       list.querySelectorAll("[data-recent-view]").forEach(btn=>btn.addEventListener("click",()=>{
-        const card=cards.find(c=>String(c.id)===String(btn.dataset.recentView));
+        const card=getCardById(btn.dataset.recentView);
         if(card) openCardRoute(card.id);
       }));
       list.querySelectorAll("[data-recent-edit]").forEach(btn=>btn.addEventListener("click",()=>{
-        const card=cards.find(c=>String(c.id)===String(btn.dataset.recentEdit));
+        const card=getCardById(btn.dataset.recentEdit);
         if(card&&requireOwner("edit recent listing")) openEditModal(card);
       }));
       list.querySelectorAll("[data-recent-clone]").forEach(btn=>btn.addEventListener("click",()=>{
-        const card=cards.find(c=>String(c.id)===String(btn.dataset.recentClone));
+        const card=getCardById(btn.dataset.recentClone);
         if(card&&requireOwner("clone recent listing")) openCloneOptions(card);
       }));
       list.querySelectorAll("[data-recent-fb]").forEach(btn=>btn.addEventListener("click",()=>{
@@ -25465,7 +25586,7 @@ function wireShimmer(container){
   }
 
   async function shareCurrentCard(){
-    const card=cards.find(c=>String(c.id)===String(detailsCardId));
+    const card=getCardById(detailsCardId);
     if(!card || (!isOwnerMode() && !isLiveLifecycle(card))) return;
 
     const url=getCardShareUrl(card.id);
@@ -25520,7 +25641,7 @@ function wireShimmer(container){
   }
 
   async function messageSellerOnFacebook(){
-    const card=cards.find(c=>String(c.id)===String(detailsCardId));
+    const card=getCardById(detailsCardId);
     if(!card || (!isOwnerMode() && !isLiveLifecycle(card))) return;
 
     // Messenger does not reliably support arbitrary prefilled text in a safe
@@ -25542,7 +25663,7 @@ function wireShimmer(container){
   }
 
   function shareCurrentCardWhatsApp(){
-    const card=cards.find(c=>String(c.id)===String(detailsCardId));
+    const card=getCardById(detailsCardId);
     if(!card) return;
 
     const url=getCardShareUrl(card.id);
@@ -25610,7 +25731,7 @@ function wireShimmer(container){
     const id=safeCardId(cardId);
     if(!id || detailsCardTransitioning) return;
 
-    const card=cards.find(c=>String(c.id)===id);
+    const card=getCardById(id);
     if(!card || (!isOwnerMode() && !isLiveLifecycle(card))) return;
 
     detailsCardTransitioning=true;
@@ -26140,7 +26261,7 @@ function wireShimmer(container){
   $("imageLightboxDownload").addEventListener("click", e=>{
     e.stopPropagation();
     if(!lightboxImages.length) return;
-    const card = cards.find(c=>c.id === detailsCardId);
+    const card = getCardById(detailsCardId);
     downloadImageSource(
       lightboxImages[lightboxIndex],
       card?.name || card?.card_code || "card",
@@ -26227,13 +26348,13 @@ function wireShimmer(container){
   });
 
   $("detailsSharePreviewBtn").addEventListener("click",async()=>{
-    const card=cards.find(c=>String(c.id)===String(detailsCardId));
+    const card=getCardById(detailsCardId);
     if(!card || (!isOwnerMode() && !isLiveLifecycle(card))) return;
     await downloadPublicCardSharePreview(card);
   });
 
   $("detailsDownloadBtn").addEventListener("click", ()=>{
-    const card = cards.find(c=>c.id === detailsCardId);
+    const card = getCardById(detailsCardId);
     if(!card) return;
     const images = getImages(card);
     if(!images.length){
@@ -26246,13 +26367,13 @@ function wireShimmer(container){
   $("detailsCloseBtn").addEventListener("click", ()=>closeDetailsModal(true));
   $("detailsCloneBtn").addEventListener("click", ()=>{
     if(!requireOwner("clone card")) return;
-    const card = cards.find(c=>String(c.id) === String(detailsCardId||""));
+    const card = getCardById(detailsCardId||"");
     if(card) openCloneOptions(card);
   });
 
   $("detailsDeleteBtn").addEventListener("click", async ()=>{
     if(!requireOwner("delete listing permanently")) return;
-    const card=cards.find(c=>String(c.id)===String(detailsCardId||""));
+    const card=getCardById(detailsCardId||"");
     if(!card) return;
     closeDetailsMoreMenu(false);
     const ok=await deleteListingPermanently(card);
@@ -26275,7 +26396,7 @@ function wireShimmer(container){
 
   $("detailsEditBtn").addEventListener("click", ()=>{
     if(!requireOwner()) return;
-    const card = cards.find(c=>c.id === detailsCardId);
+    const card = getCardById(detailsCardId);
     if(card){
       closeDetailsModal(false);
       openEditModal(card);
