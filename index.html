@@ -9232,6 +9232,50 @@
     pointer-events:none!important;
   }
 
+
+  /* Bulk metadata selection filters — expanded filter set */
+  .bulk-meta-filters{
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  }
+  .bulk-meta-filters .field{
+    min-width:0;
+  }
+
+  @media(max-width:1100px){
+    .bulk-meta-filters{
+      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    }
+  }
+
+  @media(max-width:620px){
+    .bulk-meta-filters{
+      grid-template-columns:1fr !important;
+    }
+  }
+
+  /* Preserve fail-closed owner controls. */
+  body:not(.owner-mode) .bulk-meta-layout,
+  body:not(.owner-mode) .bulk-meta-summary{
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+
+
+  /* FINAL owner visibility guard */
+  body:not(.owner-mode) .owner-only,
+  body:not(.owner-mode) #mobileMoreMenu > a.owner-only,
+  body:not(.owner-mode) nav.mainnav a.owner-only,
+  body:not(.owner-mode) .desktop-more-owner,
+  body:not(.owner-mode) .card-actions.owner-only,
+  body:not(.owner-mode) .giveaway-owner-actions,
+  body:not(.owner-mode) .bulk-meta-layout,
+  body:not(.owner-mode) .bulk-meta-summary{
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+
 </style>
 </head>
 <body>
@@ -22244,6 +22288,93 @@ function wireShimmer(container){
     return String(value ?? "").trim().slice(0,maxLen);
   }
 
+  async function updateCardMetadataFields(card,changes){
+    if(!requireOwner("apply bulk metadata changes")) return null;
+    if(!card?.id || !changes || typeof changes!=="object") return null;
+
+    const allowedFields=new Set([
+      "game","series","era","language","format","condition","availability"
+    ]);
+    const payload={};
+
+    for(const [field,value] of Object.entries(changes)){
+      if(!allowedFields.has(field)) continue;
+
+      if(field==="game"){
+        payload.game=bulkMetadataCleanString(value,120);
+      }else if(field==="series"){
+        payload.series=normalizeStoredLabel(bulkMetadataCleanString(value,80));
+      }else if(field==="era"){
+        payload.era=normalizeStoredLabel(value);
+      }else if(field==="language"){
+        payload.language=bulkMetadataCleanString(value,20);
+      }else if(field==="format"){
+        payload.format=normalizeStoredLabel(value);
+      }else if(field==="condition"){
+        payload.condition=bulkMetadataCleanString(value,20);
+      }else if(field==="availability"){
+        payload.availability=canonicalAvailability(value);
+
+        // Keep sold-date behavior consistent without exposing a sold-date
+        // editor in Bulk Metadata.
+        if(soldAtSupported){
+          if(payload.availability==="Sold"){
+            payload.sold_at=card.sold_at || new Date().toISOString();
+          }else{
+            payload.sold_at=null;
+          }
+        }
+      }
+    }
+
+    if(!Object.keys(payload).length) return null;
+
+    try{
+      let result=await supabaseClient
+        .from("cards")
+        .update(payload)
+        .eq("id",card.id)
+        .select(cardMutationReturnColumns())
+        .single();
+
+      if(result.error &&
+         Object.prototype.hasOwnProperty.call(payload,"sold_at") &&
+         optionalColumnUnavailable(result.error,"sold_at")){
+        delete payload.sold_at;
+        soldAtSupported=false;
+
+        result=await supabaseClient
+          .from("cards")
+          .update(payload)
+          .eq("id",card.id)
+          .select(cardMutationReturnColumns())
+          .single();
+      }
+
+      if(result.error){
+        console.error("Bulk metadata update error:",{
+          card_id:card.id,
+          fields:Object.keys(payload),
+          error:result.error
+        });
+        return null;
+      }
+
+      const mergedSource={
+        ...card,
+        ...changes,
+        ...(Object.prototype.hasOwnProperty.call(payload,"sold_at")
+          ? {sold_at:payload.sold_at}
+          : {})
+      };
+
+      return mergeOwnerOnlyCardFields(dbToCard(result.data),mergedSource);
+    }catch(error){
+      console.error("Bulk metadata update request failed:",error);
+      return null;
+    }
+  }
+
   function bulkMetadataFieldLabel(field){
     return ({
       game:"Game",
@@ -22326,6 +22457,73 @@ function wireShimmer(container){
                 <option value="sealed">Sealed</option>
               </select>
             </div>
+
+            <div class="field">
+              <label for="bulkMetaLanguageFilter">Language</label>
+              <select id="bulkMetaLanguageFilter">
+                <option value="">All languages</option>
+                ${[...new Set(eligibleCards.map(c=>String(c.language||"").trim()).filter(Boolean))]
+                  .sort((a,b)=>a.localeCompare(b))
+                  .map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="bulkMetaAvailabilityFilter">Availability</label>
+              <select id="bulkMetaAvailabilityFilter">
+                <option value="">All availability</option>
+                ${["Available","Reserved","Collection (NFS)"]
+                  .filter(v=>eligibleCards.some(c=>normalizeFilterValue(c.availability||"Available")===normalizeFilterValue(v)))
+                  .map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="bulkMetaGradeFilter">Grade / Condition</label>
+              <select id="bulkMetaGradeFilter">
+                <option value="">All grades / conditions</option>
+                ${(()=>{
+                  const values=new Set();
+                  eligibleCards.forEach(card=>{
+                    (Array.isArray(card.grading)?card.grading:[]).forEach(g=>{
+                      if(!g?.company || !String(g.grade??"").trim()) return;
+                      values.add(`${String(g.company).trim().toUpperCase()} ${String(g.grade).trim()}`);
+                    });
+                    const format=effectiveFormat(card);
+                    if(format==="Raw"){
+                      const label=CONDITION_LABEL[card.condition]||card.condition||"";
+                      if(label && normalizeFilterValue(label)!=="not applicable") values.add(label);
+                    }else if(format==="Sealed"){
+                      values.add("Sealed");
+                    }
+                  });
+                  return Array.from(values).sort((a,b)=>{
+                    const gradeA=parseFloat(String(a).split(" ").pop());
+                    const gradeB=parseFloat(String(b).split(" ").pop());
+                    const isGradeA=/^(PSA|BGS|CGC|SGC|TAG|ACE|ARS|OTHER)\b/i.test(a);
+                    const isGradeB=/^(PSA|BGS|CGC|SGC|TAG|ACE|ARS|OTHER)\b/i.test(b);
+                    if(isGradeA!==isGradeB) return isGradeA?-1:1;
+                    if(isGradeA && isGradeB){
+                      const companyA=String(a).split(" ")[0];
+                      const companyB=String(b).split(" ")[0];
+                      if(companyA!==companyB) return companyA.localeCompare(companyB);
+                      if(Number.isFinite(gradeA)&&Number.isFinite(gradeB)) return gradeB-gradeA;
+                    }
+                    return a.localeCompare(b);
+                  }).map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+                })()}
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="bulkMetaSeriesFilter">Series</label>
+              <select id="bulkMetaSeriesFilter">
+                <option value="">All series</option>
+                ${[...new Set(eligibleCards.map(c=>String(c.series||"").trim()).filter(Boolean))]
+                  .sort((a,b)=>a.localeCompare(b))
+                  .map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+              </select>
+            </div>
           </div>
 
           <div class="fb-card-list-bulk-actions">
@@ -22352,7 +22550,9 @@ function wireShimmer(container){
                 ? `<input type="text" id="bulkMetaValue_${field}" maxlength="80" placeholder="Enter new series">`
                 : `<select id="bulkMetaValue_${field}">
                      <option value="">Choose ${escapeHtml(label.toLowerCase())}…</option>
-                     ${options.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+                     ${options.map(v=>`<option value="${escapeHtml(v)}">${
+                       escapeHtml(field==="condition" ? (CONDITION_LABEL[v]||v) : v)
+                     }</option>`).join("")}
                    </select>`;
               return `
                 <div class="bulk-meta-field-row">
@@ -22386,6 +22586,10 @@ function wireShimmer(container){
     const gameFilter=$("bulkMetaGameFilter");
     const eraFilter=$("bulkMetaEraFilter");
     const formatFilter=$("bulkMetaFormatFilter");
+    const languageFilter=$("bulkMetaLanguageFilter");
+    const availabilityFilter=$("bulkMetaAvailabilityFilter");
+    const gradeFilter=$("bulkMetaGradeFilter");
+    const seriesFilter=$("bulkMetaSeriesFilter");
     const picker=$("bulkMetaPicker");
     const pickerEmpty=$("bulkMetaPickerEmpty");
     const pickerCount=$("bulkMetaPickerCount");
@@ -22400,11 +22604,36 @@ function wireShimmer(container){
       const game=normalizeFilterValue(gameFilter.value);
       const era=normalizeFilterValue(eraFilter.value);
       const format=normalizeFilterValue(formatFilter.value);
+      const language=normalizeFilterValue(languageFilter.value);
+      const availability=normalizeFilterValue(availabilityFilter.value);
+      const grade=normalizeFilterValue(gradeFilter.value);
+      const series=normalizeFilterValue(seriesFilter.value);
 
       return eligibleCards.filter(card=>{
         if(game && normalizeFilterValue(card.game)!==game) return false;
         if(era && normalizeFilterValue(card.era)!==era) return false;
         if(format && normalizeFilterValue(effectiveFormat(card))!==format) return false;
+        if(language && normalizeFilterValue(card.language)!==language) return false;
+        if(availability && normalizeFilterValue(card.availability||"Available")!==availability) return false;
+        if(series && normalizeFilterValue(card.series)!==series) return false;
+
+        if(grade){
+          const values=[];
+          (Array.isArray(card.grading)?card.grading:[]).forEach(g=>{
+            if(g?.company && String(g.grade??"").trim()){
+              values.push(`${String(g.company).trim().toUpperCase()} ${String(g.grade).trim()}`);
+            }
+          });
+          const cardFormat=effectiveFormat(card);
+          if(cardFormat==="Raw"){
+            values.push(CONDITION_LABEL[card.condition]||card.condition||"");
+          }else if(cardFormat==="Sealed"){
+            values.push("Sealed");
+          }
+
+          if(!values.some(value=>normalizeFilterValue(value)===grade)) return false;
+        }
+
         if(q){
           const hay=[card.name,card.card_code,card.game,card.series,card.year,card.language]
             .map(v=>normalizeFilterValue(v)).join(" ");
@@ -22524,7 +22753,10 @@ function wireShimmer(container){
       renderPicker();
     }
 
-    [search,gameFilter,eraFilter,formatFilter].forEach(el=>{
+    [
+      search,gameFilter,eraFilter,formatFilter,
+      languageFilter,availabilityFilter,gradeFilter,seriesFilter
+    ].forEach(el=>{
       el.addEventListener("input",renderPicker);
       el.addEventListener("change",renderPicker);
     });
@@ -22584,20 +22816,7 @@ function wireShimmer(container){
           const card=selected[i];
           applyBtn.textContent=`Saving ${i+1}/${selected.length}…`;
 
-          const candidate={...card};
-
-          for(const [field,value] of Object.entries(changes)){
-            if(field==="series"){
-              candidate.series=value;
-            }else if(field==="availability"){
-              candidate.availability=canonicalAvailability(value);
-              if(candidate.availability!=="Sold") candidate.sold_at=null;
-            }else{
-              candidate[field]=value;
-            }
-          }
-
-          const saved=await updateCardStorage(candidate);
+          const saved=await updateCardMetadataFields(card,changes);
           if(saved){
             const index=cards.findIndex(c=>String(c.id)===String(card.id));
             if(index>-1) cards[index]=saved;
@@ -22605,6 +22824,7 @@ function wireShimmer(container){
             savedCount++;
           }else{
             failedCount++;
+            status.textContent=`Could not update ${card.name||card.card_code||"a listing"}. Continuing with the remaining selections…`;
           }
         }
 
