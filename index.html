@@ -8816,6 +8816,118 @@
     pointer-events:none!important;
   }
 
+
+  /* ==========================================================
+     Mobile filter sheet: top-aligned full-height presentation
+     ========================================================== */
+  @media(max-width:800px){
+    .filter-drawer-shell{
+      position:fixed !important;
+      inset:0 !important;
+      top:0 !important;
+      right:0 !important;
+      bottom:0 !important;
+      left:0 !important;
+      width:100% !important;
+      max-width:none !important;
+      height:100dvh !important;
+      max-height:100dvh !important;
+      border-radius:0 !important;
+      border-left:0 !important;
+      border-right:0 !important;
+      border-bottom:0 !important;
+      padding:
+        calc(10px + env(safe-area-inset-top))
+        12px
+        calc(10px + env(safe-area-inset-bottom)) !important;
+      transform:translate3d(0,100%,0);
+      background:var(--bg) !important;
+    }
+
+    .filter-drawer-shell.open{
+      transform:translate3d(0,0,0) !important;
+    }
+
+    /* Header starts at the top of the screen and stays compact. */
+    .filter-drawer-head{
+      top:calc(-10px - env(safe-area-inset-top)) !important;
+      margin:
+        calc(-10px - env(safe-area-inset-top))
+        -12px
+        12px !important;
+      padding:
+        calc(12px + env(safe-area-inset-top))
+        14px
+        10px !important;
+      min-height:calc(54px + env(safe-area-inset-top)) !important;
+      border-radius:0 !important;
+      background:rgba(22,24,30,.98) !important;
+      box-shadow:0 8px 20px rgba(0,0,0,.18);
+    }
+
+    .filter-drawer-head > div:last-child{
+      display:flex !important;
+      align-items:center !important;
+      gap:8px !important;
+    }
+
+    /* Clear All now matches the rounded-pill language used elsewhere. */
+    .filter-drawer-head .clear-all-filters-btn{
+      display:inline-flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      min-height:34px !important;
+      padding:7px 12px !important;
+      border:1px solid rgba(95,212,196,.30) !important;
+      border-radius:999px !important;
+      background:rgba(95,212,196,.06) !important;
+      color:var(--accent-teal) !important;
+      font-size:9.5px !important;
+      font-weight:800 !important;
+      letter-spacing:.1px !important;
+      box-shadow:none !important;
+    }
+
+    .filter-drawer-head .clear-all-filters-btn:hover,
+    .filter-drawer-head .clear-all-filters-btn:focus-visible{
+      border-color:var(--accent-teal) !important;
+      background:rgba(95,212,196,.11) !important;
+      color:var(--accent-teal) !important;
+    }
+
+    /* Keep Apply anchored to the bottom of the full-height filter sheet. */
+    .filter-drawer-footer{
+      position:sticky !important;
+      bottom:calc(-10px - env(safe-area-inset-bottom)) !important;
+      margin:
+        14px
+        -12px
+        calc(-10px - env(safe-area-inset-bottom)) !important;
+      padding:
+        10px
+        12px
+        calc(12px + env(safe-area-inset-bottom)) !important;
+      background:rgba(17,18,22,.98) !important;
+      box-shadow:0 -8px 22px rgba(0,0,0,.20);
+    }
+
+    .filter-drawer-apply{
+      border-radius:12px !important;
+    }
+  }
+
+  /* Security remains fail-closed after responsive overrides. */
+  body:not(.owner-mode) .owner-only,
+  body:not(.owner-mode) #mobileMoreMenu > a.owner-only,
+  body:not(.owner-mode) nav.mainnav a.owner-only,
+  body:not(.owner-mode) .desktop-more-owner,
+  body:not(.owner-mode) .card-actions.owner-only,
+  body:not(.owner-mode) .giveaway-owner-actions{
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+
 </style>
 </head>
 <body>
