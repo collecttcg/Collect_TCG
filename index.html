@@ -7655,22 +7655,17 @@
     }
 
     nav.mainnav{
+      position:relative;
       min-width:0;
       width:100%;
       display:flex !important;
       flex-direction:row !important;
       align-items:center;
+      justify-content:flex-start;
       gap:3px !important;
-      overflow-x:auto;
-      overflow-y:hidden;
+      overflow:visible !important;
       padding:3px 2px 5px;
-      scrollbar-width:none;
       white-space:nowrap;
-      overscroll-behavior-x:contain;
-    }
-
-    nav.mainnav::-webkit-scrollbar{
-      display:none;
     }
 
     nav.mainnav > a{
@@ -7714,11 +7709,96 @@
       font-size:8px;
     }
 
-    /* Mobile-only navigation helpers stay out of the PC top bar. */
-    nav.mainnav > .mobile-more-toggle,
-    nav.mainnav > .mobile-more-menu,
+    /* Desktop keeps only the core destinations visible. Everything else lives under More. */
+    nav.mainnav > a[data-route="by-game"],
+    nav.mainnav > a[data-route="showcase"],
+    nav.mainnav > a[data-route="favorites"],
+    nav.mainnav > a[data-route="giveaway"],
+    nav.mainnav > a[data-route="insights"],
+    nav.mainnav > a[data-route="fb-tools"],
+    nav.mainnav > a[data-route="quality"],
+    nav.mainnav > a[data-route="inventory-tools"],
+    nav.mainnav > a[data-route="export"],
+    nav.mainnav > a[data-route="add"],
+    nav.mainnav > a[data-route="about"],
+    nav.mainnav > a[data-route="contact"],
     nav.mainnav > .mobile-secondary-nav{
       display:none !important;
+    }
+
+    nav.mainnav > .mobile-more-toggle{
+      flex:0 0 auto;
+      min-height:38px;
+      padding:8px 11px !important;
+      display:flex !important;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      border:1px solid transparent;
+      border-radius:8px;
+      background:transparent;
+      color:var(--text-muted);
+      font:inherit;
+      font-size:11.5px;
+      font-weight:700;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    nav.mainnav > .mobile-more-toggle:hover,
+    nav.mainnav > .mobile-more-toggle:focus-visible,
+    nav.mainnav > .mobile-more-toggle.open,
+    nav.mainnav > .mobile-more-toggle.active{
+      color:var(--text);
+      background:var(--surface);
+      border-color:var(--border);
+      outline:none;
+    }
+
+    nav.mainnav > .mobile-more-menu{
+      position:absolute !important;
+      z-index:140;
+      top:calc(100% + 8px);
+      right:0;
+      width:min(430px,calc(100vw - 44px)) !important;
+      max-height:min(520px,calc(100vh - 120px));
+      overflow-y:auto;
+      padding:8px !important;
+      border:1px solid var(--border) !important;
+      border-radius:12px !important;
+      background:var(--surface-2) !important;
+      box-shadow:0 18px 48px rgba(0,0,0,.38) !important;
+    }
+
+    nav.mainnav > .mobile-more-menu:not([hidden]){
+      display:grid !important;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:5px;
+    }
+
+    nav.mainnav > .mobile-more-menu a{
+      min-height:40px;
+      padding:8px 10px;
+      display:flex !important;
+      align-items:center;
+      gap:7px;
+      border-radius:9px;
+      color:var(--text-muted);
+      font-size:11px;
+      white-space:normal;
+    }
+
+    nav.mainnav > .mobile-more-menu a:hover,
+    nav.mainnav > .mobile-more-menu a.active{
+      color:var(--text);
+      background:var(--surface);
+    }
+
+    nav.mainnav > .mobile-more-menu .desktop-more-owner{
+      display:none !important;
+    }
+    body.owner-mode nav.mainnav > .mobile-more-menu .desktop-more-owner{
+      display:flex !important;
     }
 
     .sidebar-footer{
@@ -7776,6 +7856,11 @@
 
     nav.mainnav > a{
       padding:8px 8px !important;
+      font-size:10.5px !important;
+    }
+
+    nav.mainnav > .mobile-more-toggle{
+      padding:8px 9px !important;
       font-size:10.5px !important;
     }
   }
@@ -7868,7 +7953,15 @@
         <a href="#/contact" data-route="contact"><span class="ic">✉</span> Contact</a>
       
         <a href="#/showcase" data-route="showcase"><span class="ic">▶</span> Showcase</a>
-        <a href="#/recent" data-route="recent"><span class="ic">↻</span> Recently Viewed</a></div>
+        <a href="#/recent" data-route="recent"><span class="ic">↻</span> Recently Viewed</a>
+        <a href="#/by-game" data-route="by-game" class="owner-only desktop-more-owner"><span class="ic">▥</span> By Game</a>
+        <a href="#/insights" data-route="insights" class="owner-only desktop-more-owner"><span class="ic">◔</span> Insights</a>
+        <a href="#/fb-tools" data-route="fb-tools" class="owner-only desktop-more-owner"><span class="ic">ƒ</span> Post Generator Tools</a>
+        <a href="#/quality" data-route="quality" class="owner-only desktop-more-owner"><span class="ic">✓</span> Data Quality</a>
+        <a href="#/inventory-tools" data-route="inventory-tools" class="owner-only desktop-more-owner"><span class="ic">≡</span> Inventory Tools</a>
+        <a href="#/export" data-route="export" class="owner-only desktop-more-owner"><span class="ic">⇩</span> Export</a>
+        <a href="#/add" data-route="add" class="owner-only desktop-more-owner"><span class="ic">+</span> Add Card</a>
+      </div>
       <a href="#/favorites" data-route="favorites" class="mobile-secondary-nav"><span class="ic">♡</span> Favorites</a>
       <a href="#/giveaway" data-route="giveaway" class="mobile-secondary-nav"><span class="ic">★</span> Giveaway</a>
       <a href="#/insights" data-route="insights" class="owner-only"><span class="ic">◔</span> Insights</a>
@@ -9608,7 +9701,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(moreToggle){
       moreToggle.classList.toggle(
         "active",
-        ["collection","showcase","favorites","giveaway","recent","about","contact"].includes(safeRoute)
+        ["showcase","favorites","giveaway","recent","about","contact","by-game","insights","fb-tools","quality","inventory-tools","export","add"].includes(safeRoute)
       );
     }
 
@@ -9831,7 +9924,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     });
     const moreToggle = $("mobileMoreToggle");
     if(moreToggle){
-      moreToggle.classList.toggle("active", ["collection","showcase","favorites","giveaway","recent","about","contact"].includes(route));
+      moreToggle.classList.toggle("active", ["showcase","favorites","giveaway","recent","about","contact","by-game","insights","fb-tools","quality","inventory-tools","export","add"].includes(route));
     }
     const moreMenu = $("mobileMoreMenu");
     if(moreMenu){
@@ -21555,7 +21648,9 @@ function wireShimmer(container){
     });
 
     window.addEventListener("resize", ()=>{
-      if(window.innerWidth > 800) closeMenu();
+      // Keep the shared More menu usable on both desktop and mobile.
+      // Close only if its toggle is no longer visible after a responsive layout change.
+      if(getComputedStyle(toggle).display === "none") closeMenu();
     });
   }
 
