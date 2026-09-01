@@ -8610,6 +8610,119 @@
     display:none!important;visibility:hidden!important;pointer-events:none!important;
   }
 
+
+  /* ---------- Giveaway current / past winners ---------- */
+  .giveaway-page-section{
+    margin-top:22px;
+  }
+  .giveaway-page-section:first-of-type{
+    margin-top:8px;
+  }
+  .giveaway-page-section-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .giveaway-page-section-head h3{
+    font-size:22px;
+  }
+  .giveaway-page-section-head p{
+    margin:3px 0 0;
+    color:var(--text-muted);
+    font-size:10px;
+  }
+  .giveaway-section-count{
+    flex:0 0 auto;
+    padding:4px 8px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    color:var(--text-muted);
+    font-size:8.5px;
+    font-weight:700;
+  }
+  .giveaway-winner-card{
+    position:relative;
+  }
+  .giveaway-winner-card::before{
+    content:"Winner";
+    position:absolute;
+    top:10px;
+    left:10px;
+    z-index:3;
+    padding:4px 7px;
+    border-radius:999px;
+    background:rgba(227,179,65,.94);
+    color:#17130a;
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:.45px;
+    text-transform:uppercase;
+  }
+  .giveaway-winner-name{
+    margin-top:10px;
+    padding:10px 11px;
+    border:1px solid rgba(227,179,65,.22);
+    border-radius:10px;
+    background:rgba(227,179,65,.055);
+  }
+  .giveaway-winner-name span{
+    display:block;
+    color:var(--text-muted);
+    font-size:8px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+  }
+  .giveaway-winner-name strong{
+    display:block;
+    margin-top:4px;
+    color:var(--accent-gold);
+    font-size:14px;
+    overflow-wrap:anywhere;
+  }
+  .giveaway-winner-date{
+    margin-top:4px;
+    color:var(--text-muted);
+    font-size:8.5px;
+  }
+  .giveaway-mark-winner{
+    color:var(--accent-gold) !important;
+    border-color:rgba(227,179,65,.28) !important;
+  }
+  .giveaway-empty-section{
+    padding:28px 18px;
+    border:1px dashed var(--border);
+    border-radius:12px;
+    color:var(--text-muted);
+    text-align:center;
+    font-size:10px;
+    line-height:1.5;
+  }
+
+  @media(max-width:700px){
+    .giveaway-page-section-head{
+      align-items:flex-start;
+    }
+    .giveaway-page-section-head h3{
+      font-size:19px;
+    }
+    .giveaway-grid{
+      grid-template-columns:1fr;
+    }
+  }
+
+
+  /* FINAL giveaway owner visibility guard */
+  body:not(.owner-mode) .giveaway-owner-actions,
+  body:not(.owner-mode) [data-giveaway-mark-winner],
+  body:not(.owner-mode) #addGiveawayBtn{
+    display:none !important;
+    visibility:hidden !important;
+    pointer-events:none !important;
+  }
+
 </style>
 </head>
 <body>
@@ -8865,12 +8978,22 @@
         <select id="giveawayStatus">
           <option value="active">Active</option>
           <option value="closed">Closed</option>
+          <option value="gave_away">Gave Away / Winner Announced</option>
         </select>
       </div>
       <div class="field">
         <label for="giveawayEndsAt">End date/time</label>
         <input id="giveawayEndsAt" type="datetime-local">
       </div>
+    </div>
+
+    <div class="field giveaway-winner-field" id="giveawayWinnerField" hidden>
+      <label for="giveawayWinnerName">Winner display name <span class="field-optional">(public)</span></label>
+      <input id="giveawayWinnerName"
+             maxlength="120"
+             autocomplete="off"
+             placeholder="e.g. @collector123 or Alex T.">
+      <div class="hint">This name/handle will be shown publicly under Past Winners. Only enter information the winner is comfortable having published.</div>
     </div>
 
     <div class="field">
@@ -10029,7 +10152,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
 
   const GIVEAWAY_PUBLIC_COLUMNS =
-    "id,title,card_name,image_url,status,ends_at,how_to_enter,details,created_at";
+    "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_announced_at,created_at";
   const SHOWCASE_PUBLIC_COLUMNS =
     "id,title,category,series,video_url,thumbnail_url,description,featured,sort_order,created_at";
 
@@ -10044,6 +10167,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       ends_at: row.ends_at || null,
       how_to_enter: row.how_to_enter || "",
       details: row.details || "",
+      winner_name: row.winner_name || "",
+      winner_announced_at: row.winner_announced_at || null,
       created_at: row.created_at || null
     };
   }
@@ -10086,6 +10211,38 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       .from("giveaways")
       .delete()
       .eq("id", id);
+  }
+
+  function isPastGiveawayWinner(g){
+    return normalizeFilterValue(g?.status)==="gave_away";
+  }
+
+  function giveawayWinnerDateLabel(value){
+    if(!value) return "";
+    const date=new Date(value);
+    if(Number.isNaN(date.getTime())) return "";
+    return date.toLocaleDateString(undefined,{
+      year:"numeric",
+      month:"short",
+      day:"numeric"
+    });
+  }
+
+  async function markGiveawayAsGaveAway(g,winnerName){
+    if(!requireOwner("mark giveaway as gave away")){
+      return {data:null,error:new Error("Owner login required")};
+    }
+
+    const cleanWinner=String(winnerName||"").trim().slice(0,120);
+    if(!cleanWinner){
+      return {data:null,error:new Error("Winner display name is required")};
+    }
+
+    return await saveGiveaway({
+      status:"gave_away",
+      winner_name:cleanWinner,
+      winner_announced_at:new Date().toISOString()
+    },g.id);
   }
 
   // ---------------- Supabase showcase videos ----------------
@@ -15197,69 +15354,190 @@ function wireShimmer(container){
   });
 
   function renderGiveawayPage(){
+    const currentGiveaways=giveaways.filter(g=>!isPastGiveawayWinner(g));
+    const pastWinners=giveaways
+      .filter(isPastGiveawayWinner)
+      .slice()
+      .sort((a,b)=>String(b.winner_announced_at||b.created_at||"").localeCompare(String(a.winner_announced_at||a.created_at||"")));
+
+    const currentCardHTML=g=>`
+      <article class="giveaway-card">
+        ${g.image_url ? `<img src="${escapeHtml(g.image_url)}" alt="${escapeHtml(g.card_name)}" loading="lazy" decoding="async">` : ""}
+        <div class="giveaway-body">
+          <div class="giveaway-title">${escapeHtml(g.title)}</div>
+          <div class="giveaway-meta">${escapeHtml(g.card_name)}</div>
+          <span class="giveaway-status ${normalizeFilterValue(g.status)==="closed" ? "closed" : ""}">
+            ${escapeHtml(normalizeFilterValue(g.status)==="closed" ? "Closed" : "Active")}
+          </span>
+
+          <div class="giveaway-section">
+            <h4>How to enter</h4>
+            <p>${escapeHtml(g.how_to_enter)}</p>
+          </div>
+
+          ${g.ends_at ? `<div class="giveaway-section"><h4>Ends</h4><p>${escapeHtml(giveawayDateLabel(g.ends_at))}</p></div>` : ""}
+          ${g.details ? `<div class="giveaway-section"><h4>Details</h4><p>${escapeHtml(g.details)}</p></div>` : ""}
+
+          <div class="giveaway-owner-actions owner-only">
+            <button type="button"
+                    class="btn-ghost giveaway-mark-winner"
+                    data-giveaway-mark-winner="${escapeHtml(g.id)}">
+              Mark Gave Away
+            </button>
+            <button type="button" class="btn-ghost" data-giveaway-edit="${escapeHtml(g.id)}">Edit</button>
+            <button type="button" class="btn-ghost" data-giveaway-delete="${escapeHtml(g.id)}" style="color:var(--danger)">Delete</button>
+          </div>
+        </div>
+      </article>
+    `;
+
+    const winnerCardHTML=g=>`
+      <article class="giveaway-card giveaway-winner-card">
+        ${g.image_url ? `<img src="${escapeHtml(g.image_url)}" alt="${escapeHtml(g.card_name)}" loading="lazy" decoding="async">` : ""}
+        <div class="giveaway-body">
+          <div class="giveaway-title">${escapeHtml(g.title)}</div>
+          <div class="giveaway-meta">${escapeHtml(g.card_name)}</div>
+          <span class="giveaway-status closed">Gave Away</span>
+
+          <div class="giveaway-winner-name">
+            <span>Winner</span>
+            <strong>${escapeHtml(g.winner_name || "Winner announced")}</strong>
+            ${g.winner_announced_at ? `<div class="giveaway-winner-date">Announced ${escapeHtml(giveawayWinnerDateLabel(g.winner_announced_at))}</div>` : ""}
+          </div>
+
+          ${g.details ? `<div class="giveaway-section"><h4>Giveaway details</h4><p>${escapeHtml(g.details)}</p></div>` : ""}
+
+          <div class="giveaway-owner-actions owner-only">
+            <button type="button" class="btn-ghost" data-giveaway-edit="${escapeHtml(g.id)}">Edit Winner</button>
+            <button type="button" class="btn-ghost" data-giveaway-restore="${escapeHtml(g.id)}">Move Back to Current</button>
+            <button type="button" class="btn-ghost" data-giveaway-delete="${escapeHtml(g.id)}" style="color:var(--danger)">Delete</button>
+          </div>
+        </div>
+      </article>
+    `;
+
     view.innerHTML = `
       <div class="page-head">
         <div>
           <div class="eyebrow">Giveaways</div>
           <h2>Collect TCG Giveaways</h2>
-          <p>Cards and collectibles we are currently giving away.</p>
+          <p>Join our current giveaways and see previous winners.</p>
         </div>
         <button type="button" class="btn-primary owner-only" id="addGiveawayBtn">+ Add Giveaway</button>
       </div>
 
-      <div id="giveawayMount"></div>
+      <section class="giveaway-page-section">
+        <div class="giveaway-page-section-head">
+          <div>
+            <h3>Current Giveaways</h3>
+            <p>Giveaways that are active or waiting for a winner announcement.</p>
+          </div>
+          <span class="giveaway-section-count">${currentGiveaways.length}</span>
+        </div>
+
+        ${currentGiveaways.length
+          ? `<div class="giveaway-grid">${currentGiveaways.map(currentCardHTML).join("")}</div>`
+          : `<div class="giveaway-empty-section">No current giveaways right now. Check back again soon.</div>`}
+      </section>
+
+      <section class="giveaway-page-section">
+        <div class="giveaway-page-section-head">
+          <div>
+            <h3>Past Winners</h3>
+            <p>Previous giveaways that have been completed and awarded.</p>
+          </div>
+          <span class="giveaway-section-count">${pastWinners.length}</span>
+        </div>
+
+        ${pastWinners.length
+          ? `<div class="giveaway-grid">${pastWinners.map(winnerCardHTML).join("")}</div>`
+          : `<div class="giveaway-empty-section">Past giveaway winners will appear here.</div>`}
+      </section>
     `;
 
-    const mount = $("giveawayMount");
-    if(!giveaways.length){
-      mount.innerHTML = `<div class="empty-state">${EMPTY_ICON}<h2>No giveaways right now</h2><p>Check back again for future giveaways.</p></div>`;
-    }else{
-      mount.innerHTML = `<div class="giveaway-grid">${
-        giveaways.map(g=>`
-          <article class="giveaway-card">
-            ${g.image_url ? `<img src="${escapeHtml(g.image_url)}" alt="${escapeHtml(g.card_name)}">` : ""}
-            <div class="giveaway-body">
-              <div class="giveaway-title">${escapeHtml(g.title)}</div>
-              <div class="giveaway-meta">${escapeHtml(g.card_name)}</div>
-              <span class="giveaway-status ${g.status === "closed" ? "closed" : ""}">${escapeHtml(g.status)}</span>
+    $("addGiveawayBtn")?.addEventListener("click",()=>openGiveawayForm());
 
-              <div class="giveaway-section">
-                <h4>How to enter</h4>
-                <p>${escapeHtml(g.how_to_enter)}</p>
-              </div>
-
-              ${g.ends_at ? `<div class="giveaway-section"><h4>Ends</h4><p>${escapeHtml(giveawayDateLabel(g.ends_at))}</p></div>` : ""}
-              ${g.details ? `<div class="giveaway-section"><h4>Details</h4><p>${escapeHtml(g.details)}</p></div>` : ""}
-
-              <div class="giveaway-owner-actions owner-only">
-                <button type="button" class="btn-ghost" data-giveaway-edit="${g.id}">Edit</button>
-                <button type="button" class="btn-ghost" data-giveaway-delete="${g.id}" style="color:var(--danger)">Delete</button>
-              </div>
-            </div>
-          </article>
-        `).join("")
-      }</div>`;
-    }
-
-    const addBtn = $("addGiveawayBtn");
-    if(addBtn) addBtn.addEventListener("click", ()=>openGiveawayForm());
-
-    mount.querySelectorAll("[data-giveaway-edit]").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        if(!requireOwner()) return;
-        const g = giveaways.find(x=>x.id===btn.dataset.giveawayEdit);
+    view.querySelectorAll("[data-giveaway-edit]").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        if(!requireOwner("edit giveaway")) return;
+        const g=giveaways.find(x=>String(x.id)===String(btn.dataset.giveawayEdit||""));
         if(g) openGiveawayForm(g);
       });
     });
 
-    mount.querySelectorAll("[data-giveaway-delete]").forEach(btn=>{
-      btn.addEventListener("click", async ()=>{
-        if(!requireOwner()) return;
-        const g = giveaways.find(x=>x.id===btn.dataset.giveawayDelete);
+    view.querySelectorAll("[data-giveaway-mark-winner]").forEach(btn=>{
+      btn.addEventListener("click",async()=>{
+        if(!requireOwner("mark giveaway as gave away")) return;
+        const g=giveaways.find(x=>String(x.id)===String(btn.dataset.giveawayMarkWinner||""));
+        if(!g) return;
+
+        const winnerName=prompt(
+          `Winner display name for "${g.title}"?\n\nThis will be public on the Past Winners page.`,
+          g.winner_name||""
+        );
+        if(winnerName===null) return;
+
+        const clean=String(winnerName).trim();
+        if(!clean){
+          showToast("Winner display name is required");
+          return;
+        }
+
+        if(!confirm(`Move "${g.title}" to Past Winners and show "${clean}" as the winner?`)) return;
+
+        const {error}=await markGiveawayAsGaveAway(g,clean);
+        if(error){
+          console.error("Mark giveaway gave away error:",error);
+          showToast("Could not move giveaway to Past Winners");
+          return;
+        }
+
+        await loadGiveaways();
+        renderGiveawayPage();
+        showToast("Giveaway moved to Past Winners");
+      });
+    });
+
+    view.querySelectorAll("[data-giveaway-restore]").forEach(btn=>{
+      btn.addEventListener("click",async()=>{
+        if(!requireOwner("restore giveaway")) return;
+        const g=giveaways.find(x=>String(x.id)===String(btn.dataset.giveawayRestore||""));
+        if(!g) return;
+        if(!confirm(`Move "${g.title}" back to Current Giveaways?`)) return;
+
+        const {error}=await saveGiveaway({
+          status:"closed",
+          winner_name:null,
+          winner_announced_at:null
+        },g.id);
+
+        if(error){
+          console.error("Restore giveaway error:",error);
+          showToast("Could not restore giveaway");
+          return;
+        }
+
+        await loadGiveaways();
+        renderGiveawayPage();
+        showToast("Giveaway moved back to Current Giveaways");
+      });
+    });
+
+    view.querySelectorAll("[data-giveaway-delete]").forEach(btn=>{
+      btn.addEventListener("click",async()=>{
+        if(!requireOwner("delete giveaway")) return;
+        const id=String(btn.dataset.giveawayDelete||"");
+        const g=giveaways.find(x=>String(x.id)===id);
         if(!g) return;
         if(!confirm(`Delete giveaway "${g.title}"?`)) return;
-        const { error } = await deleteGiveaway(g.id);
-        if(error){ console.error(error); showToast("Could not delete giveaway"); return; }
+
+        const {error}=await deleteGiveaway(g.id);
+        if(error){
+          console.error(error);
+          showToast("Could not delete giveaway");
+          return;
+        }
+
         await loadGiveaways();
         renderGiveawayPage();
         showToast("Giveaway deleted");
@@ -15279,6 +15557,8 @@ function wireShimmer(container){
     $("giveawayImageFile").value = "";
     renderGiveawayImagePreview(g ? (g.image_url || "") : "");
     $("giveawayStatus").value = g ? g.status : "active";
+    $("giveawayWinnerName").value = g ? (g.winner_name || "") : "";
+    syncGiveawayWinnerField();
     $("giveawayHowToEnter").value = g ? g.how_to_enter : "";
     $("giveawayDetails").value = g ? g.details : "";
     $("giveawayEndsAt").value = g && g.ends_at ? new Date(g.ends_at).toISOString().slice(0,16) : "";
@@ -15289,6 +15569,16 @@ function wireShimmer(container){
     giveawayOverlay.hidden = true;
     $("giveawayForm").reset();
   }
+
+  function syncGiveawayWinnerField(){
+    const isWinner=$("giveawayStatus")?.value==="gave_away";
+    const field=$("giveawayWinnerField");
+    const input=$("giveawayWinnerName");
+    if(field) field.hidden=!isWinner;
+    if(input) input.required=isWinner;
+  }
+
+  $("giveawayStatus")?.addEventListener("change",syncGiveawayWinnerField);
 
   $("giveawayCancelBtn").addEventListener("click", closeGiveawayForm);
 
@@ -15323,14 +15613,28 @@ function wireShimmer(container){
       giveawayImageUrl = uploaded;
     }
 
+    const status=$("giveawayStatus").value;
+    const winnerName=$("giveawayWinnerName").value.trim().slice(0,120);
+
+    if(status==="gave_away" && !winnerName){
+      showToast("Winner display name is required");
+      $("giveawayWinnerName").focus();
+      return;
+    }
+
+    const existing=id ? giveaways.find(g=>String(g.id)===String(id)) : null;
     const payload = {
       title: $("giveawayTitle").value.trim(),
       card_name: $("giveawayCardName").value.trim(),
       image_url: giveawayImageUrl,
-      status: $("giveawayStatus").value,
+      status,
       ends_at: endsValue ? new Date(endsValue).toISOString() : null,
       how_to_enter: $("giveawayHowToEnter").value.trim(),
-      details: $("giveawayDetails").value.trim()
+      details: $("giveawayDetails").value.trim(),
+      winner_name: status==="gave_away" ? winnerName : null,
+      winner_announced_at: status==="gave_away"
+        ? (existing?.winner_announced_at || new Date().toISOString())
+        : null
     };
 
     const { error } = await saveGiveaway(payload, id);
