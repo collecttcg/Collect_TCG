@@ -14956,19 +14956,41 @@ function wireShimmer(container){
 
     const gradeOptions=[...slabGradeOptions,...rawConditionOptions,...sealedOptions];
 
-    const priority=[
-      "PSA 10","PSA 9","PSA 8","BGS 10","BGS 9.5","CGC 10",
-      "Near Mint","Lightly Played","Sealed"
-    ];
+    // Grade shortcuts are grouped logically instead of mixing slab grades
+    // with raw conditions. Order:
+    //   PSA (highest to lowest) -> BGS -> CGC -> other graders
+    //   -> Raw conditions (best to worst) -> Sealed.
+    const graderPriority=["PSA","BGS","CGC"];
+
+    const slabShortcutValues=slabGradeOptions.slice().sort((a,b)=>{
+      const [companyA,...gradePartsA]=String(a).split(" ");
+      const [companyB,...gradePartsB]=String(b).split(" ");
+
+      const companyRankA=graderPriority.includes(companyA)
+        ? graderPriority.indexOf(companyA)
+        : graderPriority.length;
+      const companyRankB=graderPriority.includes(companyB)
+        ? graderPriority.indexOf(companyB)
+        : graderPriority.length;
+
+      if(companyRankA!==companyRankB) return companyRankA-companyRankB;
+
+      if(companyRankA===graderPriority.length && companyA!==companyB){
+        return companyA.localeCompare(companyB);
+      }
+
+      const numberA=parseFloat(gradePartsA.join(" "));
+      const numberB=parseFloat(gradePartsB.join(" "));
+      if(Number.isFinite(numberA) && Number.isFinite(numberB)) return numberB-numberA;
+      if(Number.isFinite(numberA)) return -1;
+      if(Number.isFinite(numberB)) return 1;
+      return String(a).localeCompare(String(b));
+    });
 
     const shortcutValues=[
-      ...priority.filter(value=>
-        gradeOptions.some(grade=>normalizeFilterValue(grade)===normalizeFilterValue(value))
-      ),
-      ...gradeOptions.filter(grade=>
-        normalizeFilterValue(grade)!=="not applicable" &&
-        !priority.some(value=>normalizeFilterValue(value)===normalizeFilterValue(grade))
-      )
+      ...slabShortcutValues,
+      ...rawConditionOptions,
+      ...sealedOptions
     ].filter(value=>normalizeFilterValue(value)!=="not applicable").slice(0,10);
 
     return {games,languages,eras,series,gradeOptions,shortcutValues};
