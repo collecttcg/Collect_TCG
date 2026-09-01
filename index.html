@@ -9842,8 +9842,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       ? logo.naturalHeight / logo.naturalWidth
       : 1;
     const targetHeight = Math.round(targetWidth * ratio);
-    const x = canvas.width - targetWidth - margin;
-    const y = margin;
+    const offsetLeft = Math.max(14, Math.round(targetWidth * 0.10));
+    const offsetDown = Math.max(16, Math.round(targetHeight * 0.20));
+    const x = Math.max(margin, canvas.width - targetWidth - margin - offsetLeft);
+    const y = Math.min(canvas.height - targetHeight - margin, margin + offsetDown);
     const glowBlur = Math.max(12, Math.round(targetWidth * 0.10));
     const lift = Math.max(3, Math.round(targetWidth * 0.018));
 
