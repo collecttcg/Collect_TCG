@@ -5392,10 +5392,31 @@
     .filter-drawer-shell .filter-row>.price-range-filter{
       grid-column:1/-1;
     }
+    .filter-drawer-shell .overview-select{
+      position:relative;
+      z-index:1;
+    }
+    .filter-drawer-shell .overview-select.menu-open{
+      z-index:40;
+    }
+    /* Every mobile filter dropdown is a viewport-level overlay. It must never
+       participate in the filter grid's layout or change any row height. */
     .filter-drawer-shell .overview-select-menu{
-      position:static;
-      width:100%;max-width:none;margin-top:4px;
-      box-shadow:none;
+      position:fixed!important;
+      left:auto;
+      right:auto;
+      top:auto;
+      bottom:auto;
+      width:auto;
+      min-width:0;
+      max-width:none;
+      max-height:min(42dvh,320px);
+      margin:0;
+      overflow-y:auto;
+      overscroll-behavior:contain;
+      -webkit-overflow-scrolling:touch;
+      z-index:980!important;
+      box-shadow:0 14px 36px rgba(0,0,0,.46);
     }
     .filter-drawer-shell .grade-shortcuts{
       margin-top:4px;
@@ -13009,6 +13030,61 @@ function wireShimmer(container){
       shortcutValues
     }=inventoryFilterOptions(scopedCards);
 
+    function isMobileFilterOverlayMode(){
+      return window.matchMedia && window.matchMedia("(max-width:800px)").matches;
+    }
+
+    function clearOverviewMenuOverlayPosition(menu){
+      if(!menu) return;
+      menu.style.removeProperty("left");
+      menu.style.removeProperty("top");
+      menu.style.removeProperty("width");
+      menu.style.removeProperty("max-height");
+    }
+
+    function positionOverviewMenuOverlay(btn, menu){
+      if(!btn || !menu || !isMobileFilterOverlayMode()){
+        clearOverviewMenuOverlayPosition(menu);
+        return;
+      }
+
+      const rect=btn.getBoundingClientRect();
+      const viewportHeight=window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight;
+      const gap=6;
+      const edge=10;
+      const maxWanted=Math.min(viewportHeight*0.42,320);
+      const below=Math.max(0,viewportHeight-rect.bottom-gap-edge);
+      const above=Math.max(0,rect.top-gap-edge);
+      const openAbove=below<140 && above>below;
+      const available=Math.max(110,Math.min(maxWanted,openAbove?above:below));
+      const width=Math.max(0,Math.min(rect.width,(window.innerWidth||rect.right)-edge*2));
+      const left=Math.min(
+        Math.max(edge,rect.left),
+        Math.max(edge,(window.innerWidth||rect.right)-width-edge)
+      );
+
+      menu.style.left=`${Math.round(left)}px`;
+      menu.style.width=`${Math.round(width)}px`;
+      menu.style.maxHeight=`${Math.round(available)}px`;
+
+      if(openAbove){
+        // Measure after width/max-height are applied so the top coordinate is exact.
+        const menuHeight=Math.min(menu.scrollHeight,available);
+        menu.style.top=`${Math.max(edge,Math.round(rect.top-gap-menuHeight))}px`;
+      }else{
+        menu.style.top=`${Math.round(rect.bottom+gap)}px`;
+      }
+    }
+
+    function closeAllOverviewFilterMenus(except=null){
+      document.querySelectorAll(".filter-drawer-shell .overview-select-menu").forEach(m=>{
+        if(m===except) return;
+        m.hidden=true;
+        clearOverviewMenuOverlayPosition(m);
+        m.closest(".overview-select")?.classList.remove("menu-open");
+      });
+    }
+
     function setupOverviewSelect(id, options){
       const hidden = $(id);
       const btn = $(id + "Btn");
@@ -13021,10 +13097,17 @@ function wireShimmer(container){
 
       btn.addEventListener("click", e=>{
         e.stopPropagation();
-        document.querySelectorAll(".overview-select-menu").forEach(m=>{
-          if(m !== menu) m.hidden = true;
-        });
-        menu.hidden = !menu.hidden;
+        const opening=menu.hidden;
+        closeAllOverviewFilterMenus(opening?menu:null);
+        menu.hidden=!opening;
+        wrap.classList.toggle("menu-open",opening);
+        if(opening){
+          // Position after unhiding so every filter menu floats above the sheet
+          // instead of resizing/reflowing the filter grid.
+          positionOverviewMenuOverlay(btn,menu);
+        }else{
+          clearOverviewMenuOverlayPosition(menu);
+        }
       });
 
       menu.addEventListener("click", e=>{
@@ -13044,13 +13127,28 @@ function wireShimmer(container){
         if(pillType) pillFilterState[pillType].clear();
 
         menu.hidden = true;
+        clearOverviewMenuOverlayPosition(menu);
+        wrap.classList.remove("menu-open");
         hidden.dispatchEvent(new Event("change", {bubbles:true}));
       });
 
       document.addEventListener("click",e=>{
-        if(!wrap.contains(e.target)) menu.hidden=true;
+        if(!wrap.contains(e.target) && !menu.contains(e.target)){
+          menu.hidden=true;
+          clearOverviewMenuOverlayPosition(menu);
+          wrap.classList.remove("menu-open");
+        }
       },{signal:inventorySignal});
     }
+
+    const mobileFilterDrawer=$("filterDrawerShell");
+    if(mobileFilterDrawer){
+      mobileFilterDrawer.addEventListener("scroll",()=>{
+        if(isMobileFilterOverlayMode()) closeAllOverviewFilterMenus();
+      },{passive:true,signal:inventorySignal});
+    }
+    window.addEventListener("resize",()=>closeAllOverviewFilterMenus(),{signal:inventorySignal});
+    window.visualViewport?.addEventListener("resize",()=>closeAllOverviewFilterMenus(),{signal:inventorySignal});
 
     setupOverviewSelect("filterGame", [
       {value:"",label:"All Games"},
