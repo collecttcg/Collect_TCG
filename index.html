@@ -7780,6 +7780,42 @@
     }
   }
 
+
+
+/* ==========================================================
+   Desktop top-navigation full-width content fix
+   Keep this LAST so the old sidebar layout cannot reserve 250px.
+   ========================================================== */
+@media (min-width:801px){
+  .shell{
+    display:flex !important;
+    flex-direction:column !important;
+    width:100% !important;
+    min-height:100vh !important;
+  }
+
+  .sidebar{
+    position:sticky !important;
+    inset:auto !important;
+    top:0 !important;
+    width:100% !important;
+    height:auto !important;
+    max-height:none !important;
+    overflow:visible !important;
+    flex:0 0 auto !important;
+  }
+
+  .main{
+    margin-left:0 !important;
+    width:100% !important;
+    max-width:none !important;
+    flex:1 1 auto !important;
+    min-width:0 !important;
+    padding-left:clamp(18px,2.25vw,38px) !important;
+    padding-right:clamp(18px,2.25vw,38px) !important;
+  }
+}
+
 </style>
 </head>
 <body>
