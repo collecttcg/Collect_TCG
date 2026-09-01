@@ -9276,6 +9276,7 @@
     pointer-events:none!important;
   }
 
+.clean-game-pill{color:var(--accent-gold)!important;border-color:rgba(227,179,65,.22)!important;background:rgba(227,179,65,.045)!important;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.clean-game-pill.filter-pill-btn{cursor:pointer}@media(max-width:700px){.clean-game-pill{max-width:min(100%,190px)}}
 </style>
 </head>
 <body>
@@ -11452,6 +11453,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
 
     const pillKeys = {
+      game:"pga",
       grade:"pg",
       language:"pl",
       era:"pe",
@@ -14058,6 +14060,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   const pillFilterState = {
+    game: new Set(),
     grade: new Set(),
     language: new Set(),
     era: new Set(),
@@ -14161,6 +14164,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(priceMin && (!hasListedPrice(selectedCurrencyValue) || Number(selectedCurrencyValue)<Number(priceMin))) return false;
       if(priceMax && (!hasListedPrice(selectedCurrencyValue) || Number(selectedCurrencyValue)>Number(priceMax))) return false;
 
+      if(pillFilterState.game.size && !selectedSetMatches(pillFilterState.game, c.game || "")) return false;
       if(pillFilterState.grade.size){
         const cardGrades = new Set(
           (Array.isArray(c.grading) ? c.grading : [])
@@ -14476,6 +14480,7 @@ function relatedCardHTML(c){
             ${(c.card_code || c.year) ? `<div class="clean-card-reference">${c.card_code ? `<span>${escapeHtml(c.card_code)}</span>` : ""}${c.card_code && c.year ? `<span class="clean-card-reference-dot">·</span>` : ""}${c.year ? `<span>${escapeHtml(c.year)}</span>` : ""}</div>` : ""}
             ${normalizeFilterValue(c.availability) === "sold" && c.sold_at ? `<div class="sold-archive-date">Sold ${escapeHtml(formatSoldDate(c.sold_at))}</div>` : ""}
             <div class="clean-card-subrow clean-all-pills">
+              ${c.game ? `<button type="button" class="clean-meta-pill clean-game-pill filter-pill-btn ${selectedSetMatches(pillFilterState.game, c.game) && pillFilterState.game.size ? "pill-selected" : ""}" data-pill-filter="game" data-pill-value="${escapeHtml(String(c.game))}" title="Filter by ${escapeHtml(String(c.game))}">${escapeHtml(String(c.game))}</button>` : ""}
               ${(grades.length || format === "Raw" || format === "Sealed")
                 ? `<button type="button" class="clean-grade-badge filter-pill-btn ${pillFilterState.grade.has(gradeText) ? "pill-selected" : ""}" data-pill-filter="grade" data-pill-value="${escapeHtml(gradeText)}" title="Filter by ${escapeHtml(gradeText)}">${escapeHtml(gradeText)}</button>`
                 : `<span class="clean-grade-badge">${escapeHtml(gradeText)}</span>`}
@@ -15320,6 +15325,7 @@ function wireShimmer(container){
       Object.values(pillFilterState).forEach(set=>set.clear());
 
       const pillConfig = [
+        ["game","pga",valid.game],
         ["grade","pg",valid.grade],
         ["language","pl",valid.language],
         ["era","pe",valid.era],
@@ -15960,6 +15966,7 @@ function wireShimmer(container){
 
       // Keep dropdown labels informative while multi-select card pills are active.
       const maps=[
+        ["game","filterGame","Games"],
         ["grade","filterGrade","Grades / Conditions"],
         ["language","filterLanguage","Languages"],
         ["era","filterEra","Eras"],
