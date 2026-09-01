@@ -8,6 +8,7 @@
 <!-- UX PHASE 5: premium storefront and buyer confidence -->
 <!-- UX PHASE 6: technical cleanup and performance -->
 <!-- OWNER TOOL: permanent listing deletion with double confirmation -->
+<!-- MOBILE FIX: compact metadata pills + 44px invisible hit targets across iOS/Android -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10094,6 +10095,168 @@ input:focus-visible{
 .details-delete-listing-btn:focus-visible{
   background:rgba(228,71,79,.13) !important;
   color:#ffd0d2 !important;
+}
+
+
+/* =========================================================
+   MOBILE RESPONSIVE PILL FIX
+   Keep card metadata visually compact while preserving a
+   finger-friendly hit area across iOS and Android.
+   ========================================================= */
+
+/* Phase 4 made every .filter-pill-btn visually 44px tall.
+   Card metadata pills also use that class, which caused the oversized pills.
+   Only real UI controls should have a visible 44px box. */
+@media (max-width:800px){
+  #invGrid .clean-all-pills .filter-pill-btn,
+  #homeRecentGrid .clean-all-pills .filter-pill-btn,
+  .home-storefront-grid .clean-all-pills .filter-pill-btn,
+  .recently-viewed-grid .clean-all-pills .filter-pill-btn{
+    min-width:0 !important;
+    min-height:0 !important;
+    height:auto !important;
+    width:auto !important;
+  }
+
+  #invGrid .clean-all-pills,
+  #homeRecentGrid .clean-all-pills,
+  .home-storefront-grid .clean-all-pills,
+  .recently-viewed-grid .clean-all-pills{
+    display:flex !important;
+    flex-wrap:wrap !important;
+    align-items:center !important;
+    align-content:flex-start !important;
+    gap:5px !important;
+    max-height:58px !important;
+    overflow:hidden !important;
+  }
+
+  #invGrid .clean-all-pills .clean-grade-badge,
+  #invGrid .clean-all-pills .clean-meta-pill,
+  #homeRecentGrid .clean-all-pills .clean-grade-badge,
+  #homeRecentGrid .clean-all-pills .clean-meta-pill,
+  .home-storefront-grid .clean-all-pills .clean-grade-badge,
+  .home-storefront-grid .clean-all-pills .clean-meta-pill,
+  .recently-viewed-grid .clean-all-pills .clean-grade-badge,
+  .recently-viewed-grid .clean-all-pills .clean-meta-pill{
+    box-sizing:border-box !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    flex:0 1 auto !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    width:auto !important;
+    height:auto !important;
+    max-width:100% !important;
+    padding:5px 9px !important;
+    border-radius:999px !important;
+    font-size:10px !important;
+    line-height:1.05 !important;
+    letter-spacing:.15px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  /* Long set/game names should not dominate the card. */
+  #invGrid .clean-game-pill,
+  #invGrid .clean-series-pill,
+  #homeRecentGrid .clean-game-pill,
+  #homeRecentGrid .clean-series-pill,
+  .home-storefront-grid .clean-game-pill,
+  .home-storefront-grid .clean-series-pill{
+    max-width:min(100%, 190px) !important;
+  }
+
+  /* Clickable metadata stays easy to tap without visually becoming 44px tall.
+     The invisible hit box expands around the compact pill. */
+  #invGrid .clean-all-pills .filter-pill-btn,
+  #homeRecentGrid .clean-all-pills .filter-pill-btn,
+  .home-storefront-grid .clean-all-pills .filter-pill-btn,
+  .recently-viewed-grid .clean-all-pills .filter-pill-btn{
+    position:relative !important;
+    isolation:isolate;
+  }
+
+  #invGrid .clean-all-pills .filter-pill-btn::after,
+  #homeRecentGrid .clean-all-pills .filter-pill-btn::after,
+  .home-storefront-grid .clean-all-pills .filter-pill-btn::after,
+  .recently-viewed-grid .clean-all-pills .filter-pill-btn::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:max(100%, 44px);
+    height:44px;
+    transform:translate(-50%,-50%);
+    z-index:-1;
+  }
+}
+
+/* Standard phones: iPhone 14/15/16, Pixel, Galaxy S-series, etc. */
+@media (min-width:391px) and (max-width:800px){
+  #invGrid .clean-all-pills .clean-grade-badge,
+  #invGrid .clean-all-pills .clean-meta-pill,
+  #homeRecentGrid .clean-all-pills .clean-grade-badge,
+  #homeRecentGrid .clean-all-pills .clean-meta-pill{
+    padding:5px 8px !important;
+    font-size:9.5px !important;
+  }
+}
+
+/* Compact phones: iPhone SE/mini widths and narrow Android devices. */
+@media (max-width:390px){
+  #invGrid .clean-all-pills,
+  #homeRecentGrid .clean-all-pills,
+  .home-storefront-grid .clean-all-pills,
+  .recently-viewed-grid .clean-all-pills{
+    gap:4px !important;
+    max-height:52px !important;
+  }
+
+  #invGrid .clean-all-pills .clean-grade-badge,
+  #invGrid .clean-all-pills .clean-meta-pill,
+  #homeRecentGrid .clean-all-pills .clean-grade-badge,
+  #homeRecentGrid .clean-all-pills .clean-meta-pill,
+  .home-storefront-grid .clean-all-pills .clean-grade-badge,
+  .home-storefront-grid .clean-all-pills .clean-meta-pill,
+  .recently-viewed-grid .clean-all-pills .clean-grade-badge,
+  .recently-viewed-grid .clean-all-pills .clean-meta-pill{
+    padding:4px 6px !important;
+    font-size:8.5px !important;
+    letter-spacing:0 !important;
+  }
+
+  #invGrid .clean-game-pill,
+  #invGrid .clean-series-pill,
+  #homeRecentGrid .clean-game-pill,
+  #homeRecentGrid .clean-series-pill{
+    max-width:145px !important;
+  }
+}
+
+/* Wider phones / foldables in portrait: don't let pills become large just
+   because more width is available. */
+@media (min-width:540px) and (max-width:800px){
+  #invGrid .clean-all-pills .clean-grade-badge,
+  #invGrid .clean-all-pills .clean-meta-pill,
+  #homeRecentGrid .clean-all-pills .clean-grade-badge,
+  #homeRecentGrid .clean-all-pills .clean-meta-pill{
+    padding:5px 9px !important;
+    font-size:10px !important;
+  }
+}
+
+/* Actual filter controls remain properly finger-sized. */
+@media (max-width:800px){
+  .pill-filter-summary .filter-pill-btn,
+  .grade-shortcuts .filter-pill-btn,
+  .filter-drawer-shell .overview-select-btn,
+  .mobile-filter-open-btn,
+  .sticky-mobile-results-action{
+    min-height:44px !important;
+  }
 }
 
 </style>
