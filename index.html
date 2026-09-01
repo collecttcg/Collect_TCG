@@ -11,6 +11,7 @@
 <!-- MOBILE FIX: compact metadata pills + 44px invisible hit targets across iOS/Android -->
 <!-- DESKTOP NAV FIX: Reserved stays primary; duplicate hidden from More -->
 <!-- MOBILE OVERVIEW FIX: all pill rows visible; price remains below complete pill group -->
+<!-- MOBILE CARD HEIGHT FIX: content controls height; image crops to match -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10350,6 +10351,117 @@ input:focus-visible{
     gap:4px !important;
     max-height:none !important;
     overflow:visible !important;
+  }
+}
+
+
+/* =========================================================
+   MOBILE OVERVIEW CARD HEIGHT FIX
+   The information column determines the listing height.
+   The image fills/crops to that height instead of making the
+   whole card excessively tall.
+   ========================================================= */
+@media (max-width:800px){
+
+  #invGrid .card,
+  #homeRecentGrid .card{
+    display:grid !important;
+    grid-template-columns:minmax(112px,36%) minmax(0,1fr) !important;
+    grid-template-rows:auto !important;
+    align-items:stretch !important;
+    min-height:220px !important;
+    height:auto !important;
+    max-height:none !important;
+    overflow:hidden !important;
+  }
+
+  /* Let the right/content column determine the row height. */
+  #invGrid .clean-card-body,
+  #homeRecentGrid .clean-card-body{
+    grid-column:2 !important;
+    grid-row:1 !important;
+    align-self:start !important;
+    min-height:220px !important;
+    height:auto !important;
+    max-height:none !important;
+    overflow:visible !important;
+    justify-content:flex-start !important;
+  }
+
+  /* The image wrapper stretches to the content-defined row.
+     Its image is absolutely positioned so image dimensions do
+     not contribute to grid-row height. */
+  #invGrid .card > .thumb-wrap,
+  #homeRecentGrid .card > .thumb-wrap{
+    position:relative !important;
+    grid-column:1 !important;
+    grid-row:1 !important;
+    align-self:stretch !important;
+    width:100% !important;
+    height:auto !important;
+    min-height:220px !important;
+    max-height:none !important;
+    aspect-ratio:auto !important;
+    overflow:hidden !important;
+  }
+
+  #invGrid .card > .thumb-wrap .thumb,
+  #homeRecentGrid .card > .thumb-wrap .thumb{
+    position:absolute !important;
+    inset:0 !important;
+    width:100% !important;
+    height:100% !important;
+    min-height:0 !important;
+    max-height:none !important;
+    aspect-ratio:auto !important;
+    object-fit:cover !important;
+    object-position:center !important;
+  }
+
+  /* Placeholder follows the same compact row height. */
+  #invGrid .card > .thumb-placeholder,
+  #homeRecentGrid .card > .thumb-placeholder{
+    grid-column:1 !important;
+    grid-row:1 !important;
+    align-self:stretch !important;
+    width:100% !important;
+    height:auto !important;
+    min-height:220px !important;
+    max-height:none !important;
+    aspect-ratio:auto !important;
+  }
+
+  /* Keep every pill visible and keep price immediately after them. */
+  #invGrid .clean-all-pills,
+  #homeRecentGrid .clean-all-pills{
+    max-height:none !important;
+    height:auto !important;
+    overflow:visible !important;
+  }
+
+  #invGrid .clean-price-block,
+  #homeRecentGrid .clean-price-block{
+    margin-top:7px !important;
+    padding-top:9px !important;
+  }
+}
+
+/* Smaller phones: use a slightly narrower image column so text has room,
+   but retain the same content-driven height model. */
+@media (max-width:390px){
+  #invGrid .card,
+  #homeRecentGrid .card{
+    grid-template-columns:minmax(104px,35%) minmax(0,1fr) !important;
+    min-height:210px !important;
+  }
+
+  #invGrid .clean-card-body,
+  #homeRecentGrid .clean-card-body,
+  #invGrid .card > .thumb-wrap,
+  #homeRecentGrid .card > .thumb-wrap,
+  #invGrid .card > .thumb-placeholder,
+  #homeRecentGrid .card > .thumb-placeholder{
+    min-height:210px !important;
   }
 }
 
