@@ -9277,6 +9277,103 @@
   }
 
 .clean-game-pill{color:var(--accent-gold)!important;border-color:rgba(227,179,65,.22)!important;background:rgba(227,179,65,.045)!important;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.clean-game-pill.filter-pill-btn{cursor:pointer}@media(max-width:700px){.clean-game-pill{max-width:min(100%,190px)}}
+
+  /* Bulk Status editor */
+  .bulk-status-summary{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+    margin-bottom:12px;
+  }
+  .bulk-status-summary>div{
+    padding:10px 11px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--surface);
+  }
+  .bulk-status-summary strong{
+    display:block;
+    color:var(--accent-teal);
+    font-family:'JetBrains Mono',monospace;
+    font-size:16px;
+  }
+  .bulk-status-summary span{
+    display:block;
+    margin-top:2px;
+    color:var(--text-muted);
+    font-size:8px;
+  }
+  .bulk-status-layout{
+    display:grid;
+    grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);
+    gap:12px;
+    align-items:start;
+  }
+  .bulk-status-filters{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+    margin-bottom:9px;
+  }
+  .bulk-status-picker{
+    display:grid;
+    gap:6px;
+    margin-top:10px;
+    max-height:620px;
+    overflow:auto;
+    overscroll-behavior:contain;
+  }
+  .bulk-status-empty{
+    margin-top:10px;
+    padding:20px;
+    border:1px dashed var(--border);
+    border-radius:10px;
+    color:var(--text-muted);
+    text-align:center;
+    font-size:9px;
+  }
+  .bulk-status-editor-panel{
+    position:sticky;
+    top:84px;
+  }
+
+  @media(max-width:1050px){
+    .bulk-status-layout{grid-template-columns:1fr;}
+    .bulk-status-editor-panel{position:static;}
+    .bulk-status-filters{grid-template-columns:repeat(2,minmax(0,1fr));}
+  }
+
+  @media(max-width:620px){
+    .bulk-status-summary{grid-template-columns:repeat(3,minmax(0,1fr));}
+    .bulk-status-filters{grid-template-columns:1fr;}
+    .bulk-status-picker{max-height:none;}
+  }
+
+  /* Fail closed: Bulk Status is owner-only. */
+  body:not(.owner-mode) .bulk-status-layout,
+  body:not(.owner-mode) .bulk-status-summary{
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+
+
+  /* FINAL owner visibility guard */
+  body:not(.owner-mode) .owner-only,
+  body:not(.owner-mode) #mobileMoreMenu > a.owner-only,
+  body:not(.owner-mode) nav.mainnav a.owner-only,
+  body:not(.owner-mode) .desktop-more-owner,
+  body:not(.owner-mode) .card-actions.owner-only,
+  body:not(.owner-mode) .giveaway-owner-actions,
+  body:not(.owner-mode) .bulk-meta-layout,
+  body:not(.owner-mode) .bulk-meta-summary,
+  body:not(.owner-mode) .bulk-status-layout,
+  body:not(.owner-mode) .bulk-status-summary{
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+
 </style>
 </head>
 <body>
@@ -20307,6 +20404,372 @@ function wireShimmer(container){
 
     $("healthRefreshBtn")?.addEventListener("click",refresh);
     refresh();
+  }
+
+  function renderBulkStatusPage(){
+    if(!requireOwner("open bulk status editor")) return;
+
+    const eligibleCards=cards.filter(card=>
+      isLiveLifecycle(card) &&
+      cardLifecycle(card)!=="archived"
+    );
+    const byId=new Map(eligibleCards.map(card=>[String(card.id),card]));
+    const selectedIds=new Set();
+
+    const games=[...new Set(
+      eligibleCards.map(c=>String(c.game||"").trim()).filter(Boolean)
+    )].sort((a,b)=>a.localeCompare(b));
+
+    const languages=[...new Set(
+      eligibleCards.map(c=>String(c.language||"").trim()).filter(Boolean)
+    )].sort((a,b)=>a.localeCompare(b));
+
+    const series=[...new Set(
+      eligibleCards.map(c=>String(c.series||"").trim()).filter(Boolean)
+    )].sort((a,b)=>a.localeCompare(b));
+
+    view.innerHTML=`
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Inventory Tools · Bulk Editing</div>
+          <h2>Bulk Status Editor</h2>
+          <p>Select listings, choose a new availability status, preview the change, then apply it securely.</p>
+        </div>
+      </div>
+
+      <div class="bulk-status-summary">
+        <div><strong id="bulkStatusSelectedCount">0</strong><span>Selected</span></div>
+        <div><strong>${eligibleCards.length}</strong><span>Eligible</span></div>
+        <div><strong id="bulkStatusTargetCount">0</strong><span>Will change</span></div>
+      </div>
+
+      <div class="bulk-status-layout">
+        <section class="panel bulk-status-picker-panel">
+          <div class="fb-card-list-control-heading">
+            <h3>1 · Select Listings</h3>
+            <span id="bulkStatusPickerCount">${eligibleCards.length} shown</span>
+          </div>
+
+          <div class="bulk-status-filters">
+            <div class="field">
+              <label for="bulkStatusSearch">Search</label>
+              <input id="bulkStatusSearch" type="search" maxlength="100" placeholder="Name, code, game or series…">
+            </div>
+
+            <div class="field">
+              <label for="bulkStatusGameFilter">Game</label>
+              <select id="bulkStatusGameFilter">
+                <option value="">All games</option>
+                ${games.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="bulkStatusCurrentFilter">Current status</label>
+              <select id="bulkStatusCurrentFilter">
+                <option value="">All statuses</option>
+                ${AVAILABILITY_OPTIONS.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="bulkStatusFormatFilter">Format</label>
+              <select id="bulkStatusFormatFilter">
+                <option value="">All formats</option>
+                <option value="graded">Graded</option>
+                <option value="raw">Raw</option>
+                <option value="sealed">Sealed</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="bulkStatusLanguageFilter">Language</label>
+              <select id="bulkStatusLanguageFilter">
+                <option value="">All languages</option>
+                ${languages.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="bulkStatusSeriesFilter">Series</label>
+              <select id="bulkStatusSeriesFilter">
+                <option value="">All series</option>
+                ${series.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+              </select>
+            </div>
+          </div>
+
+          <div class="fb-card-list-bulk-actions">
+            <button type="button" class="btn-ghost" id="bulkStatusSelectAllBtn">Select All</button>
+            <button type="button" class="btn-ghost" id="bulkStatusClearAllBtn">Clear All</button>
+            <button type="button" class="btn-ghost" id="bulkStatusSelectFilteredBtn">Select Filtered</button>
+            <button type="button" class="btn-ghost" id="bulkStatusClearFilteredBtn">Clear Filtered</button>
+          </div>
+
+          <div class="bulk-status-picker" id="bulkStatusPicker"></div>
+          <div class="bulk-status-empty" id="bulkStatusPickerEmpty" hidden>No listings match the current filters.</div>
+        </section>
+
+        <section class="panel bulk-status-editor-panel">
+          <div class="eyebrow">2 · Choose Status</div>
+          <h3>New Availability</h3>
+          <p class="bulk-meta-help">Only availability is changed. Images, prices, grading, private notes and other metadata stay untouched.</p>
+
+          <div class="field">
+            <label for="bulkStatusTarget">Set selected listings to</label>
+            <select id="bulkStatusTarget">
+              <option value="">Choose status…</option>
+              ${AVAILABILITY_OPTIONS.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+            </select>
+          </div>
+
+          <div class="bulk-meta-warning">
+            Marking listings <strong>Sold</strong> may stamp the sold date. Moving a sold listing back to another status clears its sold date when supported.
+          </div>
+
+          <div class="bulk-meta-preview" id="bulkStatusPreview">
+            Select listings and choose a status to see a preview.
+          </div>
+
+          <div class="bulk-meta-actions">
+            <button type="button" class="btn-primary" id="bulkStatusApplyBtn" disabled>Apply Status</button>
+          </div>
+          <div class="hint" id="bulkStatusProgress"></div>
+        </section>
+      </div>
+    `;
+
+    const search=$("bulkStatusSearch");
+    const gameFilter=$("bulkStatusGameFilter");
+    const currentFilter=$("bulkStatusCurrentFilter");
+    const formatFilter=$("bulkStatusFormatFilter");
+    const languageFilter=$("bulkStatusLanguageFilter");
+    const seriesFilter=$("bulkStatusSeriesFilter");
+    const target=$("bulkStatusTarget");
+    const picker=$("bulkStatusPicker");
+    const empty=$("bulkStatusPickerEmpty");
+    const pickerCount=$("bulkStatusPickerCount");
+    const selectedCount=$("bulkStatusSelectedCount");
+    const targetCount=$("bulkStatusTargetCount");
+    const preview=$("bulkStatusPreview");
+    const applyBtn=$("bulkStatusApplyBtn");
+    const progress=$("bulkStatusProgress");
+
+    function visibleCards(){
+      const q=normalizeFilterValue(search.value);
+      const game=normalizeFilterValue(gameFilter.value);
+      const status=normalizeFilterValue(currentFilter.value);
+      const format=normalizeFilterValue(formatFilter.value);
+      const language=normalizeFilterValue(languageFilter.value);
+      const selectedSeries=normalizeFilterValue(seriesFilter.value);
+
+      return eligibleCards.filter(card=>{
+        if(game && normalizeFilterValue(card.game)!==game) return false;
+        if(status && normalizeFilterValue(card.availability||"Available")!==status) return false;
+        if(format && normalizeFilterValue(effectiveFormat(card))!==format) return false;
+        if(language && normalizeFilterValue(card.language)!==language) return false;
+        if(selectedSeries && normalizeFilterValue(card.series)!==selectedSeries) return false;
+
+        if(q){
+          const hay=[
+            card.name,card.card_code,card.game,card.series,
+            card.year,card.language,card.availability
+          ].map(v=>normalizeFilterValue(v)).join(" ");
+          if(!hay.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    function selectedCards(){
+      return [...selectedIds].map(id=>byId.get(id)).filter(Boolean);
+    }
+
+    function cardsThatWillChange(){
+      const status=canonicalAvailability(target.value||"");
+      if(!AVAILABILITY_OPTIONS.includes(status)) return [];
+      return selectedCards().filter(card=>
+        normalizeFilterValue(card.availability||"Available")!==normalizeFilterValue(status)
+      );
+    }
+
+    function updateSummary(){
+      const selected=selectedCards();
+      const newStatus=canonicalAvailability(target.value||"");
+      const validTarget=AVAILABILITY_OPTIONS.includes(newStatus);
+      const changing=validTarget ? cardsThatWillChange() : [];
+
+      selectedCount.textContent=String(selected.length);
+      targetCount.textContent=String(changing.length);
+      applyBtn.disabled=selected.length===0 || !validTarget || changing.length===0;
+
+      if(!selected.length){
+        preview.textContent="Select at least one listing.";
+        return;
+      }
+      if(!validTarget){
+        preview.textContent=`${selected.length} listing${selected.length===1?"":"s"} selected. Choose a new status.`;
+        return;
+      }
+      if(!changing.length){
+        preview.innerHTML=`<strong>No changes needed.</strong><span>Every selected listing is already ${escapeHtml(newStatus)}.</span>`;
+        return;
+      }
+
+      const unchanged=selected.length-changing.length;
+      preview.innerHTML=`
+        <strong>${changing.length} listing${changing.length===1?"":"s"} will be set to ${escapeHtml(newStatus)}.</strong>
+        <span>${unchanged ? `${unchanged} already ${escapeHtml(newStatus)} and will be skipped.` : "Every selected listing will change."}</span>
+      `;
+    }
+
+    function renderPicker(){
+      const visible=visibleCards();
+      pickerCount.textContent=`${visible.length} shown`;
+      empty.hidden=visible.length>0;
+
+      picker.innerHTML=visible.map(card=>{
+        const id=String(card.id);
+        const image=getImages(card)[0]||"";
+        const checked=selectedIds.has(id);
+        return `
+          <label class="bulk-meta-card ${checked?"selected":""}">
+            <input type="checkbox" data-bulk-status-id="${escapeHtml(id)}" ${checked?"checked":""}>
+            <span class="bulk-meta-thumb">${image?`<img src="${escapeHtml(image)}" alt="">`:"—"}</span>
+            <span class="bulk-meta-copy">
+              <strong>${escapeHtml(card.name||"Untitled card")}</strong>
+              <small>${escapeHtml([card.card_code,card.year,card.game,card.series].filter(Boolean).join(" · "))}</small>
+            </span>
+            <span class="bulk-meta-status-badge">${escapeHtml(canonicalAvailability(card.availability||"Available"))}</span>
+          </label>
+        `;
+      }).join("");
+
+      picker.querySelectorAll("[data-bulk-status-id]").forEach(box=>{
+        box.addEventListener("change",()=>{
+          const id=String(box.dataset.bulkStatusId||"");
+          if(box.checked) selectedIds.add(id);
+          else selectedIds.delete(id);
+          box.closest(".bulk-meta-card")?.classList.toggle("selected",box.checked);
+          updateSummary();
+        });
+      });
+
+      updateSummary();
+    }
+
+    function setVisibleSelection(select){
+      visibleCards().forEach(card=>{
+        const id=String(card.id);
+        if(select) selectedIds.add(id);
+        else selectedIds.delete(id);
+      });
+      renderPicker();
+    }
+
+    [
+      search,gameFilter,currentFilter,formatFilter,languageFilter,seriesFilter
+    ].forEach(el=>{
+      el.addEventListener("input",renderPicker);
+      el.addEventListener("change",renderPicker);
+    });
+
+    target.addEventListener("change",updateSummary);
+
+    $("bulkStatusSelectAllBtn").addEventListener("click",()=>{
+      eligibleCards.forEach(card=>selectedIds.add(String(card.id)));
+      renderPicker();
+    });
+
+    $("bulkStatusClearAllBtn").addEventListener("click",()=>{
+      selectedIds.clear();
+      renderPicker();
+    });
+
+    $("bulkStatusSelectFilteredBtn").addEventListener("click",()=>setVisibleSelection(true));
+    $("bulkStatusClearFilteredBtn").addEventListener("click",()=>setVisibleSelection(false));
+
+    applyBtn.addEventListener("click",async()=>{
+      if(!requireOwner("apply bulk status changes")) return;
+
+      const newStatus=canonicalAvailability(target.value||"");
+      if(!AVAILABILITY_OPTIONS.includes(newStatus)){
+        showToast("Choose a valid status");
+        return;
+      }
+
+      const selected=cardsThatWillChange();
+      if(!selected.length){
+        showToast("No selected listings need this status change");
+        return;
+      }
+
+      const soldWarning=newStatus==="Sold"
+        ? "\n\nSelected listings will be marked Sold."
+        : "";
+      if(!confirm(
+        `Set ${selected.length} listing${selected.length===1?"":"s"} to ${newStatus}?${soldWarning}`
+      )) return;
+
+      const originalText=applyBtn.textContent;
+      applyBtn.disabled=true;
+      let savedCount=0;
+      let failedCount=0;
+
+      try{
+        for(let i=0;i<selected.length;i++){
+          const card=selected[i];
+          applyBtn.textContent=`Saving ${i+1}/${selected.length}…`;
+          progress.textContent=`Updating ${card.name||card.card_code||"listing"}…`;
+
+          // Reuse the field-only secure updater from Bulk Metadata.
+          // This changes availability only and never resends images/private
+          // grading/prices or other unrelated card fields.
+          const saved=await updateCardMetadataFields(card,{availability:newStatus});
+
+          if(saved){
+            const index=cards.findIndex(c=>String(c.id)===String(card.id));
+            if(index>-1) cards[index]=saved;
+            byId.set(String(card.id),saved);
+            savedCount++;
+          }else{
+            failedCount++;
+          }
+        }
+
+        invalidateOwnerReservedAgeCache();
+
+        progress.textContent=failedCount
+          ? `${savedCount} saved · ${failedCount} failed.`
+          : `${savedCount} listing${savedCount===1?"":"s"} updated successfully.`;
+
+        showToast(
+          failedCount
+            ? `Bulk status: ${savedCount} saved · ${failedCount} failed`
+            : `Updated ${savedCount} listing${savedCount===1?"":"s"}`
+        );
+
+        // Keep failed items selected so the owner can retry them.
+        const failedIds=new Set();
+        if(failedCount){
+          selected.forEach(card=>{
+            const latest=byId.get(String(card.id));
+            if(normalizeFilterValue(latest?.availability||"")!==normalizeFilterValue(newStatus)){
+              failedIds.add(String(card.id));
+            }
+          });
+        }
+        selectedIds.clear();
+        failedIds.forEach(id=>selectedIds.add(id));
+
+        renderPicker();
+      }finally{
+        applyBtn.textContent=originalText;
+        updateSummary();
+      }
+    });
+
+    renderPicker();
   }
 
   function renderInventoryToolsPage(){
