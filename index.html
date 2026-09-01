@@ -3,6 +3,7 @@
 <head>
 <!-- UX PHASE 2: consolidated overrides and storefront polish -->
 <!-- UX PHASE 3: mobile browsing clarity and conversion polish -->
+<!-- MOBILE FIX: normal taps use click; swipes alone use touchend; recursive CTA observer removed -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="collect-tcg-app-version" content="3">
@@ -12145,7 +12146,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(reusePreservedListingOnReturn && !detailsOverlay.hidden){
       closeDetailsModal(false);
     }
-    const routedCardCandidate = isCardRoute ? cards.find(c=>c.id === decodeURIComponent(route.slice(5))) : null;
+    const routedCardCandidate = isCardRoute
+      ? cards.find(c=>String(c.id) === String(decodeURIComponent(route.slice(5))))
+      : null;
     const routedCard = routedCardCandidate && (isOwnerMode() || isLiveLifecycle(routedCardCandidate))
       ? routedCardCandidate
       : null;
@@ -15420,7 +15423,7 @@ function wireShimmer(container){
 
       const tile = e.target.closest(".card[data-card-id]");
       if(!tile) return;
-      const card = cards.find(c=>c.id === tile.dataset.cardId);
+      const card = cards.find(c=>String(c.id) === String(tile.dataset.cardId||""));
       if(card) openCardRoute(card.id);
     });
   }
@@ -15442,40 +15445,17 @@ function wireShimmer(container){
     const touch=e.changedTouches[0];
     const dx=touch.clientX-state.x;
     const dy=touch.clientY-state.y;
-    const moved=Math.hypot(dx,dy);
 
-    // A deliberate horizontal swipe changes the listing photo.
+    // Only intercept a real horizontal swipe. Normal taps are intentionally
+    // left untouched so Safari can emit the standard click event, which is
+    // handled by the delegated card click listener above.
     if(Math.abs(dx)>=44 && Math.abs(dx)>Math.abs(dy)){
       const card=cards.find(c=>String(c.id)===String(state.wrap.dataset.listingGallery||""));
       if(!card) return;
 
-      e.preventDefault();
+      if(e.cancelable) e.preventDefault();
       e.stopPropagation();
       await stepListingGallery(state.wrap,card,dx<0?1:-1);
-      return;
-    }
-
-    // iOS can suppress the synthetic click after a touch sequence on the
-    // swipe-enabled gallery. Handle a genuine tap explicitly so the whole
-    // card remains tappable on mobile.
-    if(moved<=14){
-      const target=e.target;
-      const interactive=target.closest?.(
-        "button,a,input,select,textarea,label," +
-        "[data-action],[data-listing-gallery-step]," +
-        ".favorite-btn,.compare-card-btn,.filter-pill-btn"
-      );
-      if(interactive) return;
-
-      const tile=target.closest?.(".card[data-card-id]");
-      if(!tile) return;
-
-      const card=cards.find(c=>String(c.id)===String(tile.dataset.cardId||""));
-      if(!card) return;
-
-      e.preventDefault();
-      e.stopPropagation();
-      openCardRoute(card.id);
     }
   },{passive:false});
 
@@ -16706,7 +16686,7 @@ function wireShimmer(container){
       const tile = e.target.closest(".card[data-card-id]");
       if(!tile) return;
       e.preventDefault();
-      const card = cards.find(c=>c.id === tile.dataset.cardId);
+      const card = cards.find(c=>String(c.id) === String(tile.dataset.cardId||""));
       if(card) openCardRoute(card.id);
     });
   }
@@ -26359,8 +26339,8 @@ function wireShimmer(container){
       !document.getElementById("detailsOverlay").hidden;
 
     if(!mobile || (!isDetailRoute() && !detailsVisible)){
-      bar.hidden=true;
-      bar.dataset.state="";
+      if(!bar.hidden) bar.hidden=true;
+      if(bar.dataset.state) bar.dataset.state="";
       return;
     }
 
@@ -26372,26 +26352,27 @@ function wireShimmer(container){
     const isReserved=availabilityText.includes("reserved");
 
     if(isNfs){
-      bar.hidden=true;
-      bar.dataset.state="nfs";
+      if(!bar.hidden) bar.hidden=true;
+      if(bar.dataset.state!=="nfs") bar.dataset.state="nfs";
       return;
     }
 
     const price=findVisiblePrice();
-    priceEl.textContent=price || "View price";
-    bar.hidden=false;
+    const nextPrice=price || "View price";
+    if(priceEl.textContent!==nextPrice) priceEl.textContent=nextPrice;
+    if(bar.hidden) bar.hidden=false;
 
     if(isSold){
-      bar.dataset.state="sold";
-      action.textContent="Sold";
-      action.disabled=true;
+      if(bar.dataset.state!=="sold") bar.dataset.state="sold";
+      if(action.textContent!=="Sold") action.textContent="Sold";
+      if(action.disabled!==true) action.disabled=true;
       return;
     }
 
     if(isReserved){
-      bar.dataset.state="reserved";
-      action.textContent="Reserved";
-      action.disabled=true;
+      if(bar.dataset.state!=="reserved") bar.dataset.state="reserved";
+      if(action.textContent!=="Reserved") action.textContent="Reserved";
+      if(action.disabled!==true) action.disabled=true;
       return;
     }
 
@@ -26410,10 +26391,35 @@ function wireShimmer(container){
     location.hash="#/contact";
   });
 
-  window.addEventListener("hashchange",()=>setTimeout(update,80));
-  window.addEventListener("resize",update,{passive:true});
-  const mo=new MutationObserver(()=>update());
-  mo.observe(document.body,{subtree:true,childList:true,characterData:true});
+  let updateTimer=null;
+
+  function scheduleUpdate(delay=60){
+    if(updateTimer) clearTimeout(updateTimer);
+    updateTimer=setTimeout(()=>{
+      updateTimer=null;
+      update();
+    },delay);
+  }
+
+  // Route changes are the primary signal that a card detail opened/closed.
+  window.addEventListener("hashchange",()=>{
+    scheduleUpdate(40);
+    // A second pass catches detail content rendered just after the route.
+    setTimeout(()=>update(),180);
+  });
+
+  window.addEventListener("popstate",()=>scheduleUpdate(50));
+  window.addEventListener("resize",()=>scheduleUpdate(20),{passive:true});
+
+  // Smooth previous/next card navigation uses history.replaceState and does
+  // not emit hashchange, so refresh the CTA only after interactions inside
+  // the already-open details modal. This is targeted and cannot self-loop.
+  document.addEventListener("click",e=>{
+    if(e.target.closest?.("#detailsOverlay")){
+      setTimeout(()=>update(),180);
+    }
+  },true);
+
   setTimeout(update,120);
 })();
 </script>
