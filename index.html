@@ -7,6 +7,7 @@
 <!-- UX PHASE 4: accessibility, touch ergonomics and rendering performance -->
 <!-- UX PHASE 5: premium storefront and buyer confidence -->
 <!-- UX PHASE 6: technical cleanup and performance -->
+<!-- OWNER TOOL: permanent listing deletion with double confirmation -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1249,9 +1250,10 @@
 
 
   /* Detail modal: Edit is never visible to public viewers */
-  #detailsEditBtn,#detailsCloneBtn{display:none !important;}
+  #detailsEditBtn,#detailsCloneBtn,#detailsDeleteBtn{display:none !important;}
   body.owner-mode #detailsEditBtn,
-  body.owner-mode #detailsCloneBtn{display:inline-flex !important;}
+  body.owner-mode #detailsCloneBtn,
+  body.owner-mode #detailsDeleteBtn{display:inline-flex !important;}
 
 
   /* ===== Responsive mobile brand + navigation sizing =====
@@ -8492,7 +8494,8 @@
   body:not(.owner-mode) .desktop-more-owner,
   body:not(.owner-mode) .card-actions.owner-only,
   body:not(.owner-mode) #detailsEditBtn,
-  body:not(.owner-mode) #detailsCloneBtn{
+  body:not(.owner-mode) #detailsCloneBtn,
+  body:not(.owner-mode) #detailsDeleteBtn{
     display:none !important;
     visibility:hidden !important;
     pointer-events:none !important;
@@ -10079,6 +10082,20 @@ input:focus-visible{
   }
 }
 
+
+/* Permanent delete — owner only */
+.quick-card-danger-hard,
+.details-delete-listing-btn{
+  color:#ff8d91 !important;
+  font-weight:900 !important;
+}
+.quick-card-danger-hard:hover,
+.details-delete-listing-btn:hover,
+.details-delete-listing-btn:focus-visible{
+  background:rgba(228,71,79,.13) !important;
+  color:#ffd0d2 !important;
+}
+
 </style>
 </head>
 <body>
@@ -10207,6 +10224,7 @@ input:focus-visible{
             <button type="button" id="detailsDownloadBtn" role="menuitem">Download current image</button>
             <button type="button" id="detailsSharePreviewBtn" role="menuitem">Download share preview</button>
             <button type="button" class="owner-only" id="detailsCloneBtn" role="menuitem" hidden>Clone card</button>
+            <button type="button" class="owner-only details-delete-listing-btn" id="detailsDeleteBtn" role="menuitem" hidden>Delete listing permanently</button>
           </div>
         </div>
       </div>
@@ -10767,7 +10785,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     // Fail closed in both desktop and mobile navigation. Responsive CSS must
     // never be the only thing deciding whether an owner tool is visible.
     document.querySelectorAll(".owner-only").forEach(el=>{
-      if(el.id==="detailsEditBtn" || el.id==="detailsCloneBtn"){
+      if(el.id==="detailsEditBtn" || el.id==="detailsCloneBtn" || el.id==="detailsDeleteBtn"){
         el.hidden=!owner;
         return;
       }
@@ -10791,6 +10809,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(detailsCloneBtn){
       detailsCloneBtn.hidden = !owner;
       detailsCloneBtn.style.display = owner ? "inline-flex" : "none";
+    }
+
+    const detailsDeleteBtn = $("detailsDeleteBtn");
+    if(detailsDeleteBtn){
+      detailsDeleteBtn.hidden = !owner;
+      detailsDeleteBtn.style.display = owner ? "inline-flex" : "none";
     }
 
     // If owner state disappears while an owner-only route is open, immediately
@@ -11473,6 +11497,120 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     const index=cards.findIndex(c=>String(c.id)===String(card.id));
     if(index>-1) cards[index]=saved;
+    return true;
+  }
+
+
+  async function deleteListingPermanently(card){
+    if(!card || !requireOwner("delete listing permanently")) return false;
+
+    const id=safeCardId(card.id);
+    if(!id){
+      showToast("Invalid listing ID");
+      return false;
+    }
+
+    const confirmed=confirm(
+      `Permanently delete "${card.name}"?\n\n` +
+      `This is different from Archive. The listing will be removed from the database and cannot be restored from this website.`
+    );
+    if(!confirmed) return false;
+
+    const confirmedAgain=confirm(
+      `Final confirmation:\n\nDelete "${card.name}" permanently?`
+    );
+    if(!confirmedAgain) return false;
+
+    // Capture owned Storage files before deleting the database row so we can
+    // clean them up after the database confirms the listing was removed.
+    const storageUrls=new Set();
+
+    try{
+      const fullCardResult=await supabaseClient
+        .from("cards")
+        .select("images,thumbnail_url")
+        .eq("id",id)
+        .maybeSingle();
+
+      if(!fullCardResult.error && fullCardResult.data){
+        (Array.isArray(fullCardResult.data.images) ? fullCardResult.data.images : [])
+          .forEach(url=>storageUrls.add(url));
+        if(fullCardResult.data.thumbnail_url) storageUrls.add(fullCardResult.data.thumbnail_url);
+      }
+
+      if(cardImageVariantsSupported){
+        const variantResult=await supabaseClient
+          .from("card_image_variants")
+          .select("original_url,watermarked_url")
+          .eq("card_id",id);
+
+        if(!variantResult.error){
+          (variantResult.data||[]).forEach(row=>{
+            if(row.original_url) storageUrls.add(row.original_url);
+            if(row.watermarked_url) storageUrls.add(row.watermarked_url);
+          });
+        }
+      }
+    }catch(error){
+      console.warn("Could not inspect listing images before deletion:",error);
+    }
+
+    const {data,error}=await supabaseClient
+      .from("cards")
+      .delete()
+      .eq("id",id)
+      .select("id");
+
+    if(error){
+      console.error("Permanent listing delete error:",error);
+      const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+
+      if(message.includes("foreign key") || message.includes("violates foreign key")){
+        showToast("Delete blocked by related database records. Archive is still available.");
+      }else if(message.includes("row-level security") || message.includes("permission")){
+        showToast("Supabase rejected delete permission. Check owner DELETE policy.");
+      }else{
+        showToast("Could not permanently delete listing");
+      }
+      return false;
+    }
+
+    if(!Array.isArray(data) || !data.some(row=>String(row.id)===id)){
+      console.warn("Delete returned no matching row. RLS may have blocked the deletion.");
+      showToast("Listing was not deleted. Check Supabase DELETE policy.");
+      return false;
+    }
+
+    // Remove stale local references immediately.
+    cards=cards.filter(c=>String(c.id)!==id);
+    compareSelectedIds.delete(id);
+    updateCompareTray();
+
+    const favorites=getFavoriteIds();
+    if(favorites.delete(id)) saveFavoriteIds(favorites);
+
+    try{
+      const recent=getRecentlyViewedEntries().filter(entry=>entry.id!==id);
+      localStorage.setItem(RECENTLY_VIEWED_KEY,JSON.stringify(recent));
+    }catch{}
+
+    // Database deletion is authoritative. Storage cleanup is best-effort and
+    // never causes a deleted listing to reappear if an old file cannot be removed.
+    const storagePaths=[...storageUrls]
+      .map(cardStoragePathFromUrl)
+      .filter(Boolean);
+
+    if(storagePaths.length){
+      const storageOk=await removeCardStoragePaths(storagePaths);
+      if(!storageOk) console.warn("Listing deleted, but one or more Storage files could not be removed.");
+    }
+
+    if(String(detailsCardId||"")===id){
+      closeDetailsModal(false);
+    }
+
+    showToast("Listing permanently deleted");
+    updateSidebarFooter();
     return true;
   }
 
@@ -15327,6 +15465,8 @@ function relatedCardHTML(c){
                 ${cardLifecycle(c)==="live" ? `<button type="button" data-action="lifecycle" data-status="draft" data-id="${escapeHtml(c.id)}">Move to Draft</button>` : ""}
                 <button type="button" class="quick-card-danger-soft" data-action="lifecycle" data-status="archived" data-id="${escapeHtml(c.id)}">Archive</button>
               ` : ""}
+              <div class="quick-card-menu-separator"></div>
+              <button type="button" class="quick-card-danger-hard" data-action="delete-listing" data-id="${escapeHtml(c.id)}">Delete Permanently</button>
             </div>
           </div>
 
@@ -15602,6 +15742,9 @@ function wireShimmer(container){
             showToast(status==="archived" ? "Listing archived" : "Moved to Draft");
             router();
           }
+        }else if(action==="delete-listing"){
+          const ok=await deleteListingPermanently(card);
+          if(ok) router();
         }
         return;
       }
@@ -25734,8 +25877,20 @@ function wireShimmer(container){
   $("detailsCloseBtn").addEventListener("click", ()=>closeDetailsModal(true));
   $("detailsCloneBtn").addEventListener("click", ()=>{
     if(!requireOwner("clone card")) return;
-    const card = cards.find(c=>c.id === detailsCardId);
+    const card = cards.find(c=>String(c.id) === String(detailsCardId||""));
     if(card) openCloneOptions(card);
+  });
+
+  $("detailsDeleteBtn").addEventListener("click", async ()=>{
+    if(!requireOwner("delete listing permanently")) return;
+    const card=cards.find(c=>String(c.id)===String(detailsCardId||""));
+    if(!card) return;
+    closeDetailsMoreMenu(false);
+    const ok=await deleteListingPermanently(card);
+    if(ok){
+      location.hash="#/inventory";
+      router();
+    }
   });
 
   $("cloneOptionsCloseBtn").addEventListener("click",closeCloneOptions);
