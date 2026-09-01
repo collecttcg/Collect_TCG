@@ -9071,6 +9071,167 @@
     pointer-events:none!important;
   }
 
+
+  /* ==========================================================
+     Owner bulk reversible watermark
+     ========================================================== */
+  .bulk-watermark-panel{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:14px;
+    align-items:center;
+    margin-bottom:12px;
+    padding:14px;
+  }
+  .bulk-watermark-copy h3{
+    margin:3px 0 5px;
+    font-size:19px;
+  }
+  .bulk-watermark-copy p{
+    max-width:720px;
+    margin:0;
+    color:var(--text-muted);
+    font-size:8.5px;
+    line-height:1.5;
+  }
+  .bulk-watermark-actions{
+    display:flex;
+    gap:7px;
+    align-items:center;
+  }
+  .bulk-watermark-progress{
+    grid-column:1/-1;
+    min-height:20px;
+    padding-top:8px;
+    border-top:1px solid var(--border);
+    color:var(--text-muted);
+    font-family:'JetBrains Mono',monospace;
+    font-size:8px;
+  }
+
+  @media(max-width:700px){
+    .bulk-watermark-panel{
+      grid-template-columns:1fr;
+      padding:12px;
+    }
+    .bulk-watermark-actions{
+      display:grid;
+      grid-template-columns:1fr;
+    }
+    .bulk-watermark-actions button{
+      width:100%;
+      min-height:42px;
+    }
+  }
+
+  /* Final owner-only guard */
+  body:not(.owner-mode) .bulk-watermark-panel{
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+
+
+  /* FINAL FINAL owner visibility guard */
+  body:not(.owner-mode) .owner-only,
+  body:not(.owner-mode) #mobileMoreMenu > a.owner-only,
+  body:not(.owner-mode) nav.mainnav a.owner-only,
+  body:not(.owner-mode) .desktop-more-owner,
+  body:not(.owner-mode) .card-actions.owner-only,
+  body:not(.owner-mode) .giveaway-owner-actions,
+  body:not(.owner-mode) .image-watermark-control,
+  body:not(.owner-mode) .image-preview-watermark-actions,
+  body:not(.owner-mode) .bulk-watermark-panel{
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+
+
+  /* ==========================================================
+     Owner Add/Edit — all photos on this card watermark controls
+     ========================================================== */
+  .image-watermark-all-actions{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:10px 12px;
+    align-items:center;
+    padding:10px 11px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:rgba(95,212,196,.035);
+  }
+  .image-watermark-all-actions strong{
+    display:block;
+    color:var(--text);
+    font-size:9.5px;
+  }
+  .image-watermark-all-actions span{
+    display:block;
+    margin-top:2px;
+    color:var(--text-muted);
+    font-size:7.8px;
+    line-height:1.35;
+  }
+  .image-watermark-all-buttons{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+  .image-watermark-all-buttons button{
+    min-height:34px;
+    white-space:nowrap;
+  }
+  .image-watermark-all-status{
+    grid-column:1/-1;
+    padding-top:7px;
+    border-top:1px solid var(--border-soft);
+    color:var(--text-muted);
+    font-family:'JetBrains Mono',monospace;
+    font-size:7.5px;
+  }
+
+  @media(max-width:700px){
+    .image-watermark-all-actions{
+      grid-template-columns:1fr;
+      align-items:stretch;
+    }
+    .image-watermark-all-buttons{
+      display:grid;
+      grid-template-columns:1fr;
+      justify-content:stretch;
+    }
+    .image-watermark-all-buttons button{
+      width:100%;
+      min-height:40px;
+    }
+  }
+
+  /* Final owner-only guard */
+  body:not(.owner-mode) .image-watermark-all-actions{
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+
+
+  /* FINAL FINAL owner visibility guard */
+  body:not(.owner-mode) .owner-only,
+  body:not(.owner-mode) .image-watermark-all-actions,
+  body:not(.owner-mode) #mobileMoreMenu > a.owner-only,
+  body:not(.owner-mode) nav.mainnav a.owner-only,
+  body:not(.owner-mode) .desktop-more-owner,
+  body:not(.owner-mode) .card-actions.owner-only,
+  body:not(.owner-mode) .giveaway-owner-actions,
+  body:not(.owner-mode) .image-watermark-control,
+  body:not(.owner-mode) .image-preview-watermark-actions,
+  body:not(.owner-mode) .bulk-watermark-panel{
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+
 </style>
 </head>
 <body>
@@ -12262,6 +12423,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             </div>
           </div>
 
+          <div class="owner-only image-watermark-all-actions" id="${p}WatermarkAllActions">
+            <div>
+              <strong>All photos on this card</strong>
+              <span>Apply or remove the logo watermark from every photo in this Add/Edit form.</span>
+            </div>
+            <div class="image-watermark-all-buttons">
+              <button type="button" class="btn-ghost" id="${p}WatermarkAllPhotos">Watermark all photos</button>
+              <button type="button" class="btn-ghost" id="${p}OriginalAllPhotos">Use originals for all photos</button>
+            </div>
+            <div class="image-watermark-all-status" id="${p}WatermarkAllStatus" hidden></div>
+          </div>
+
           <input type="file" id="${p}ImageFile" accept="image/*" multiple>
           <div class="image-url-row">
             <input type="text" id="${p}ImageUrl" placeholder="Paste an image URL, then click Add URL">
@@ -12432,6 +12605,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const preview = $(p + "ImageGalleryPreview");
     const watermarkOffBtn=$(p+"WatermarkOff");
     const watermarkOnBtn=$(p+"WatermarkOn");
+    const watermarkAllBtn=$(p+"WatermarkAllPhotos");
+    const originalAllBtn=$(p+"OriginalAllPhotos");
+    const watermarkAllStatus=$(p+"WatermarkAllStatus");
 
     formState.watermarkEnabled=Boolean(formState.watermarkEnabled);
     formState.imageCleanSources=Array.isArray(formState.imageCleanSources)
@@ -12520,7 +12696,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       });
     }
 
-    async function setImageWatermark(index,apply){
+    async function setImageWatermark(index,apply,silent=false){
       if(!requireOwner("change image watermark")) return;
       if(!cardImageVariantsSupported){
         showToast("Run the reversible watermark migration first");
@@ -12550,20 +12726,93 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
           formState.images[index]=watermarkedSource;
           formState.imageWatermarkStates[index]=true;
-          showToast("Watermarked version selected");
+          if(!silent) showToast("Watermarked version selected");
         }else{
           formState.images[index]=cleanSource;
           formState.imageWatermarkStates[index]=false;
-          showToast("Original version selected");
+          if(!silent) showToast("Original version selected");
         }
       }catch(error){
         console.warn("Could not change image watermark:",error);
-        showToast("Could not switch the watermark for this photo.");
+        if(!silent) showToast("Could not switch the watermark for this photo.");
       }finally{
         formState.processingImages=Math.max(0,Number(formState.processingImages||0)-1);
         refreshPreview();
       }
     }
+
+    async function setAllImagesWatermark(apply){
+      if(!requireOwner("change all photos on this card")) return;
+      if(!cardImageVariantsSupported){
+        showToast("Run the reversible watermark migration first");
+        return;
+      }
+      if(!formState.images.length){
+        showToast("No photos on this card");
+        return;
+      }
+
+      const action=apply ? "watermark" : "switch to original";
+      const count=formState.images.length;
+      if(!confirm(
+        apply
+          ? `Apply the logo watermark to all ${count} photo${count===1?"":"s"} on this card?\n\nThe original versions will remain saved so you can switch back later.`
+          : `Switch all ${count} photo${count===1?"":"s"} on this card back to their original versions?`
+      )) return;
+
+      watermarkAllBtn.disabled=true;
+      originalAllBtn.disabled=true;
+      fileInput.disabled=true;
+      addUrlBtn.disabled=true;
+      if(watermarkAllStatus){
+        watermarkAllStatus.hidden=false;
+        watermarkAllStatus.textContent="Starting…";
+      }
+
+      let changed=0;
+      let failed=0;
+
+      try{
+        for(let i=0;i<formState.images.length;i++){
+          if(watermarkAllStatus){
+            watermarkAllStatus.textContent=
+              `${apply ? "Watermarking" : "Restoring"} photo ${i+1} / ${formState.images.length}…`;
+          }
+
+          const before=formState.images[i];
+          try{
+            await setImageWatermark(i,apply,true);
+            if(formState.images[i]!==before) changed++;
+          }catch(error){
+            failed++;
+            console.warn("Per-card bulk watermark photo failed:",i,error);
+          }
+        }
+
+        formState.watermarkEnabled=Boolean(apply);
+        syncWatermarkChoiceUI();
+        refreshPreview();
+
+        if(watermarkAllStatus){
+          watermarkAllStatus.textContent=
+            `Finished · ${changed} changed${failed ? ` · ${failed} failed` : ""}`;
+        }
+
+        showToast(
+          failed
+            ? `${changed} photo${changed===1?"":"s"} changed · ${failed} failed`
+            : `${changed} photo${changed===1?"":"s"} changed`
+        );
+      }finally{
+        watermarkAllBtn.disabled=false;
+        originalAllBtn.disabled=false;
+        fileInput.disabled=false;
+        addUrlBtn.disabled=false;
+      }
+    }
+
+    watermarkAllBtn?.addEventListener("click",()=>setAllImagesWatermark(true));
+    originalAllBtn?.addEventListener("click",()=>setAllImagesWatermark(false));
 
     function refreshPreview(){
       preview.innerHTML = "";
@@ -20137,6 +20386,160 @@ function wireShimmer(container){
     render();
   }
 
+  // ---------------- Owner Reversible Bulk Watermark ----------------
+  async function switchCardWatermarkVariant(card,target,onProgress){
+    if(!card || !requireOwner("change card watermark")) return {ok:false,error:"Owner login required"};
+    if(!cardImageVariantsSupported) return {ok:false,error:"Run the reversible watermark migration first"};
+    if(!["original","watermarked"].includes(target)) return {ok:false,error:"Invalid watermark target"};
+
+    await ensureCardImagesLoaded(card);
+    const currentImages=getImages(card).slice();
+    if(!currentImages.length) return {ok:true,changed:false,count:0};
+
+    const storedVariants=await fetchOwnerCardImageVariants(card.id);
+    const prepared=[];
+    const newlyUploadedPaths=[];
+
+    try{
+      for(let i=0;i<currentImages.length;i++){
+        if(typeof onProgress==="function") onProgress(i,currentImages.length);
+
+        const current=currentImages[i];
+        let variant=storedVariants.find(v=>
+          v.original_url===current || v.watermarked_url===current
+        );
+
+        if(!variant){
+          // First time this image is managed by the reversible system.
+          // The currently stored image becomes the original source.
+          variant={
+            image_key:newCardImageVariantKey(),
+            original_url:current,
+            watermarked_url:"",
+            active_variant:"original"
+          };
+        }else{
+          variant={...variant};
+        }
+
+        if(target==="watermarked" && !variant.watermarked_url){
+          const original=safeHttpUrl(variant.original_url)||variant.original_url;
+          if(!original) throw new Error(`Original image unavailable for image ${i+1}`);
+
+          const processed=await applyWatermarkToCardImageSource(original,1800,0.94);
+          const stored=await uploadPendingCardImage(processed,i);
+          variant.watermarked_url=stored.url;
+          newlyUploadedPaths.push(stored.path);
+        }
+
+        variant.active_variant=target;
+        prepared.push(variant);
+
+        if(typeof onProgress==="function") onProgress(i+1,currentImages.length);
+      }
+
+      const targetImages=prepared.map(v=>
+        target==="watermarked"
+          ? (v.watermarked_url||v.original_url)
+          : v.original_url
+      );
+
+      if(targetImages.some(v=>!safeHttpUrl(v))){
+        throw new Error("One or more image URLs are invalid");
+      }
+
+      // Save reversible metadata first. If the public card update fails, restore
+      // the previous active_variant values so the metadata remains truthful.
+      const previousByKey=new Map(storedVariants.map(v=>[v.image_key,v.active_variant]));
+      const variantResult=await saveOwnerCardImageVariants(card.id,prepared);
+      if(!variantResult.ok){
+        throw new Error("Could not save reversible watermark metadata");
+      }
+
+      const saved=await saveMigratedCardImageUrls(card.id,targetImages);
+      if(!saved){
+        const rollback=prepared.map(v=>({
+          ...v,
+          active_variant:previousByKey.get(v.image_key)||(
+            currentImages.includes(v.watermarked_url) ? "watermarked" : "original"
+          )
+        }));
+        await saveOwnerCardImageVariants(card.id,rollback);
+        await removeCardStoragePaths(newlyUploadedPaths);
+        return {ok:false,error:"Database update failed"};
+      }
+
+      card.images=Array.isArray(saved.images)?saved.images.slice():targetImages.slice();
+      card.image=card.images[0]||null;
+      card.thumbnail_url=card.image||"";
+      card._images_loaded=true;
+      if(saved.updated_at) card.updated_at=saved.updated_at;
+
+      // Keep BOTH original and watermarked files. They are intentionally
+      // retained so this operation is reversible later.
+      return {
+        ok:true,
+        changed:currentImages.some((url,i)=>url!==targetImages[i]),
+        count:targetImages.length
+      };
+    }catch(error){
+      if(newlyUploadedPaths.length){
+        await removeCardStoragePaths(newlyUploadedPaths);
+      }
+      console.error("Bulk reversible watermark switch failed:",card?.id,error);
+      return {ok:false,error:String(error?.message||"Watermark switch failed")};
+    }
+  }
+
+  async function switchAllCardsWatermarkVariant(target,onProgress){
+    if(!requireOwner("change all card watermarks")){
+      return {ok:false,done:0,failed:0,skipped:0};
+    }
+    if(!cardImageVariantsSupported){
+      showToast("Run the reversible watermark migration first");
+      return {ok:false,done:0,failed:0,skipped:0};
+    }
+
+    const eligible=cards.filter(card=>getImages(card).length);
+    let done=0;
+    let failed=0;
+    let skipped=0;
+
+    for(let i=0;i<eligible.length;i++){
+      const card=eligible[i];
+      if(typeof onProgress==="function"){
+        onProgress({
+          cardIndex:i,
+          cardTotal:eligible.length,
+          imageIndex:0,
+          imageTotal:getImages(card).length,
+          card
+        });
+      }
+
+      const result=await switchCardWatermarkVariant(card,target,(imageIndex,imageTotal)=>{
+        if(typeof onProgress==="function"){
+          onProgress({
+            cardIndex:i,
+            cardTotal:eligible.length,
+            imageIndex,
+            imageTotal,
+            card
+          });
+        }
+      });
+
+      if(result.ok){
+        if(result.changed) done++;
+        else skipped++;
+      }else{
+        failed++;
+      }
+    }
+
+    return {ok:failed===0,done,failed,skipped,total:eligible.length};
+  }
+
   // ---------------- Owner Image Reprocessor ----------------
   async function reprocessCardImages(card,onProgress){
     if(!card || !requireOwner("reprocess card images")) return {ok:false,error:"Owner login required"};
@@ -20188,12 +20591,82 @@ function wireShimmer(container){
     const selected=new Set();
 
     view.innerHTML=`
-      <div class="page-head"><div><div class="eyebrow">Inventory Tools · Quality</div><h2>Reprocess Images</h2><p>Re-encode selected listing images at the current high-quality settings and apply the latest transparent logo watermark.</p></div></div>
-      <div class="image-reprocess-warning"><strong>Important</strong><span>This tool cannot erase a watermark already baked into the source image. If an old watermark is already visible, reprocessing can place the new watermark over the current image. For a perfectly clean result, replace the listing with the original unwatermarked photo.</span></div>
+      <div class="page-head"><div><div class="eyebrow">Inventory Tools · Quality</div><h2>Reprocess Images</h2><p>Manage image quality and the reversible Collect TCG watermark.</p></div></div>
+
+      <section class="panel bulk-watermark-panel owner-only">
+        <div class="bulk-watermark-copy">
+          <div class="eyebrow">Reversible watermark</div>
+          <h3>All card photos</h3>
+          <p>Switch every card with photos to the watermarked version or back to its saved original version. Both versions are preserved so you can switch again later.</p>
+        </div>
+        <div class="bulk-watermark-actions">
+          <button type="button" class="btn-primary" id="watermarkAllCardsBtn">Watermark all cards</button>
+          <button type="button" class="btn-ghost" id="originalAllCardsBtn">Use originals for all cards</button>
+        </div>
+        <div class="bulk-watermark-progress" id="bulkWatermarkProgress">Ready</div>
+      </section>
+
+      <div class="image-reprocess-warning"><strong>Older images</strong><span>For photos that were already permanently watermarked before the reversible system was installed, the current file may be the only source available. Upload the clean original once if you need a truly unwatermarked version.</span></div>
       <div class="image-reprocess-layout">
         <section class="panel"><div class="image-reprocess-toolbar"><button class="btn-ghost" id="reprocessSelectAll" type="button">Select All</button><button class="btn-ghost" id="reprocessClear" type="button">Clear</button><span id="reprocessCount">0 selected</span></div><div class="image-reprocess-list" id="reprocessList">${eligible.map(card=>`<label class="image-reprocess-row"><input type="checkbox" value="${escapeHtml(card.id)}"><span class="image-reprocess-thumb">${getImages(card)[0]?`<img src="${escapeHtml(getImages(card)[0])}" alt="" loading="lazy" decoding="async">`:"No image"}</span><span><strong>${escapeHtml(card.name)}</strong><small>${escapeHtml([card.card_code,card.series].filter(Boolean).join(" · "))} · ${getImages(card).length} image${getImages(card).length===1?"":"s"}</small></span></label>`).join("")}</div></section>
         <section class="panel image-reprocess-action"><h3>High-quality reprocess</h3><p>1800px maximum dimension · JPEG quality 0.94 · current transparent vibrant watermark.</p><button type="button" class="btn-primary" id="reprocessRun">Reprocess selected</button><div class="hint" id="reprocessStatus"></div></section>
       </div>`;
+
+    async function runBulkWatermarkSwitch(target){
+      if(!requireOwner("change all card watermarks")) return;
+      if(!cardImageVariantsSupported){
+        showToast("Run the reversible watermark migration first");
+        return;
+      }
+
+      const eligibleCount=cards.filter(card=>getImages(card).length).length;
+      if(!eligibleCount){
+        showToast("No cards with images found");
+        return;
+      }
+
+      const watermarked=target==="watermarked";
+      const actionLabel=watermarked ? "watermark" : "switch to original for";
+      const confirmText=watermarked
+        ? `Watermark all ${eligibleCount} card listing${eligibleCount===1?"":"s"} with images?\n\nThe original versions will be preserved so this can be reversed later. The first run may take time and use additional Supabase Storage because watermarked copies must be created.`
+        : `Switch all ${eligibleCount} card listing${eligibleCount===1?"":"s"} back to their saved original images?\n\nWatermarked copies will be kept privately so you can switch back later.`;
+
+      if(!confirm(confirmText)) return;
+
+      const watermarkBtn=$("watermarkAllCardsBtn");
+      const originalBtn=$("originalAllCardsBtn");
+      const progress=$("bulkWatermarkProgress");
+      watermarkBtn.disabled=true;
+      originalBtn.disabled=true;
+
+      try{
+        const result=await switchAllCardsWatermarkVariant(target,state=>{
+          if(!progress) return;
+          const cardName=String(state.card?.name||"Card").slice(0,80);
+          progress.textContent=
+            `${state.cardIndex+1}/${state.cardTotal} · ${cardName}`+
+            (state.imageTotal ? ` · image ${state.imageIndex}/${state.imageTotal}` : "");
+        });
+
+        if(progress){
+          progress.textContent=
+            `Finished · ${result.done} changed · ${result.skipped} already set · ${result.failed} failed`;
+        }
+
+        showToast(result.failed
+          ? `${result.done} changed · ${result.failed} failed`
+          : `${result.done} card${result.done===1?"":"s"} changed · ${result.skipped} already set`);
+
+        // Refresh owner cards so every route reflects the new public image URLs.
+        await loadCards();
+      }finally{
+        watermarkBtn.disabled=false;
+        originalBtn.disabled=false;
+      }
+    }
+
+    $("watermarkAllCardsBtn")?.addEventListener("click",()=>runBulkWatermarkSwitch("watermarked"));
+    $("originalAllCardsBtn")?.addEventListener("click",()=>runBulkWatermarkSwitch("original"));
 
     const sync=()=>{
       selected.clear();
