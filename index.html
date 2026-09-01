@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- UX PHASE 2: consolidated overrides and storefront polish -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="collect-tcg-app-version" content="3">
@@ -9647,58 +9648,6 @@
 }
 
 
-/* Badge colours aligned with the mobile version */
-.overview-grade-overlay{
-  background:rgba(18,108,101,.94) !important;
-  border-color:rgba(102,240,223,.52) !important;
-  color:#fff !important;
-  box-shadow:
-    0 5px 16px rgba(0,0,0,.40),
-    0 0 0 1px rgba(102,240,223,.08) !important;
-}
-.overview-grade-overlay strong{
-  color:#fff !important;
-}
-.overview-grade-overlay small{
-  color:rgba(226,255,251,.72) !important;
-}
-
-.new-card-badge{
-  background:
-    linear-gradient(135deg,#76f7e6 0%,#42d8c7 55%,#25b7a9 100%) !important;
-  color:#061210 !important;
-  border-color:rgba(255,255,255,.42) !important;
-  box-shadow:
-    0 5px 14px rgba(0,0,0,.32),
-    0 0 0 1px rgba(55,218,199,.18),
-    inset 0 1px 0 rgba(255,255,255,.34) !important;
-}
-
-
-@media (max-width:800px){
-  .back-to-top-btn{
-    right:14px !important;
-    bottom:calc(104px + env(safe-area-inset-bottom)) !important;
-    z-index:1250 !important;
-  }
-}
-
-
-/* Black condition / grade badge */
-.overview-grade-overlay{
-  background:rgba(8,9,11,.95) !important;
-  border-color:rgba(255,255,255,.22) !important;
-  color:#fff !important;
-  box-shadow:0 5px 16px rgba(0,0,0,.42) !important;
-}
-.overview-grade-overlay strong{
-  color:#fff !important;
-}
-.overview-grade-overlay small{
-  color:rgba(255,255,255,.68) !important;
-}
-
-
 /* UX Phase 1: simplified buyer mobile navigation */
 @media (max-width:800px){
   nav.mainnav > a[data-route="reserved"],
@@ -9787,10 +9736,111 @@
   .mobile-detail-cta-action:active{
     transform:scale(.98);
   }
+}
 
-  /* keep floating controls above the sticky CTA */
+
+/* ===== Final condition / NEW badge palette ===== */
+.overview-grade-overlay{
+  background:rgba(8,9,11,.95) !important;
+  border-color:rgba(255,255,255,.22) !important;
+  color:#fff !important;
+  box-shadow:0 5px 16px rgba(0,0,0,.42) !important;
+}
+.overview-grade-overlay strong{color:#fff !important;}
+.overview-grade-overlay small{color:rgba(255,255,255,.68) !important;}
+
+.new-card-badge{
+  background:linear-gradient(135deg,#76f7e6 0%,#42d8c7 55%,#25b7a9 100%) !important;
+  color:#061210 !important;
+  border-color:rgba(255,255,255,.42) !important;
+  box-shadow:
+    0 5px 14px rgba(0,0,0,.32),
+    0 0 0 1px rgba(55,218,199,.18),
+    inset 0 1px 0 rgba(255,255,255,.34) !important;
+}
+
+
+/* ===== Final mobile floating-control spacing ===== */
+@media (max-width:800px){
   .back-to-top-btn{
+    right:14px !important;
     bottom:calc(92px + env(safe-area-inset-bottom)) !important;
+    z-index:1350 !important;
+  }
+}
+
+
+/* ===== Home stat cards act as navigation ===== */
+a.home-stat-card{
+  cursor:pointer;
+}
+a.home-stat-card::after{
+  content:"›";
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--text-muted);
+  font-size:18px;
+  font-weight:800;
+  opacity:.55;
+}
+a.home-stat-card{
+  position:relative;
+  padding-right:32px;
+}
+a.home-stat-card:hover::after{opacity:.95;}
+
+
+.shipping-summary-grid{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-top:7px;
+}
+.shipping-summary-grid > span{
+  display:block;
+  min-width:0;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:rgba(255,255,255,.018);
+}
+.shipping-summary-grid b,
+.shipping-summary-grid small{
+  display:block;
+}
+.shipping-summary-grid b{
+  color:var(--text);
+  font-size:10px;
+  line-height:1.3;
+}
+.shipping-summary-grid small{
+  margin-top:4px;
+  color:var(--text-muted);
+  font-size:9px;
+  line-height:1.45;
+}
+@media(max-width:700px){
+  .shipping-summary-grid{
+    grid-template-columns:1fr !important;
+  }
+}
+
+
+/* ===== Mobile tactile card feedback ===== */
+@media (hover:none) and (pointer:coarse){
+  .card,
+  .home-storefront-grid .card,
+  #invGrid .card{
+    -webkit-tap-highlight-color:transparent;
+    transition:transform .11s ease,border-color .11s ease,box-shadow .11s ease;
+  }
+  .card:active,
+  .home-storefront-grid .card:active,
+  #invGrid .card:active{
+    transform:scale(.992);
+    border-color:rgba(102,224,210,.34);
   }
 }
 
@@ -14330,7 +14380,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           and open any listing for full card details and uploaded photos.
         </p>
         <div class="home-hero-actions">
-          <a href="#/inventory" class="btn-primary" style="display:inline-flex;align-items:center;">Browse Collection</a>
+          <a href="#/inventory" class="btn-primary" style="display:inline-flex;align-items:center;">Browse Cards</a>
           <a href="#/giveaway" class="btn-ghost" style="display:inline-flex;align-items:center;text-decoration:none;">View Giveaways</a>
           <label class="global-currency-control" title="Your preferred currency is saved on this device.">
             <span>Currency</span>
@@ -14372,18 +14422,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
                 <span class="home-stat-value">${stats.sold.toLocaleString()}</span>
                 <span class="home-stat-label">Sold</span>
               </a>
-              <div class="home-stat-card">
-                <span class="home-stat-value">${stats.graded.toLocaleString()}</span>
-                <span class="home-stat-label">Graded</span>
-              </div>
-              <div class="home-stat-card">
-                <span class="home-stat-value">${stats.vintage.toLocaleString()}</span>
-                <span class="home-stat-label">Vintage</span>
-              </div>
-              <div class="home-stat-card">
-                <span class="home-stat-value">${stats.sealed.toLocaleString()}</span>
-                <span class="home-stat-label">Sealed</span>
-              </div>
+              <a href="#/inventory?format=graded" class="home-stat-card">
+  <span class="home-stat-value">${stats.graded.toLocaleString()}</span>
+  <span class="home-stat-label">Graded</span>
+</a>
+              <a href="#/inventory?quick=vintage" class="home-stat-card">
+  <span class="home-stat-value">${stats.vintage.toLocaleString()}</span>
+  <span class="home-stat-label">Vintage</span>
+</a>
+              <a href="#/inventory?format=sealed" class="home-stat-card">
+  <span class="home-stat-value">${stats.sealed.toLocaleString()}</span>
+  <span class="home-stat-label">Sealed</span>
+</a>
             </div>
           </section>
         `;
@@ -14495,11 +14545,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
       <section class="home-shipping">
         <div class="home-shipping-item home-shipping-international">
-          <strong>🌏 International Shipping</strong>
-          <span>
-            International shipping is available <b>only for orders valued below USD 6,000</b>.
-            Shipping and insurance are borne by the buyer. Shipping insurance is optional, but we strongly encourage adding insurance for higher-value shipments.
-            For items valued at <b>USD 6,000 or above, we prefer Cash on Delivery (COD) / face-to-face transactions in Malaysia or Singapore, depending on the item</b>.
+          <strong>🌏 Buying &amp; Shipping</strong>
+          <span class="shipping-summary-grid">
+            <span><b>International Shipping</b><small>Available for orders below USD 6,000.</small></span>
+            <span><b>High-Value Cards</b><small>USD 6,000+ — COD / face-to-face preferred in Malaysia or Singapore, depending on the item.</small></span>
+            <span><b>Insurance</b><small>Optional and borne by the buyer; recommended for higher-value shipments.</small></span>
           </span>
         </div>
         <div class="home-shipping-item">
