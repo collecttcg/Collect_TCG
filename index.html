@@ -4,6 +4,7 @@
 <!-- UX PHASE 2: consolidated overrides and storefront polish -->
 <!-- UX PHASE 3: mobile browsing clarity and conversion polish -->
 <!-- MOBILE FIX: normal taps use click; swipes alone use touchend; recursive CTA observer removed -->
+<!-- UX PHASE 4: accessibility, touch ergonomics and rendering performance -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="collect-tcg-app-version" content="3">
@@ -9893,6 +9894,62 @@ a.home-stat-card:hover::after{opacity:.95;}
   color:var(--text-muted);
 }
 
+
+/* =========================================================
+   UX PHASE 4 — accessibility, touch ergonomics & performance
+   ========================================================= */
+
+/* Give interactive controls a reliable finger-sized hit area on phones. */
+@media(max-width:800px){
+  .listing-gallery-arrow,
+  .detail-slider-btn,
+  .details-top-actions button,
+  .detail-thumb-strip-btn,
+  .image-lightbox-thumb,
+  .filter-pill,
+  .filter-pill-btn,
+  .grade-shortcuts button,
+  .sticky-mobile-results-action,
+  .mobile-more-toggle{
+    min-width:44px;
+    min-height:44px;
+  }
+
+  .detail-thumb-strip-btn{
+    padding:2px;
+  }
+
+  .details-top-actions{
+    gap:7px;
+  }
+}
+
+/* Render off-screen inventory cards only when they approach the viewport.
+   Browsers that do not support this simply ignore it. */
+@supports (content-visibility:auto){
+  #invGrid .card{
+    content-visibility:auto;
+    contain-intrinsic-size:420px;
+  }
+}
+
+/* Clear keyboard focus that works in both dark and light themes. */
+.card:focus-visible,
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input:focus-visible{
+  outline:2px solid var(--accent-teal);
+  outline-offset:3px;
+}
+
+/* Avoid hover-only visual assumptions on touch devices. */
+@media(hover:none){
+  .card:hover{
+    transform:none;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -9990,7 +10047,7 @@ a.home-stat-card:hover::after{opacity:.95;}
   </form>
 </div>
 
-<div class="modal-overlay" id="detailsOverlay" hidden>
+<div class="modal-overlay" id="detailsOverlay" hidden aria-live="polite">
   <div class="modal card-details-modal" id="detailsModal" role="dialog" aria-modal="true" aria-labelledby="detailsTitle">
     <div class="details-top-actions">
       <div class="details-secondary-actions" aria-label="Card actions">
@@ -12948,7 +13005,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     </span>`;
   }
 
-  function cardThumbHTML(c){
+  function cardThumbHTML(c, renderIndex=999){
     const color = RARITY_COLOR[c.rarity] || "var(--r-common)";
     const images = getImages(c);
     if(images.length){
@@ -12960,9 +13017,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         <img class="thumb"
              src="${escapeHtml(images[0])}"
              alt="${escapeHtml(c.name)} photo 1"
-             loading="lazy"
+             loading="${renderIndex < 6 ? "eager" : "lazy"}"
              decoding="async"
-             fetchpriority="low"
+             fetchpriority="${renderIndex < 4 ? "high" : "low"}"
              style="border-color:${color}">
         ${overviewGradeOverlayHTML(c)}
         ${overviewRawConditionOverlayHTML(c)}
@@ -15107,7 +15164,7 @@ function relatedCardHTML(c){
     `;
   }
 
-  function cardTileHTML(c){
+  function cardTileHTML(c, renderIndex=999){
     const color = RARITY_COLOR[c.rarity] || "var(--r-common)";
     const shimmer = SHIMMER_RARITIES.has(c.rarity);
     const format = effectiveFormat(c);
@@ -15118,7 +15175,7 @@ function relatedCardHTML(c){
     const seriesText = normalizeStoredLabel(c.series || "");
     return `
       <div class="card ${shimmer ? "shimmer" : ""} ${isCompareSelected(c.id) ? "compare-selected" : ""} ${normalizeFilterValue(c.availability)==="collection (nfs)" ? "nfs-collection-card" : ""}" style="--stripe:${normalizeFilterValue(c.availability)==="collection (nfs)" ? "#a855f7" : color}" data-shimmer="${shimmer}" data-card-id="${escapeHtml(c.id)}" tabindex="0" role="button" aria-label="View details for ${escapeHtml(c.name)}">
-        ${cardThumbHTML(c)}
+        ${cardThumbHTML(c, renderIndex)}
         <div class="card-body clean-card-body">
           <div class="card-actions owner-only quick-card-actions">
             <button type="button"
@@ -24452,6 +24509,7 @@ function wireShimmer(container){
   const detailsMount = $("detailsMount");
   let detailsCardId = null;
   let detailsImageIndex = 0;
+  let detailsLastFocusedElement = null;
 
 
   let lightboxImages = [];
@@ -25012,6 +25070,15 @@ function wireShimmer(container){
 
   async function openDetailsModal(card){
     if(!card) return;
+
+    // Preserve the customer's current keyboard/focus position so closing
+    // details returns them to the card they were browsing.
+    if(detailsOverlay.hidden){
+      detailsLastFocusedElement = document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    }
+
     await ensureCardImagesLoaded(card);
     if(!isOwnerMode() && !isLiveLifecycle(card)){
       showToast("Card not found");
@@ -25203,6 +25270,15 @@ function wireShimmer(container){
 
     detailsOverlay.hidden = false;
 
+    // Move focus into the dialog without causing the page to jump.
+    requestAnimationFrame(()=>{
+      const preferredFocus = $("detailsCloseBtn") || detailsMount.querySelector("button,[href],select,input");
+      if(preferredFocus && typeof preferredFocus.focus==="function"){
+        try{ preferredFocus.focus({preventScroll:true}); }
+        catch{ preferredFocus.focus(); }
+      }
+    });
+
     $("detailsCurrencyPreference")?.addEventListener("change",async e=>{
       setPriceCurrencyPreference(e.target.value);
       await openDetailsModal(card);
@@ -25352,6 +25428,15 @@ function wireShimmer(container){
     detailsOverlay.hidden = true;
     detailsMount.innerHTML = "";
     detailsCardId = null;
+
+    const focusTarget = detailsLastFocusedElement;
+    detailsLastFocusedElement = null;
+    if(focusTarget && document.contains(focusTarget) && typeof focusTarget.focus==="function"){
+      requestAnimationFrame(()=>{
+        try{ focusTarget.focus({preventScroll:true}); }
+        catch{ focusTarget.focus(); }
+      });
+    }
 
     if(navigateBack && currentRoute().startsWith("card/")){
       const target=detailsReturnHash && !detailsReturnHash.includes("#/card/")
@@ -26421,6 +26506,41 @@ function wireShimmer(container){
   },true);
 
   setTimeout(update,120);
+})();
+</script>
+
+
+<script>
+(function(){
+  const overlay=document.getElementById("detailsOverlay");
+  const modal=document.getElementById("detailsModal");
+  if(!overlay || !modal) return;
+
+  function focusables(){
+    return Array.from(modal.querySelectorAll(
+      'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
+    )).filter(el=>!el.hidden && el.getClientRects().length);
+  }
+
+  modal.addEventListener("keydown",e=>{
+    if(overlay.hidden) return;
+
+    if(e.key==="Tab"){
+      const items=focusables();
+      if(!items.length) return;
+
+      const first=items[0];
+      const last=items[items.length-1];
+
+      if(e.shiftKey && document.activeElement===first){
+        e.preventDefault();
+        last.focus();
+      }else if(!e.shiftKey && document.activeElement===last){
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  });
 })();
 </script>
 
