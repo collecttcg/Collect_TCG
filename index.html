@@ -9981,6 +9981,30 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   };
   const SHIMMER_RARITIES = new Set(["Rare Holo","Ultra Rare","Secret Rare","Promo"]);
   const CONDITION_LABEL = {NM:"Near Mint", M:"Mint", LP:"Lightly Played", MP:"Moderately Played", HP:"Heavily Played", DMG:"Damaged", SEALED:"Sealed", NA:"Not Applicable"};
+
+  // Compact labels used on raw-card overview badges/pills.
+  const RAW_CONDITION_SHORT = {
+    "M":"M",
+    "MINT":"M",
+    "NM":"NM",
+    "NEAR MINT":"NM",
+    "LP":"LP",
+    "LIGHTLY PLAYED":"LP",
+    "MP":"MP",
+    "MODERATELY PLAYED":"MP",
+    "HP":"HP",
+    "HEAVILY PLAYED":"HP",
+    "DMG":"DMG",
+    "DAMAGED":"DMG",
+    "NA":"N/A",
+    "NOT APPLICABLE":"N/A"
+  };
+
+  function rawConditionShortLabel(condition){
+    const value=String(condition||"").trim();
+    if(!value) return "";
+    return RAW_CONDITION_SHORT[value.toUpperCase()] || value.toUpperCase();
+  }
   const LANGUAGE_OPTIONS = ["JP","ENG","KR","CN"];
   const ERA_OPTIONS = ["Modern","Mid-Era","Vintage"];
   // Keep these canonical values exact. The Supabase availability CHECK
@@ -12608,6 +12632,22 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     </span>`;
   }
 
+  function overviewRawConditionOverlayHTML(card){
+    if(!card || normalizeFilterValue(effectiveFormat(card))!=="raw") return "";
+
+    const condition=rawConditionShortLabel(card.condition);
+    if(!condition) return "";
+
+    const status=normalizeFilterValue(card.availability||"Available");
+    const avoidStatusCorner=status==="sold" || status==="reserved";
+
+    return `<span class="overview-grade-overlay ${avoidStatusCorner?"overview-grade-overlay-right":""}"
+                  aria-label="${escapeHtml(`Raw card condition ${condition}`)}">
+      <strong>${escapeHtml(condition)}</strong>
+      <small>RAW</small>
+    </span>`;
+  }
+
   function cardThumbHTML(c){
     const color = RARITY_COLOR[c.rarity] || "var(--r-common)";
     const images = getImages(c);
@@ -12625,7 +12665,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
              fetchpriority="low"
              style="border-color:${color}">
         ${overviewGradeOverlayHTML(c)}
-        ${isNewCard(c) ? `<span class="new-card-badge ${normalizeFilterValue(effectiveFormat(c))==="graded" ? "new-card-badge-with-grade" : ""}" aria-label="Recently added">NEW</span>` : ""}
+        ${overviewRawConditionOverlayHTML(c)}
+        ${isNewCard(c) ? `<span class="new-card-badge ${["graded","raw"].includes(normalizeFilterValue(effectiveFormat(c))) ? "new-card-badge-with-grade" : ""}" aria-label="Recently added">NEW</span>` : ""}
         ${statusCornerHTML(c)}
         <span class="image-count-badge"
               data-listing-image-count
@@ -14492,8 +14533,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           return normalizeFilterValue(key) === normalizeFilterValue(gradeF);
         });
 
+        const conditionShort = format === "Raw" ? rawConditionShortLabel(c.condition) : "";
+
         if(!hasNormalizedGrade &&
-           normalizeFilterValue(conditionLabel) !== normalizeFilterValue(gradeF)) return false;
+           normalizeFilterValue(conditionLabel) !== normalizeFilterValue(gradeF) &&
+           normalizeFilterValue(conditionShort) !== normalizeFilterValue(gradeF)) return false;
       }
       if(languageF && normalizeFilterValue(c.language || "") !== normalizeFilterValue(languageF)) return false;
       if(eraF && normalizeFilterValue(c.era || "") !== normalizeFilterValue(eraF)) return false;
@@ -14515,7 +14559,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         const format = effectiveFormat(c);
         if(format === "Raw"){
           const rawCondition = CONDITION_LABEL[c.condition] || c.condition || "";
+          const rawConditionShort = rawConditionShortLabel(c.condition);
           if(rawCondition) cardGrades.add(rawCondition);
+          if(rawConditionShort) cardGrades.add(rawConditionShort);
         }else if(format === "Sealed"){
           cardGrades.add("Sealed");
         }
@@ -14768,7 +14814,7 @@ function relatedCardHTML(c){
     const grades = Array.isArray(c.grading) ? c.grading.filter(g=>g && g.company) : [];
     const gradeText = grades.length
       ? `${grades[0].company} ${grades[0].grade || ""}`.trim()
-      : (format === "Sealed" ? "Sealed" : (CONDITION_LABEL[c.condition] || c.condition || "—"));
+      : (format === "Sealed" ? "Sealed" : (rawConditionShortLabel(c.condition) || "—"));
     const seriesText = normalizeStoredLabel(c.series || "");
     return `
       <div class="card ${shimmer ? "shimmer" : ""} ${isCompareSelected(c.id) ? "compare-selected" : ""} ${normalizeFilterValue(c.availability)==="collection (nfs)" ? "nfs-collection-card" : ""}" style="--stripe:${normalizeFilterValue(c.availability)==="collection (nfs)" ? "#a855f7" : color}" data-shimmer="${shimmer}" data-card-id="${escapeHtml(c.id)}" tabindex="0" role="button" aria-label="View details for ${escapeHtml(c.name)}">
