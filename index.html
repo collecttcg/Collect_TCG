@@ -9839,8 +9839,8 @@ a.home-stat-card:hover::after{opacity:.95;}
   .card:active,
   .home-storefront-grid .card:active,
   #invGrid .card:active{
-    transform:scale(.992);
     border-color:rgba(102,224,210,.34);
+    box-shadow:0 0 0 1px rgba(102,224,210,.08);
   }
 }
 
@@ -15394,15 +15394,46 @@ function wireShimmer(container){
     const touch=e.changedTouches[0];
     const dx=touch.clientX-state.x;
     const dy=touch.clientY-state.y;
-    if(Math.abs(dx)<44 || Math.abs(dx)<=Math.abs(dy)) return;
+    const moved=Math.hypot(dx,dy);
 
-    const card=cards.find(c=>String(c.id)===String(state.wrap.dataset.listingGallery||""));
-    if(!card) return;
+    // A deliberate horizontal swipe changes the listing photo.
+    if(Math.abs(dx)>=44 && Math.abs(dx)>Math.abs(dy)){
+      const card=cards.find(c=>String(c.id)===String(state.wrap.dataset.listingGallery||""));
+      if(!card) return;
 
-    e.preventDefault();
-    e.stopPropagation();
-    await stepListingGallery(state.wrap,card,dx<0?1:-1);
+      e.preventDefault();
+      e.stopPropagation();
+      await stepListingGallery(state.wrap,card,dx<0?1:-1);
+      return;
+    }
+
+    // iOS can suppress the synthetic click after a touch sequence on the
+    // swipe-enabled gallery. Handle a genuine tap explicitly so the whole
+    // card remains tappable on mobile.
+    if(moved<=14){
+      const target=e.target;
+      const interactive=target.closest?.(
+        "button,a,input,select,textarea,label," +
+        "[data-action],[data-listing-gallery-step]," +
+        ".favorite-btn,.compare-card-btn,.filter-pill-btn"
+      );
+      if(interactive) return;
+
+      const tile=target.closest?.(".card[data-card-id]");
+      if(!tile) return;
+
+      const card=cards.find(c=>String(c.id)===String(tile.dataset.cardId||""));
+      if(!card) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      openCardRoute(card.id);
+    }
   },{passive:false});
+
+  view.addEventListener("touchcancel",()=>{
+    listingGalleryTouchState=null;
+  },{passive:true});
 
   function syncQuickFilterUI(){
     const wrap = $("quickFilters");
