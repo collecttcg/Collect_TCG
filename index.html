@@ -8928,6 +8928,149 @@
     pointer-events:none!important;
   }
 
+
+  /* ==========================================================
+     Owner image watermark controls
+     ========================================================== */
+  .image-watermark-control{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:10px 11px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--surface-2);
+  }
+  .image-watermark-copy{
+    min-width:0;
+  }
+  .image-watermark-copy strong{
+    display:block;
+    font-size:10px;
+    color:var(--text);
+  }
+  .image-watermark-copy span{
+    display:block;
+    margin-top:2px;
+    color:var(--text-muted);
+    font-size:8px;
+    line-height:1.35;
+  }
+  .image-watermark-choice{
+    display:inline-grid;
+    grid-template-columns:1fr 1fr;
+    flex:0 0 auto;
+    padding:3px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:var(--bg);
+  }
+  .image-watermark-option{
+    min-height:32px;
+    padding:6px 9px;
+    border:0;
+    border-radius:7px;
+    background:transparent;
+    color:var(--text-muted);
+    font-size:8px;
+    font-weight:800;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .image-watermark-option.active{
+    background:rgba(95,212,196,.10);
+    color:var(--accent-teal);
+    box-shadow:inset 0 0 0 1px rgba(95,212,196,.30);
+  }
+
+  .image-preview-watermark-actions{
+    position:absolute;
+    left:5px;
+    right:5px;
+    bottom:5px;
+    z-index:6;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:4px;
+    padding:5px;
+    border-radius:8px;
+    background:rgba(10,11,14,.86);
+    backdrop-filter:blur(7px);
+    -webkit-backdrop-filter:blur(7px);
+  }
+  .image-watermark-state{
+    flex:1 1 100%;
+    color:var(--text-muted);
+    font-size:6.5px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.35px;
+  }
+  .image-watermark-state.with-mark{color:var(--accent-gold);}
+  .image-watermark-state.without-mark{color:var(--accent-teal);}
+  .image-preview-watermark-btn{
+    flex:1 1 auto;
+    min-height:25px;
+    padding:4px 5px;
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:6px;
+    background:rgba(18,20,25,.9);
+    color:#f1f2f4;
+    font-size:6.5px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .image-preview-watermark-btn:disabled{
+    opacity:.38;
+    cursor:not-allowed;
+  }
+
+  @media(max-width:700px){
+    .image-watermark-control{
+      align-items:stretch;
+      flex-direction:column;
+      gap:8px;
+    }
+    .image-watermark-choice{
+      width:100%;
+    }
+    .image-watermark-option{
+      min-height:36px;
+      font-size:8.5px;
+    }
+    .image-preview-watermark-actions{
+      position:static;
+      margin:5px;
+      background:var(--surface-2);
+    }
+  }
+
+  /* FINAL owner guard: these controls must never appear publicly. */
+  body:not(.owner-mode) .image-watermark-control,
+  body:not(.owner-mode) .image-preview-watermark-actions,
+  body:not(.owner-mode) [data-preview-watermark]{
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+
+
+  /* FINAL FINAL owner visibility guard */
+  body:not(.owner-mode) .owner-only,
+  body:not(.owner-mode) #mobileMoreMenu > a.owner-only,
+  body:not(.owner-mode) nav.mainnav a.owner-only,
+  body:not(.owner-mode) .desktop-more-owner,
+  body:not(.owner-mode) .card-actions.owner-only,
+  body:not(.owner-mode) .giveaway-owner-actions,
+  body:not(.owner-mode) .image-watermark-control,
+  body:not(.owner-mode) .image-preview-watermark-actions{
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+
 </style>
 </head>
 <body>
@@ -11448,7 +11591,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return canvasToBlob(canvas, quality, "image/jpeg");
   }
 
-  async function renderWatermarkedImage(img, maxDim = 1800, quality = 0.94){
+  async function renderCardImage(img, maxDim = 1800, quality = 0.94, applyWatermark = false){
     let w = img.naturalWidth || img.width;
     let h = img.naturalHeight || img.height;
     if(!w || !h) throw new Error("invalid image dimensions");
@@ -11473,10 +11616,19 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
     ctx.drawImage(img, 0, 0, w, h);
 
-    const logo = await loadWatermarkLogo();
-    drawWatermark(ctx, canvas, logo);
+    if(applyWatermark){
+      if(!requireOwner("apply image watermark")){
+        throw new Error("Owner login required");
+      }
+      const logo = await loadWatermarkLogo();
+      drawWatermark(ctx, canvas, logo);
+    }
 
     return canvas.toDataURL("image/jpeg", quality);
+  }
+
+  async function renderWatermarkedImage(img, maxDim = 1800, quality = 0.94){
+    return renderCardImage(img,maxDim,quality,true);
   }
 
   function loadImageFromDataUrl(dataUrl){
@@ -11488,7 +11640,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     });
   }
 
-  async function resizeImageFile(file, maxDim, quality){
+  async function resizeImageFile(file, maxDim = 1800, quality = 0.94, applyWatermark = false){
+    if(!requireOwner("process card image")) throw new Error("Owner login required");
     if(!file) throw new Error("no file");
     const mime = String(file.type || "").toLowerCase();
     if(mime === "image/svg+xml") throw new Error("unsupported image type");
@@ -11503,10 +11656,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     });
 
     const img = await loadImageFromDataUrl(dataUrl);
-    return renderWatermarkedImage(img, maxDim, quality);
+    return renderCardImage(img, maxDim, quality, applyWatermark);
   }
 
-  async function watermarkImageUrl(url, maxDim = 1800, quality = 0.94){
+  async function processCardImageUrl(url, maxDim = 1800, quality = 0.94, applyWatermark = false){
+    if(!requireOwner("process card image URL")) throw new Error("Owner login required");
+
     let parsed;
     try{
       parsed = new URL(url, location.href);
@@ -11542,10 +11697,25 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         image.onerror = ()=>reject(new Error("decode failed"));
         image.src = objectUrl;
       });
-      return await renderWatermarkedImage(img, maxDim, quality);
+      return await renderCardImage(img,maxDim,quality,applyWatermark);
     }finally{
       URL.revokeObjectURL(objectUrl);
     }
+  }
+
+  async function applyWatermarkToCardImageSource(source, maxDim = 1800, quality = 0.94){
+    if(!requireOwner("apply image watermark")) throw new Error("Owner login required");
+
+    if(isPendingCardImage(source)){
+      const img=await loadImageFromDataUrl(source);
+      return renderCardImage(img,maxDim,quality,true);
+    }
+
+    return processCardImageUrl(source,maxDim,quality,true);
+  }
+
+  async function watermarkImageUrl(url, maxDim = 1800, quality = 0.94){
+    return processCardImageUrl(url,maxDim,quality,true);
   }
 
   const CARD_IMAGE_STORAGE_BUCKET="card-images";
@@ -11917,12 +12087,33 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       <div class="image-field">
         <div class="image-gallery-preview" id="${p}ImageGalleryPreview"></div>
         <div class="image-controls">
+          <div class="owner-only image-watermark-control" id="${p}WatermarkControl">
+            <div class="image-watermark-copy">
+              <strong>Logo watermark</strong>
+              <span>Choose how newly added photos are saved.</span>
+            </div>
+            <div class="image-watermark-choice" role="group" aria-label="Image watermark choice">
+              <button type="button" class="image-watermark-option active" data-watermark-choice="off" id="${p}WatermarkOff">
+                Without watermark
+              </button>
+              <button type="button" class="image-watermark-option" data-watermark-choice="on" id="${p}WatermarkOn">
+                Add logo watermark
+              </button>
+            </div>
+          </div>
+
           <input type="file" id="${p}ImageFile" accept="image/*" multiple>
           <div class="image-url-row">
             <input type="text" id="${p}ImageUrl" placeholder="Paste an image URL, then click Add URL">
             <button type="button" class="btn-ghost" id="${p}AddImageUrl">Add URL</button>
           </div>
-          <div class="image-gallery-note">Add multiple pictures. New images are watermarked first, then uploaded to the <strong>card-images</strong> Supabase Storage bucket only when you press Save. The database stores only the resulting image URLs. Existing legacy images remain compatible. Drag pictures to change their order; the first picture is the listing thumbnail.</div>
+          <div class="image-gallery-note">
+            Add multiple pictures and choose <strong>Without watermark</strong> or <strong>Add logo watermark</strong> before adding them.
+            Images are uploaded to the <strong>card-images</strong> Supabase Storage bucket only when you press Save.
+            For photos added during this Add/Edit session, you can switch each preview between clean and watermarked before saving.
+            Existing photos can have the logo applied, but a watermark already baked into an older image cannot be automatically removed; replace it with the original clean photo if needed.
+            Drag pictures to change their order; the first picture is the listing thumbnail.
+          </div>
         </div>
       </div>
       <div class="field">
@@ -12072,18 +12263,71 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   function wireImageControls(p, formState){
+    if(!requireOwner("manage card images")) return;
+
     const fileInput = $(p + "ImageFile");
     const urlInput = $(p + "ImageUrl");
     const addUrlBtn = $(p + "AddImageUrl");
     const preview = $(p + "ImageGalleryPreview");
+    const watermarkOffBtn=$(p+"WatermarkOff");
+    const watermarkOnBtn=$(p+"WatermarkOn");
+
+    formState.watermarkEnabled=Boolean(formState.watermarkEnabled);
+    formState.imageCleanSources=Array.isArray(formState.imageCleanSources)
+      ? formState.imageCleanSources.slice(0,formState.images.length)
+      : Array(formState.images.length).fill(null);
+    while(formState.imageCleanSources.length<formState.images.length){
+      formState.imageCleanSources.push(null);
+    }
+    formState.imageWatermarkStates=Array.isArray(formState.imageWatermarkStates)
+      ? formState.imageWatermarkStates.slice(0,formState.images.length)
+      : Array(formState.images.length).fill(null);
+    while(formState.imageWatermarkStates.length<formState.images.length){
+      formState.imageWatermarkStates.push(null);
+    }
+
     let dragIndex = null;
     let pointerDragIndex = null;
+
+    function syncWatermarkChoiceUI(){
+      watermarkOffBtn?.classList.toggle("active",!formState.watermarkEnabled);
+      watermarkOnBtn?.classList.toggle("active",formState.watermarkEnabled);
+      watermarkOffBtn?.setAttribute("aria-pressed",formState.watermarkEnabled ? "false" : "true");
+      watermarkOnBtn?.setAttribute("aria-pressed",formState.watermarkEnabled ? "true" : "false");
+    }
+
+    watermarkOffBtn?.addEventListener("click",()=>{
+      if(!requireOwner("change watermark setting")) return;
+      formState.watermarkEnabled=false;
+      syncWatermarkChoiceUI();
+    });
+
+    watermarkOnBtn?.addEventListener("click",()=>{
+      if(!requireOwner("change watermark setting")) return;
+      formState.watermarkEnabled=true;
+      syncWatermarkChoiceUI();
+    });
+
+    function moveParallelArray(array,from,to){
+      if(!Array.isArray(array)) return;
+      const [value]=array.splice(from,1);
+      array.splice(to,0,value);
+    }
 
     function moveImage(from, to){
       if(from === to || from == null || to == null) return;
       if(from < 0 || to < 0 || from >= formState.images.length || to >= formState.images.length) return;
-      const [moved] = formState.images.splice(from, 1);
-      formState.images.splice(to, 0, moved);
+
+      moveParallelArray(formState.images,from,to);
+      moveParallelArray(formState.imageCleanSources,from,to);
+      moveParallelArray(formState.imageWatermarkStates,from,to);
+      refreshPreview();
+    }
+
+    function removeImageAt(index){
+      formState.images.splice(index,1);
+      formState.imageCleanSources.splice(index,1);
+      formState.imageWatermarkStates.splice(index,1);
       refreshPreview();
     }
 
@@ -12091,6 +12335,51 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       preview.querySelectorAll(".image-preview-box").forEach(box=>{
         box.classList.remove("dragging","drag-over");
       });
+    }
+
+    async function setImageWatermark(index,apply){
+      if(!requireOwner("change image watermark")) return;
+      if(index<0 || index>=formState.images.length) return;
+
+      const current=formState.images[index];
+      let cleanSource=formState.imageCleanSources[index];
+
+      formState.processingImages=Number(formState.processingImages||0)+1;
+      refreshPreview();
+
+      try{
+        if(apply){
+          // Preserve a clean source before adding the watermark so the owner
+          // can switch back during this editing session.
+          if(!cleanSource){
+            cleanSource=current;
+            formState.imageCleanSources[index]=cleanSource;
+          }
+
+          formState.images[index]=await applyWatermarkToCardImageSource(cleanSource,1800,0.94);
+          formState.imageWatermarkStates[index]=true;
+          showToast("Logo watermark applied");
+        }else{
+          if(!cleanSource){
+            showToast("A clean source is not available for this existing photo. Replace it with the original photo to remove a baked-in watermark.");
+            return;
+          }
+
+          formState.images[index]=cleanSource;
+          formState.imageWatermarkStates[index]=false;
+          showToast("Using photo without added watermark");
+        }
+      }catch(error){
+        console.warn("Could not change image watermark:",error);
+        showToast(
+          String(error?.message||"").includes("image fetch")
+            ? "Could not read that existing image. Replace it with the original file to change its watermark."
+            : "Could not change the watermark for this photo."
+        );
+      }finally{
+        formState.processingImages=Math.max(0,Number(formState.processingImages||0)-1);
+        refreshPreview();
+      }
     }
 
     function refreshPreview(){
@@ -12105,6 +12394,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
       formState.images.forEach((image, index)=>{
         const box = document.createElement("div");
+        const state=formState.imageWatermarkStates[index];
+        const cleanAvailable=Boolean(formState.imageCleanSources[index]);
+
         box.className = "image-preview-box";
         box.dataset.imageIndex = String(index);
         box.draggable = true;
@@ -12112,17 +12404,58 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           <img src="${escapeHtml(image)}" alt="Image ${index+1}" draggable="false">
           <span class="image-drag-handle" title="Drag to reorder">☰</span>
           <span class="image-number">${index+1}</span>
+
+          <div class="owner-only image-preview-watermark-actions">
+            <span class="image-watermark-state ${
+              state===true ? "with-mark" : state===false ? "without-mark" : "unknown"
+            }">${
+              state===true
+                ? "Watermarked"
+                : state===false
+                  ? "No watermark"
+                  : "Existing photo"
+            }</span>
+
+            <button type="button"
+                    class="image-preview-watermark-btn"
+                    data-preview-watermark="on"
+                    title="Apply the Collect TCG logo watermark">
+              Add watermark
+            </button>
+
+            <button type="button"
+                    class="image-preview-watermark-btn"
+                    data-preview-watermark="off"
+                    ${cleanAvailable ? "" : "disabled"}
+                    title="${
+                      cleanAvailable
+                        ? "Use the clean photo saved during this editing session"
+                        : "Replace this existing photo with its original clean file first"
+                    }">
+              Without watermark
+            </button>
+          </div>
+
           <button type="button" class="image-remove" title="Remove image">×</button>`;
 
         box.querySelector(".image-remove").addEventListener("pointerdown", e=>e.stopPropagation());
         box.querySelector(".image-remove").addEventListener("click", e=>{
           e.stopPropagation();
-          formState.images.splice(index, 1);
-          refreshPreview();
+          removeImageAt(index);
+        });
+
+        box.querySelectorAll("[data-preview-watermark]").forEach(btn=>{
+          btn.addEventListener("pointerdown",e=>e.stopPropagation());
+          btn.addEventListener("click",async e=>{
+            e.stopPropagation();
+            if(btn.disabled) return;
+            await setImageWatermark(index,btn.dataset.previewWatermark==="on");
+          });
         });
 
         // Desktop HTML5 drag and drop.
         box.addEventListener("dragstart", e=>{
+          if(e.target.closest("button")){e.preventDefault();return;}
           dragIndex = index;
           box.classList.add("dragging");
           if(e.dataTransfer){
@@ -12158,7 +12491,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         // Pointer-based reordering also works on touch screens.
         box.addEventListener("pointerdown", e=>{
           if(e.button !== undefined && e.button !== 0) return;
-          if(e.target.closest(".image-remove")) return;
+          if(e.target.closest("button")) return;
           pointerDragIndex = index;
           box.classList.add("dragging");
           try{ box.setPointerCapture(e.pointerId); }catch(_){}
@@ -12192,18 +12525,35 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
 
     fileInput.addEventListener("change", async ()=>{
+      if(!requireOwner("add card image")) return;
+
       const files = Array.from(fileInput.files || []);
       if(!files.length) return;
 
       formState.processingImages = Number(formState.processingImages || 0) + files.length;
       fileInput.disabled = true;
+
       try{
+        let added=0;
         for(const file of files){
-          formState.images.push(await resizeImageFile(file, 1800, 0.94));
+          // Always keep a clean, high-quality version client-side during this
+          // Add/Edit session so the owner can switch watermark on/off.
+          const clean=await resizeImageFile(file,1800,0.94,false);
+          const finalImage=formState.watermarkEnabled
+            ? await applyWatermarkToCardImageSource(clean,1800,0.94)
+            : clean;
+
+          formState.images.push(finalImage);
+          formState.imageCleanSources.push(clean);
+          formState.imageWatermarkStates.push(Boolean(formState.watermarkEnabled));
+          added++;
         }
+
         fileInput.value = "";
         refreshPreview();
-        showToast(files.length === 1 ? "Image added with watermark" : `${files.length} images added with watermark`);
+
+        const mode=formState.watermarkEnabled ? "with logo watermark" : "without watermark";
+        showToast(`${files.length===1 ? "Image" : `${files.length} images`} added ${mode}`);
       }catch(e){
         console.warn("Card image processing failed:", e);
         showToast(
@@ -12211,7 +12561,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             ? "Image is too large. Maximum size is 20 MB."
             : String(e?.message || "").includes("unsupported")
               ? "That image format is not supported by this browser."
-              : "Could not process the image or load the watermark logo."
+              : "Could not process the image."
         );
       }finally{
         formState.processingImages = Math.max(0, Number(formState.processingImages || 0) - files.length);
@@ -12220,23 +12570,34 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     });
 
     async function addUrl(){
+      if(!requireOwner("add card image URL")) return;
+
       const val = urlInput.value.trim();
       if(!val) return;
 
       formState.processingImages = Number(formState.processingImages || 0) + 1;
       addUrlBtn.disabled = true;
       const originalText = addUrlBtn.textContent;
-      addUrlBtn.textContent = "Watermarking…";
+      addUrlBtn.textContent = "Processing…";
 
       try{
-        const processed = await watermarkImageUrl(val, 1800, 0.94);
-        formState.images.push(processed);
+        const clean=await processCardImageUrl(val,1800,0.94,false);
+        const finalImage=formState.watermarkEnabled
+          ? await applyWatermarkToCardImageSource(clean,1800,0.94)
+          : clean;
+
+        formState.images.push(finalImage);
+        formState.imageCleanSources.push(clean);
+        formState.imageWatermarkStates.push(Boolean(formState.watermarkEnabled));
         urlInput.value = "";
         refreshPreview();
-        showToast("Image added with watermark");
+
+        showToast(formState.watermarkEnabled
+          ? "Image added with logo watermark"
+          : "Image added without watermark");
       }catch(err){
-        console.warn("Could not watermark image URL:", err);
-        showToast("Could not watermark that URL. Upload the image file instead.");
+        console.warn("Could not process image URL:", err);
+        showToast("Could not process that URL. Upload the image file instead.");
       }finally{
         formState.processingImages = Math.max(0, Number(formState.processingImages || 0) - 1);
         addUrlBtn.disabled = false;
@@ -12252,6 +12613,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       }
     });
 
+    syncWatermarkChoiceUI();
     refreshPreview();
   }
 
@@ -22041,6 +22403,9 @@ function wireShimmer(container){
     `;
     const formState = {
       images: cloneDraft ? getImages(cloneDraft).slice() : [],
+      imageCleanSources: cloneDraft ? Array(getImages(cloneDraft).length).fill(null) : [],
+      imageWatermarkStates: cloneDraft ? Array(getImages(cloneDraft).length).fill(null) : [],
+      watermarkEnabled: false,
       grading: cloneDraft && Array.isArray(cloneDraft.grading) ? cloneDraft.grading.map(g=>({...g})) : [],
       processingImages: 0
     };
@@ -22054,7 +22419,7 @@ function wireShimmer(container){
       e.preventDefault();
 
       if(formState.processingImages){
-        showToast("Please wait for the image watermark to finish.");
+        showToast("Please wait for image processing to finish.");
         return;
       }
 
@@ -23238,7 +23603,14 @@ function wireShimmer(container){
   // ---------------- Edit modal ----------------
   const overlay = $("modalOverlay");
   const editForm = $("editForm");
-  let editFormState = { images: [], grading: [], processingImages: 0 };
+  let editFormState = {
+    images: [],
+    imageCleanSources: [],
+    imageWatermarkStates: [],
+    watermarkEnabled:false,
+    grading: [],
+    processingImages: 0
+  };
 
   function resetEditSubmitButton(){
     const submitBtn=editForm.querySelector('button[type="submit"]');
@@ -23260,6 +23632,9 @@ function wireShimmer(container){
     editFormState = {
       images: getImages(card).slice(),
       originalImages: getImages(card).slice(),
+      imageCleanSources: Array(getImages(card).length).fill(null),
+      imageWatermarkStates: Array(getImages(card).length).fill(null),
+      watermarkEnabled:false,
       processingImages: 0,
       grading: Array.isArray(card.grading) ? card.grading.map(g=>({
         company:g.company || "PSA",
@@ -23291,7 +23666,7 @@ function wireShimmer(container){
     e.preventDefault();
 
     if(editFormState.processingImages){
-      showToast("Please wait for the image watermark to finish.");
+      showToast("Please wait for image processing to finish.");
       return;
     }
 
