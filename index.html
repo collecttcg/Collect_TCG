@@ -7545,6 +7545,51 @@
     color:#ef7b7b;
   }
 
+
+
+  /* ---------- High-value direct-contact notice ---------- */
+  .high-value-contact-alert{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 12px;align-items:center;margin:10px 0 14px;padding:11px 12px;border:1px solid rgba(227,179,65,.42);border-radius:11px;background:linear-gradient(135deg,rgba(227,179,65,.10),rgba(95,212,196,.045));box-shadow:inset 0 0 0 1px rgba(255,255,255,.025);}
+  .high-value-contact-alert strong{grid-column:1;color:var(--accent-gold);font-size:10.5px;letter-spacing:.15px;}
+  .high-value-contact-alert span{grid-column:1;color:var(--text-muted);font-size:8.5px;line-height:1.45;}
+  .high-value-contact-btn{grid-column:2;grid-row:1/3;align-self:center;min-height:34px;padding:7px 10px;border:1px solid rgba(227,179,65,.45);border-radius:8px;background:rgba(227,179,65,.10);color:var(--accent-gold);font-size:8.5px;font-weight:800;cursor:pointer;}
+  .high-value-contact-btn:hover{background:rgba(227,179,65,.17);border-color:var(--accent-gold);}
+  .high-value-contact-alert.compact{display:block;margin:7px 0;padding:8px 9px;}
+  .high-value-contact-alert.compact strong,.high-value-contact-alert.compact span{display:block;}
+  .high-value-contact-alert.compact span{margin-top:3px;font-size:7.5px;}
+  .high-value-contact-alert.compact .high-value-contact-btn{margin-top:7px;min-height:29px;font-size:7.5px;}
+
+  /* ---------- Catalogue audit ---------- */
+  .catalogue-audit-summary{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:12px;}
+  .catalogue-audit-summary button{padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);text-align:left;cursor:pointer;}
+  .catalogue-audit-summary strong{display:block;color:var(--accent-teal);font-family:'JetBrains Mono',monospace;font-size:18px;}
+  .catalogue-audit-summary span{display:block;margin-top:3px;color:var(--text-muted);font-size:8px;}
+  .catalogue-audit-panel{padding:13px;}
+  .catalogue-audit-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .catalogue-audit-toolbar input{flex:1;min-height:38px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);}
+  .catalogue-audit-toolbar span{color:var(--text-muted);font-size:8.5px;white-space:nowrap;}
+  .catalogue-audit-list{display:flex;flex-direction:column;gap:7px;}
+  .catalogue-audit-row{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--bg);}
+  .catalogue-audit-thumb{width:48px;height:60px;border-radius:7px;overflow:hidden;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:7px;}
+  .catalogue-audit-thumb img{width:100%;height:100%;object-fit:cover;}
+  .catalogue-audit-copy{min-width:0;}
+  .catalogue-audit-copy strong,.catalogue-audit-copy small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .catalogue-audit-copy strong{font-size:10px;}.catalogue-audit-copy small{margin-top:3px;color:var(--text-muted);font-size:7.5px;}
+  .catalogue-audit-copy>div{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+  .catalogue-audit-chip{padding:3px 5px;border:1px solid rgba(227,179,65,.22);border-radius:999px;color:var(--accent-gold);background:rgba(227,179,65,.05);font-size:7px;font-weight:700;}
+  .catalogue-audit-chip.critical{border-color:rgba(232,96,122,.3);background:rgba(232,96,122,.06);color:var(--danger);}
+
+  /* ---------- Image reprocessor ---------- */
+  .image-reprocess-warning{display:flex;gap:10px;margin-bottom:12px;padding:10px 12px;border:1px solid rgba(227,179,65,.32);border-radius:10px;background:rgba(227,179,65,.05);}
+  .image-reprocess-warning strong{flex:0 0 auto;color:var(--accent-gold);font-size:9px;}.image-reprocess-warning span{color:var(--text-muted);font-size:8px;line-height:1.5;}
+  .image-reprocess-layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(240px,.5fr);gap:12px;align-items:start;}
+  .image-reprocess-toolbar{display:flex;align-items:center;gap:7px;padding:12px;border-bottom:1px solid var(--border);}.image-reprocess-toolbar span{margin-left:auto;color:var(--text-muted);font-size:8px;}
+  .image-reprocess-list{max-height:620px;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:6px;}
+  .image-reprocess-row{display:grid;grid-template-columns:auto 46px minmax(0,1fr);gap:9px;align-items:center;padding:7px;border:1px solid var(--border);border-radius:9px;background:var(--bg);cursor:pointer;}
+  .image-reprocess-thumb{width:46px;height:58px;border-radius:6px;overflow:hidden;background:var(--surface-2);font-size:7px;display:flex;align-items:center;justify-content:center;}.image-reprocess-thumb img{width:100%;height:100%;object-fit:cover;}
+  .image-reprocess-row strong,.image-reprocess-row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.image-reprocess-row strong{font-size:9.5px;}.image-reprocess-row small{margin-top:3px;color:var(--text-muted);font-size:7.5px;}
+  .image-reprocess-action{padding:14px;position:sticky;top:14px;}.image-reprocess-action h3{font-size:18px;}.image-reprocess-action p{color:var(--text-muted);font-size:8.5px;line-height:1.5;}
+  @media(max-width:900px){.catalogue-audit-summary{grid-template-columns:repeat(2,minmax(0,1fr));}.image-reprocess-layout{grid-template-columns:1fr}.image-reprocess-action{position:static}.high-value-contact-alert{grid-template-columns:1fr}.high-value-contact-btn{grid-column:1;grid-row:auto;justify-self:start}.catalogue-audit-row{grid-template-columns:42px minmax(0,1fr)}.catalogue-audit-row>.btn-ghost{grid-column:1/-1}.catalogue-audit-thumb{width:42px;height:54px}}
+
 </style>
 </head>
 <body>
@@ -8080,6 +8125,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   let soldAtSupported = false;
   let lifecycleSupported = false;
   let ownerPrivateSupported = false;
+  let thumbnailUrlSupported = false;
   let editHistorySupported = false;
   let giveaways = [];
   let showcases = [];
@@ -8313,6 +8359,32 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       .filter(entry=>hasListedPrice(entry.value));
   }
 
+  const HIGH_VALUE_DIRECT_CONTACT_USD=6000;
+
+  function cardUsdListedPrice(card){
+    const value=card?.price_usd ?? card?.price;
+    const amount=Number(value);
+    return Number.isFinite(amount) && amount>=0 ? amount : null;
+  }
+
+  function isHighValueDirectContactCard(card){
+    const status=normalizeFilterValue(card?.availability||"");
+    if(status==="sold" || status==="collection (nfs)") return false;
+    const usd=cardUsdListedPrice(card);
+    return usd!==null && usd>=HIGH_VALUE_DIRECT_CONTACT_USD;
+  }
+
+  function highValueContactAlertHTML(card,compact=false){
+    if(!isHighValueDirectContactCard(card)) return "";
+    return `
+      <div class="high-value-contact-alert ${compact?"compact":""}" role="note">
+        <strong>High-value listing · USD ${HIGH_VALUE_DIRECT_CONTACT_USD.toLocaleString()}+</strong>
+        <span>Please contact us directly regarding this card so we can arrange the safest purchase and handover method. COD / face-to-face may be preferred depending on the item and location.</span>
+        <button type="button" class="high-value-contact-btn" data-high-value-contact="1">Contact us directly</button>
+      </div>
+    `;
+  }
+
 
   function cardPriceDisplayHTML(card){
     if(normalizeFilterValue(card?.availability)==="collection (nfs)"){
@@ -8345,6 +8417,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function escapeHtml(str){ const d = document.createElement("div"); d.textContent = str == null ? "" : str; return d.innerHTML; }
   function uid(){ return "c_" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
   const CARD_PUBLIC_COLUMNS_BASE = "id,name,card_code,year,game,language,era,availability,set_name,series,format,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,images,grading,created_at,updated_at";
+  const CARD_PUBLIC_COLUMNS_LIGHT = "id,name,card_code,year,game,language,era,availability,set_name,series,format,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,thumbnail_url,grading,created_at,updated_at";
 
   function cardMutationReturnColumns(){
     return CARD_PUBLIC_COLUMNS_BASE
@@ -8393,8 +8466,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       cost: row.cost == null ? null : Number(row.cost),
       notes: row.notes || "",
       price_negotiability: priceNegotiabilityFromNotes(row.notes || ""),
-      images: Array.isArray(row.images) ? row.images : [],
-      image: Array.isArray(row.images) && row.images.length ? row.images[0] : null,
+      images: Array.isArray(row.images)
+        ? row.images
+        : (safeHttpUrl(row.thumbnail_url||"") ? [safeHttpUrl(row.thumbnail_url)] : []),
+      image: Array.isArray(row.images) && row.images.length
+        ? row.images[0]
+        : (safeHttpUrl(row.thumbnail_url||"") || null),
+      thumbnail_url: safeHttpUrl(row.thumbnail_url||"") || (Array.isArray(row.images) && row.images.length ? safeHttpUrl(row.images[0]) : ""),
+      _images_loaded: Array.isArray(row.images),
       grading: (() => {
         const publicGrades = Array.isArray(row.grading) ? row.grading : [];
         const privateGrades = Array.isArray(row.grading_private) ? row.grading_private : [];
@@ -8472,7 +8551,36 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function fetchPublicCards(){
+    // Prefer a lightweight catalogue query: only the first image URL is loaded
+    // up front. The full images array is fetched only when a buyer opens a card.
     let result=await supabaseClient
+      .from("cards")
+      .select(`${CARD_PUBLIC_COLUMNS_LIGHT},sold_at`)
+      .order("created_at",{ascending:true});
+
+    if(!result.error){
+      thumbnailUrlSupported=true;
+      soldAtSupported=true;
+      return result;
+    }
+
+    // If sold_at is the only unavailable optional column, retry the light query.
+    if(optionalColumnUnavailable(result.error,"sold_at") && !optionalColumnUnavailable(result.error,"thumbnail_url")){
+      soldAtSupported=false;
+      result=await supabaseClient
+        .from("cards")
+        .select(CARD_PUBLIC_COLUMNS_LIGHT)
+        .order("created_at",{ascending:true});
+      if(!result.error){
+        thumbnailUrlSupported=true;
+        return result;
+      }
+    }
+
+    // Database has not received the thumbnail migration yet: fall back to the
+    // original images-array query so the public site remains fully functional.
+    thumbnailUrlSupported=false;
+    result=await supabaseClient
       .from("cards")
       .select(`${CARD_PUBLIC_COLUMNS_BASE},sold_at`)
       .order("created_at",{ascending:true});
@@ -8488,6 +8596,33 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
 
     return result;
+  }
+
+  async function ensureCardImagesLoaded(card){
+    if(!card || card._images_loaded!==false) return card;
+    if(!safeCardId(card.id)) return card;
+
+    try{
+      const {data,error}=await supabaseClient
+        .from("cards")
+        .select("images")
+        .eq("id",card.id)
+        .single();
+
+      if(error){
+        console.warn("Could not lazy-load full card images:",error);
+        return card;
+      }
+
+      const full=Array.isArray(data?.images) ? data.images.filter(v=>safeHttpUrl(v)||isPendingCardImage(v)) : [];
+      card.images=full;
+      card.image=full[0]||card.thumbnail_url||null;
+      card._images_loaded=true;
+      return card;
+    }catch(error){
+      console.warn("Could not lazy-load full card images:",error);
+      return card;
+    }
   }
 
   async function probeOwnerCardCapabilities(){
@@ -12015,6 +12150,7 @@ function relatedCardHTML(c){
           </div>
 
           ${cardPriceDisplayHTML(c)}
+          ${highValueContactAlertHTML(c,true)}
 
           ${(() => {
             const displayNotes=normalizeFilterValue(c.availability)==="collection (nfs)"
@@ -12134,6 +12270,14 @@ function wireShimmer(container){
         }else{
           location.hash = "#/inventory";
         }
+        return;
+      }
+
+      const highValueContact=e.target.closest("[data-high-value-contact]");
+      if(highValueContact){
+        e.preventDefault();
+        e.stopPropagation();
+        location.hash="#/contact";
         return;
       }
 
@@ -16804,9 +16948,9 @@ function wireShimmer(container){
     const allowed={
       bulk:["prices","metadata","status"],
       activity:["recent","history"],
-      quality:["images","duplicates"],
+      quality:["audit","images","duplicates","reprocess"],
       lifecycle:["lifecycle"],
-      storage:["health","migration"]
+      storage:["health","migration","backup"]
     };
     if(allowed[mode]?.includes(requested)) return requested;
 
@@ -16820,17 +16964,17 @@ function wireShimmer(container){
     const tabs=[
       ["bulk","Bulk Edit","Prices · metadata · status","prices"],
       ["activity","Activity","Recent · history","recent"],
-      ["quality","Quality","Images · duplicates","images"],
+      ["quality","Quality","Audit · images · duplicates · reprocess","audit"],
       ["lifecycle","Lifecycle","Drafts · archive","lifecycle"],
-      ["storage","Storage","Capacity · image migration","health"]
+      ["storage","Storage","Capacity · migration · backup","health"]
     ];
 
     const subtabs={
       bulk:[["prices","Bulk Prices"],["metadata","Bulk Metadata"],["status","Bulk Status"]],
       activity:[["recent","Recently Edited"],["history","Edit History"]],
-      quality:[["images","Image Health"],["duplicates","Duplicates"]],
+      quality:[["audit","Catalogue Audit"],["images","Image Health"],["duplicates","Duplicates"],["reprocess","Reprocess Images"]],
       lifecycle:[["lifecycle","Drafts & Archive"]],
-      storage:[["health","Database & Storage"],["migration","Image Migration"]]
+      storage:[["health","Database & Storage"],["migration","Image Migration"],["backup","Backup"]]
     };
 
     return `
@@ -17328,10 +17472,13 @@ function wireShimmer(container){
     if(submode==="metadata") renderBulkMetadataPage(true);
     else if(submode==="status") renderBulkStatusPage();
     else if(submode==="health") renderSupabaseHealthPage();
+    else if(submode==="backup") renderInventoryExportPage();
     else if(submode==="recent") renderRecentlyEditedOwnerPage(true);
     else if(submode==="history") renderEditHistoryPage();
+    else if(submode==="audit") renderCatalogueAuditPage();
     else if(submode==="images") renderImageHealthPage(true);
     else if(submode==="duplicates") renderDuplicateDetectorPage();
+    else if(submode==="reprocess") renderImageReprocessPage();
     else if(submode==="lifecycle") renderLifecycleManagerPage();
     else if(submode==="migration") renderLegacyImageMigrationPage();
     else renderBulkPricePage(true);
@@ -17344,7 +17491,174 @@ function wireShimmer(container){
   }
 
 
-  // ---------------- Owner Bulk Status ----------------\n  function renderBulkStatusPage(){\n    if(!requireOwner("bulk update availability")) return;\n\n    const eligible=cards.filter(card=>isLiveLifecycle(card));\n    const selected=new Set();\n\n    view.innerHTML=`\n      <div class="page-head">\n        <div>\n          <div class="eyebrow">Inventory Tools · Bulk Edit</div>\n          <h2>Bulk Status</h2>\n          <p>Select listings and move them to Available, Reserved, Collection (NFS), or Sold.</p>\n        </div>\n      </div>\n      <div class="bulk-status-layout">\n        <section class="panel bulk-status-panel">\n          <div class="bulk-status-toolbar">\n            <button class="btn-ghost" type="button" id="bulkStatusSelectAll">Select All</button>\n            <button class="btn-ghost" type="button" id="bulkStatusClear">Clear</button>\n            <span class="hint" id="bulkStatusCount">0 selected</span>\n          </div>\n          <div class="bulk-status-list" id="bulkStatusList">\n            ${eligible.map(card=>{\n              const img=getImages(card)[0];\n              return `<label class="bulk-status-card" data-bulk-status-id="${escapeHtml(card.id)}">\n                <input type="checkbox" value="${escapeHtml(card.id)}">\n                <span class="bulk-status-thumb">${img?`<img src="${escapeHtml(img)}" alt="" loading="lazy" decoding="async">`:"No image"}</span>\n                <span class="bulk-status-copy"><strong>${escapeHtml(card.name)}</strong><small>${escapeHtml([card.card_code,card.series,card.year].filter(Boolean).join(" · "))}</small></span>\n                <span class="bulk-status-badge">${escapeHtml(card.availability||"Available")}</span>\n              </label>`;\n            }).join("")}\n          </div>\n        </section>\n        <section class="panel bulk-status-panel bulk-status-actions">\n          <h3>Set selected listings to</h3>\n          <button class="btn-primary" type="button" data-bulk-set-status="Available">Mark Available</button>\n          <button class="btn-primary" type="button" data-bulk-set-status="Reserved">Mark Reserved</button>\n          <button class="btn-primary" type="button" data-bulk-set-status="Collection (NFS)">Mark NFS</button>\n          <button class="btn-ghost" type="button" data-bulk-set-status="Sold">Mark Sold</button>\n          <div class="bulk-meta-warning">Only the <strong>availability</strong> field is changed. Images, grading, prices, notes, year, and other listing data are left untouched.</div>\n        </section>\n      </div>`;\n\n    const list=$("bulkStatusList");\n    const count=$("bulkStatusCount");\n    const sync=()=>{\n      selected.clear();\n      list.querySelectorAll('input[type="checkbox"]:checked').forEach(cb=>selected.add(String(cb.value)));\n      list.querySelectorAll(".bulk-status-card").forEach(row=>row.classList.toggle("selected",selected.has(String(row.dataset.bulkStatusId))));\n      count.textContent=`${selected.size} selected`;\n    };\n    list.addEventListener("change",sync);\n    $("bulkStatusSelectAll").addEventListener("click",()=>{list.querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.checked=true);sync();});\n    $("bulkStatusClear").addEventListener("click",()=>{list.querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.checked=false);sync();});\n\n    view.querySelectorAll("[data-bulk-set-status]").forEach(btn=>btn.addEventListener("click",async()=>{\n      if(!requireOwner("bulk update availability")) return;\n      const status=String(btn.dataset.bulkSetStatus||"");\n      const allowed=new Set(["Available","Reserved","Sold","Collection (NFS)"]);\n      if(!allowed.has(status) || !selected.size){ showToast("Select at least one listing"); return; }\n      if(status==="Sold" && !confirm(`Mark ${selected.size} selected listing${selected.size===1?"":"s"} as Sold?`)) return;\n\n      const ids=[...selected];\n      const original=btn.textContent;\n      view.querySelectorAll("[data-bulk-set-status]").forEach(b=>b.disabled=true);\n      let done=0,failed=0;\n      try{\n        for(const id of ids){\n          const card=cards.find(c=>String(c.id)===id);\n          if(!card){ failed++; continue; }\n          const candidate={...card,availability:status};\n          if(status!=="Sold") candidate.sold_at=null;\n          const saved=await updateCardStorage(candidate);\n          if(saved){\n            const index=cards.findIndex(c=>String(c.id)===id);\n            if(index>-1) cards[index]=saved;\n            done++;\n          }else failed++;\n          btn.textContent=`Updating ${done+failed}/${ids.length}…`;\n        }\n        invalidateOwnerReservedAgeCache();\n        showToast(failed?`${done} updated · ${failed} failed`:`${done} marked ${status==="Collection (NFS)"?"NFS":status}`);\n        renderInventoryToolsPage();\n      }finally{\n        btn.textContent=original;\n        view.querySelectorAll("[data-bulk-set-status]").forEach(b=>b.disabled=false);\n      }\n    }));\n  }\n\n  // ---------------- Owner Supabase Health ----------------\n  function renderSupabaseHealthPage(){\n    if(!requireOwner("view Supabase health")) return;\n\n    view.innerHTML=`\n      <div class="page-head">\n        <div>\n          <div class="eyebrow">Inventory Tools · Storage</div>\n          <h2>Database & Storage</h2>\n          <p>Owner-only capacity overview for the Supabase Free-plan reference limits used by this site.</p>\n        </div>\n      </div>\n      <section class="panel supabase-health-panel">\n        <div class="supabase-health-grid">\n          <div><strong id="healthDbUsed">—</strong><span>Database used</span></div>\n          <div><strong id="healthDbLeft">—</strong><span>Database left · 500 MB</span></div>\n          <div><strong id="healthStorageUsed">—</strong><span>File Storage used</span></div>\n          <div><strong id="healthStorageLeft">—</strong><span>File Storage left · 1 GB</span></div>\n          <div><strong id="healthHistoryRows">—</strong><span>Edit history rows · max 100</span></div>\n        </div>\n        <button class="btn-primary" type="button" id="healthRefreshBtn">Refresh Supabase Usage</button>\n        <div id="healthCapacityWarning" class="capacity-warning" hidden></div>\n        <div class="hint" style="margin-top:10px">Database and file usage are read through the owner-only <code>get_owner_capacity_usage()</code> RPC. Remaining values use the 500 MB database and 1 GB file Storage Free-plan reference limits.</div>\n      </section>`;\n\n    const refresh=async()=>{\n      const btn=$("healthRefreshBtn");\n      btn.disabled=true;\n      btn.textContent="Refreshing…";\n      try{\n        const [usage,historyResult]=await Promise.all([\n          fetchSupabaseCapacityUsage(),\n          supabaseClient.from("card_edit_history").select("id",{count:"exact",head:true})\n        ]);\n        if(!usage?.ok){\n          ["healthDbUsed","healthDbLeft","healthStorageUsed","healthStorageLeft"].forEach(id=>$(id).textContent="Unavailable");\n        }else{\n          const dbLeft=capacityLeft(usage.databaseBytes,SUPABASE_FREE_DATABASE_LIMIT_BYTES);\n          const storageLeft=capacityLeft(usage.storageBytes,SUPABASE_FREE_STORAGE_LIMIT_BYTES);\n          $("healthDbUsed").textContent=formatApproxBytes(usage.databaseBytes);\n          $("healthDbLeft").textContent=formatApproxBytes(dbLeft);\n          $("healthStorageUsed").textContent=formatApproxBytes(usage.storageBytes);\n          $("healthStorageLeft").textContent=formatApproxBytes(storageLeft);\n\n          const dbPct=capacityPercent(usage.databaseBytes,SUPABASE_FREE_DATABASE_LIMIT_BYTES);\n          const storagePct=capacityPercent(usage.storageBytes,SUPABASE_FREE_STORAGE_LIMIT_BYTES);\n          const warning=$("healthCapacityWarning");\n          const parts=[];\n          if(dbPct>=80) parts.push(`Database is ${dbPct.toFixed(1)}% of the 500 MB reference limit.`);\n          if(storagePct>=80) parts.push(`File Storage is ${storagePct.toFixed(1)}% of the 1 GB reference limit.`);\n          warning.hidden=!parts.length;\n          warning.classList.toggle("danger",dbPct>=90||storagePct>=90);\n          warning.textContent=parts.join(" ");\n        }\n        $("healthHistoryRows").textContent=historyResult.error?"Unavailable":Number(historyResult.count||0).toLocaleString();\n      }finally{\n        btn.disabled=false;\n        btn.textContent="Refresh Supabase Usage";\n      }\n    };\n    $("healthRefreshBtn").addEventListener("click",refresh);\n    refresh();\n  }\n\n  // ---------------- Owner Legacy Image Migration ----------------
+
+  // ---------------- Owner Catalogue Audit ----------------
+  function catalogueAuditIssues(card){
+    const issues=[];
+    const images=getImages(card);
+    const status=normalizeFilterValue(card.availability||"");
+    const format=normalizeFilterValue(effectiveFormat(card));
+    const grades=Array.isArray(card.grading)?card.grading.filter(Boolean):[];
+
+    if(!images.length) issues.push({key:"image",label:"Missing image",critical:true});
+    if(!String(card.card_code||"").trim()) issues.push({key:"code",label:"Missing card code",critical:false});
+    if(!String(card.year||"").trim()) issues.push({key:"year",label:"Missing year",critical:false});
+    else if(!isValidYearValue(card.year)) issues.push({key:"year-invalid",label:"Invalid year / range",critical:true});
+    if(!String(card.game||"").trim()) issues.push({key:"game",label:"Missing game",critical:true});
+    if(!String(card.series||"").trim()) issues.push({key:"series",label:"Missing series",critical:false});
+    if(status==="available" && !hasListedPrice(card.price_myr)) issues.push({key:"myr",label:"Available · missing MYR price",critical:true});
+    if(format==="graded"){
+      if(!grades.length || !String(grades[0]?.company||"").trim()) issues.push({key:"grade-company",label:"Graded · missing company",critical:true});
+      if(!String(grades[0]?.grade||"").trim()) issues.push({key:"grade",label:"Graded · missing grade",critical:true});
+      if(isOwnerMode() && grades.length && !String(grades[0]?.cert||"").trim()) issues.push({key:"cert",label:"Graded · missing certificate",critical:false});
+    }
+    if(images.some(isPendingCardImage)) issues.push({key:"legacy",label:"Legacy Base64 image",critical:true});
+    if(images.some(img=>!isPendingCardImage(img) && !safeHttpUrl(img))) issues.push({key:"image-url",label:"Invalid image URL",critical:true});
+    return issues;
+  }
+
+  function renderCatalogueAuditPage(){
+    if(!requireOwner("open catalogue audit")) return;
+    const rows=cards.map(card=>({card,issues:catalogueAuditIssues(card)}));
+    const withIssues=rows.filter(row=>row.issues.length);
+    const countFor=key=>rows.filter(row=>row.issues.some(issue=>issue.key===key)).length;
+    const critical=rows.filter(row=>row.issues.some(issue=>issue.critical)).length;
+
+    view.innerHTML=`
+      <div class="page-head"><div><div class="eyebrow">Inventory Tools · Quality</div><h2>Catalogue Audit</h2><p>Find incomplete or risky listings before buyers see them.</p></div></div>
+      <div class="catalogue-audit-summary">
+        <button type="button" data-audit-filter="all"><strong>${withIssues.length}</strong><span>Listings with issues</span></button>
+        <button type="button" data-audit-filter="critical"><strong>${critical}</strong><span>Critical</span></button>
+        <button type="button" data-audit-filter="image"><strong>${countFor("image")}</strong><span>Missing image</span></button>
+        <button type="button" data-audit-filter="code"><strong>${countFor("code")}</strong><span>Missing code</span></button>
+        <button type="button" data-audit-filter="year"><strong>${countFor("year")+countFor("year-invalid")}</strong><span>Year issues</span></button>
+        <button type="button" data-audit-filter="myr"><strong>${countFor("myr")}</strong><span>Missing MYR</span></button>
+      </div>
+      <section class="panel catalogue-audit-panel">
+        <div class="catalogue-audit-toolbar"><input id="catalogueAuditSearch" type="search" placeholder="Search card name, code, series…" autocomplete="off"><span id="catalogueAuditCount"></span></div>
+        <div id="catalogueAuditList" class="catalogue-audit-list"></div>
+      </section>`;
+
+    let activeFilter="all";
+    const render=()=>{
+      const q=String($("catalogueAuditSearch")?.value||"").trim().toLowerCase();
+      const visible=rows.filter(row=>{
+        if(!row.issues.length) return false;
+        if(activeFilter==="critical" && !row.issues.some(i=>i.critical)) return false;
+        if(!["all","critical"].includes(activeFilter) && !row.issues.some(i=>i.key===activeFilter || (activeFilter==="year"&&i.key==="year-invalid"))) return false;
+        if(q){
+          const hay=[row.card.name,row.card.card_code,row.card.series,row.card.game,row.card.year].join(" ").toLowerCase();
+          if(!hay.includes(q)) return false;
+        }
+        return true;
+      });
+      $("catalogueAuditCount").textContent=`${visible.length} listing${visible.length===1?"":"s"}`;
+      $("catalogueAuditList").innerHTML=visible.length?visible.map(({card,issues})=>`
+        <div class="catalogue-audit-row">
+          <div class="catalogue-audit-thumb">${getImages(card)[0]?`<img src="${escapeHtml(getImages(card)[0])}" alt="" loading="lazy" decoding="async">`:`<span>No image</span>`}</div>
+          <div class="catalogue-audit-copy"><strong>${escapeHtml(card.name)}</strong><small>${escapeHtml([card.card_code,card.series,card.year].filter(Boolean).join(" · "))}</small><div>${issues.map(issue=>`<span class="catalogue-audit-chip ${issue.critical?"critical":""}">${escapeHtml(issue.label)}</span>`).join("")}</div></div>
+          <button type="button" class="btn-ghost" data-audit-edit="${escapeHtml(card.id)}">Edit</button>
+        </div>`).join(""):`<div class="quality-empty"><strong>No matching issues</strong><span>Your catalogue looks clean for this filter.</span></div>`;
+      $("catalogueAuditList").querySelectorAll("[data-audit-edit]").forEach(btn=>btn.addEventListener("click",()=>{
+        const card=cards.find(c=>String(c.id)===String(btn.dataset.auditEdit||""));
+        if(card) openEditModal(card);
+      }));
+    };
+    view.querySelectorAll("[data-audit-filter]").forEach(btn=>btn.addEventListener("click",()=>{activeFilter=String(btn.dataset.auditFilter||"all");render();}));
+    $("catalogueAuditSearch")?.addEventListener("input",render);
+    render();
+  }
+
+  // ---------------- Owner Image Reprocessor ----------------
+  async function reprocessCardImages(card,onProgress){
+    if(!card || !requireOwner("reprocess card images")) return {ok:false,error:"Owner login required"};
+    await ensureCardImagesLoaded(card);
+    const original=getImages(card).slice();
+    if(!original.length) return {ok:false,error:"No images"};
+    if(original.some(isPendingCardImage)) return {ok:false,error:"Migrate legacy Base64 images first"};
+
+    const newUrls=[];
+    const newPaths=[];
+    try{
+      for(let i=0;i<original.length;i++){
+        const src=safeHttpUrl(original[i]);
+        if(!src) throw new Error(`Invalid image URL ${i+1}`);
+        if(typeof onProgress==="function") onProgress(i,original.length);
+        const processed=await watermarkImageUrl(src,1800,0.94);
+        const stored=await uploadPendingCardImage(processed,i);
+        newUrls.push(stored.url);
+        newPaths.push(stored.path);
+        if(typeof onProgress==="function") onProgress(i+1,original.length);
+      }
+
+      const saved=await saveMigratedCardImageUrls(card.id,newUrls);
+      if(!saved){
+        await removeCardStoragePaths(newPaths);
+        return {ok:false,error:"Database update failed"};
+      }
+
+      card.images=Array.isArray(saved.images)?saved.images.slice():newUrls.slice();
+      card.image=card.images[0]||null;
+      card.thumbnail_url=card.image||"";
+      card._images_loaded=true;
+      if(saved.updated_at) card.updated_at=saved.updated_at;
+
+      // Delete old owned Storage objects only after the database points to the
+      // replacement files. External image URLs are never deleted.
+      await cleanupRemovedCardStorageImages(original,card.images);
+      return {ok:true,count:newUrls.length};
+    }catch(error){
+      await removeCardStoragePaths(newPaths);
+      console.error("Image reprocess failed:",card.id,error);
+      return {ok:false,error:String(error?.message||"Reprocess failed")};
+    }
+  }
+
+  function renderImageReprocessPage(){
+    if(!requireOwner("open image reprocessor")) return;
+    const eligible=cards.filter(card=>getImages(card).length && !getImages(card).some(isPendingCardImage));
+    const selected=new Set();
+
+    view.innerHTML=`
+      <div class="page-head"><div><div class="eyebrow">Inventory Tools · Quality</div><h2>Reprocess Images</h2><p>Re-encode selected listing images at the current high-quality settings and apply the latest transparent logo watermark.</p></div></div>
+      <div class="image-reprocess-warning"><strong>Important</strong><span>This tool cannot erase a watermark already baked into the source image. If an old watermark is already visible, reprocessing can place the new watermark over the current image. For a perfectly clean result, replace the listing with the original unwatermarked photo.</span></div>
+      <div class="image-reprocess-layout">
+        <section class="panel"><div class="image-reprocess-toolbar"><button class="btn-ghost" id="reprocessSelectAll" type="button">Select All</button><button class="btn-ghost" id="reprocessClear" type="button">Clear</button><span id="reprocessCount">0 selected</span></div><div class="image-reprocess-list" id="reprocessList">${eligible.map(card=>`<label class="image-reprocess-row"><input type="checkbox" value="${escapeHtml(card.id)}"><span class="image-reprocess-thumb">${getImages(card)[0]?`<img src="${escapeHtml(getImages(card)[0])}" alt="" loading="lazy" decoding="async">`:"No image"}</span><span><strong>${escapeHtml(card.name)}</strong><small>${escapeHtml([card.card_code,card.series].filter(Boolean).join(" · "))} · ${getImages(card).length} image${getImages(card).length===1?"":"s"}</small></span></label>`).join("")}</div></section>
+        <section class="panel image-reprocess-action"><h3>High-quality reprocess</h3><p>1800px maximum dimension · JPEG quality 0.94 · current transparent vibrant watermark.</p><button type="button" class="btn-primary" id="reprocessRun">Reprocess selected</button><div class="hint" id="reprocessStatus"></div></section>
+      </div>`;
+
+    const sync=()=>{
+      selected.clear();
+      $("reprocessList").querySelectorAll('input[type="checkbox"]:checked').forEach(cb=>selected.add(String(cb.value)));
+      $("reprocessCount").textContent=`${selected.size} selected`;
+    };
+    $("reprocessList").addEventListener("change",sync);
+    $("reprocessSelectAll").addEventListener("click",()=>{$("reprocessList").querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.checked=true);sync();});
+    $("reprocessClear").addEventListener("click",()=>{$("reprocessList").querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.checked=false);sync();});
+    $("reprocessRun").addEventListener("click",async()=>{
+      if(!requireOwner("reprocess selected card images")) return;
+      if(!selected.size){showToast("Select at least one listing");return;}
+      if(!confirm(`Reprocess images for ${selected.size} selected listing${selected.size===1?"":"s"}?\n\nExisting owned Storage files are deleted only after replacement images are uploaded and the database update succeeds.`)) return;
+      const btn=$("reprocessRun");
+      btn.disabled=true;
+      let done=0,failed=0;
+      try{
+        const ids=[...selected];
+        for(let n=0;n<ids.length;n++){
+          const card=cards.find(c=>String(c.id)===ids[n]);
+          if(!card){failed++;continue;}
+          const result=await reprocessCardImages(card,(i,total)=>{$("reprocessStatus").textContent=`${n+1}/${ids.length} · ${card.name} · image ${i}/${total}`;});
+          if(result.ok) done++; else failed++;
+        }
+        showToast(failed?`${done} reprocessed · ${failed} failed`:`${done} listing${done===1?"":"s"} reprocessed`);
+        renderInventoryToolsPage();
+      }finally{btn.disabled=false;}
+    });
+  }
+
+  // Stale escaped duplicate bulk/storage block removed.
+
+  // ---------------- Owner Legacy Image Migration ----------------
   function legacyCardImageStats(){
     let cardsWithLegacy=0;
     let legacyImages=0;
@@ -20258,8 +20572,9 @@ function wireShimmer(container){
     }
   }
 
-  function openDetailsModal(card){
+  async function openDetailsModal(card){
     if(!card) return;
+    await ensureCardImagesLoaded(card);
     if(!isOwnerMode() && !isLiveLifecycle(card)){
       showToast("Card not found");
       return;
@@ -20318,6 +20633,7 @@ function wireShimmer(container){
           </div>
         </div>
       ` : ""}
+      ${highValueContactAlertHTML(card,false)}
       ${isSoldListing ? `
         <div class="sold-detail-notice" role="status">
           <div class="sold-detail-notice-mark">SOLD</div>
@@ -20415,6 +20731,11 @@ function wireShimmer(container){
     `;
 
     detailsOverlay.hidden = false;
+
+    detailsMount.querySelectorAll("[data-high-value-contact]").forEach(btn=>btn.addEventListener("click",()=>{
+      location.hash="#/contact";
+      closeDetailsModal(false);
+    }));
 
     if(isOwnerMode() && ownerPrivateSupported){
       fetchOwnerPrivateMeta(card.id).then(meta=>{
