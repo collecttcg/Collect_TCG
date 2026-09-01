@@ -8,8 +8,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Collect TCG">
-  <link rel="manifest" href="./collect-tcg-manifest-v3.webmanifest">
-  <link rel="apple-touch-icon" href="./collect-tcg-icon-v3-192.png">
+  <link rel="manifest" href="./collect-tcg-manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="./collect-tcg-apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="./collect-tcg-favicon.png">
 <title>Collect TCG MY & SG — Inventory</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -9664,6 +9665,15 @@
   border-color:rgba(80,203,190,.72) !important;
   color:#eafffc !important;
   box-shadow:0 7px 18px rgba(0,0,0,.30) !important;
+}
+
+
+@media (max-width:800px){
+  .back-to-top-btn{
+    right:14px !important;
+    bottom:calc(104px + env(safe-area-inset-bottom)) !important;
+    z-index:1250 !important;
+  }
 }
 
 </style>
@@ -26003,18 +26013,33 @@ function wireShimmer(container){
 <script>
 (function(){
   const btn = document.getElementById("backToTopBtn");
+  const shell = document.querySelector(".shell");
   if(!btn) return;
 
+  function mobileUsesShellScroll(){
+    return window.matchMedia("(max-width: 800px)").matches && shell;
+  }
+
+  function currentScrollTop(){
+    if(mobileUsesShellScroll()) return shell.scrollTop || 0;
+    return window.scrollY || document.documentElement.scrollTop || 0;
+  }
+
   function updateBackToTop(){
-    const y = window.scrollY || document.documentElement.scrollTop || 0;
-    btn.classList.toggle("show", y > 500);
+    btn.classList.toggle("show", currentScrollTop() > 350);
   }
 
   btn.addEventListener("click", function(){
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if(mobileUsesShellScroll()){
+      shell.scrollTo({ top: 0, behavior: "smooth" });
+    }else{
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   });
 
   window.addEventListener("scroll", updateBackToTop, { passive: true });
+  if(shell) shell.addEventListener("scroll", updateBackToTop, { passive: true });
+  window.addEventListener("resize", updateBackToTop, { passive: true });
   updateBackToTop();
 })();
 </script>
