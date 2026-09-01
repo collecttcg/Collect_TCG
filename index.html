@@ -8252,6 +8252,210 @@
     white-space:normal;
   }
 
+
+  /* ==========================================================
+     Mobile UX refinement: persistent search + compact filters
+     ========================================================== */
+  .mobile-inventory-search{display:none;}
+
+  @media(max-width:800px){
+    /* Search is a primary browsing action, so expose it without opening Filters. */
+    .mobile-inventory-search{
+      position:relative;
+      display:flex;
+      align-items:center;
+      width:100%;
+      margin:0 0 12px;
+    }
+    .mobile-inventory-search input{
+      width:100%;
+      min-height:48px;
+      padding:10px 42px 10px 42px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:var(--surface);
+      color:var(--text);
+      font:500 13px/1.2 'Inter',sans-serif;
+      outline:none;
+    }
+    .mobile-inventory-search input:focus{
+      border-color:rgba(95,212,196,.72);
+      box-shadow:0 0 0 2px rgba(95,212,196,.08);
+    }
+    .mobile-inventory-search-icon{
+      position:absolute;
+      left:14px;
+      z-index:2;
+      color:var(--text-muted);
+      font-size:20px;
+      pointer-events:none;
+    }
+    .mobile-inventory-search-clear{
+      position:absolute;
+      right:8px;
+      z-index:3;
+      width:32px;
+      height:32px;
+      border:0;
+      border-radius:50%;
+      background:transparent;
+      color:var(--text-muted);
+      font-size:20px;
+      cursor:pointer;
+    }
+    .mobile-search-suggestions{
+      position:absolute !important;
+      top:calc(100% + 6px) !important;
+      left:0 !important;
+      right:0 !important;
+      z-index:850 !important;
+      max-height:280px !important;
+      overflow-y:auto !important;
+      border-radius:11px !important;
+      box-shadow:0 16px 36px rgba(0,0,0,.46) !important;
+    }
+
+    /* Search remains in the filter drawer for desktop only; hide duplicate on mobile. */
+    .filter-drawer-shell .filter-row > .inventory-search-wrap{
+      display:none !important;
+    }
+
+    /* Let the sheet size to its controls instead of creating a large empty block. */
+    .filter-drawer-shell{
+      height:auto !important;
+      max-height:min(82dvh,720px) !important;
+      padding-bottom:0 !important;
+    }
+
+    /* Compact filter header: one clean row. Apply is already at the bottom. */
+    .filter-drawer-head{
+      min-height:54px !important;
+      margin:-14px -12px 10px !important;
+      padding:10px 12px !important;
+      align-items:center !important;
+      background:var(--surface-2) !important;
+    }
+    .filter-drawer-head > div:first-child{
+      display:flex !important;
+      align-items:center !important;
+    }
+    .filter-drawer-head > div:first-child span{
+      display:none !important;
+    }
+    .filter-drawer-head strong{
+      font-size:12px !important;
+      line-height:1 !important;
+    }
+    .filter-drawer-head > div:last-child{
+      margin-left:auto;
+      gap:4px !important;
+    }
+    .filter-drawer-head .clear-all-filters-btn{
+      min-height:34px !important;
+      padding:6px 9px !important;
+      border:0 !important;
+      background:transparent !important;
+      font-size:9.5px !important;
+    }
+    .filter-drawer-head .mobile-filter-close-btn{
+      display:none !important;
+    }
+
+    /* Footer is the single completion action and should follow content directly. */
+    .filter-drawer-footer{
+      margin:12px -12px 0 !important;
+      padding:10px 12px calc(10px + env(safe-area-inset-bottom)) !important;
+    }
+    .filter-drawer-footer-copy{
+      font-size:9px !important;
+    }
+    .filter-drawer-footer-copy strong{
+      font-size:12px !important;
+    }
+    .filter-drawer-apply{
+      min-width:88px !important;
+      min-height:40px !important;
+    }
+
+    /* Long listing names must own their real height. Never let text paint over year/code. */
+    #invGrid .card .clean-card-body,
+    #homeRecentGrid .card .clean-card-body{
+      justify-content:flex-start !important;
+      padding-top:14px !important;
+      padding-bottom:14px !important;
+    }
+    #invGrid .clean-card-title-row,
+    #homeRecentGrid .clean-card-title-row{
+      align-items:flex-start !important;
+    }
+    #invGrid .clean-card-name,
+    #homeRecentGrid .clean-card-name{
+      display:-webkit-box !important;
+      -webkit-box-orient:vertical !important;
+      -webkit-line-clamp:4 !important;
+      overflow:hidden !important;
+      text-overflow:ellipsis !important;
+      line-height:1.24 !important;
+      max-height:calc(1.24em * 4) !important;
+      min-height:0 !important;
+    }
+    #invGrid .clean-card-reference,
+    #homeRecentGrid .clean-card-reference{
+      position:relative !important;
+      z-index:1;
+      margin-top:2px !important;
+      flex:0 0 auto !important;
+    }
+
+    /* Show a richer metadata set on mobile. Keep pills compact and allow two tidy rows. */
+    #invGrid .clean-era-pill,
+    #invGrid .clean-series-pill,
+    #homeRecentGrid .clean-era-pill,
+    #homeRecentGrid .clean-series-pill{
+      display:inline-flex !important;
+    }
+    #invGrid .clean-all-pills,
+    #homeRecentGrid .clean-all-pills{
+      display:flex !important;
+      flex-wrap:wrap !important;
+      gap:5px !important;
+      max-height:68px;
+      overflow:hidden;
+      align-content:flex-start;
+    }
+    #invGrid .clean-all-pills .clean-grade-badge,
+    #invGrid .clean-all-pills .clean-meta-pill,
+    #homeRecentGrid .clean-all-pills .clean-grade-badge,
+    #homeRecentGrid .clean-all-pills .clean-meta-pill{
+      font-size:9.5px !important;
+      padding:4px 7px !important;
+      line-height:1.1 !important;
+      white-space:nowrap !important;
+      max-width:100%;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    #invGrid .clean-series-pill,
+    #homeRecentGrid .clean-series-pill{
+      max-width:130px !important;
+    }
+  }
+
+  @media(max-width:390px){
+    #invGrid .clean-all-pills,
+    #homeRecentGrid .clean-all-pills{
+      gap:4px !important;
+      max-height:64px;
+    }
+    #invGrid .clean-all-pills .clean-grade-badge,
+    #invGrid .clean-all-pills .clean-meta-pill,
+    #homeRecentGrid .clean-all-pills .clean-grade-badge,
+    #homeRecentGrid .clean-all-pills .clean-meta-pill{
+      font-size:9px !important;
+      padding:4px 6px !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -13084,6 +13288,19 @@ function wireShimmer(container){
 
       <div class="pill-filter-summary" id="pillFilterSummary" hidden></div>
 
+      <div class="mobile-inventory-search" id="mobileInventorySearchWrap">
+        <span class="mobile-inventory-search-icon" aria-hidden="true">⌕</span>
+        <input type="search"
+               id="mobileInventorySearch"
+               maxlength="100"
+               autocomplete="off"
+               placeholder="Search name, code, year or series…"
+               aria-autocomplete="list"
+               aria-controls="mobileSearchSuggestions">
+        <button type="button" class="mobile-inventory-search-clear" id="mobileInventorySearchClear" aria-label="Clear search" hidden>×</button>
+        <div class="search-suggestions mobile-search-suggestions" id="mobileSearchSuggestions" role="listbox" hidden></div>
+      </div>
+
       <div class="mobile-filter-backdrop" id="mobileFilterBackdrop" hidden></div>
 
       <section class="filter-drawer-shell" id="filterDrawerShell" aria-label="Inventory filters">
@@ -13798,6 +14015,61 @@ function wireShimmer(container){
       return options.slice(0,10);
     }
 
+    const mobileSearch=$("mobileInventorySearch");
+    const mobileSearchSuggestions=$("mobileSearchSuggestions");
+    const mobileSearchClear=$("mobileInventorySearchClear");
+
+    function syncMobileSearchFromMain(){
+      if(!mobileSearch) return;
+      mobileSearch.value=$("search")?.value||"";
+      if(mobileSearchClear) mobileSearchClear.hidden=!mobileSearch.value;
+    }
+
+    function renderMobileSearchSuggestions(){
+      if(!mobileSearch || !mobileSearchSuggestions) return;
+      const suggestions=getSearchSuggestions(mobileSearch.value);
+      mobileSearchSuggestions.hidden=suggestions.length===0;
+      mobileSearchSuggestions.innerHTML=suggestions.map(item=>`
+        <button type="button" role="option" data-mobile-search-suggestion="${escapeHtml(item.text)}">
+          <span>${escapeHtml(item.text)}</span>
+          <small>${escapeHtml(item.type)}</small>
+        </button>
+      `).join("");
+
+      mobileSearchSuggestions.querySelectorAll("[data-mobile-search-suggestion]").forEach(btn=>{
+        btn.addEventListener("mousedown",e=>e.preventDefault());
+        btn.addEventListener("click",()=>{
+          const value=String(btn.dataset.mobileSearchSuggestion||"").slice(0,100);
+          mobileSearch.value=value;
+          if($("search")) $("search").value=value;
+          mobileSearchSuggestions.hidden=true;
+          if(mobileSearchClear) mobileSearchClear.hidden=!value;
+          $("search")?.dispatchEvent(new Event("input",{bubbles:true}));
+        });
+      });
+    }
+
+    syncMobileSearchFromMain();
+
+    mobileSearch?.addEventListener("input",()=>{
+      const value=mobileSearch.value.slice(0,100);
+      if($("search")) $("search").value=value;
+      if(mobileSearchClear) mobileSearchClear.hidden=!value;
+      renderMobileSearchSuggestions();
+      $("search")?.dispatchEvent(new Event("input",{bubbles:true}));
+    });
+
+    mobileSearch?.addEventListener("focus",renderMobileSearchSuggestions);
+
+    mobileSearchClear?.addEventListener("click",()=>{
+      mobileSearch.value="";
+      if($("search")) $("search").value="";
+      mobileSearchClear.hidden=true;
+      if(mobileSearchSuggestions) mobileSearchSuggestions.hidden=true;
+      $("search")?.dispatchEvent(new Event("input",{bubbles:true}));
+      mobileSearch.focus();
+    });
+
     function renderSearchSuggestions(){
       if(!searchSuggestions) return;
       const suggestions=getSearchSuggestions($("search").value);
@@ -13821,7 +14093,10 @@ function wireShimmer(container){
     }
 
     $("search").addEventListener("focus",renderSearchSuggestions);
-    $("search").addEventListener("input",renderSearchSuggestions);
+    $("search").addEventListener("input",()=>{
+      renderSearchSuggestions();
+      syncMobileSearchFromMain();
+    });
     $("search").addEventListener("keydown",e=>{
       if(!searchSuggestions || searchSuggestions.hidden) return;
       const items=Array.from(searchSuggestions.querySelectorAll("[data-search-suggestion]"));
@@ -13844,6 +14119,9 @@ function wireShimmer(container){
     document.addEventListener("click",e=>{
       if(!e.target.closest(".inventory-search-wrap") && searchSuggestions){
         searchSuggestions.hidden=true;
+      }
+      if(!e.target.closest(".mobile-inventory-search") && mobileSearchSuggestions){
+        mobileSearchSuggestions.hidden=true;
       }
     },{signal:inventorySignal});
 
@@ -13927,6 +14205,9 @@ function wireShimmer(container){
 
     function clearAllInventoryFilters(){
       $("search").value="";
+      if($("mobileInventorySearch")) $("mobileInventorySearch").value="";
+      if($("mobileInventorySearchClear")) $("mobileInventorySearchClear").hidden=true;
+      if($("mobileSearchSuggestions")) $("mobileSearchSuggestions").hidden=true;
       ["filterGame","filterGrade","filterLanguage","filterEra","filterAvailability","filterSeries"].forEach(id=>{
         const el=$(id);
         if(el) el.value="";
