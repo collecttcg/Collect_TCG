@@ -7974,6 +7974,284 @@
   nav.mainnav > .mobile-more-menu > a[data-route="favorites"],
   nav.mainnav > .mobile-more-menu > a[data-route="giveaway"]{display:flex !important;}
 }
+
+  /* ==========================================================
+     UX enhancement pass
+     ========================================================== */
+
+  /* Result count + quick return links */
+  .inventory-toolbar-context{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-left:auto;
+  }
+  .inventory-result-count{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    min-height:32px;
+    padding:6px 9px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    background:var(--surface);
+    color:var(--text-muted);
+    font-size:10px;
+    white-space:nowrap;
+  }
+  .inventory-result-count strong{color:var(--text);font-size:11px;}
+  .inventory-recent-link{
+    display:inline-flex;
+    align-items:center;
+    min-height:32px;
+    padding:6px 9px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    color:var(--accent-teal);
+    background:var(--surface);
+    font-size:10px;
+    font-weight:700;
+    text-decoration:none;
+    white-space:nowrap;
+  }
+  .inventory-recent-link:hover{border-color:var(--accent-teal);}
+
+  /* Active filters: all controls, not only card-pill filters */
+  .pill-filter-summary{
+    margin-top:8px !important;
+    margin-bottom:14px !important;
+  }
+  .pill-filter-summary .active-pill-filter{
+    max-width:min(100%,260px);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  /* Mobile filter sheet: sticky controls + sticky Apply footer */
+  .filter-drawer-footer{
+    display:none;
+  }
+
+  @media(max-width:800px){
+    .filter-drawer-shell{
+      display:flex !important;
+      flex-direction:column !important;
+    }
+    .filter-drawer-head{
+      position:sticky !important;
+      top:0 !important;
+      z-index:120 !important;
+      flex:0 0 auto;
+      background:var(--surface-2) !important;
+      border-bottom:1px solid var(--border) !important;
+      box-shadow:0 7px 18px rgba(0,0,0,.16);
+    }
+    .filter-drawer-shell > .filter-row,
+    .filter-drawer-shell > .grade-shortcuts{
+      flex:0 0 auto;
+    }
+    .filter-drawer-footer{
+      position:sticky;
+      bottom:0;
+      z-index:120;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:10px;
+      align-items:center;
+      margin-top:auto;
+      padding:11px 14px calc(11px + env(safe-area-inset-bottom));
+      border-top:1px solid var(--border);
+      background:rgba(18,19,23,.97);
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
+      box-shadow:0 -8px 24px rgba(0,0,0,.24);
+    }
+    .filter-drawer-footer-copy{
+      min-width:0;
+      color:var(--text-muted);
+      font-size:10px;
+      line-height:1.3;
+    }
+    .filter-drawer-footer-copy strong{
+      display:block;
+      color:var(--text);
+      font-size:13px;
+    }
+    .filter-drawer-apply{
+      min-width:92px;
+      min-height:42px;
+      padding:9px 14px;
+    }
+    .inventory-toolbar-context{
+      display:none;
+    }
+
+    /* Reduce listing-card clutter on phones while keeping core buying info. */
+    .grid .clean-notes,
+    #homeRecentGrid .clean-notes{
+      display:none !important;
+    }
+    .grid .clean-era-pill,
+    .grid .clean-series-pill,
+    #homeRecentGrid .clean-era-pill,
+    #homeRecentGrid .clean-series-pill{
+      display:none !important;
+    }
+
+    /* Clear active-state indicator on the mobile primary navigation. */
+    nav.mainnav > a.active{
+      box-shadow:inset 0 -3px 0 var(--accent-teal) !important;
+    }
+  }
+
+  /* Detail information hierarchy */
+  .detail-summary-strip{
+    display:grid;
+    grid-template-columns:1.25fr 1fr 1fr;
+    gap:9px;
+    margin-bottom:14px;
+  }
+  .detail-summary-card{
+    min-width:0;
+    padding:11px 12px;
+    border:1px solid var(--border);
+    border-radius:11px;
+    background:var(--surface);
+  }
+  .detail-summary-card span,
+  .detail-info-section-title{
+    display:block;
+    color:var(--text-muted);
+    font-size:8.5px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+  }
+  .detail-summary-card strong{
+    display:block;
+    margin-top:5px;
+    color:var(--text);
+    font-size:13px;
+    line-height:1.25;
+    overflow-wrap:anywhere;
+  }
+  .detail-summary-price .detail-price-primary{
+    margin-top:4px;
+  }
+  .detail-info-section-title{
+    margin:4px 0 8px;
+  }
+
+  @media(max-width:700px){
+    .detail-summary-strip{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:7px;
+    }
+    .detail-summary-price{
+      grid-column:1 / -1;
+    }
+    .detail-summary-card{
+      padding:9px 10px;
+    }
+  }
+
+  /* Skeleton loading */
+  .inventory-skeleton-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:14px;
+  }
+  .inventory-skeleton-card{
+    min-height:330px;
+    border:1px solid var(--border);
+    border-radius:13px;
+    overflow:hidden;
+    background:var(--surface);
+  }
+  .inventory-skeleton-image,
+  .inventory-skeleton-line{
+    position:relative;
+    overflow:hidden;
+    background:var(--surface-2);
+  }
+  .inventory-skeleton-image{height:230px;}
+  .inventory-skeleton-body{padding:13px;}
+  .inventory-skeleton-line{
+    height:11px;
+    margin:8px 0;
+    border-radius:999px;
+  }
+  .inventory-skeleton-line.short{width:52%;}
+  .inventory-skeleton-line.medium{width:74%;}
+  .inventory-skeleton-image::after,
+  .inventory-skeleton-line::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    transform:translateX(-100%);
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent);
+    animation:inventorySkeletonSweep 1.25s infinite;
+  }
+  @keyframes inventorySkeletonSweep{to{transform:translateX(100%);}}
+  @media(max-width:800px){
+    .inventory-skeleton-grid{grid-template-columns:1fr;gap:12px;}
+    .inventory-skeleton-card{
+      min-height:210px;
+      display:grid;
+      grid-template-columns:minmax(112px,36%) 1fr;
+    }
+    .inventory-skeleton-image{height:100%;min-height:210px;}
+    .inventory-skeleton-body{display:flex;flex-direction:column;justify-content:center;}
+  }
+
+  /* Image-loading polish */
+  .thumb,
+  .detail-slider-image,
+  .detail-thumb-strip-btn img,
+  .image-lightbox img{
+    transition:opacity .22s ease, transform .22s ease;
+  }
+  .detail-slider-image.is-switching{opacity:.42;}
+  .detail-thumb-strip-btn img{opacity:.92;}
+  .detail-thumb-strip-btn.active img{opacity:1;}
+
+  /* One-time favorites discovery hint */
+  .favorite-discovery-hint{
+    position:fixed;
+    z-index:1200;
+    max-width:210px;
+    padding:9px 11px;
+    border:1px solid rgba(227,179,65,.45);
+    border-radius:10px;
+    background:rgba(19,20,24,.97);
+    color:var(--text);
+    box-shadow:0 12px 32px rgba(0,0,0,.42);
+    font-size:10px;
+    line-height:1.4;
+    pointer-events:none;
+  }
+  .favorite-discovery-hint strong{
+    color:var(--accent-gold);
+  }
+
+  /* Compact high-value badge */
+  .high-value-contact-alert.compact{
+    display:inline-flex !important;
+    width:auto !important;
+    max-width:100%;
+    margin:7px 0 2px !important;
+    padding:5px 8px !important;
+    border-radius:999px !important;
+    box-shadow:none !important;
+  }
+  .high-value-contact-alert.compact strong{
+    font-size:8.5px !important;
+    line-height:1.2;
+    white-space:normal;
+  }
+
 </style>
 </head>
 <body>
@@ -12769,6 +13047,11 @@ function wireShimmer(container){
       <div class="inventory-filter-tools listing-filter-tools" data-listing-scope="${escapeHtml(scope)}">
         <div class="quick-filters" id="quickFilters">${inventoryQuickFiltersHTML()}</div>
 
+        <div class="inventory-toolbar-context">
+          <span class="inventory-result-count" aria-live="polite"><strong id="inventoryResultCount">0</strong> results</span>
+          ${getRecentlyViewedCards().length ? `<a href="#/recent" class="inventory-recent-link">Recently Viewed</a>` : ""}
+        </div>
+
         <div class="inventory-display-tools ${isCollection ? "collection-display-tools" : ""}">
           ${!isCollection ? `
             <label class="currency-preference-control" title="Choose which stored currency is shown first. No currency conversion is performed.">
@@ -12880,9 +13163,17 @@ function wireShimmer(container){
         </div>
 
         <div class="grade-shortcuts" id="gradeShortcuts" hidden></div>
+
+        <div class="filter-drawer-footer">
+          <div class="filter-drawer-footer-copy">
+            <strong><span id="mobileFilterFooterResultCount">0</span> results</strong>
+            <span>Filters update live</span>
+          </div>
+          <button type="button" class="btn-primary filter-drawer-apply" id="mobileFilterApplyBtn">Apply</button>
+        </div>
       </section>
 
-      <div id="invGrid"></div>
+      <div id="invGrid" aria-busy="true">${inventorySkeletonHTML(8)}</div>
 
       <div class="sticky-mobile-results-bar" id="stickyMobileResultsBar" aria-label="Results controls">
         <div class="sticky-mobile-results-count">
@@ -12985,6 +13276,23 @@ function wireShimmer(container){
     if(scope==="reserved") return "There are currently no reserved cards.";
     if(scope==="sold") return "There are currently no sold cards.";
     return "There are currently no available cards.";
+  }
+
+
+  function inventorySkeletonHTML(count=8){
+    const safeCount=Math.max(4,Math.min(12,Number(count)||8));
+    return `<div class="inventory-skeleton-grid" aria-hidden="true">${
+      Array.from({length:safeCount},()=>`
+        <div class="inventory-skeleton-card">
+          <div class="inventory-skeleton-image"></div>
+          <div class="inventory-skeleton-body">
+            <div class="inventory-skeleton-line"></div>
+            <div class="inventory-skeleton-line medium"></div>
+            <div class="inventory-skeleton-line short"></div>
+          </div>
+        </div>
+      `).join("")
+    }</div>`;
   }
 
   function inventoryNoResultsHTML({scope,activeCount,hasSearch,hasPrice,noScopeCards}){
@@ -13321,17 +13629,69 @@ function wireShimmer(container){
       });
     }
 
+    const FAVORITE_DISCOVERY_KEY="collect_tcg_favorite_hint_seen_v1";
+
+    function maybeShowFavoriteDiscoveryHint(grid){
+      if(!grid || isOwnerMode()) return;
+      try{
+        if(localStorage.getItem(FAVORITE_DISCOVERY_KEY)==="1") return;
+      }catch{}
+
+      const btn=grid.querySelector(".title-favorite-btn");
+      if(!btn) return;
+
+      const hint=document.createElement("div");
+      hint.className="favorite-discovery-hint";
+      hint.innerHTML="<strong>♡ Save cards</strong><br>Tap the heart to keep cards in Favorites.";
+      document.body.appendChild(hint);
+
+      const place=()=>{
+        const rect=btn.getBoundingClientRect();
+        const width=Math.min(210,window.innerWidth-24);
+        hint.style.maxWidth=width+"px";
+        const left=Math.min(
+          window.innerWidth-width-12,
+          Math.max(12,rect.left-6)
+        );
+        const top=Math.min(
+          window.innerHeight-90,
+          Math.max(12,rect.bottom+8)
+        );
+        hint.style.left=left+"px";
+        hint.style.top=top+"px";
+      };
+      place();
+
+      let dismissed=false;
+      const dismiss=()=>{
+        if(dismissed) return;
+        dismissed=true;
+        hint.remove();
+        try{localStorage.setItem(FAVORITE_DISCOVERY_KEY,"1");}catch{}
+        document.removeEventListener("pointerdown",dismiss,true);
+      };
+      setTimeout(()=>document.addEventListener("pointerdown",dismiss,true),100);
+      setTimeout(dismiss,4500);
+      window.addEventListener("resize",place,{once:true});
+    }
+
     let inventoryDrawGeneration=0;
 
     function draw(){
       const drawGeneration=++inventoryDrawGeneration;
       const grid=$("invGrid");
       updateActiveFilterIndicators();
+      syncPillFilterSummary();
+      if(grid) grid.setAttribute("aria-busy","false");
 
       if(cards.length===0){
         captureFilteredResultsBrowseContext([]);
         const mobileResultCount=$("stickyMobileResultCount");
         if(mobileResultCount) mobileResultCount.textContent="0";
+        const desktopResultCount=$("inventoryResultCount");
+        if(desktopResultCount) desktopResultCount.textContent="0";
+        const footerResultCount=$("mobileFilterFooterResultCount");
+        if(footerResultCount) footerResultCount.textContent="0";
         grid.className="";
         grid.innerHTML=`<div class="empty-state">${EMPTY_ICON}<h2>No listings yet</h2><p>The catalogue is currently empty.</p></div>`;
         return;
@@ -13341,6 +13701,10 @@ function wireShimmer(container){
       captureFilteredResultsBrowseContext(list);
       const mobileResultCount=$("stickyMobileResultCount");
       if(mobileResultCount) mobileResultCount.textContent=String(list.length);
+      const desktopResultCount=$("inventoryResultCount");
+      if(desktopResultCount) desktopResultCount.textContent=list.length.toLocaleString();
+      const footerResultCount=$("mobileFilterFooterResultCount");
+      if(footerResultCount) footerResultCount.textContent=list.length.toLocaleString();
       if(list.length===0){
         const activeCount=activeInventoryFilterCount();
         const hasSearch=!!String($("search")?.value||"").trim();
@@ -13367,6 +13731,7 @@ function wireShimmer(container){
       const firstEnd=Math.min(initialBatchSize,list.length);
       grid.innerHTML=list.slice(0,firstEnd).map(cardTileHTML).join("");
       wireShimmer(grid);
+      requestAnimationFrame(()=>maybeShowFavoriteDiscoveryHint(grid));
 
       const appendBatch=(startIndex)=>{
         if(inventorySignal.aborted || drawGeneration!==inventoryDrawGeneration) return;
@@ -13422,9 +13787,15 @@ function wireShimmer(container){
         add(card.card_code,"Card code");
         add(card.name,"Card");
         add(card.series,"Series");
+        add(card.game,"Game");
+        add(card.year,"Year");
+        const grades=Array.isArray(card.grading)?card.grading:[];
+        grades.forEach(g=>{
+          if(g?.company) add(`${g.company} ${g.grade||""}`.trim(),"Grade");
+        });
       });
 
-      return options.slice(0,8);
+      return options.slice(0,10);
     }
 
     function renderSearchSuggestions(){
@@ -13551,6 +13922,7 @@ function wireShimmer(container){
     $("stickyMobileFilterBtn")?.addEventListener("click",openMobileFilterDrawer);
     $("stickyMobileSortBtn")?.addEventListener("click",openMobileSortDrawer);
     $("mobileFilterCloseBtn")?.addEventListener("click",closeMobileFilterDrawer);
+    $("mobileFilterApplyBtn")?.addEventListener("click",closeMobileFilterDrawer);
     $("mobileFilterBackdrop")?.addEventListener("click",closeMobileFilterDrawer);
 
     function clearAllInventoryFilters(){
@@ -13641,51 +14013,104 @@ function wireShimmer(container){
     });
 
     function syncPillFilterSummary(){
-      const mount = $("pillFilterSummary");
+      const mount=$("pillFilterSummary");
       if(!mount) return;
 
-      const selections = [
-        ...Array.from(pillFilterState.grade).map(value=>({type:"grade", value})),
-        ...Array.from(pillFilterState.language).map(value=>({type:"language", value})),
-        ...Array.from(pillFilterState.era).map(value=>({type:"era", value})),
-        ...Array.from(pillFilterState.availability).map(value=>({type:"availability", value})),
-        ...Array.from(pillFilterState.series).map(value=>({type:"series", value}))
-      ];
+      const selections=[];
+      const addControl=(id,label,value,resetLabel)=>{
+        const text=String(value||"").trim();
+        if(text) selections.push({kind:"control",id,label,value:text,resetLabel});
+      };
 
-      mount.hidden = selections.length === 0;
-      mount.innerHTML = selections.length ? `
-        <span class="pill-filter-summary-label">Filtering by</span>
-        ${selections.map(item=>`
-          <button type="button" class="active-pill-filter"
-            data-remove-pill-type="${escapeHtml(item.type)}"
-            data-remove-pill-value="${escapeHtml(item.value)}"
-            title="Remove ${escapeHtml(item.value)} filter">
-            ${escapeHtml(item.value)} <span>×</span>
+      if(activeQuickFilter && activeQuickFilter!=="all"){
+        const quickLabels={
+          graded:"Slabs",
+          raw:"Raw",
+          sealed:"Sealed",
+          championship:"Championship",
+          vintage:"Vintage"
+        };
+        selections.push({
+          kind:"quick",
+          id:"quick",
+          label:"Category",
+          value:quickLabels[activeQuickFilter]||activeQuickFilter
+        });
+      }
+
+      addControl("search","Search",$("search")?.value,"");
+      addControl("filterGame","Game",$("filterGame")?.value,"All Games");
+      addControl("filterGrade","Grade / Condition",$("filterGrade")?.value,"All Grades / Conditions");
+      addControl("filterLanguage","Language",$("filterLanguage")?.value,"All Languages");
+      addControl("filterEra","Era",$("filterEra")?.value,"All Eras");
+      addControl("filterSeries","Series",$("filterSeries")?.value,"All Series");
+
+      const pmin=safePriceFilterValue($("filterPriceMin")?.value);
+      const pmax=safePriceFilterValue($("filterPriceMax")?.value);
+      if(pmin||pmax){
+        selections.push({
+          kind:"price",
+          id:"price",
+          label:`Price (${getPriceCurrencyPreference()})`,
+          value:pmin&&pmax ? `${pmin}–${pmax}` : (pmin ? `≥ ${pmin}` : `≤ ${pmax}`)
+        });
+      }
+
+      Object.entries(pillFilterState).forEach(([type,set])=>{
+        Array.from(set).forEach(value=>selections.push({
+          kind:"pill",
+          id:type,
+          label:type==="grade" ? "Grade / Condition" : normalizeStoredLabel(type),
+          value
+        }));
+      });
+
+      mount.hidden=selections.length===0;
+      mount.innerHTML=selections.length ? `
+        <span class="pill-filter-summary-label">Active filters</span>
+        ${selections.map((item,index)=>`
+          <button type="button"
+                  class="active-pill-filter"
+                  data-active-filter-index="${index}"
+                  title="Remove ${escapeHtml(item.label)} filter">
+            ${escapeHtml(item.label)}: ${escapeHtml(item.value)} <span>×</span>
           </button>
         `).join("")}
         <button type="button" class="clear-pill-filters" id="clearPillFilters">Clear all</button>
       ` : "";
 
-      mount.querySelectorAll("[data-remove-pill-type]").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
-          const bucket = pillFilterState[btn.dataset.removePillType];
-          if(bucket) bucket.delete(btn.dataset.removePillValue);
+      mount.querySelectorAll("[data-active-filter-index]").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          const item=selections[Number(btn.dataset.activeFilterIndex)];
+          if(!item) return;
+
+          if(item.kind==="pill"){
+            pillFilterState[item.id]?.delete(item.value);
+          }else if(item.kind==="quick"){
+            activeQuickFilter="all";
+            syncQuickFilterUI();
+          }else if(item.kind==="price"){
+            if($("filterPriceMin")) $("filterPriceMin").value="";
+            if($("filterPriceMax")) $("filterPriceMax").value="";
+          }else{
+            const el=$(item.id);
+            if(el) el.value="";
+            const controlBtn=$(item.id+"Btn");
+            if(controlBtn && item.resetLabel){
+              const span=controlBtn.querySelector("span");
+              if(span) span.textContent=item.resetLabel;
+            }
+          }
+
           updateListingUrlFromControls();
-          renderInventoryPage(listingAvailabilityScope);
+          draw();
         });
       });
 
-      const clearBtn = $("clearPillFilters");
-      if(clearBtn){
-        clearBtn.addEventListener("click", ()=>{
-          Object.values(pillFilterState).forEach(set=>set.clear());
-          updateListingUrlFromControls();
-          renderInventoryPage(listingAvailabilityScope);
-        });
-      }
+      $("clearPillFilters")?.addEventListener("click",clearAllInventoryFilters);
 
-      // Keep dropdown labels informative while pills are active.
-      const maps = [
+      // Keep dropdown labels informative while multi-select card pills are active.
+      const maps=[
         ["grade","filterGrade","Grades / Conditions"],
         ["language","filterLanguage","Languages"],
         ["era","filterEra","Eras"],
@@ -13693,17 +14118,17 @@ function wireShimmer(container){
         ["series","filterSeries","Series"]
       ];
       maps.forEach(([type,id,plural])=>{
-        const set = pillFilterState[type];
-        const btn = $(id + "Btn");
-        if(!btn || !set.size) return;
-        btn.querySelector("span").textContent =
-          set.size === 1 ? Array.from(set)[0] : `${set.size} ${plural}`;
+        const set=pillFilterState[type];
+        const btn=$(id+"Btn");
+        if(!btn || !set?.size) return;
+        const span=btn.querySelector("span");
+        if(span) span.textContent=set.size===1 ? Array.from(set)[0] : `${set.size} ${plural}`;
       });
     }
 
     syncPillFilterSummary();
     syncQuickFilterUI();
-    draw();
+    requestAnimationFrame(()=>draw());
     setupInventoryStickyBarVisibility();
 
     $("invGrid").addEventListener("keydown", e=>{
@@ -21040,6 +21465,15 @@ function wireShimmer(container){
     syncDetailsFavoriteButton(card);
     closeDetailsMoreMenu();
 
+    const detailsCloseButton=$("detailsCloseBtn");
+    if(detailsCloseButton){
+      const returningToListing=!!detailsReturnHash && !detailsReturnHash.includes("#/card/");
+      detailsCloseButton.innerHTML=returningToListing
+        ? `<span aria-hidden="true">←</span> Back to results`
+        : `<span aria-hidden="true">×</span> Close`;
+      detailsCloseButton.setAttribute("aria-label",returningToListing ? "Back to previous results" : "Close card details");
+    }
+
     detailsMount.innerHTML = `
       <div class="detail-header">
         <div class="detail-title">
@@ -21096,16 +21530,24 @@ function wireShimmer(container){
       <div class="detail-layout">
         <div>${imageHTML}</div>
         <div class="detail-info">
-          <div class="detail-grid details-info-grid">
-            <div class="detail-item detail-price-item">
-              <div class="detail-label">Price</div>
-              <div class="detail-price-stack">
-                ${detailPriceDisplayHTML(card)}
-              </div>
+          <div class="detail-summary-strip">
+            <div class="detail-summary-card detail-summary-price">
+              <span>Price</span>
+              ${detailPriceDisplayHTML(card)}
             </div>
+            <div class="detail-summary-card">
+              <span>Grade / Condition</span>
+              <strong>${escapeHtml(detailCondition)}</strong>
+            </div>
+            <div class="detail-summary-card">
+              <span>Availability</span>
+              <strong>${escapeHtml(card.availability || "Available")}</strong>
+            </div>
+          </div>
+
+          <div class="detail-info-section-title">Card information</div>
+          <div class="detail-grid details-info-grid">
             <div class="detail-item"><div class="detail-label">Format</div><div class="detail-value">${escapeHtml(effectiveFormat(card))}</div></div>
-            <div class="detail-item"><div class="detail-label">Condition</div><div class="detail-value">${escapeHtml(detailCondition)}</div></div>
-            <div class="detail-item"><div class="detail-label">Availability</div><div class="detail-value">${escapeHtml(card.availability || "Available")}</div></div>
             ${isSoldListing && soldDateLabel ? `<div class="detail-item"><div class="detail-label">Sold Date</div><div class="detail-value">${escapeHtml(soldDateLabel)}</div></div>` : ""}
             ${card.card_code ? `<div class="detail-item"><div class="detail-label">Card Code</div><div class="detail-value">${escapeHtml(card.card_code)}</div></div>` : ""}
             ${card.year ? `<div class="detail-item"><div class="detail-label">Year</div><div class="detail-value">${escapeHtml(card.year)}</div></div>` : ""}
@@ -21215,11 +21657,28 @@ function wireShimmer(container){
       const dots = Array.from(slider.querySelectorAll(".detail-slider-dot"));
       const thumbs = Array.from(slider.querySelectorAll(".detail-thumb-strip-btn"));
 
+      function preloadDetailNeighbors(index){
+        if(images.length<2) return;
+        const indexes=[
+          (index+1)%images.length,
+          (index-1+images.length)%images.length
+        ];
+        indexes.forEach(i=>{
+          const preload=new Image();
+          preload.decoding="async";
+          preload.src=images[i];
+        });
+      }
+
       function showSlide(index){
         slideIndex = (index + images.length) % images.length;
         detailsImageIndex = slideIndex;
+        slideImg.classList.add("is-switching");
         slideImg.src = images[slideIndex];
         slideImg.alt = `${card.name} image ${slideIndex + 1}`;
+        const settle=()=>slideImg.classList.remove("is-switching");
+        if(slideImg.complete) requestAnimationFrame(settle);
+        else slideImg.addEventListener("load",settle,{once:true});
         if(countEl) countEl.textContent = `${slideIndex + 1} / ${images.length}`;
         dots.forEach((d,i)=>d.classList.toggle("active", i === slideIndex));
         thumbs.forEach((thumb,i)=>thumb.classList.toggle("active", i === slideIndex));
@@ -21227,7 +21686,10 @@ function wireShimmer(container){
         if(activeThumb){
           try{activeThumb.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});}catch{}
         }
+        preloadDetailNeighbors(slideIndex);
       }
+
+      preloadDetailNeighbors(0);
 
       const prev = slider.querySelector(".detail-slider-btn.prev");
       const next = slider.querySelector(".detail-slider-btn.next");
