@@ -9438,6 +9438,118 @@
     }
   }
 
+
+  /* ==========================================================
+     Inventory overview — prominent grading badge on card photo
+     ========================================================== */
+  .overview-grade-overlay{
+    position:absolute;
+    top:8px;
+    left:8px;
+    z-index:12;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
+    min-width:74px;
+    max-width:calc(100% - 16px);
+    padding:7px 10px 6px;
+    border:1px solid rgba(255,255,255,.26);
+    border-radius:10px;
+    background:rgba(8,9,12,.92);
+    color:#fff;
+    box-shadow:
+      0 5px 16px rgba(0,0,0,.40),
+      inset 3px 0 0 var(--accent-teal);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    pointer-events:none;
+  }
+
+  .overview-grade-overlay strong{
+    display:block;
+    max-width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-family:'Barlow Condensed','Inter',sans-serif;
+    font-size:16px;
+    font-weight:900;
+    line-height:1;
+    letter-spacing:.35px;
+  }
+
+  .overview-grade-overlay small{
+    display:block;
+    margin-top:3px;
+    color:rgba(255,255,255,.68);
+    font-family:'Inter',sans-serif;
+    font-size:6.5px;
+    font-weight:800;
+    line-height:1;
+    letter-spacing:.9px;
+  }
+
+  /* SOLD / RESERVED already own the upper-left corner. */
+  .overview-grade-overlay-right{
+    left:auto;
+    right:8px;
+  }
+
+  /* Keep the NEW marker visible rather than stacking it under the grade badge. */
+  .new-card-badge-with-grade{
+    top:58px !important;
+  }
+
+  /* Make the existing clickable grade pill easier to scan as well. */
+  .clean-grade-badge{
+    border-color:rgba(95,212,196,.34) !important;
+    background:rgba(95,212,196,.08) !important;
+    font-weight:850 !important;
+  }
+
+  @media(max-width:800px){
+    .overview-grade-overlay{
+      top:6px;
+      left:6px;
+      min-width:66px;
+      padding:6px 8px 5px;
+      border-radius:9px;
+    }
+
+    .overview-grade-overlay-right{
+      left:auto;
+      right:6px;
+    }
+
+    .overview-grade-overlay strong{
+      font-size:14px;
+    }
+
+    .overview-grade-overlay small{
+      font-size:6px;
+    }
+
+    .new-card-badge-with-grade{
+      top:51px !important;
+    }
+  }
+
+  @media(max-width:390px){
+    .overview-grade-overlay{
+      min-width:62px;
+      padding:5px 7px;
+    }
+
+    .overview-grade-overlay strong{
+      font-size:13px;
+    }
+
+    .new-card-badge-with-grade{
+      top:47px !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -12430,6 +12542,26 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return "";
   }
 
+  function overviewGradeOverlayHTML(card){
+    if(!card || normalizeFilterValue(effectiveFormat(card))!=="graded") return "";
+
+    const grade=(Array.isArray(card.grading)?card.grading:[])
+      .find(g=>g && String(g.company||"").trim() && String(g.grade??"").trim());
+
+    if(!grade) return "";
+
+    const company=String(grade.company||"").trim().toUpperCase().slice(0,12);
+    const value=String(grade.grade??"").trim().slice(0,12);
+    const status=normalizeFilterValue(card.availability||"Available");
+    const avoidStatusCorner=status==="sold" || status==="reserved";
+
+    return `<span class="overview-grade-overlay ${avoidStatusCorner?"overview-grade-overlay-right":""}"
+                  aria-label="${escapeHtml(`${company} grade ${value}`)}">
+      <strong>${escapeHtml(company)} ${escapeHtml(value)}</strong>
+      <small>GRADED</small>
+    </span>`;
+  }
+
   function cardThumbHTML(c){
     const color = RARITY_COLOR[c.rarity] || "var(--r-common)";
     const images = getImages(c);
@@ -12446,7 +12578,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
              decoding="async"
              fetchpriority="low"
              style="border-color:${color}">
-        ${isNewCard(c) ? `<span class="new-card-badge" aria-label="Recently added">NEW</span>` : ""}
+        ${overviewGradeOverlayHTML(c)}
+        ${isNewCard(c) ? `<span class="new-card-badge ${normalizeFilterValue(effectiveFormat(c))==="graded" ? "new-card-badge-with-grade" : ""}" aria-label="Recently added">NEW</span>` : ""}
         ${statusCornerHTML(c)}
         <span class="image-count-badge"
               data-listing-image-count
