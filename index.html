@@ -8456,6 +8456,64 @@
     }
   }
 
+
+  /* ==========================================================
+     FINAL OWNER SECURITY / VISIBILITY GUARD
+     Keep this block last so responsive navigation rules cannot
+     accidentally reveal owner-only controls.
+     ========================================================== */
+
+  /* Respect the HTML hidden attribute everywhere, regardless of component CSS. */
+  [hidden]{
+    display:none !important;
+  }
+
+  /* Fail closed for every owner-only element when owner verification is absent. */
+  body:not(.owner-mode) .owner-only,
+  body:not(.owner-mode) nav.mainnav .owner-only,
+  body:not(.owner-mode) nav.mainnav > .mobile-more-menu > a.owner-only,
+  body:not(.owner-mode) nav.mainnav > a.owner-only,
+  body:not(.owner-mode) .desktop-more-owner,
+  body:not(.owner-mode) .card-actions.owner-only,
+  body:not(.owner-mode) #detailsEditBtn,
+  body:not(.owner-mode) #detailsCloneBtn{
+    display:none !important;
+    visibility:hidden !important;
+    pointer-events:none !important;
+  }
+
+  /* Only a verified owner session may reveal owner navigation. */
+  body.owner-mode nav.mainnav > .mobile-more-menu > a.owner-only:not([hidden]){
+    display:flex !important;
+    visibility:visible !important;
+    pointer-events:auto !important;
+  }
+
+  @media(min-width:801px){
+    /* Desktop owner links belong in More; don't leak them into the main row. */
+    body:not(.owner-mode) nav.mainnav .desktop-more-owner{
+      display:none !important;
+    }
+    body.owner-mode nav.mainnav > .mobile-more-menu > a.desktop-more-owner:not([hidden]){
+      display:flex !important;
+    }
+  }
+
+  @media(max-width:800px){
+    /* Mobile More menu had a generic "all links = flex" rule. Owner rules win here. */
+    body:not(.owner-mode) #mobileMoreMenu > a.owner-only,
+    body:not(.owner-mode) #mobileMoreMenu > a.desktop-more-owner{
+      display:none !important;
+      visibility:hidden !important;
+      pointer-events:none !important;
+    }
+    body.owner-mode #mobileMoreMenu > a.owner-only:not([hidden]){
+      display:flex !important;
+      visibility:visible !important;
+      pointer-events:auto !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -9088,16 +9146,68 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   function applyOwnerMode(){
-    document.body.classList.toggle("owner-mode", isOwnerMode());
+    const owner=isOwnerMode();
+    document.body.classList.toggle("owner-mode", owner);
     const b = $("ownerToggle");
-    if(b) b.textContent = isOwnerMode() ? "Owner logout" : "Owner login";
+    if(b) b.textContent = owner ? "Owner logout" : "Owner login";
+
+    // Fail closed in both desktop and mobile navigation. Responsive CSS must
+    // never be the only thing deciding whether an owner tool is visible.
+    document.querySelectorAll(".owner-only").forEach(el=>{
+      if(el.id==="detailsEditBtn" || el.id==="detailsCloneBtn"){
+        el.hidden=!owner;
+        return;
+      }
+
+      // Navigation/actions that are owner-only are explicitly removed from
+      // layout for public sessions. Verified owner mode may reveal them.
+      if(
+        el.matches("nav a, nav button, .desktop-more-owner, .card-actions, .showcase-owner-actions, .giveaway-owner-actions")
+      ){
+        el.hidden=!owner;
+      }
+    });
 
     const detailsEditBtn = $("detailsEditBtn");
     if(detailsEditBtn){
-      detailsEditBtn.hidden = !isOwnerMode();
-      detailsEditBtn.style.display = isOwnerMode() ? "inline-flex" : "none";
+      detailsEditBtn.hidden = !owner;
+      detailsEditBtn.style.display = owner ? "inline-flex" : "none";
     }
 
+    const detailsCloneBtn = $("detailsCloneBtn");
+    if(detailsCloneBtn){
+      detailsCloneBtn.hidden = !owner;
+      detailsCloneBtn.style.display = owner ? "inline-flex" : "none";
+    }
+
+    // If owner state disappears while an owner-only route is open, immediately
+    // leave that route instead of leaving stale owner UI on screen.
+    if(!owner && typeof currentRoute==="function"){
+      const route=currentRoute();
+      if(isOwnerOnlyRoute(route)){
+        location.hash="#/inventory";
+      }
+    }
+  }
+
+  const OWNER_ONLY_ROUTES=new Set([
+    "insights",
+    "fb-tools",
+    "fb-posts",
+    "fb-card-list",
+    "quality",
+    "inventory-tools",
+    "bulk-prices",
+    "bulk-metadata",
+    "recent-edits",
+    "export",
+    "add",
+    "by-game"
+  ]);
+
+  function isOwnerOnlyRoute(route){
+    const base=String(route||"").split("?")[0].trim().toLowerCase();
+    return OWNER_ONLY_ROUTES.has(base);
   }
 
   function requireOwner(action = "perform this action"){
@@ -10448,6 +10558,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function router(){
     updateStatusNavCounts();
     const route=currentRoute();
+
+    // Central fail-closed route gate. This protects direct URLs/bookmarks as
+    // well as clicks from desktop/mobile navigation.
+    if(isOwnerOnlyRoute(route) && !isOwnerMode()){
+      if(location.hash!=="#/inventory"){
+        location.hash="#/inventory";
+        return;
+      }
+    }
+
     const isCardRoute=route.startsWith("card/");
     const listingRoutes=new Set(["inventory","collection","reserved","sold"]);
     const reusePreservedListingOnReturn=
@@ -21120,6 +21240,7 @@ function wireShimmer(container){
 
   // ---------------- Add page ----------------
   function renderAddPage(){
+    if(!requireOwner("open add card")) return;
     const cloneDraft = pendingCloneCard;
     pendingCloneCard = null;
     view.innerHTML = `
