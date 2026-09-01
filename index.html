@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <!-- UX PHASE 2: consolidated overrides and storefront polish -->
+<!-- UX PHASE 3: mobile browsing clarity and conversion polish -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="collect-tcg-app-version" content="3">
@@ -9844,6 +9845,53 @@ a.home-stat-card:hover::after{opacity:.95;}
   }
 }
 
+
+/* =========================================================
+   UX PHASE 3 — mobile browsing clarity
+   ========================================================= */
+
+/* Keep active filters close to the search/results they affect. */
+@media(max-width:800px){
+  .pill-filter-summary:not([hidden]){
+    position:sticky;
+    top:0;
+    z-index:38;
+    display:flex !important;
+    gap:7px;
+    overflow-x:auto;
+    overscroll-behavior-x:contain;
+    scrollbar-width:none;
+    padding:8px 3px 9px;
+    margin:0 0 8px;
+    background:linear-gradient(180deg,var(--bg) 72%,rgba(0,0,0,0));
+    -webkit-overflow-scrolling:touch;
+  }
+  .pill-filter-summary:not([hidden])::-webkit-scrollbar{display:none;}
+  .pill-filter-summary button,
+  .pill-filter-summary .filter-pill,
+  .pill-filter-summary [data-active-filter-index]{
+    flex:0 0 auto;
+    min-height:34px;
+    white-space:nowrap;
+  }
+
+  .mobile-inventory-search{
+    margin-bottom:6px;
+  }
+}
+
+/* Sticky enquiry bar state clarity */
+.mobile-detail-cta-action:disabled{
+  cursor:default;
+  opacity:.58;
+  background:var(--surface-3) !important;
+  color:var(--text-muted) !important;
+}
+.mobile-detail-cta[data-state="sold"] .mobile-detail-cta-price small,
+.mobile-detail-cta[data-state="reserved"] .mobile-detail-cta-price small{
+  color:var(--text-muted);
+}
+
 </style>
 </head>
 <body>
@@ -15585,7 +15633,7 @@ function wireShimmer(container){
 
           <div class="overview-select" id="sortByWrap">
             <button type="button" class="overview-select-btn" id="sortByBtn">
-              <span>${scope==="sold" ? "Sort: Recently Sold" : "Sort: Name"}</span><i></i>
+              <span>${scope==="sold" ? "Sort: Recently Sold" : "Sort: Newest Added"}</span><i></i>
             </button>
             <div class="overview-select-menu" id="sortByMenu" hidden></div>
             <input type="hidden" id="sortBy" value="${scope==="sold" ? "recent-sold" : "newest"}">
@@ -15607,7 +15655,7 @@ function wireShimmer(container){
 
         <div class="filter-drawer-footer">
           <div class="filter-drawer-footer-copy">
-            <strong><span id="mobileFilterFooterResultCount">0</span> results</strong>
+            <strong><span id="mobileFilterFooterResultCount">0</span> cards</strong>
             <span>Filters update live</span>
           </div>
           <button type="button" class="btn-primary filter-drawer-apply" id="mobileFilterApplyBtn">Show Results</button>
@@ -15619,7 +15667,7 @@ function wireShimmer(container){
       <div class="sticky-mobile-results-bar" id="stickyMobileResultsBar" aria-label="Results controls">
         <div class="sticky-mobile-results-count">
           <strong id="stickyMobileResultCount">0</strong>
-          <span>Results</span>
+          <span>Cards</span>
         </div>
 
         <button type="button" class="sticky-mobile-results-action" id="stickyMobileSortBtn" aria-expanded="false">
@@ -26245,7 +26293,7 @@ function wireShimmer(container){
 </script>
 
 
-<div class="mobile-detail-cta" id="mobileDetailCta" hidden aria-label="Card enquiry">
+<div class="mobile-detail-cta" id="mobileDetailCta" hidden aria-label="Card enquiry" aria-live="polite">
   <div class="mobile-detail-cta-price">
     <small>Price</small>
     <strong id="mobileDetailCtaPrice">—</strong>
@@ -26307,17 +26355,53 @@ function wireShimmer(container){
 
   function update(){
     const mobile=window.matchMedia("(max-width:800px)").matches;
-    if(!mobile || !isDetailRoute()){
+    const detailsVisible=document.getElementById("detailsOverlay") &&
+      !document.getElementById("detailsOverlay").hidden;
+
+    if(!mobile || (!isDetailRoute() && !detailsVisible)){
       bar.hidden=true;
+      bar.dataset.state="";
+      return;
+    }
+
+    const isNfs=!!document.querySelector(".nfs-detail-notice");
+    const isSold=!!document.querySelector(".sold-detail-notice");
+    const availabilityText=(
+      document.querySelector(".detail-summary-card:nth-child(3) strong")?.textContent || ""
+    ).trim().toLowerCase();
+    const isReserved=availabilityText.includes("reserved");
+
+    if(isNfs){
+      bar.hidden=true;
+      bar.dataset.state="nfs";
       return;
     }
 
     const price=findVisiblePrice();
     priceEl.textContent=price || "View price";
     bar.hidden=false;
+
+    if(isSold){
+      bar.dataset.state="sold";
+      action.textContent="Sold";
+      action.disabled=true;
+      return;
+    }
+
+    if(isReserved){
+      bar.dataset.state="reserved";
+      action.textContent="Reserved";
+      action.disabled=true;
+      return;
+    }
+
+    bar.dataset.state="available";
+    action.textContent="I'm Interested";
+    action.disabled=false;
   }
 
   action.addEventListener("click",function(){
+    if(action.disabled) return;
     const target=findInterestTarget();
     if(target){
       target.click();
