@@ -9698,6 +9698,102 @@
   color:rgba(255,255,255,.68) !important;
 }
 
+
+/* UX Phase 1: simplified buyer mobile navigation */
+@media (max-width:800px){
+  nav.mainnav > a[data-route="reserved"],
+  nav.mainnav > a[data-route="collection"],
+  nav.mainnav > a[data-route="showcase"],
+  nav.mainnav > a[data-route="giveaway"],
+  nav.mainnav > a[data-route="about"],
+  nav.mainnav > a[data-route="contact"],
+  nav.mainnav > a[data-route="recent"]{
+    display:none !important;
+  }
+
+  nav.mainnav > a[data-route="favorites"]{
+    display:flex !important;
+  }
+
+  .mobile-more-toggle{
+    display:flex !important;
+  }
+}
+
+
+/* UX Phase 1: bring fresh inventory higher in the home experience */
+.home-recently-added-priority{
+  order:-20;
+}
+
+
+/* UX Phase 1: sticky mobile enquiry bar */
+.mobile-detail-cta{
+  display:none;
+}
+@media (max-width:800px){
+  .mobile-detail-cta{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    z-index:1300;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    background:rgba(10,12,15,.96);
+    border-top:1px solid rgba(255,255,255,.12);
+    box-shadow:0 -8px 24px rgba(0,0,0,.35);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+  }
+  .mobile-detail-cta[hidden]{
+    display:none !important;
+  }
+  .mobile-detail-cta-price{
+    min-width:0;
+    flex:1;
+  }
+  .mobile-detail-cta-price small{
+    display:block;
+    color:var(--text-muted);
+    font-size:9px;
+    font-weight:800;
+    letter-spacing:.5px;
+    text-transform:uppercase;
+  }
+  .mobile-detail-cta-price strong{
+    display:block;
+    margin-top:2px;
+    color:var(--text);
+    font-size:17px;
+    line-height:1.1;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .mobile-detail-cta-action{
+    min-height:44px;
+    padding:11px 16px;
+    border:0;
+    border-radius:11px;
+    background:var(--accent-teal);
+    color:#061210;
+    font-weight:900;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .mobile-detail-cta-action:active{
+    transform:scale(.98);
+  }
+
+  /* keep floating controls above the sticky CTA */
+  .back-to-top-btn{
+    bottom:calc(92px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -9742,6 +9838,7 @@
         <span class="ic">⋯</span> More <span class="mobile-more-caret">⌄</span>
       </button>
       <div class="mobile-more-menu" id="mobileMoreMenu" hidden>
+        <a href="#/reserved" data-route="reserved"><span class="ic">◌</span> Reserved</a>
 <a href="#/collection" data-route="collection"><span class="ic">◆</span> Collection / NFS</a>
         <a href="#/favorites" data-route="favorites"><span class="ic">♡</span> Favorites</a>
         <a href="#/giveaway" data-route="giveaway"><span class="ic">★</span> Giveaway</a>
@@ -14295,7 +14392,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       ${(()=>{
         const recent=getRecentlyViewedCards().slice(0,4);
         return recent.length?`
-          <section class="home-section home-recent-section">
+          <section class="home-section home-recent-section home-recently-added-priority">
             <div class="home-section-head">
               <div><h3>Recently Viewed</h3><p>Continue browsing where you left off.</p></div>
               <a href="#/recent" class="home-section-link">View All</a>
@@ -15410,7 +15507,7 @@ function wireShimmer(container){
               <span>${scope==="sold" ? "Sort: Recently Sold" : "Sort: Name"}</span><i></i>
             </button>
             <div class="overview-select-menu" id="sortByMenu" hidden></div>
-            <input type="hidden" id="sortBy" value="${scope==="sold" ? "recent-sold" : "name"}">
+            <input type="hidden" id="sortBy" value="${scope==="sold" ? "recent-sold" : "newest"}">
           </div>
 
           ${!isCollection ? `
@@ -15432,7 +15529,7 @@ function wireShimmer(container){
             <strong><span id="mobileFilterFooterResultCount">0</span> results</strong>
             <span>Filters update live</span>
           </div>
-          <button type="button" class="btn-primary filter-drawer-apply" id="mobileFilterApplyBtn">Apply</button>
+          <button type="button" class="btn-primary filter-drawer-apply" id="mobileFilterApplyBtn">Show Results</button>
         </div>
       </section>
 
@@ -15446,7 +15543,7 @@ function wireShimmer(container){
 
         <button type="button" class="sticky-mobile-results-action" id="stickyMobileSortBtn" aria-expanded="false">
           <span>Sort</span>
-          <small id="stickyMobileSortLabel">Name A–Z</small>
+          <small id="stickyMobileSortLabel">Newest Added</small>
         </button>
 
         <button type="button" class="sticky-mobile-results-action" id="stickyMobileFilterBtn" aria-expanded="false">
@@ -26063,6 +26160,96 @@ function wireShimmer(container){
   if(shell) shell.addEventListener("scroll", updateBackToTop, { passive: true });
   window.addEventListener("resize", updateBackToTop, { passive: true });
   updateBackToTop();
+})();
+</script>
+
+
+<div class="mobile-detail-cta" id="mobileDetailCta" hidden aria-label="Card enquiry">
+  <div class="mobile-detail-cta-price">
+    <small>Price</small>
+    <strong id="mobileDetailCtaPrice">—</strong>
+  </div>
+  <button type="button" class="mobile-detail-cta-action" id="mobileDetailCtaAction">I'm Interested</button>
+</div>
+
+
+<script>
+(function(){
+  const bar=document.getElementById("mobileDetailCta");
+  const priceEl=document.getElementById("mobileDetailCtaPrice");
+  const action=document.getElementById("mobileDetailCtaAction");
+  if(!bar || !priceEl || !action) return;
+
+  function isDetailRoute(){
+    const h=location.hash || "";
+    return /#\/(card|detail|inventory\/|collection\/|sold\/|reserved\/)/i.test(h);
+  }
+
+  function findVisiblePrice(){
+    const selectors=[
+      ".detail-price",
+      ".card-detail-price",
+      ".clean-price-primary",
+      "[data-detail-price]",
+      ".price-primary",
+      ".price"
+    ];
+    for(const s of selectors){
+      const els=[...document.querySelectorAll(s)];
+      const el=els.find(x=>{
+        const r=x.getBoundingClientRect();
+        return r.width>0 && r.height>0 && x.textContent.trim();
+      });
+      if(el) return el.textContent.trim();
+    }
+    return "";
+  }
+
+  function findInterestTarget(){
+    const selectors=[
+      'a[href*="carousell"]',
+      'a[href*="instagram"]',
+      'a[href*="wa.me"]',
+      'a[href*="whatsapp"]',
+      'a[href*="m.me"]',
+      'a[href^="mailto:"]',
+      '#contactBtn',
+      '.contact-btn',
+      '.interest-btn'
+    ];
+    for(const s of selectors){
+      const el=document.querySelector(s);
+      if(el) return el;
+    }
+    return null;
+  }
+
+  function update(){
+    const mobile=window.matchMedia("(max-width:800px)").matches;
+    if(!mobile || !isDetailRoute()){
+      bar.hidden=true;
+      return;
+    }
+
+    const price=findVisiblePrice();
+    priceEl.textContent=price || "View price";
+    bar.hidden=false;
+  }
+
+  action.addEventListener("click",function(){
+    const target=findInterestTarget();
+    if(target){
+      target.click();
+      return;
+    }
+    location.hash="#/contact";
+  });
+
+  window.addEventListener("hashchange",()=>setTimeout(update,80));
+  window.addEventListener("resize",update,{passive:true});
+  const mo=new MutationObserver(()=>update());
+  mo.observe(document.body,{subtree:true,childList:true,characterData:true});
+  setTimeout(update,120);
 })();
 </script>
 
