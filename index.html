@@ -5,8 +5,14 @@
 <!-- UX PHASE 3: mobile browsing clarity and conversion polish -->
 <!-- MOBILE FIX: normal taps use click; swipes alone use touchend; recursive CTA observer removed -->
 <!-- UX PHASE 4: accessibility, touch ergonomics and rendering performance -->
+<!-- UX PHASE 5: premium storefront and buyer confidence -->
+<!-- UX PHASE 6: technical cleanup and performance -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+<link rel="preconnect" href="https://cbzytysxtdcqxuckspye.supabase.co" crossorigin>
   <meta name="collect-tcg-app-version" content="3">
   <meta name="theme-color" content="#111216">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3224,8 +3230,6 @@
       width:100%;
     }
   }
-
-
 
 
   /* Owner Card List Post Generator */
@@ -9950,6 +9954,131 @@ input:focus-visible{
   }
 }
 
+
+/* =========================================================
+   UX PHASE 5 — premium storefront & buyer confidence
+   ========================================================= */
+
+.detail-buyer-confidence{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin:0 0 14px;
+}
+.detail-confidence-item{
+  min-width:0;
+  display:flex;
+  gap:9px;
+  align-items:flex-start;
+  padding:10px 11px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.008));
+}
+.detail-confidence-icon{
+  flex:0 0 auto;
+  width:25px;
+  height:25px;
+  display:grid;
+  place-items:center;
+  border-radius:7px;
+  border:1px solid rgba(78,210,199,.20);
+  background:rgba(78,210,199,.07);
+  color:var(--accent-teal);
+  font-size:12px;
+  font-weight:900;
+}
+.detail-confidence-item strong,
+.detail-confidence-item small{
+  display:block;
+}
+.detail-confidence-item strong{
+  color:var(--text);
+  font-size:9.5px;
+  line-height:1.25;
+}
+.detail-confidence-item small{
+  margin-top:3px;
+  color:var(--text-muted);
+  font-size:8.5px;
+  line-height:1.4;
+}
+
+.detail-summary-card[data-availability="available"] strong{
+  color:var(--accent-teal);
+}
+.detail-summary-card[data-availability="reserved"] strong{
+  color:var(--accent-gold);
+}
+.detail-summary-card[data-availability="sold"] strong{
+  color:#ff8d91;
+}
+
+.detail-purchase-note{
+  margin:12px 0 0;
+  padding:10px 11px;
+  border-left:3px solid rgba(78,210,199,.45);
+  border-radius:0 9px 9px 0;
+  background:rgba(78,210,199,.045);
+  color:var(--text-muted);
+  font-size:9.5px;
+  line-height:1.5;
+}
+.detail-purchase-note strong{
+  color:var(--text);
+}
+
+.inventory-no-results h3{
+  color:var(--text);
+  font-size:17px;
+  margin:4px 0 7px;
+}
+.inventory-no-results .no-results-actions{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:8px;
+  margin-top:4px;
+}
+
+@media(max-width:700px){
+  .detail-buyer-confidence{
+    grid-template-columns:1fr;
+    gap:6px;
+  }
+  .detail-confidence-item{
+    padding:9px 10px;
+  }
+  .detail-confidence-item small{
+    font-size:9px;
+  }
+}
+
+
+/* =========================================================
+   UX PHASE 6 — final technical polish
+   ========================================================= */
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto !important;}
+  *,
+  *::before,
+  *::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+}
+
+/* Limit paint work for off-screen home/storefront cards too. */
+@supports (content-visibility:auto){
+  .home-storefront-grid .card,
+  #homeRecentGrid .card,
+  .recently-viewed-grid .card{
+    content-visibility:auto;
+    contain-intrinsic-size:380px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -10323,7 +10452,6 @@ input:focus-visible{
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 window.COLLECT_TCG_SUPABASE_URL = "https://cbzytysxtdcqxuckspye.supabase.co";
 window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-Au";
@@ -15849,7 +15977,7 @@ function wireShimmer(container){
         <div class="empty-icon">${activeCount ? "⌕" : "◇"}</div>
         <h3>${noScopeCards ? escapeHtml(inventoryScopeEmptyText(scope)) : "No cards match these filters"}</h3>
         <p>${activeCount
-          ? "Try removing one or more filters, or clear everything to see more results."
+          ? "No match yet. Remove one filter, adjust your search, or reset everything to browse the full selection."
           : "There are no listings to show in this section right now."}</p>
         <div class="no-results-actions">
           ${hasSearch ? `<button type="button" class="btn-ghost" data-empty-clear-search>Clear Search</button>` : ""}
@@ -25211,11 +25339,39 @@ function wireShimmer(container){
               <span>Grade / Condition</span>
               <strong>${escapeHtml(detailCondition)}</strong>
             </div>
-            <div class="detail-summary-card">
+            <div class="detail-summary-card" data-availability="${normalizeFilterValue(card.availability||"Available")}">
               <span>Availability</span>
               <strong>${escapeHtml(card.availability || "Available")}</strong>
             </div>
           </div>
+
+          ${!isNfsListing ? `
+            <div class="detail-buyer-confidence" aria-label="Buyer information">
+              <div class="detail-confidence-item">
+                <span class="detail-confidence-icon" aria-hidden="true">▣</span>
+                <span>
+                  <strong>${images.length} Listing Photo${images.length===1?"":"s"}</strong>
+                  <small>Open the gallery to inspect the images provided for this listing.</small>
+                </span>
+              </div>
+              <div class="detail-confidence-item">
+                <span class="detail-confidence-icon" aria-hidden="true">✓</span>
+                <span>
+                  <strong>Secure Packing</strong>
+                  <small>Cards are packed securely; a packing video can be provided.</small>
+                </span>
+              </div>
+              <div class="detail-confidence-item">
+                <span class="detail-confidence-icon" aria-hidden="true">◎</span>
+                <span>
+                  <strong>${isSoldListing ? "Sold Archive" : "Buyer Options"}</strong>
+                  <small>${isSoldListing
+                    ? "This listing is retained for collection history and reference."
+                    : "Shipping or face-to-face arrangements depend on item value and location."}</small>
+                </span>
+              </div>
+            </div>
+          ` : ""}
 
           <div class="detail-info-section-title">Card information</div>
           <div class="detail-grid details-info-grid">
@@ -25231,6 +25387,13 @@ function wireShimmer(container){
           </div>
 
           ${card.notes ? `<div class="detail-section"><h3>Notes</h3><div class="detail-notes">${escapeHtml(card.notes)}</div></div>` : ""}
+
+          ${!isNfsListing && !isSoldListing && normalizeFilterValue(card.availability||"Available")==="available" ? `
+            <div class="detail-purchase-note">
+              <strong>Interested in this card?</strong>
+              Contact us to confirm current availability, transaction method and delivery / meetup options before payment.
+            </div>
+          ` : ""}
         </div>
       </div>
 
