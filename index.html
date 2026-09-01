@@ -5165,6 +5165,12 @@
     }
   }
 
+
+  @media(max-width:800px) and (prefers-reduced-motion:reduce){
+    .filter-drawer-shell,
+    .filter-drawer-shell.open{transition:none!important;}
+  }
+
   @media(max-width:420px){
     .compare-tray-copy span{
       display:none;
@@ -5337,18 +5343,28 @@
       position:fixed;
       left:0;right:0;bottom:0;
       z-index:910;
-      max-height:min(82vh,720px);
-      overflow:auto;
+      height:min(82dvh,720px);
+      max-height:min(82dvh,720px);
+      overflow-x:hidden;
+      overflow-y:auto;
+      overscroll-behavior:contain;
+      -webkit-overflow-scrolling:touch;
       padding:14px 12px calc(14px + env(safe-area-inset-bottom));
       border:1px solid var(--border);
       border-radius:16px 16px 0 0;
       background:var(--bg);
       box-shadow:0 -18px 45px rgba(0,0,0,.48);
-      transform:translateY(105%);
+      transform:translate3d(0,105%,0);
       visibility:hidden;
-      transition:transform .18s ease,visibility .18s ease;
+      will-change:transform;
+      contain:layout paint;
+      transition:transform .20s cubic-bezier(.22,.8,.32,1),visibility 0s linear .20s;
     }
-    .filter-drawer-shell.open{transform:translateY(0);visibility:visible;}
+    .filter-drawer-shell.open{
+      transform:translate3d(0,0,0);
+      visibility:visible;
+      transition:transform .20s cubic-bezier(.22,.8,.32,1),visibility 0s;
+    }
     .mobile-filter-backdrop{
       position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.54);backdrop-filter:blur(2px);
     }
@@ -7913,14 +7929,14 @@
 /* Desktop navigation arrangement v2 */
 @media (min-width:801px){
   nav.mainnav{display:flex !important;flex-wrap:nowrap !important;align-items:center !important;gap:3px !important;min-width:0 !important;overflow:visible !important;}
-  nav.mainnav > a[data-route="inventory"]{order:1 !important;}
-  nav.mainnav > a[data-route="reserved"]{order:2 !important;}
-  nav.mainnav > a[data-route="sold"]{order:3 !important;}
-  nav.mainnav > a[data-route="collection"]{order:4 !important;}
-  nav.mainnav > a[data-route="showcase"]{order:5 !important;}
-  nav.mainnav > a[data-route="favorites"].mobile-secondary-nav{display:flex !important;order:6 !important;}
-  nav.mainnav > a[data-route="giveaway"].mobile-secondary-nav{display:flex !important;order:7 !important;}
-  nav.mainnav > a[data-route="home"]{order:8 !important;}
+  nav.mainnav > a[data-route="home"]{order:1 !important;}
+  nav.mainnav > a[data-route="inventory"]{order:2 !important;}
+  nav.mainnav > a[data-route="reserved"]{order:3 !important;}
+  nav.mainnav > a[data-route="sold"]{order:4 !important;}
+  nav.mainnav > a[data-route="collection"]{order:5 !important;}
+  nav.mainnav > a[data-route="showcase"]{order:6 !important;}
+  nav.mainnav > a[data-route="favorites"].mobile-secondary-nav{display:flex !important;order:7 !important;}
+  nav.mainnav > a[data-route="giveaway"].mobile-secondary-nav{display:flex !important;order:8 !important;}
   nav.mainnav > .mobile-more-toggle{order:20 !important;}
   nav.mainnav > .mobile-more-menu{order:21 !important;}
   nav.mainnav > a.owner-only:not(.mobile-secondary-nav){display:none !important;}
@@ -7932,8 +7948,7 @@
 }
 @media (min-width:801px) and (max-width:1050px){
   nav.mainnav > a[data-route="favorites"].mobile-secondary-nav,
-  nav.mainnav > a[data-route="giveaway"].mobile-secondary-nav,
-  nav.mainnav > a[data-route="home"]{display:none !important;}
+  nav.mainnav > a[data-route="giveaway"].mobile-secondary-nav{display:none !important;}
   nav.mainnav > .mobile-more-menu > a[data-route="favorites"],
   nav.mainnav > .mobile-more-menu > a[data-route="giveaway"]{display:flex !important;}
 }
@@ -7976,7 +7991,6 @@
       <a href="#/collection" data-route="collection" class="collection-primary-nav"><span class="ic">◆</span> <span>Collection</span><span class="nav-count collection-nav-count" id="collectionNavCount">0</span></a>
       <a href="#/reserved" data-route="reserved" class="status-primary-nav"><span class="ic">◷</span> <span>Reserved</span><span class="nav-count" id="reservedNavCount">0</span></a>
       <a href="#/sold" data-route="sold" class="status-primary-nav"><span class="ic">✓</span> <span>Sold</span><span class="nav-count" id="soldNavCount">0</span></a>
-      <a href="#/by-game" data-route="by-game" class="owner-only"><span class="ic">▥</span> By Game</a>
       <a href="#/showcase" data-route="showcase"><span class="ic">▶</span> Showcase</a>
       <button type="button" class="mobile-more-toggle" id="mobileMoreToggle" aria-expanded="false">
         <span class="ic">⋯</span> More <span class="mobile-more-caret">⌄</span>
@@ -7990,7 +8004,6 @@
       
         <a href="#/showcase" data-route="showcase"><span class="ic">▶</span> Showcase</a>
         <a href="#/recent" data-route="recent"><span class="ic">↻</span> Recently Viewed</a>
-        <a href="#/by-game" data-route="by-game" class="owner-only desktop-more-owner"><span class="ic">▥</span> By Game</a>
         <a href="#/insights" data-route="insights" class="owner-only desktop-more-owner"><span class="ic">◔</span> Insights</a>
         <a href="#/fb-tools" data-route="fb-tools" class="owner-only desktop-more-owner"><span class="ic">ƒ</span> Post Generator Tools</a>
         <a href="#/quality" data-route="quality" class="owner-only desktop-more-owner"><span class="ic">✓</span> Data Quality</a>
@@ -14375,6 +14388,9 @@ function wireShimmer(container){
           </a>
           <a class="about-link" href="https://www.instagram.com/collecttcg.mysg/" target="_blank" rel="noopener noreferrer">
             <span><b>📸 Instagram</b><small>@collecttcg.mysg</small></span><span>↗</span>
+          </a>
+          <a class="about-link" href="https://www.facebook.com/profile.php?id=61590041416102" target="_blank" rel="noopener noreferrer">
+            <span><b>Facebook</b><small>Collect TCG MY &amp; SG</small></span><span>↗</span>
           </a>
         </div>
 
