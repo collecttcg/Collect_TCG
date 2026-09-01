@@ -9,6 +9,8 @@
 <!-- UX PHASE 6: technical cleanup and performance -->
 <!-- OWNER TOOL: permanent listing deletion with double confirmation -->
 <!-- MOBILE FIX: compact metadata pills + 44px invisible hit targets across iOS/Android -->
+<!-- DESKTOP NAV FIX: Reserved stays primary; duplicate hidden from More -->
+<!-- MOBILE OVERVIEW FIX: all pill rows visible; price remains below complete pill group -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10256,6 +10258,98 @@ input:focus-visible{
   .mobile-filter-open-btn,
   .sticky-mobile-results-action{
     min-height:44px !important;
+  }
+}
+
+
+/* Desktop nav cleanup: Reserved is already a primary desktop tab.
+   Keep the duplicate Reserved entry only for mobile More. */
+@media (min-width:801px){
+  #mobileMoreMenu > a[data-route="reserved"]{
+    display:none !important;
+  }
+}
+
+
+/* =========================================================
+   MOBILE OVERVIEW — SHOW ALL METADATA PILL ROWS
+   Pills remain together above price. Cards grow vertically
+   when metadata needs 3+ rows.
+   ========================================================= */
+@media (max-width:800px){
+
+  /* Never clip pill rows on mobile overview cards. */
+  #invGrid .clean-all-pills,
+  #homeRecentGrid .clean-all-pills,
+  .home-storefront-grid .clean-all-pills,
+  .recently-viewed-grid .clean-all-pills{
+    display:flex !important;
+    flex-wrap:wrap !important;
+    align-items:center !important;
+    align-content:flex-start !important;
+    gap:5px !important;
+    width:100% !important;
+    max-height:none !important;
+    height:auto !important;
+    overflow:visible !important;
+    flex:0 0 auto !important;
+  }
+
+  /* The body and card must expand with the metadata rather than cropping it. */
+  #invGrid .card,
+  #homeRecentGrid .card,
+  .home-storefront-grid .card,
+  .recently-viewed-grid .card{
+    height:auto !important;
+    max-height:none !important;
+    overflow:visible !important;
+    align-items:stretch !important;
+  }
+
+  #invGrid .clean-card-body,
+  #homeRecentGrid .clean-card-body,
+  .home-storefront-grid .clean-card-body,
+  .recently-viewed-grid .clean-card-body{
+    height:auto !important;
+    min-height:100% !important;
+    max-height:none !important;
+    overflow:visible !important;
+    justify-content:flex-start !important;
+  }
+
+  /* Price is always a separate block AFTER every pill row. */
+  #invGrid .clean-price-block,
+  #homeRecentGrid .clean-price-block,
+  .home-storefront-grid .clean-price-block,
+  .recently-viewed-grid .clean-price-block{
+    position:relative !important;
+    order:initial !important;
+    width:100% !important;
+    flex:0 0 auto !important;
+    margin-top:7px !important;
+    padding-top:10px !important;
+    clear:both !important;
+  }
+
+  /* Never allow price contents to float into the metadata area. */
+  #invGrid .clean-price-primary,
+  #invGrid .clean-price-secondary,
+  #homeRecentGrid .clean-price-primary,
+  #homeRecentGrid .clean-price-secondary{
+    display:block !important;
+    width:100% !important;
+  }
+}
+
+/* Narrow phones can use tighter pill spacing, but still show every row. */
+@media (max-width:390px){
+  #invGrid .clean-all-pills,
+  #homeRecentGrid .clean-all-pills,
+  .home-storefront-grid .clean-all-pills,
+  .recently-viewed-grid .clean-all-pills{
+    gap:4px !important;
+    max-height:none !important;
+    overflow:visible !important;
   }
 }
 
