@@ -9634,6 +9634,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   let soldAtSupported = false;
   let lifecycleSupported = false;
   let ownerPrivateSupported = false;
+  let cardImageVariantsSupported = false;
   let thumbnailUrlSupported = false;
   let editHistorySupported = false;
   let giveaways = [];
@@ -9671,6 +9672,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function clearOwnerOnlyClientState(){
     cards=cards.filter(isLiveLifecycle);
     ownerPrivateSupported=false;
+    cardImageVariantsSupported=false;
     editHistorySupported=false;
     ownerVerified=false;
     detailsPreservedListingHash="";
@@ -10188,18 +10190,21 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(!isOwnerMode()){
       lifecycleSupported=false;
       ownerPrivateSupported=false;
+      cardImageVariantsSupported=false;
       editHistorySupported=false;
       return;
     }
 
-    const [lifecycleProbe,privateProbe,historyProbe]=await Promise.all([
+    const [lifecycleProbe,privateProbe,imageVariantsProbe,historyProbe]=await Promise.all([
       supabaseClient.from("cards").select("lifecycle_status").limit(1),
       supabaseClient.from("card_owner_private").select("card_id").limit(1),
+      supabaseClient.from("card_image_variants").select("card_id,image_key").limit(1),
       supabaseClient.from("card_edit_history").select("id").limit(1)
     ]);
 
     lifecycleSupported=!lifecycleProbe.error;
     ownerPrivateSupported=!privateProbe.error;
+    cardImageVariantsSupported=!imageVariantsProbe.error;
     editHistorySupported=!historyProbe.error;
   }
 
@@ -10235,6 +10240,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }else{
       lifecycleSupported=false;
       ownerPrivateSupported=false;
+      cardImageVariantsSupported=false;
       editHistorySupported=false;
 
       const publicResult=await fetchPublicCards();
@@ -10292,6 +10298,102 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return {
       tags:sanitizeOwnerTags(data?.tags||[]),
       notes:sanitizeOwnerPrivateNotes(data?.notes||"")
+    };
+  }
+
+  function newCardImageVariantKey(){
+    return (crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2,14)}`)
+      .replace(/[^a-zA-Z0-9-]/g,"")
+      .slice(0,80);
+  }
+
+  async function fetchOwnerCardImageVariants(cardId){
+    if(!requireOwner("read reversible image variants")) return [];
+    if(!cardImageVariantsSupported) return [];
+
+    const id=safeCardId(cardId);
+    if(!id) return [];
+
+    const {data,error}=await supabaseClient
+      .from("card_image_variants")
+      .select("card_id,image_key,original_url,watermarked_url,active_variant")
+      .eq("card_id",id);
+
+    if(error){
+      console.error("Image variant read error:",error);
+      return [];
+    }
+
+    return (data||[]).map(row=>({
+      image_key:String(row.image_key||"").slice(0,80),
+      original_url:safeHttpUrl(row.original_url)||"",
+      watermarked_url:safeHttpUrl(row.watermarked_url)||"",
+      active_variant:row.active_variant==="watermarked" ? "watermarked" : "original"
+    })).filter(row=>row.image_key && row.original_url);
+  }
+
+  async function saveOwnerCardImageVariants(cardId,variantRecords){
+    if(!requireOwner("save reversible image variants")){
+      return {ok:false,staleUrls:[]};
+    }
+    if(!cardImageVariantsSupported){
+      return {ok:false,staleUrls:[]};
+    }
+
+    const id=safeCardId(cardId);
+    if(!id) return {ok:false,staleUrls:[]};
+
+    const variants=(variantRecords||[]).map(v=>({
+      card_id:id,
+      image_key:String(v.image_key||newCardImageVariantKey()).slice(0,80),
+      original_url:safeHttpUrl(v.original_url)||"",
+      watermarked_url:safeHttpUrl(v.watermarked_url)||null,
+      active_variant:v.active_variant==="watermarked" ? "watermarked" : "original",
+      updated_at:new Date().toISOString()
+    })).filter(v=>v.image_key && v.original_url);
+
+    const {data:existing,error:readError}=await supabaseClient
+      .from("card_image_variants")
+      .select("image_key,original_url,watermarked_url")
+      .eq("card_id",id);
+
+    if(readError){
+      console.error("Image variant pre-save read error:",readError);
+      return {ok:false,staleUrls:[]};
+    }
+
+    if(variants.length){
+      const {error:upsertError}=await supabaseClient
+        .from("card_image_variants")
+        .upsert(variants,{onConflict:"card_id,image_key"});
+
+      if(upsertError){
+        console.error("Image variant upsert error:",upsertError);
+        return {ok:false,staleUrls:[]};
+      }
+    }
+
+    const keepKeys=new Set(variants.map(v=>v.image_key));
+    const stale=(existing||[]).filter(row=>!keepKeys.has(String(row.image_key||"")));
+    if(stale.length){
+      const staleKeys=stale.map(row=>String(row.image_key||"")).filter(Boolean);
+      const {error:deleteError}=await supabaseClient
+        .from("card_image_variants")
+        .delete()
+        .eq("card_id",id)
+        .in("image_key",staleKeys);
+
+      if(deleteError){
+        console.warn("Could not delete stale image variant rows:",deleteError);
+      }
+    }
+
+    return {
+      ok:true,
+      staleUrls:stale.flatMap(row=>[
+        safeHttpUrl(row.original_url)||"",
+        safeHttpUrl(row.watermarked_url)||""
+      ]).filter(Boolean)
     };
   }
 
@@ -11826,43 +11928,101 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(!requireOwner("save card images")) throw new Error("Owner login required");
 
     const originalImages=Array.isArray(formState?.images) ? formState.images.slice() : [];
-    const pendingCount=originalImages.filter(isPendingCardImage).length;
-    if(!pendingCount){
-      return {images:originalImages,originalImages,uploadedPaths:[]};
+    const cleanSources=Array.isArray(formState?.imageCleanSources)
+      ? formState.imageCleanSources.slice(0,originalImages.length)
+      : [];
+    const watermarkedSources=Array.isArray(formState?.imageWatermarkedSources)
+      ? formState.imageWatermarkedSources.slice(0,originalImages.length)
+      : [];
+    const variantKeys=Array.isArray(formState?.imageVariantKeys)
+      ? formState.imageVariantKeys.slice(0,originalImages.length)
+      : [];
+    const states=Array.isArray(formState?.imageWatermarkStates)
+      ? formState.imageWatermarkStates.slice(0,originalImages.length)
+      : [];
+
+    while(cleanSources.length<originalImages.length) cleanSources.push(null);
+    while(watermarkedSources.length<originalImages.length) watermarkedSources.push(null);
+    while(variantKeys.length<originalImages.length) variantKeys.push(newCardImageVariantKey());
+    while(states.length<originalImages.length) states.push(false);
+
+    // Every reversible image needs a persistent clean source. For a legacy
+    // photo without stored metadata, treat the currently stored image as the
+    // clean source. This cannot undo a watermark that was already baked into
+    // that legacy file before this feature existed.
+    for(let i=0;i<originalImages.length;i++){
+      if(!cleanSources[i]) cleanSources[i]=originalImages[i];
     }
 
-    const result=[];
+    const allSources=[
+      ...originalImages,
+      ...cleanSources,
+      ...watermarkedSources.filter(Boolean)
+    ];
+    const pendingUnique=[...new Set(allSources.filter(isPendingCardImage))];
+
     const uploadedPaths=[];
+    const uploadedMap=new Map();
     let uploaded=0;
 
     try{
-      for(let i=0;i<originalImages.length;i++){
-        const image=originalImages[i];
-        if(!isPendingCardImage(image)){
-          result.push(image);
-          continue;
-        }
-
-        if(typeof onProgress==="function") onProgress(uploaded,pendingCount);
-        const stored=await uploadPendingCardImage(image,i);
+      for(let i=0;i<pendingUnique.length;i++){
+        const source=pendingUnique[i];
+        if(typeof onProgress==="function") onProgress(uploaded,pendingUnique.length);
+        const stored=await uploadPendingCardImage(source,i);
         uploadedPaths.push(stored.path);
-        result.push(stored.url);
+        uploadedMap.set(source,stored.url);
         uploaded++;
-        if(typeof onProgress==="function") onProgress(uploaded,pendingCount);
+        if(typeof onProgress==="function") onProgress(uploaded,pendingUnique.length);
       }
 
-      return {images:result,originalImages,uploadedPaths};
+      const resolveSource=value=>{
+        if(!value) return "";
+        return uploadedMap.get(value) || value;
+      };
+
+      const resolvedClean=cleanSources.map(resolveSource);
+      const resolvedWatermarked=watermarkedSources.map(resolveSource);
+
+      const resultImages=originalImages.map((image,index)=>{
+        const active=states[index]===true ? "watermarked" : "original";
+        if(active==="watermarked" && resolvedWatermarked[index]){
+          return resolvedWatermarked[index];
+        }
+        return resolvedClean[index] || resolveSource(image);
+      });
+
+      const variantRecords=resultImages.map((_,index)=>({
+        image_key:variantKeys[index] || newCardImageVariantKey(),
+        original_url:resolvedClean[index],
+        watermarked_url:resolvedWatermarked[index] || "",
+        active_variant:states[index]===true && resolvedWatermarked[index]
+          ? "watermarked"
+          : "original"
+      }));
+
+      return {
+        images:resultImages,
+        originalImages,
+        uploadedPaths,
+        variantRecords,
+        resolvedClean,
+        resolvedWatermarked
+      };
     }catch(error){
-      // A partial upload must not leave unused files behind if the save fails.
       await removeCardStoragePaths(uploadedPaths);
       throw error;
     }
   }
 
-  async function cleanupRemovedCardStorageImages(originalImages,currentImages){
+  async function cleanupRemovedCardStorageImages(originalImages,currentImages,protectedVariantUrls=[]){
     if(!isOwnerMode()) return false;
 
-    const keep=new Set((currentImages||[]).map(cardStoragePathFromUrl).filter(Boolean));
+    const keep=new Set(
+      [...(currentImages||[]),...(protectedVariantUrls||[])]
+        .map(cardStoragePathFromUrl)
+        .filter(Boolean)
+    );
     const removed=(originalImages||[])
       .map(cardStoragePathFromUrl)
       .filter(path=>path && !keep.has(path));
@@ -12110,8 +12270,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           <div class="image-gallery-note">
             Add multiple pictures and choose <strong>Without watermark</strong> or <strong>Add logo watermark</strong> before adding them.
             Images are uploaded to the <strong>card-images</strong> Supabase Storage bucket only when you press Save.
-            For photos added during this Add/Edit session, you can switch each preview between clean and watermarked before saving.
-            Existing photos can have the logo applied, but a watermark already baked into an older image cannot be automatically removed; replace it with the original clean photo if needed.
+            The clean original and the watermarked version are saved separately in owner-protected metadata, while only the selected version is shown publicly.
+            You can save a card with the watermark, edit it later, choose <strong>Original</strong>, and save again without re-uploading the photo.
+            Images that were already permanently watermarked before this reversible system was installed cannot be restored unless you upload the original clean file once.
             Drag pictures to change their order; the first picture is the listing thumbnail.
           </div>
         </div>
@@ -12279,11 +12440,25 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     while(formState.imageCleanSources.length<formState.images.length){
       formState.imageCleanSources.push(null);
     }
+    formState.imageWatermarkedSources=Array.isArray(formState.imageWatermarkedSources)
+      ? formState.imageWatermarkedSources.slice(0,formState.images.length)
+      : Array(formState.images.length).fill(null);
+    while(formState.imageWatermarkedSources.length<formState.images.length){
+      formState.imageWatermarkedSources.push(null);
+    }
+
+    formState.imageVariantKeys=Array.isArray(formState.imageVariantKeys)
+      ? formState.imageVariantKeys.slice(0,formState.images.length)
+      : Array.from({length:formState.images.length},()=>newCardImageVariantKey());
+    while(formState.imageVariantKeys.length<formState.images.length){
+      formState.imageVariantKeys.push(newCardImageVariantKey());
+    }
+
     formState.imageWatermarkStates=Array.isArray(formState.imageWatermarkStates)
       ? formState.imageWatermarkStates.slice(0,formState.images.length)
-      : Array(formState.images.length).fill(null);
+      : Array(formState.images.length).fill(false);
     while(formState.imageWatermarkStates.length<formState.images.length){
-      formState.imageWatermarkStates.push(null);
+      formState.imageWatermarkStates.push(false);
     }
 
     let dragIndex = null;
@@ -12304,6 +12479,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     watermarkOnBtn?.addEventListener("click",()=>{
       if(!requireOwner("change watermark setting")) return;
+      if(!cardImageVariantsSupported){
+        showToast("Run the reversible watermark migration first");
+        return;
+      }
       formState.watermarkEnabled=true;
       syncWatermarkChoiceUI();
     });
@@ -12320,6 +12499,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
       moveParallelArray(formState.images,from,to);
       moveParallelArray(formState.imageCleanSources,from,to);
+      moveParallelArray(formState.imageWatermarkedSources,from,to);
+      moveParallelArray(formState.imageVariantKeys,from,to);
       moveParallelArray(formState.imageWatermarkStates,from,to);
       refreshPreview();
     }
@@ -12327,6 +12508,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     function removeImageAt(index){
       formState.images.splice(index,1);
       formState.imageCleanSources.splice(index,1);
+      formState.imageWatermarkedSources.splice(index,1);
+      formState.imageVariantKeys.splice(index,1);
       formState.imageWatermarkStates.splice(index,1);
       refreshPreview();
     }
@@ -12339,43 +12522,43 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     async function setImageWatermark(index,apply){
       if(!requireOwner("change image watermark")) return;
+      if(!cardImageVariantsSupported){
+        showToast("Run the reversible watermark migration first");
+        return;
+      }
       if(index<0 || index>=formState.images.length) return;
 
-      const current=formState.images[index];
       let cleanSource=formState.imageCleanSources[index];
+      let watermarkedSource=formState.imageWatermarkedSources[index];
+
+      // A legacy image has no reversible pair yet. Its current stored file
+      // becomes the clean base going forward.
+      if(!cleanSource){
+        cleanSource=formState.images[index];
+        formState.imageCleanSources[index]=cleanSource;
+      }
 
       formState.processingImages=Number(formState.processingImages||0)+1;
       refreshPreview();
 
       try{
         if(apply){
-          // Preserve a clean source before adding the watermark so the owner
-          // can switch back during this editing session.
-          if(!cleanSource){
-            cleanSource=current;
-            formState.imageCleanSources[index]=cleanSource;
+          if(!watermarkedSource){
+            watermarkedSource=await applyWatermarkToCardImageSource(cleanSource,1800,0.94);
+            formState.imageWatermarkedSources[index]=watermarkedSource;
           }
 
-          formState.images[index]=await applyWatermarkToCardImageSource(cleanSource,1800,0.94);
+          formState.images[index]=watermarkedSource;
           formState.imageWatermarkStates[index]=true;
-          showToast("Logo watermark applied");
+          showToast("Watermarked version selected");
         }else{
-          if(!cleanSource){
-            showToast("A clean source is not available for this existing photo. Replace it with the original photo to remove a baked-in watermark.");
-            return;
-          }
-
           formState.images[index]=cleanSource;
           formState.imageWatermarkStates[index]=false;
-          showToast("Using photo without added watermark");
+          showToast("Original version selected");
         }
       }catch(error){
         console.warn("Could not change image watermark:",error);
-        showToast(
-          String(error?.message||"").includes("image fetch")
-            ? "Could not read that existing image. Replace it with the original file to change its watermark."
-            : "Could not change the watermark for this photo."
-        );
+        showToast("Could not switch the watermark for this photo.");
       }finally{
         formState.processingImages=Math.max(0,Number(formState.processingImages||0)-1);
         refreshPreview();
@@ -12394,7 +12577,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
       formState.images.forEach((image, index)=>{
         const box = document.createElement("div");
-        const state=formState.imageWatermarkStates[index];
+        const state=formState.imageWatermarkStates[index]===true;
         const cleanAvailable=Boolean(formState.imageCleanSources[index]);
 
         box.className = "image-preview-box";
@@ -12407,14 +12590,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
           <div class="owner-only image-preview-watermark-actions">
             <span class="image-watermark-state ${
-              state===true ? "with-mark" : state===false ? "without-mark" : "unknown"
-            }">${
-              state===true
-                ? "Watermarked"
-                : state===false
-                  ? "No watermark"
-                  : "Existing photo"
-            }</span>
+              state ? "with-mark" : "without-mark"
+            }">${state ? "Watermarked" : "Original"}</span>
 
             <button type="button"
                     class="image-preview-watermark-btn"
@@ -12427,12 +12604,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
                     class="image-preview-watermark-btn"
                     data-preview-watermark="off"
                     ${cleanAvailable ? "" : "disabled"}
-                    title="${
-                      cleanAvailable
-                        ? "Use the clean photo saved during this editing session"
-                        : "Replace this existing photo with its original clean file first"
-                    }">
-              Without watermark
+                    title="${cleanAvailable ? "Switch back to the saved original photo" : "No original source is available"}">
+              Original
             </button>
           </div>
 
@@ -12545,6 +12718,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
           formState.images.push(finalImage);
           formState.imageCleanSources.push(clean);
+          formState.imageWatermarkedSources.push(formState.watermarkEnabled ? finalImage : null);
+          formState.imageVariantKeys.push(newCardImageVariantKey());
           formState.imageWatermarkStates.push(Boolean(formState.watermarkEnabled));
           added++;
         }
@@ -12588,6 +12763,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
         formState.images.push(finalImage);
         formState.imageCleanSources.push(clean);
+        formState.imageWatermarkedSources.push(formState.watermarkEnabled ? finalImage : null);
+        formState.imageVariantKeys.push(newCardImageVariantKey());
         formState.imageWatermarkStates.push(Boolean(formState.watermarkEnabled));
         urlInput.value = "";
         refreshPreview();
@@ -22403,8 +22580,10 @@ function wireShimmer(container){
     `;
     const formState = {
       images: cloneDraft ? getImages(cloneDraft).slice() : [],
-      imageCleanSources: cloneDraft ? Array(getImages(cloneDraft).length).fill(null) : [],
-      imageWatermarkStates: cloneDraft ? Array(getImages(cloneDraft).length).fill(null) : [],
+      imageCleanSources: cloneDraft ? getImages(cloneDraft).slice() : [],
+      imageWatermarkedSources: cloneDraft ? Array(getImages(cloneDraft).length).fill(null) : [],
+      imageVariantKeys: cloneDraft ? Array.from({length:getImages(cloneDraft).length},()=>newCardImageVariantKey()) : [],
+      imageWatermarkStates: cloneDraft ? Array(getImages(cloneDraft).length).fill(false) : [],
       watermarkEnabled: false,
       grading: cloneDraft && Array.isArray(cloneDraft.grading) ? cloneDraft.grading.map(g=>({...g})) : [],
       processingImages: 0
@@ -22469,6 +22648,12 @@ function wireShimmer(container){
           return;
         }
 
+        let imageVariantsSaved=true;
+        if(preparedImages.variantRecords?.length){
+          const variantResult=await saveOwnerCardImageVariants(saved.id,preparedImages.variantRecords);
+          imageVariantsSaved=variantResult.ok;
+        }
+
         cards.push(saved);
 
         let privateMetaSaved=true;
@@ -22491,9 +22676,11 @@ function wireShimmer(container){
             : "Card added · images stored in Supabase Storage · private notes/tags were not saved");
           await refreshPsaPopForCard(saved.id,false);
         }else{
-          showToast(privateMetaSaved
-            ? "Card added · images stored in Supabase Storage"
-            : "Card added · images stored in Supabase Storage · private notes/tags were not saved");
+          showToast(!imageVariantsSaved
+            ? "Card added · reversible watermark metadata was not saved"
+            : (privateMetaSaved
+                ? "Card added · images stored in Supabase Storage"
+                : "Card added · images stored in Supabase Storage · private notes/tags were not saved"));
         }
 
         location.hash="#/inventory";
@@ -23606,6 +23793,8 @@ function wireShimmer(container){
   let editFormState = {
     images: [],
     imageCleanSources: [],
+    imageWatermarkedSources: [],
+    imageVariantKeys: [],
     imageWatermarkStates: [],
     watermarkEnabled:false,
     grading: [],
@@ -23623,17 +23812,47 @@ function wireShimmer(container){
   async function openEditModal(card){
     if(!requireOwner()) return;
     resetEditSubmitButton();
-    const privateMeta=await fetchOwnerPrivateMeta(card.id);
+    const [privateMeta,storedImageVariants]=await Promise.all([
+      fetchOwnerPrivateMeta(card.id),
+      fetchOwnerCardImageVariants(card.id)
+    ]);
     $("editId").value = card.id;
     $("editFieldsMount").innerHTML = fieldsTemplate("edit");
     populateFields("edit", card);
     if($("editOwnerTags")) $("editOwnerTags").value=privateMeta.tags.join(", ");
     if($("editOwnerNotes")) $("editOwnerNotes").value=privateMeta.notes;
+    const currentImages=getImages(card).slice();
+    const mappedVariants=currentImages.map(image=>{
+      const stored=storedImageVariants.find(v=>
+        v.original_url===image || v.watermarked_url===image
+      );
+
+      if(stored){
+        return {
+          key:stored.image_key,
+          original:stored.original_url,
+          watermarked:stored.watermarked_url||null,
+          active:stored.watermarked_url===image ? true : false
+        };
+      }
+
+      // Legacy image: current file becomes the clean base for future
+      // reversible watermark switching.
+      return {
+        key:newCardImageVariantKey(),
+        original:image,
+        watermarked:null,
+        active:false
+      };
+    });
+
     editFormState = {
-      images: getImages(card).slice(),
-      originalImages: getImages(card).slice(),
-      imageCleanSources: Array(getImages(card).length).fill(null),
-      imageWatermarkStates: Array(getImages(card).length).fill(null),
+      images: currentImages,
+      originalImages: currentImages.slice(),
+      imageCleanSources: mappedVariants.map(v=>v.original),
+      imageWatermarkedSources: mappedVariants.map(v=>v.watermarked),
+      imageVariantKeys: mappedVariants.map(v=>v.key),
+      imageWatermarkStates: mappedVariants.map(v=>v.active),
       watermarkEnabled:false,
       processingImages: 0,
       grading: Array.isArray(card.grading) ? card.grading.map(g=>({
@@ -23709,22 +23928,40 @@ function wireShimmer(container){
         return;
       }
 
+      const variantResult=await saveOwnerCardImageVariants(id,preparedImages.variantRecords||[]);
+      const protectedVariantUrls=(preparedImages.variantRecords||[]).flatMap(v=>[
+        v.original_url,
+        v.watermarked_url
+      ]).filter(Boolean);
+
       const idx=cards.findIndex(c=>c.id===id);
       if(idx>-1) cards[idx]=saved;
       invalidateOwnerReservedAgeCache();
 
-      // Only after the database update succeeds do we delete Storage objects
-      // that the owner intentionally removed from the listing.
+      // Do not delete the inactive original/watermarked counterpart. Both
+      // versions are intentionally preserved so the owner can switch later.
       await cleanupRemovedCardStorageImages(
         editFormState.originalImages || [],
-        getImages(saved)
+        getImages(saved),
+        protectedVariantUrls
       );
+
+      // Variants belonging to photos removed from the card can now be cleaned.
+      if(variantResult.ok && variantResult.staleUrls?.length){
+        const protectedPaths=new Set(protectedVariantUrls.map(cardStoragePathFromUrl).filter(Boolean));
+        const stalePaths=variantResult.staleUrls
+          .map(cardStoragePathFromUrl)
+          .filter(path=>path && !protectedPaths.has(path));
+        if(stalePaths.length) await removeCardStoragePaths(stalePaths);
+      }
 
       if(ownerPrivateSupported){
         await saveOwnerPrivateMeta(id,data._owner_tags,data._owner_notes);
       }
 
-      if(hasPsaCert(data)){
+      if(!variantResult.ok && preparedImages.variantRecords?.length){
+        showToast("Card updated · reversible watermark metadata was not saved");
+      }else if(hasPsaCert(data)){
         showToast("Card updated · images stored in Supabase Storage · syncing PSA POP…");
         await refreshPsaPopForCard(id,false);
       }else{
