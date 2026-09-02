@@ -17625,6 +17625,16 @@ function wireShimmer(container){
 
     mobileSearch?.addEventListener("focus",renderMobileSearchSuggestions);
 
+    mobileSearch?.addEventListener("keydown",e=>{
+      if(e.key==="Enter"){
+        if(mobileSearchSuggestions) mobileSearchSuggestions.hidden=true;
+        mobileSearch.blur();
+      }else if(e.key==="Escape"){
+        if(mobileSearchSuggestions) mobileSearchSuggestions.hidden=true;
+        mobileSearch.blur();
+      }
+    });
+
     mobileSearchClear?.addEventListener("click",()=>{
       mobileSearch.value="";
       if($("search")) $("search").value="";
@@ -17662,6 +17672,25 @@ function wireShimmer(container){
       syncMobileSearchFromMain();
     });
     $("search").addEventListener("keydown",e=>{
+      if(e.key==="Enter"){
+        if(searchSuggestions && !searchSuggestions.hidden && suggestionIndex>=0){
+          const items=Array.from(searchSuggestions.querySelectorAll("[data-search-suggestion]"));
+          if(items[suggestionIndex]){
+            e.preventDefault();
+            items[suggestionIndex].click();
+            searchSuggestions.hidden=true;
+            return;
+          }
+        }
+
+        // Enter with no highlighted suggestion keeps the typed query but
+        // dismisses the dropdown so the results are unobstructed.
+        if(searchSuggestions) searchSuggestions.hidden=true;
+        suggestionIndex=-1;
+        $("search").blur();
+        return;
+      }
+
       if(!searchSuggestions || searchSuggestions.hidden) return;
       const items=Array.from(searchSuggestions.querySelectorAll("[data-search-suggestion]"));
       if(!items.length) return;
@@ -17672,11 +17701,9 @@ function wireShimmer(container){
           ? (suggestionIndex+1)%items.length
           : (suggestionIndex-1+items.length)%items.length;
         items.forEach((item,i)=>item.classList.toggle("active",i===suggestionIndex));
-      }else if(e.key==="Enter" && suggestionIndex>=0){
-        e.preventDefault();
-        items[suggestionIndex].click();
       }else if(e.key==="Escape"){
         searchSuggestions.hidden=true;
+        suggestionIndex=-1;
       }
     });
 
