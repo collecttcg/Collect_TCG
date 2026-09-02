@@ -13,6 +13,7 @@
 <!-- REFACTOR STAGE 3: JavaScript helpers/routes/lookups consolidated; single-file architecture preserved -->
 <!-- REFACTOR STAGE 4: conservative dead-code/duplicate cleanup; behavior preserved -->
 <!-- STAGE 4 HOTFIX: restored valid JS after partial helper removal -->
+<!-- MOBILE ENQUIRY: platform chooser for Instagram/Facebook/Carousell + copy inquiry -->
 <!-- OWNER TOOL: permanent listing deletion with double confirmation -->
 <!-- MOBILE FIX: compact metadata pills + 44px invisible hit targets across iOS/Android -->
 <!-- DESKTOP NAV FIX: Reserved stays primary; duplicate hidden from More -->
@@ -10371,6 +10372,209 @@ input:focus-visible{
     min-height:210px !important;
   }
 }
+
+/* =========================================================
+   MOBILE CARD ENQUIRY CHOOSER
+   Platform-neutral enquiry flow for iPhone / Android.
+   ========================================================= */
+.interest-contact-overlay{
+  position:fixed;
+  inset:0;
+  z-index:1450;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:12px;
+  background:rgba(0,0,0,.56);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+}
+.interest-contact-overlay[hidden]{
+  display:none !important;
+}
+
+.interest-contact-sheet{
+  width:min(100%,520px);
+  max-height:min(82dvh,680px);
+  overflow:auto;
+  overscroll-behavior:contain;
+  padding:16px 14px calc(14px + env(safe-area-inset-bottom));
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:18px;
+  background:rgba(16,18,22,.985);
+  box-shadow:0 -16px 48px rgba(0,0,0,.48);
+  animation:interestSheetIn .18s ease-out;
+}
+
+@keyframes interestSheetIn{
+  from{transform:translateY(18px);opacity:.55;}
+  to{transform:translateY(0);opacity:1;}
+}
+
+.interest-contact-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:12px;
+}
+.interest-contact-head h3{
+  margin:0;
+  color:var(--text);
+  font-size:17px;
+  line-height:1.2;
+}
+.interest-contact-head p{
+  margin:4px 0 0;
+  color:var(--text-muted);
+  font-size:10px;
+  line-height:1.45;
+}
+.interest-contact-close{
+  flex:0 0 auto;
+  width:42px;
+  height:42px;
+  min-width:42px;
+  min-height:42px;
+  padding:0;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:var(--surface-2);
+  color:var(--text);
+  font-size:20px;
+  cursor:pointer;
+}
+
+.interest-contact-card{
+  margin:0 0 11px;
+  padding:10px 11px;
+  border:1px solid var(--border);
+  border-radius:11px;
+  background:rgba(255,255,255,.025);
+}
+.interest-contact-card strong,
+.interest-contact-card span{
+  display:block;
+}
+.interest-contact-card strong{
+  color:var(--text);
+  font-size:11px;
+  line-height:1.3;
+}
+.interest-contact-card span{
+  margin-top:3px;
+  color:var(--text-muted);
+  font-size:9px;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+
+.interest-contact-options{
+  display:grid;
+  gap:7px;
+}
+.interest-contact-option{
+  width:100%;
+  min-height:50px;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--surface-2);
+  color:var(--text);
+  text-decoration:none;
+  text-align:left;
+  cursor:pointer;
+}
+.interest-contact-option:hover,
+.interest-contact-option:focus-visible{
+  border-color:rgba(78,210,199,.42);
+  background:rgba(78,210,199,.07);
+}
+.interest-contact-option-icon{
+  flex:0 0 auto;
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(78,210,199,.20);
+  border-radius:9px;
+  background:rgba(78,210,199,.07);
+  font-size:15px;
+}
+.interest-contact-option-copy{
+  min-width:0;
+  flex:1;
+}
+.interest-contact-option-copy strong,
+.interest-contact-option-copy small{
+  display:block;
+}
+.interest-contact-option-copy strong{
+  font-size:11px;
+  line-height:1.25;
+}
+.interest-contact-option-copy small{
+  margin-top:2px;
+  color:var(--text-muted);
+  font-size:8.5px;
+  line-height:1.3;
+}
+.interest-contact-option-arrow{
+  flex:0 0 auto;
+  color:var(--text-muted);
+  font-size:14px;
+}
+.interest-contact-copy{
+  margin-top:9px;
+  border-color:rgba(227,179,65,.25);
+}
+.interest-contact-note{
+  margin:10px 2px 0;
+  color:var(--text-muted);
+  font-size:8.5px;
+  line-height:1.45;
+  text-align:center;
+}
+
+@media(max-width:390px){
+  .interest-contact-overlay{
+    padding:8px;
+  }
+  .interest-contact-sheet{
+    padding:13px 11px calc(11px + env(safe-area-inset-bottom));
+    border-radius:16px;
+  }
+  .interest-contact-option{
+    min-height:48px;
+    padding:9px 10px;
+  }
+}
+
+@media(min-width:801px){
+  .interest-contact-overlay{
+    align-items:center;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .interest-contact-sheet{
+    animation:none !important;
+  }
+}
+
+
+body.interest-contact-open{
+  overflow:hidden !important;
+}
+@media(max-width:800px){
+  body.interest-contact-open .shell{
+    overflow:hidden !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -27111,13 +27315,221 @@ function wireShimmer(container){
   <button type="button" class="mobile-detail-cta-action" id="mobileDetailCtaAction">I'm Interested</button>
 </div>
 
+<div class="interest-contact-overlay" id="interestContactOverlay" hidden>
+  <section class="interest-contact-sheet"
+           id="interestContactSheet"
+           role="dialog"
+           aria-modal="true"
+           aria-labelledby="interestContactTitle">
+    <div class="interest-contact-head">
+      <div>
+        <h3 id="interestContactTitle">Contact about this card</h3>
+        <p>Choose whichever platform is easiest for you.</p>
+      </div>
+      <button type="button"
+              class="interest-contact-close"
+              id="interestContactClose"
+              aria-label="Close contact options">×</button>
+    </div>
+
+    <div class="interest-contact-card">
+      <strong id="interestContactCardName">Card enquiry</strong>
+      <span id="interestContactCardRef"></span>
+    </div>
+
+    <div class="interest-contact-options">
+      <a class="interest-contact-option"
+         href="https://www.instagram.com/collecttcg.mysg/"
+         target="_blank"
+         rel="noopener noreferrer"
+         data-interest-platform="Instagram">
+        <span class="interest-contact-option-icon" aria-hidden="true">◎</span>
+        <span class="interest-contact-option-copy">
+          <strong>Instagram</strong>
+          <small>@collecttcg.mysg</small>
+        </span>
+        <span class="interest-contact-option-arrow" aria-hidden="true">↗</span>
+      </a>
+
+      <a class="interest-contact-option"
+         href="https://www.facebook.com/profile.php?id=61590041416102"
+         target="_blank"
+         rel="noopener noreferrer"
+         data-interest-platform="Facebook">
+        <span class="interest-contact-option-icon" aria-hidden="true">f</span>
+        <span class="interest-contact-option-copy">
+          <strong>Facebook</strong>
+          <small>Collect TCG MY &amp; SG</small>
+        </span>
+        <span class="interest-contact-option-arrow" aria-hidden="true">↗</span>
+      </a>
+
+      <a class="interest-contact-option"
+         href="https://www.carousell.com.my/u/collect_tcg_my_sg/"
+         target="_blank"
+         rel="noopener noreferrer"
+         data-interest-platform="Carousell Malaysia">
+        <span class="interest-contact-option-icon" aria-hidden="true">MY</span>
+        <span class="interest-contact-option-copy">
+          <strong>Carousell Malaysia</strong>
+          <small>collect_tcg_my_sg</small>
+        </span>
+        <span class="interest-contact-option-arrow" aria-hidden="true">↗</span>
+      </a>
+
+      <a class="interest-contact-option"
+         href="https://www.carousell.sg/u/collect_tcg_sg/"
+         target="_blank"
+         rel="noopener noreferrer"
+         data-interest-platform="Carousell Singapore">
+        <span class="interest-contact-option-icon" aria-hidden="true">SG</span>
+        <span class="interest-contact-option-copy">
+          <strong>Carousell Singapore</strong>
+          <small>collect_tcg_sg</small>
+        </span>
+        <span class="interest-contact-option-arrow" aria-hidden="true">↗</span>
+      </a>
+
+      <button type="button"
+              class="interest-contact-option interest-contact-copy"
+              id="interestCopyInquiry">
+        <span class="interest-contact-option-icon" aria-hidden="true">⧉</span>
+        <span class="interest-contact-option-copy">
+          <strong>Copy inquiry</strong>
+          <small>Copy the card name and listing link</small>
+        </span>
+        <span class="interest-contact-option-arrow" aria-hidden="true">✓</span>
+      </button>
+    </div>
+
+    <p class="interest-contact-note">
+      Social links open the profile/page. You can then send us a message about the card.
+    </p>
+  </section>
+</div>
+
 
 <script>
 (function(){
   const bar=document.getElementById("mobileDetailCta");
   const priceEl=document.getElementById("mobileDetailCtaPrice");
   const action=document.getElementById("mobileDetailCtaAction");
-  if(!bar || !priceEl || !action) return;
+  const contactOverlay=document.getElementById("interestContactOverlay");
+  const contactSheet=document.getElementById("interestContactSheet");
+  const contactClose=document.getElementById("interestContactClose");
+  const contactCardName=document.getElementById("interestContactCardName");
+  const contactCardRef=document.getElementById("interestContactCardRef");
+  const copyInquiryBtn=document.getElementById("interestCopyInquiry");
+  if(!bar || !priceEl || !action || !contactOverlay || !contactSheet) return;
+
+  let lastInterestFocus=null;
+
+  function currentCardContext(){
+    const nameSelectors=[
+      ".detail-title h2",
+      ".detail-header h2",
+      ".card-detail-title",
+      "#detailsMount h2",
+      "#detailsMount .clean-card-name"
+    ];
+
+    let name="Card enquiry";
+    for(const selector of nameSelectors){
+      const el=document.querySelector(selector);
+      if(el && el.textContent.trim()){
+        name=el.textContent.trim();
+        break;
+      }
+    }
+
+    const codeSelectors=[
+      "#detailsMount .detail-meta",
+      "#detailsMount .clean-card-reference",
+      "#detailsMount [data-card-code]"
+    ];
+
+    let reference="";
+    for(const selector of codeSelectors){
+      const el=document.querySelector(selector);
+      if(el && el.textContent.trim()){
+        reference=el.textContent.trim();
+        break;
+      }
+    }
+
+    return {
+      name,
+      reference,
+      url:location.href
+    };
+  }
+
+  function inquiryText(){
+    const ctx=currentCardContext();
+    const ref=ctx.reference ? ` (${ctx.reference})` : "";
+    return `Hi, I'm interested in this card: ${ctx.name}${ref}\n${ctx.url}`;
+  }
+
+  async function copyInquiry(){
+    const message=inquiryText();
+    try{
+      if(navigator.clipboard?.writeText){
+        await navigator.clipboard.writeText(message);
+      }else{
+        const textarea=document.createElement("textarea");
+        textarea.value=message;
+        textarea.style.position="fixed";
+        textarea.style.opacity="0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      }
+      if(typeof showToast==="function") showToast("Inquiry copied");
+      if(copyInquiryBtn){
+        const strong=copyInquiryBtn.querySelector("strong");
+        if(strong){
+          const old=strong.textContent;
+          strong.textContent="Copied";
+          setTimeout(()=>{ strong.textContent=old; },1200);
+        }
+      }
+      return true;
+    }catch(error){
+      console.warn("Could not copy inquiry:",error);
+      if(typeof showToast==="function") showToast("Could not copy inquiry");
+      return false;
+    }
+  }
+
+  function openContactChooser(){
+    const ctx=currentCardContext();
+    if(contactCardName) contactCardName.textContent=ctx.name || "Card enquiry";
+    if(contactCardRef){
+      contactCardRef.textContent=ctx.reference || "Choose a platform to contact us.";
+    }
+
+    lastInterestFocus=document.activeElement;
+    contactOverlay.hidden=false;
+    document.body.classList.add("interest-contact-open");
+
+    requestAnimationFrame(()=>{
+      try{ contactClose?.focus({preventScroll:true}); }
+      catch{ contactClose?.focus(); }
+    });
+  }
+
+  function closeContactChooser(restoreFocus=true){
+    if(contactOverlay.hidden) return;
+    contactOverlay.hidden=true;
+    document.body.classList.remove("interest-contact-open");
+
+    if(restoreFocus && lastInterestFocus && document.contains(lastInterestFocus)){
+      try{ lastInterestFocus.focus({preventScroll:true}); }
+      catch{ lastInterestFocus.focus(); }
+    }
+    lastInterestFocus=null;
+  }
 
   function isDetailRoute(){
     const h=location.hash || "";
@@ -27142,25 +27554,6 @@ function wireShimmer(container){
       if(el) return el.textContent.trim();
     }
     return "";
-  }
-
-  function findInterestTarget(){
-    const selectors=[
-      'a[href*="carousell"]',
-      'a[href*="instagram"]',
-      'a[href*="wa.me"]',
-      'a[href*="whatsapp"]',
-      'a[href*="m.me"]',
-      'a[href^="mailto:"]',
-      '#contactBtn',
-      '.contact-btn',
-      '.interest-btn'
-    ];
-    for(const s of selectors){
-      const el=document.querySelector(s);
-      if(el) return el;
-    }
-    return null;
   }
 
   function update(){
@@ -27213,12 +27606,49 @@ function wireShimmer(container){
 
   action.addEventListener("click",function(){
     if(action.disabled) return;
-    const target=findInterestTarget();
-    if(target){
-      target.click();
+    openContactChooser();
+  });
+
+  contactClose?.addEventListener("click",()=>closeContactChooser(true));
+
+  contactOverlay.addEventListener("click",e=>{
+    if(e.target===contactOverlay) closeContactChooser(true);
+  });
+
+  copyInquiryBtn?.addEventListener("click",copyInquiry);
+
+  contactSheet.querySelectorAll("[data-interest-platform]").forEach(link=>{
+    link.addEventListener("click",()=>{
+      // Copy the exact card context before opening the buyer's chosen platform.
+      // Failure to access clipboard must never block navigation.
+      copyInquiry().catch(()=>{});
+      setTimeout(()=>closeContactChooser(false),80);
+    });
+  });
+
+  contactSheet.addEventListener("keydown",e=>{
+    if(e.key==="Escape"){
+      e.preventDefault();
+      closeContactChooser(true);
       return;
     }
-    goToRoute("contact");
+
+    if(e.key!=="Tab") return;
+    const items=[...contactSheet.querySelectorAll(
+      'a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"])'
+    )].filter(el=>!el.hidden && el.getClientRects().length);
+
+    if(!items.length) return;
+    const first=items[0];
+    const last=items[items.length-1];
+
+    if(e.shiftKey && document.activeElement===first){
+      e.preventDefault();
+      last.focus();
+    }else if(!e.shiftKey && document.activeElement===last){
+      e.preventDefault();
+      first.focus();
+    }
   });
 
   let updateTimer=null;
@@ -27233,6 +27663,7 @@ function wireShimmer(container){
 
   // Route changes are the primary signal that a card detail opened/closed.
   window.addEventListener("hashchange",()=>{
+    closeContactChooser(false);
     scheduleUpdate(40);
     // A second pass catches detail content rendered just after the route.
     setTimeout(()=>update(),180);
