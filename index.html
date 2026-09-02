@@ -39,8 +39,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Collect TCG">
   <link rel="manifest" href="./collect-tcg-manifest.webmanifest">
-<link rel="apple-touch-icon" sizes="180x180" href="./collect-tcg-apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="./collect-tcg-favicon.png">
+<link rel="apple-touch-icon" href="./collect-tcg-icon-192.png">
+<link rel="icon" type="image/png" href="./collect-tcg-icon-192.png">
 <title>Collect TCG MY & SG — Inventory</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -29374,7 +29374,7 @@ function wireShimmer(container){
     window.addEventListener("load",async()=>{
       try{
         const registration=await navigator.serviceWorker.register(
-          "./collect-tcg-service-worker-v3.js",
+          "./collect-tcg-service-worker.js",
           {scope:"./",updateViaCache:"none"}
         );
 
