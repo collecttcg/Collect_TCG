@@ -11338,6 +11338,36 @@ body.interest-contact-open{
   }
 }
 
+
+/* =========================================================
+   MOBILE BOTTOM PAGINATION CLEARANCE
+   Prevent sticky sort/filter controls from covering pagination.
+   ========================================================= */
+@media(max-width:800px){
+  .listing-pagination-bottom{
+    position:relative !important;
+    z-index:20 !important;
+    margin-bottom:calc(96px + env(safe-area-inset-bottom)) !important;
+    padding-bottom:2px !important;
+  }
+
+  /* Ensure the final inventory content also has breathing room above
+     the sticky mobile result controls on phones with taller browser UI. */
+  #invGrid{
+    scroll-margin-bottom:calc(96px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .sticky-mobile-results-bar{
+    z-index:1200 !important;
+  }
+}
+
+@media(max-width:390px){
+  .listing-pagination-bottom{
+    margin-bottom:calc(104px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
 </style>
 </head>
 <body>
