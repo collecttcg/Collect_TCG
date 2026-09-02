@@ -11982,55 +11982,38 @@ html{
 
 
 /* =========================================================
-   CONDITION BADGE SIZE — MATCH GRADED / SEALED
-   Only raw-condition badges are changed.
+   MOBILE HOME PILLS — MATCH INVENTORY
+   Home card pills now use the same compact sizing as Inventory.
    ========================================================= */
-.overview-grade-overlay.condition-filter-btn{
-  min-width:70px !important;
-  max-width:calc(100% - 16px) !important;
-  width:auto !important;
-  height:auto !important;
-  min-height:0 !important;
-  padding:6px 9px 5px !important;
-  border-radius:10px !important;
-}
-
 @media(max-width:800px){
-  .overview-grade-overlay.condition-filter-btn{
-    min-width:70px !important;
-    max-width:calc(100% - 16px) !important;
+  .home-recent-grid .clean-all-pills .clean-grade-badge,
+  .home-recent-grid .clean-all-pills .clean-meta-pill,
+  .home-storefront-grid .clean-all-pills .clean-grade-badge,
+  .home-storefront-grid .clean-all-pills .clean-meta-pill{
+    box-sizing:border-box !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    flex:0 1 auto !important;
+    min-width:0 !important;
+    min-height:0 !important;
     width:auto !important;
     height:auto !important;
-    min-height:0 !important;
-    padding:6px 9px 5px !important;
-    border-radius:10px !important;
+    max-width:100% !important;
+    padding:4px 6px !important;
+    border-radius:999px !important;
+    font-size:8.5px !important;
+    line-height:1.1 !important;
+    letter-spacing:0 !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
   }
-}
 
-
-/* CONDITION BADGE TEXT: center within badge. */
-.overview-grade-overlay.condition-filter-btn{
-  align-items:center !important;
-  text-align:center !important;
-}
-
-.overview-grade-overlay.condition-filter-btn strong,
-.overview-grade-overlay.condition-filter-btn small{
-  width:100% !important;
-  text-align:center !important;
-}
-
-
-/* ALL OVERLAY BADGES: center text for Condition, Sealed, and Graded. */
-.overview-grade-overlay{
-  align-items:center !important;
-  text-align:center !important;
-}
-
-.overview-grade-overlay strong,
-.overview-grade-overlay small{
-  width:100% !important;
-  text-align:center !important;
+  .home-recent-grid .clean-all-pills,
+  .home-storefront-grid .clean-all-pills{
+    gap:4px !important;
+  }
 }
 
 </style>
