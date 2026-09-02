@@ -11252,6 +11252,59 @@ body.interest-contact-open{
   }
 }
 
+
+/* =========================================================
+   MOBILE TOOLBAR ROW FIX
+   Explicit row placement prevents CSS Grid auto-flow from
+   moving Filters onto a second row because of DOM order.
+   ========================================================= */
+@media(max-width:800px){
+  .listing-filter-tools .inventory-display-tools{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) !important;
+    grid-auto-flow:row !important;
+  }
+
+  .listing-filter-tools .currency-preference-control{
+    grid-column:1 !important;
+    grid-row:1 !important;
+  }
+
+  .listing-filter-tools .mobile-filter-open-btn{
+    grid-column:2 !important;
+    grid-row:1 !important;
+  }
+
+  .listing-filter-tools .listing-per-page-control{
+    grid-column:3 !important;
+    grid-row:1 !important;
+  }
+
+  .listing-filter-tools .copy-filter-link-btn{
+    grid-column:1 / -1 !important;
+    grid-row:2 !important;
+  }
+
+  /* Collection does not have Currency: keep Filters + Show together. */
+  .listing-filter-tools .inventory-display-tools.collection-display-tools{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+  }
+
+  .listing-filter-tools .collection-display-tools .mobile-filter-open-btn{
+    grid-column:1 !important;
+    grid-row:1 !important;
+  }
+
+  .listing-filter-tools .collection-display-tools .listing-per-page-control{
+    grid-column:2 !important;
+    grid-row:1 !important;
+  }
+
+  .listing-filter-tools .collection-display-tools .copy-filter-link-btn{
+    grid-column:1 / -1 !important;
+    grid-row:2 !important;
+  }
+}
+
 </style>
 </head>
 <body>
