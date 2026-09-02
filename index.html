@@ -12436,6 +12436,26 @@ body.light-mode .sticky-mobile-results-action small{
   color:#59616a !important;
 }
 
+
+/* =========================================================
+   DESKTOP CARD DETAILS — MORE MENU POSITION FIX
+   Open toward the right so the modal's left edge cannot clip it.
+   Mobile behavior is unchanged.
+   ========================================================= */
+@media(min-width:801px){
+  .modal.card-details-modal .details-more-wrap{
+    position:relative !important;
+    overflow:visible !important;
+  }
+
+  .modal.card-details-modal .details-more-menu{
+    left:0 !important;
+    right:auto !important;
+    transform:none !important;
+    max-width:min(270px,calc(100vw - 40px)) !important;
+  }
+}
+
 </style>
 </head>
 <body>
