@@ -14,6 +14,7 @@
 <!-- REFACTOR STAGE 4: conservative dead-code/duplicate cleanup; behavior preserved -->
 <!-- STAGE 4 HOTFIX: restored valid JS after partial helper removal -->
 <!-- MOBILE ENQUIRY: platform chooser for Instagram/Facebook/Carousell + copy inquiry -->
+<!-- DETAIL ACTION CLEANUP: redundant Message/PM button removed -->
 <!-- OWNER TOOL: permanent listing deletion with double confirmation -->
 <!-- MOBILE FIX: compact metadata pills + 44px invisible hit targets across iOS/Android -->
 <!-- DESKTOP NAV FIX: Reserved stays primary; duplicate hidden from More -->
@@ -10680,11 +10681,6 @@ body.interest-contact-open{
           <span class="details-favorite-icon" data-favorite-icon aria-hidden="true">♡</span>
           <span class="details-action-label-desktop" data-favorite-label-desktop>Favorite</span>
           <span class="details-action-label-mobile" data-favorite-label-mobile>Fav</span>
-        </button>
-
-        <button type="button" class="details-contact-btn" id="detailsFacebookBtn" aria-label="Message Collect TCG on Facebook">
-          <span class="details-action-label-desktop">PM us on FB</span>
-          <span class="details-action-label-mobile">Message</span>
         </button>
 
         <button type="button" id="detailsShareBtn" aria-label="Share this card">Share</button>
@@ -26434,7 +26430,6 @@ function wireShimmer(container){
     syncDetailsFavoriteButton(card);
   });
   $("detailsShareBtn").addEventListener("click",shareCurrentCard);
-  $("detailsFacebookBtn").addEventListener("click",messageSellerOnFacebook);
 
   $("detailsMoreBtn").addEventListener("click",e=>{
     e.stopPropagation();
