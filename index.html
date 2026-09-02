@@ -19142,33 +19142,25 @@ function wireShimmer(container){
       nextPage=Math.min(Math.max(1,nextPage),totalPages);
       if(nextPage===listingCurrentPage) return;
 
-      const scrollingEl=document.scrollingElement || document.documentElement;
-      const clickedBottomPagination=!!button.closest("#listingPaginationBottom");
-
-      // For bottom pagination, preserve the user's distance from the natural
-      // document bottom. This avoids both the viewport jump and artificial
-      // spacer height / endless empty scrolling.
-      const oldBottomDistance=clickedBottomPagination
-        ? Math.max(
-            0,
-            scrollingEl.scrollHeight - window.innerHeight - scrollingEl.scrollTop
-          )
-        : null;
+      const fromBottom=!!button.closest("#listingPaginationBottom");
 
       listingCurrentPage=nextPage;
       updateListingUrlFromControls();
       draw();
 
-      if(clickedBottomPagination && Number.isFinite(oldBottomDistance)){
-        // Force layout after the new cards are rendered.
-        void scrollingEl.scrollHeight;
-
-        const newMaxScroll=Math.max(0,scrollingEl.scrollHeight-window.innerHeight);
-        const target=Math.max(0,newMaxScroll-oldBottomDistance);
-
-        // Direct assignment avoids smooth scrolling and does not create
-        // any extra document height.
-        scrollingEl.scrollTop=target;
+      if(fromBottom){
+        // When paging from the bottom controls, start the user at the
+        // beginning of the newly rendered listing results.
+        const grid=$("invGrid");
+        if(grid){
+          const rect=grid.getBoundingClientRect();
+          const target=window.scrollY + rect.top - 8;
+          window.scrollTo({
+            top:Math.max(0,target),
+            left:window.scrollX,
+            behavior:"auto"
+          });
+        }
       }
     };
 
