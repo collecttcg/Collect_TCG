@@ -17,6 +17,7 @@
 <!-- DETAIL ACTION CLEANUP: redundant Message/PM button removed -->
 <!-- REFACTOR STAGE 5: startup/render performance optimizations; behavior unchanged -->
 <!-- MOBILE PRICE SYNC: sticky enquiry price follows card-detail currency changes -->
+<!-- SEALED OVERVIEW: sealed listings now show condition overlay badge -->
 <!-- OWNER TOOL: permanent listing deletion with double confirmation -->
 <!-- MOBILE FIX: compact metadata pills + 44px invisible hit targets across iOS/Android -->
 <!-- DESKTOP NAV FIX: Reserved stays primary; duplicate hidden from More -->
@@ -13911,6 +13912,20 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     </span>`;
   }
 
+  function overviewSealedConditionOverlayHTML(card){
+    if(!card || normalizeFilterValue(effectiveFormat(card))!=="sealed") return "";
+
+    const condition=rawConditionShortLabel(card.condition || "SEALED") || "SEALED";
+    const status=normalizeFilterValue(card.availability||"Available");
+    const avoidStatusCorner=status==="sold" || status==="reserved";
+
+    return `<span class="overview-grade-overlay ${avoidStatusCorner?"overview-grade-overlay-right":""}"
+                  aria-label="${escapeHtml(`Sealed item condition ${condition}`)}">
+      <strong>${escapeHtml(condition)}</strong>
+      <small>SEALED</small>
+    </span>`;
+  }
+
   function cardThumbHTML(c, renderIndex=999){
     const color = RARITY_COLOR[c.rarity] || "var(--r-common)";
     const images = getImages(c);
@@ -13929,7 +13944,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
              style="border-color:${color}">
         ${overviewGradeOverlayHTML(c)}
         ${overviewRawConditionOverlayHTML(c)}
-        ${isNewCard(c) ? `<span class="new-card-badge ${["graded","raw"].includes(normalizeFilterValue(effectiveFormat(c))) ? "new-card-badge-with-grade" : ""}" aria-label="Recently added">NEW</span>` : ""}
+        ${overviewSealedConditionOverlayHTML(c)}
+        ${isNewCard(c) ? `<span class="new-card-badge ${["graded","raw","sealed"].includes(normalizeFilterValue(effectiveFormat(c))) ? "new-card-badge-with-grade" : ""}" aria-label="Recently added">NEW</span>` : ""}
         ${statusCornerHTML(c)}
         <span class="image-count-badge"
               data-listing-image-count
