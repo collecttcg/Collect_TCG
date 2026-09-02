@@ -12,6 +12,7 @@
 <!-- REFACTOR STAGE 2: canonical responsive CSS; obsolete late overrides removed -->
 <!-- REFACTOR STAGE 3: JavaScript helpers/routes/lookups consolidated; single-file architecture preserved -->
 <!-- REFACTOR STAGE 4: conservative dead-code/duplicate cleanup; behavior preserved -->
+<!-- STAGE 4 HOTFIX: restored valid JS after partial helper removal -->
 <!-- OWNER TOOL: permanent listing deletion with double confirmation -->
 <!-- MOBILE FIX: compact metadata pills + 44px invisible hit targets across iOS/Android -->
 <!-- DESKTOP NAV FIX: Reserved stays primary; duplicate hidden from More -->
@@ -11177,10 +11178,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     console.warn(`Blocked non-owner attempt to ${action}.`);
     showToast("Owner login required");
     return false;
-  }catch(error){
-      console.error(`Owner action failed: ${action}`,error);
-      throw error;
-    }
   }
 
   function confirmOwnerAction(message){
