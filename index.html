@@ -27863,15 +27863,15 @@ function wireShimmer(container){
     if(value === "sold"){
       return {
         label:"SOLD",
-        color:"#b42318",
-        shadow:"rgba(0,0,0,.24)"
+        color:"#e11d48",
+        shadow:"rgba(123,12,36,.28)"
       };
     }
     if(value === "reserved"){
       return {
         label:"RESERVE",
-        color:"#9a6700",
-        shadow:"rgba(0,0,0,.22)"
+        color:"#f59e0b",
+        shadow:"rgba(133,77,14,.28)"
       };
     }
     return null;
@@ -27897,7 +27897,7 @@ function wireShimmer(container){
 
     ctx.drawImage(img,0,0,width,height);
 
-    const tri = Math.max(150, Math.min(Math.round(Math.min(width,height) * 0.28), 460));
+    const tri = Math.max(210, Math.min(Math.round(Math.min(width,height) * 0.38), 620));
 
     // Filled top-left triangle.
     ctx.save();
@@ -27908,7 +27908,7 @@ function wireShimmer(container){
     ctx.closePath();
     ctx.fillStyle = meta.color;
     ctx.shadowColor = meta.shadow;
-    ctx.shadowBlur = Math.max(12, Math.round(tri * 0.08));
+    ctx.shadowBlur = Math.max(16, Math.round(tri * 0.09));
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = Math.max(2, Math.round(tri * 0.02));
     ctx.fill();
@@ -27922,7 +27922,7 @@ function wireShimmer(container){
     ctx.lineTo(0,tri);
     ctx.closePath();
     ctx.strokeStyle = "rgba(255,255,255,.24)";
-    ctx.lineWidth = Math.max(2, Math.round(tri * 0.012));
+    ctx.lineWidth = Math.max(3, Math.round(tri * 0.014));
     ctx.stroke();
     ctx.restore();
 
@@ -27930,15 +27930,15 @@ function wireShimmer(container){
     ctx.save();
     const text = meta.label;
     const diagonalFont = text.length > 5
-      ? Math.round(tri * 0.12)
-      : Math.round(tri * 0.14);
-    ctx.translate(tri * 0.34, tri * 0.34);
+      ? Math.round(tri * 0.145)
+      : Math.round(tri * 0.165);
+    ctx.translate(tri * 0.355, tri * 0.355);
     ctx.rotate(-Math.PI / 4);
     ctx.font = `900 ${Math.max(18, diagonalFont)}px Inter, Arial, sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.lineJoin = "round";
-    ctx.lineWidth = Math.max(5, Math.round(tri * 0.03));
+    ctx.lineWidth = Math.max(6, Math.round(tri * 0.034));
     ctx.strokeStyle = "rgba(0,0,0,.20)";
     ctx.strokeText(text,0,0);
     ctx.fillStyle = "#ffffff";
