@@ -27930,15 +27930,15 @@ function wireShimmer(container){
     ctx.save();
     const text = meta.label;
     const diagonalFont = text.length > 5
-      ? Math.round(tri * 0.145)
-      : Math.round(tri * 0.165);
+      ? Math.round(tri * 0.18)
+      : Math.round(tri * 0.205);
     ctx.translate(tri * 0.355, tri * 0.355);
     ctx.rotate(-Math.PI / 4);
     ctx.font = `900 ${Math.max(18, diagonalFont)}px Inter, Arial, sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.lineJoin = "round";
-    ctx.lineWidth = Math.max(6, Math.round(tri * 0.034));
+    ctx.lineWidth = Math.max(7, Math.round(tri * 0.038));
     ctx.strokeStyle = "rgba(0,0,0,.20)";
     ctx.strokeText(text,0,0);
     ctx.fillStyle = "#ffffff";
