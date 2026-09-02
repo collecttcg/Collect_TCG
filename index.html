@@ -10846,6 +10846,154 @@ body.interest-contact-open{
   }
 }
 
+
+/* =========================================================
+   LARGE INVENTORY PAGINATION
+   ========================================================= */
+.listing-per-page-control{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:36px;
+  padding:5px 8px;
+  border:1px solid var(--border);
+  border-radius:9px;
+  background:var(--surface);
+  color:var(--text-muted);
+  font-size:10px;
+  white-space:nowrap;
+}
+.listing-per-page-control select{
+  min-height:28px;
+  padding:3px 24px 3px 7px;
+  border:1px solid var(--border);
+  border-radius:7px;
+  background:var(--surface-2);
+  color:var(--text);
+  font:inherit;
+  font-weight:800;
+}
+
+.listing-pagination-shell{
+  margin:12px 0;
+}
+.listing-pagination-shell[hidden]{
+  display:none !important;
+}
+.listing-pagination{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:9px 10px;
+  border:1px solid var(--border);
+  border-radius:11px;
+  background:var(--surface);
+}
+.listing-pagination-summary{
+  flex:0 0 auto;
+  color:var(--text-muted);
+  font-size:10px;
+  line-height:1.35;
+  white-space:nowrap;
+}
+.listing-pagination-summary strong{
+  color:var(--text);
+  font-size:10.5px;
+}
+.listing-pagination-pages{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:5px;
+  flex-wrap:wrap;
+}
+.listing-page-btn{
+  min-width:34px;
+  height:34px;
+  padding:0 9px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--surface-2);
+  color:var(--text);
+  font-size:10px;
+  font-weight:800;
+  cursor:pointer;
+}
+.listing-page-btn:hover:not(:disabled),
+.listing-page-btn:focus-visible{
+  border-color:rgba(78,210,199,.42);
+  background:rgba(78,210,199,.07);
+}
+.listing-page-btn.active{
+  border-color:var(--accent-teal);
+  background:rgba(78,210,199,.12);
+  color:var(--accent-teal);
+}
+.listing-page-btn:disabled{
+  opacity:.4;
+  cursor:default;
+}
+.listing-page-ellipsis{
+  min-width:20px;
+  color:var(--text-muted);
+  text-align:center;
+  font-size:11px;
+}
+
+@media(max-width:800px){
+  .inventory-display-tools{
+    flex-wrap:wrap !important;
+  }
+  .listing-per-page-control{
+    min-height:42px;
+    padding:6px 9px;
+  }
+  .listing-per-page-control select{
+    min-height:32px;
+  }
+  .listing-pagination{
+    display:block;
+    padding:9px;
+  }
+  .listing-pagination-summary{
+    margin-bottom:8px;
+    text-align:center;
+    white-space:normal;
+  }
+  .listing-pagination-pages{
+    justify-content:center;
+    flex-wrap:nowrap;
+    gap:4px;
+  }
+  .listing-page-btn{
+    min-width:40px;
+    height:42px;
+    padding:0 8px;
+    font-size:10px;
+  }
+  .listing-page-btn[data-page-direction]{
+    min-width:42px;
+  }
+  .listing-pagination-top{
+    margin-top:8px;
+  }
+}
+
+@media(max-width:390px){
+  .listing-page-btn{
+    min-width:36px;
+    padding:0 6px;
+  }
+  .listing-pagination-pages{
+    gap:3px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -11753,6 +11901,36 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   const PRICE_CURRENCY_KEY="collect_tcg_price_currency_v1";
   const INVENTORY_VIEW_KEY="collect_tcg_inventory_view_v1";
+  const LISTING_PER_PAGE_KEY="collect_tcg_listing_per_page_v1";
+  const LISTING_PER_PAGE_OPTIONS=Object.freeze([20,40,100]);
+  let listingCurrentPage=1;
+  let listingPerPage=20;
+
+  function defaultListingPerPage(){
+    return window.matchMedia("(max-width:800px)").matches ? 20 : 40;
+  }
+
+  function getSavedListingPerPage(){
+    try{
+      const value=Number(localStorage.getItem(LISTING_PER_PAGE_KEY));
+      return LISTING_PER_PAGE_OPTIONS.includes(value) ? value : defaultListingPerPage();
+    }catch{
+      return defaultListingPerPage();
+    }
+  }
+
+  function setSavedListingPerPage(value){
+    const number=Number(value);
+    const safe=LISTING_PER_PAGE_OPTIONS.includes(number) ? number : defaultListingPerPage();
+    listingPerPage=safe;
+    try{ localStorage.setItem(LISTING_PER_PAGE_KEY,String(safe)); }catch{}
+    return safe;
+  }
+
+  function safeListingPage(value){
+    const page=Math.floor(Number(value));
+    return Number.isFinite(page) && page>=1 ? page : 1;
+  }
 
   function getPriceCurrencyPreference(){
     try{
@@ -13302,6 +13480,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(activeQuickFilter && activeQuickFilter !== "all"){
       params.set("quick", activeQuickFilter);
     }
+
+    params.set("per",String(listingPerPage));
+    if(listingCurrentPage>1) params.set("page",String(listingCurrentPage));
 
     const pillKeys = {
       game:"pga",
@@ -16816,6 +16997,16 @@ function wireShimmer(container){
             </label>
           ` : ""}
 
+          <label class="listing-per-page-control" title="Choose how many listings are shown on each page.">
+            <span>Show</span>
+            <select id="listingPerPageSelect" aria-label="Listings per page">
+              ${LISTING_PER_PAGE_OPTIONS.map(value=>`
+                <option value="${value}" ${listingPerPage===value?"selected":""}>${value}</option>
+              `).join("")}
+            </select>
+            <span>per page</span>
+          </label>
+
           <button type="button"
                   class="view-mode-toggle desktop-compact-view-toggle"
                   id="compactViewToggle"
@@ -16938,7 +17129,11 @@ function wireShimmer(container){
         </div>
       </section>
 
+      <div class="listing-pagination-shell listing-pagination-top" id="listingPaginationTop" hidden></div>
+
       <div id="invGrid" aria-busy="true">${inventorySkeletonHTML(8)}</div>
+
+      <div class="listing-pagination-shell listing-pagination-bottom" id="listingPaginationBottom" hidden></div>
 
       <div class="sticky-mobile-results-bar" id="stickyMobileResultsBar" aria-label="Results controls">
         <div class="sticky-mobile-results-count">
@@ -17109,8 +17304,16 @@ function wireShimmer(container){
 
     updateStatusNavCounts();
     listingAvailabilityScope = isInventoryRoute(scope) ? scope : "inventory";
+
+    const listingParams=currentHashParams();
+    const requestedPer=Number(listingParams.get("per"));
+    listingPerPage=LISTING_PER_PAGE_OPTIONS.includes(requestedPer)
+      ? requestedPer
+      : getSavedListingPerPage();
+    listingCurrentPage=safeListingPage(listingParams.get("page"));
+
     const scopeMeta = listingScopeMeta(listingAvailabilityScope);
-    const requestedQuick=safeUrlFilterText(currentHashParams().get("quick"),24);
+    const requestedQuick=safeUrlFilterText(listingParams.get("quick"),24);
     activeQuickFilter=["all","new","graded","raw","sealed","championship","vintage"].includes(requestedQuick)
       ? requestedQuick
       : "all";
@@ -17340,6 +17543,9 @@ function wireShimmer(container){
 
     restoreListingFiltersFromUrl();
 
+    const perPageSelect=$("listingPerPageSelect");
+    if(perPageSelect) perPageSelect.value=String(listingPerPage);
+
     function activeInventoryFilterCount(){
       let count=0;
       if(String($("search")?.value||"").trim()) count++;
@@ -17458,9 +17664,129 @@ function wireShimmer(container){
 
     let inventoryDrawGeneration=0;
 
+    let paginationFilterSignature=null;
+    let paginationFirstDraw=true;
+
+    function currentPaginationFilterSignature(){
+      const pillState={};
+      Object.entries(pillFilterState).forEach(([key,set])=>{
+        pillState[key]=Array.from(set||[]).map(normalizeFilterValue).sort();
+      });
+
+      return JSON.stringify({
+        q:String($("search")?.value||"").trim(),
+        game:$("filterGame")?.value||"",
+        grade:$("filterGrade")?.value||"",
+        language:$("filterLanguage")?.value||"",
+        era:$("filterEra")?.value||"",
+        availability:$("filterAvailability")?.value||"",
+        series:$("filterSeries")?.value||"",
+        pmin:safePriceFilterValue($("filterPriceMin")?.value),
+        pmax:safePriceFilterValue($("filterPriceMax")?.value),
+        sort:$("sortBy")?.value||"",
+        quick:activeQuickFilter||"all",
+        pills:pillState
+      });
+    }
+
+    function paginationPageItems(current,total){
+      if(total<=7) return Array.from({length:total},(_,i)=>i+1);
+
+      const pages=new Set([1,total,current-1,current,current+1]);
+      if(current<=4){
+        [2,3,4,5].forEach(page=>pages.add(page));
+      }
+      if(current>=total-3){
+        [total-4,total-3,total-2,total-1].forEach(page=>pages.add(page));
+      }
+
+      const sorted=Array.from(pages)
+        .filter(page=>page>=1 && page<=total)
+        .sort((a,b)=>a-b);
+
+      const items=[];
+      sorted.forEach((page,index)=>{
+        if(index && page-sorted[index-1]>1) items.push("ellipsis");
+        items.push(page);
+      });
+      return items;
+    }
+
+    function paginationHTML(totalItems){
+      const totalPages=Math.max(1,Math.ceil(totalItems/listingPerPage));
+      const start=totalItems ? ((listingCurrentPage-1)*listingPerPage)+1 : 0;
+      const end=totalItems ? Math.min(listingCurrentPage*listingPerPage,totalItems) : 0;
+
+      const pages=paginationPageItems(listingCurrentPage,totalPages);
+      return `
+        <nav class="listing-pagination" aria-label="Listing pages">
+          <div class="listing-pagination-summary">
+            <strong>Showing ${start.toLocaleString()}–${end.toLocaleString()}</strong>
+            of ${totalItems.toLocaleString()} listings
+            · Page ${listingCurrentPage.toLocaleString()} of ${totalPages.toLocaleString()}
+          </div>
+          <div class="listing-pagination-pages">
+            <button type="button"
+                    class="listing-page-btn"
+                    data-page-direction="prev"
+                    aria-label="Previous page"
+                    ${listingCurrentPage<=1?"disabled":""}>‹</button>
+
+            ${pages.map(page=>page==="ellipsis"
+              ? `<span class="listing-page-ellipsis" aria-hidden="true">…</span>`
+              : `<button type="button"
+                         class="listing-page-btn ${page===listingCurrentPage?"active":""}"
+                         data-listing-page="${page}"
+                         ${page===listingCurrentPage?'aria-current="page"':""}>${page}</button>`
+            ).join("")}
+
+            <button type="button"
+                    class="listing-page-btn"
+                    data-page-direction="next"
+                    aria-label="Next page"
+                    ${listingCurrentPage>=totalPages?"disabled":""}>›</button>
+          </div>
+        </nav>
+      `;
+    }
+
+    function renderPagination(totalItems){
+      const totalPages=Math.max(1,Math.ceil(totalItems/listingPerPage));
+      listingCurrentPage=Math.min(Math.max(1,listingCurrentPage),totalPages);
+
+      ["listingPaginationTop","listingPaginationBottom"].forEach(id=>{
+        const mount=$(id);
+        if(!mount) return;
+        mount.hidden=totalItems<=listingPerPage;
+        mount.innerHTML=totalItems>listingPerPage ? paginationHTML(totalItems) : "";
+      });
+    }
+
+    function scrollToListingStart(){
+      const target=$("listingPaginationTop") || $("invGrid");
+      if(!target) return;
+      requestAnimationFrame(()=>{
+        try{ target.scrollIntoView({behavior:"smooth",block:"start"}); }
+        catch{ target.scrollIntoView(); }
+      });
+    }
+
     function draw(){
       const drawGeneration=++inventoryDrawGeneration;
       const grid=$("invGrid");
+
+      const nextFilterSignature=currentPaginationFilterSignature();
+      if(paginationFirstDraw){
+        paginationFirstDraw=false;
+        paginationFilterSignature=nextFilterSignature;
+      }else if(nextFilterSignature!==paginationFilterSignature){
+        paginationFilterSignature=nextFilterSignature;
+        if(listingCurrentPage!==1){
+          listingCurrentPage=1;
+          updateListingUrlFromControls();
+        }
+      }
+
       updateActiveFilterIndicators();
       syncPillFilterSummary();
       if(grid) grid.setAttribute("aria-busy","false");
@@ -17473,6 +17799,8 @@ function wireShimmer(container){
         if(desktopResultCount) desktopResultCount.textContent="0";
         const footerResultCount=$("mobileFilterFooterResultCount");
         if(footerResultCount) footerResultCount.textContent="0";
+        renderPagination(0);
+        ["listingPaginationTop","listingPaginationBottom"].forEach(id=>{ const el=$(id); if(el) el.hidden=true; });
         grid.className="";
         grid.innerHTML=`<div class="empty-state">${EMPTY_ICON}<h2>No listings yet</h2><p>The catalogue is currently empty.</p></div>`;
         return;
@@ -17493,6 +17821,8 @@ function wireShimmer(container){
 
         const noScopeCards=scopedCards.length===0;
 
+        renderPagination(0);
+        ["listingPaginationTop","listingPaginationBottom"].forEach(id=>{ const el=$(id); if(el) el.hidden=true; });
         grid.className="";
         grid.innerHTML=inventoryNoResultsHTML({
           scope:listingAvailabilityScope,
@@ -17507,38 +17837,25 @@ function wireShimmer(container){
 
       grid.className=effectiveInventoryViewMode()==="compact" ? "grid compact-list" : "grid";
 
-      const initialBatchSize=48;
-      const followupBatchSize=48;
-      const firstEnd=Math.min(initialBatchSize,list.length);
-      grid.innerHTML=list.slice(0,firstEnd).map(cardTileHTML).join("");
+      const totalPages=Math.max(1,Math.ceil(list.length/listingPerPage));
+      const clampedPage=Math.min(Math.max(1,listingCurrentPage),totalPages);
+      if(clampedPage!==listingCurrentPage){
+        listingCurrentPage=clampedPage;
+        updateListingUrlFromControls();
+      }
+
+      renderPagination(list.length);
+
+      const pageStart=(listingCurrentPage-1)*listingPerPage;
+      const pageEnd=Math.min(pageStart+listingPerPage,list.length);
+      const pageCards=list.slice(pageStart,pageEnd);
+
+      grid.innerHTML=pageCards
+        .map((card,index)=>cardTileHTML(card,index))
+        .join("");
+
       wireShimmer(grid);
       requestAnimationFrame(()=>maybeShowFavoriteDiscoveryHint(grid));
-
-      const appendBatch=(startIndex)=>{
-        if(inventorySignal.aborted || drawGeneration!==inventoryDrawGeneration) return;
-        const endIndex=Math.min(startIndex+followupBatchSize,list.length);
-        if(endIndex<=startIndex) return;
-
-        grid.insertAdjacentHTML(
-          "beforeend",
-          list.slice(startIndex,endIndex).map(cardTileHTML).join("")
-        );
-        wireShimmer(grid);
-
-        if(endIndex<list.length){
-          const schedule=window.requestIdleCallback
-            ? cb=>window.requestIdleCallback(cb,{timeout:180})
-            : cb=>setTimeout(cb,0);
-          schedule(()=>appendBatch(endIndex));
-        }
-      };
-
-      if(firstEnd<list.length){
-        const schedule=window.requestIdleCallback
-          ? cb=>window.requestIdleCallback(cb,{timeout:120})
-          : cb=>setTimeout(cb,0);
-        schedule(()=>appendBatch(firstEnd));
-      }
 
       updateCompareTray();
       if(isOwnerMode() && listingAvailabilityScope==="reserved"){
@@ -17734,6 +18051,43 @@ function wireShimmer(container){
         mobileSearchSuggestions.hidden=true;
       }
     },{signal:inventorySignal});
+
+    $("listingPerPageSelect")?.addEventListener("change",e=>{
+      const value=Number(e.target.value);
+      listingPerPage=setSavedListingPerPage(value);
+      listingCurrentPage=1;
+      updateListingUrlFromControls();
+      draw();
+      scrollToListingStart();
+    });
+
+    const handlePaginationClick=e=>{
+      const button=e.target.closest(".listing-page-btn");
+      if(!button || button.disabled) return;
+
+      const list=getFiltered();
+      const totalPages=Math.max(1,Math.ceil(list.length/listingPerPage));
+      let nextPage=listingCurrentPage;
+
+      if(button.dataset.pageDirection==="prev"){
+        nextPage=Math.max(1,listingCurrentPage-1);
+      }else if(button.dataset.pageDirection==="next"){
+        nextPage=Math.min(totalPages,listingCurrentPage+1);
+      }else if(button.dataset.listingPage){
+        nextPage=safeListingPage(button.dataset.listingPage);
+      }
+
+      nextPage=Math.min(Math.max(1,nextPage),totalPages);
+      if(nextPage===listingCurrentPage) return;
+
+      listingCurrentPage=nextPage;
+      updateListingUrlFromControls();
+      draw();
+      scrollToListingStart();
+    };
+
+    $("listingPaginationTop")?.addEventListener("click",handlePaginationClick);
+    $("listingPaginationBottom")?.addEventListener("click",handlePaginationClick);
 
     $("currencyPreference")?.addEventListener("change",e=>{
       const currency=setPriceCurrencyPreference(e.target.value);
