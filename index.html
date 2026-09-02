@@ -12535,6 +12535,32 @@ body.light-mode .sticky-mobile-results-action small{
   }
 }
 
+
+/* =========================================================
+   GRADE / SEALED BADGE HOVER — MATCH CONDITION BADGE
+   Prevent generic teal hover styling on clickable overview badges.
+   ========================================================= */
+.overview-grade-overlay.filter-pill-btn:hover,
+.clean-grade-badge.filter-pill-btn:hover,
+.overview-grade-overlay.filter-pill-btn:focus-visible,
+.clean-grade-badge.filter-pill-btn:focus-visible{
+  background:#0b0c0f !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.16) !important;
+  box-shadow:0 5px 14px rgba(0,0,0,.34) !important;
+}
+
+.overview-grade-overlay.filter-pill-btn:hover strong,
+.overview-grade-overlay.filter-pill-btn:hover small,
+.clean-grade-badge.filter-pill-btn:hover strong,
+.clean-grade-badge.filter-pill-btn:hover small,
+.overview-grade-overlay.filter-pill-btn:focus-visible strong,
+.overview-grade-overlay.filter-pill-btn:focus-visible small,
+.clean-grade-badge.filter-pill-btn:focus-visible strong,
+.clean-grade-badge.filter-pill-btn:focus-visible small{
+  color:#fff !important;
+}
+
 </style>
 </head>
 <body>
