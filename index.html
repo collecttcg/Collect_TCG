@@ -21,6 +21,7 @@
 <!-- STICKY PRICE FINAL FIX: reads .detail-price-primary after currency re-render -->
 <!-- GLOBAL CURRENCY SYNC: changing currency updates details, sticky price and all rendered overview cards -->
 <!-- MOBILE NAV FINAL: Home | Inventory | Favorites | More; no mobile Favorites duplication -->
+<!-- MOBILE NAV RESTORE: row1 Home/Inventory, row2 Sold/Favorites, row3 More -->
 <!-- OWNER TOOL: permanent listing deletion with double confirmation -->
 <!-- MOBILE FIX: compact metadata pills + 44px invisible hit targets across iOS/Android -->
 <!-- DESKTOP NAV FIX: Reserved stays primary; duplicate hidden from More -->
@@ -10689,6 +10690,116 @@ body.interest-contact-open{
 
   nav.mainnav > a[data-route="inventory"] .nav-count{
     display:none !important;
+  }
+}
+
+
+/* =========================================================
+   MOBILE NAV FINAL LAYOUT
+   Row 1: Home | Inventory
+   Row 2: Sold | Favorites
+   Row 3: More
+   ========================================================= */
+@media (max-width:800px){
+  nav.mainnav{
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:4px !important;
+    align-items:stretch !important;
+  }
+
+  nav.mainnav > a[data-route="home"]{
+    display:flex !important;
+    order:1 !important;
+    grid-column:1 !important;
+  }
+
+  nav.mainnav > a[data-route="inventory"]{
+    display:flex !important;
+    order:2 !important;
+    grid-column:2 !important;
+  }
+
+  nav.mainnav > a[data-route="sold"]{
+    display:flex !important;
+    order:3 !important;
+    grid-column:1 !important;
+  }
+
+  nav.mainnav > a[data-route="favorites"].mobile-secondary-nav{
+    display:flex !important;
+    order:4 !important;
+    grid-column:2 !important;
+  }
+
+  nav.mainnav > .mobile-more-toggle{
+    display:flex !important;
+    order:5 !important;
+    grid-column:1 / -1 !important;
+    width:100% !important;
+  }
+
+  nav.mainnav > .mobile-more-menu{
+    order:6 !important;
+    grid-column:1 / -1 !important;
+    width:100% !important;
+  }
+
+  /* Keep other destinations out of the primary mobile grid. */
+  nav.mainnav > a[data-route="collection"],
+  nav.mainnav > a[data-route="reserved"],
+  nav.mainnav > a[data-route="showcase"],
+  nav.mainnav > a[data-route="giveaway"],
+  nav.mainnav > a[data-route="about"],
+  nav.mainnav > a[data-route="contact"],
+  nav.mainnav > a[data-route="recent"],
+  nav.mainnav > a[data-route="by-game"],
+  nav.mainnav > a.owner-only,
+  nav.mainnav > a.mobile-secondary-nav:not([data-route="favorites"]){
+    display:none !important;
+  }
+
+  /* Favorites is already a primary mobile tab. */
+  nav.mainnav > .mobile-more-menu > a[data-route="favorites"]{
+    display:none !important;
+  }
+
+  nav.mainnav > a[data-route="home"],
+  nav.mainnav > a[data-route="inventory"],
+  nav.mainnav > a[data-route="sold"],
+  nav.mainnav > a[data-route="favorites"].mobile-secondary-nav{
+    min-height:46px !important;
+    padding:9px 10px !important;
+    justify-content:flex-start !important;
+    align-items:center !important;
+    gap:8px !important;
+    border-radius:11px !important;
+    font-size:13px !important;
+  }
+
+  nav.mainnav > .mobile-more-toggle{
+    min-height:42px !important;
+    padding:8px 12px !important;
+    justify-content:center !important;
+    align-items:center !important;
+    gap:7px !important;
+    border-radius:11px !important;
+    font-size:12px !important;
+  }
+}
+
+@media (max-width:360px){
+  nav.mainnav{
+    gap:3px !important;
+  }
+
+  nav.mainnav > a[data-route="home"],
+  nav.mainnav > a[data-route="inventory"],
+  nav.mainnav > a[data-route="sold"],
+  nav.mainnav > a[data-route="favorites"].mobile-secondary-nav{
+    padding:8px 7px !important;
+    gap:5px !important;
+    font-size:12px !important;
   }
 }
 
