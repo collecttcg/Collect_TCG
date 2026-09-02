@@ -11528,6 +11528,26 @@ body.interest-contact-open{
   }
 }
 
+
+/* =========================================================
+   MOBILE PAGINATION — NO ARTIFICIAL SCROLL SPACE
+   The old viewport-height guard is permanently disabled.
+   Bottom pagination now preserves natural bottom distance.
+   ========================================================= */
+.listing-pagination-viewport-guard{
+  display:none !important;
+  height:0 !important;
+  min-height:0 !important;
+  max-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  overflow:hidden !important;
+}
+
+html{
+  scroll-behavior:auto;
+}
+
 </style>
 </head>
 <body>
@@ -18644,9 +18664,6 @@ function wireShimmer(container){
     },{signal:inventorySignal});
 
     $("listingPerPageSelect")?.addEventListener("change",e=>{
-      const guard=$("listingPaginationViewportGuard");
-      if(guard) guard.style.height="0px";
-
       const value=Number(e.target.value);
       listingPerPage=setSavedListingPerPage(value);
       listingCurrentPage=1;
@@ -18673,47 +18690,34 @@ function wireShimmer(container){
       nextPage=Math.min(Math.max(1,nextPage),totalPages);
       if(nextPage===listingCurrentPage) return;
 
-      const paginationShell=button.closest(".listing-pagination-shell");
-      const paginationShellId=paginationShell?.id || "";
-      const guard=$("listingPaginationViewportGuard");
-      const oldAnchorTop=paginationShell?.getBoundingClientRect().top;
-      const oldScrollY=window.scrollY;
-      const oldDocHeight=document.documentElement.scrollHeight;
+      const scrollingEl=document.scrollingElement || document.documentElement;
+      const clickedBottomPagination=!!button.closest("#listingPaginationBottom");
 
-      // Prevent scroll clamping while the grid is replaced.
-      if(guard){
-        guard.style.height=`${Math.max(oldDocHeight,window.innerHeight*2)}px`;
-        void guard.offsetHeight;
-      }
+      // For bottom pagination, preserve the user's distance from the natural
+      // document bottom. This avoids both the viewport jump and artificial
+      // spacer height / endless empty scrolling.
+      const oldBottomDistance=clickedBottomPagination
+        ? Math.max(
+            0,
+            scrollingEl.scrollHeight - window.innerHeight - scrollingEl.scrollTop
+          )
+        : null;
 
       listingCurrentPage=nextPage;
       updateListingUrlFromControls();
       draw();
 
-      // Measure and correct immediately, before the browser paints.
-      const nextShell=paginationShellId ? $(paginationShellId) : null;
-      let targetScrollY=oldScrollY;
+      if(clickedBottomPagination && Number.isFinite(oldBottomDistance)){
+        // Force layout after the new cards are rendered.
+        void scrollingEl.scrollHeight;
 
-      if(nextShell && Number.isFinite(oldAnchorTop)){
-        const newAnchorTop=nextShell.getBoundingClientRect().top;
-        targetScrollY=window.scrollY + (newAnchorTop-oldAnchorTop);
+        const newMaxScroll=Math.max(0,scrollingEl.scrollHeight-window.innerHeight);
+        const target=Math.max(0,newMaxScroll-oldBottomDistance);
+
+        // Direct assignment avoids smooth scrolling and does not create
+        // any extra document height.
+        scrollingEl.scrollTop=target;
       }
-
-      if(guard){
-        guard.style.height="0px";
-        void guard.offsetHeight;
-
-        const naturalHeight=document.documentElement.scrollHeight;
-        const requiredHeight=targetScrollY + window.innerHeight + 2;
-        const requiredGuard=Math.max(0,requiredHeight-naturalHeight);
-
-        if(requiredGuard>0){
-          guard.style.height=`${Math.ceil(requiredGuard)}px`;
-          void guard.offsetHeight;
-        }
-      }
-
-      window.scrollTo(window.scrollX,Math.max(0,targetScrollY));
     };
 
     $("listingPaginationTop")?.addEventListener("click",handlePaginationClick);
