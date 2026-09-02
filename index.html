@@ -11840,6 +11840,59 @@ html{
   }
 }
 
+
+/* =========================================================
+   MOBILE SEARCH + FILTER — REFINED PROPORTIONS
+   Compact Filters button, longer Search field, tighter gap.
+   ========================================================= */
+@media(max-width:800px){
+  .mobile-search-filter-row{
+    grid-template-columns:max-content minmax(0,1fr) !important;
+    gap:4px !important;
+  }
+
+  /* Filters: only as wide as its content needs. */
+  .mobile-search-filter-row .mobile-search-filter-btn{
+    grid-column:1 !important;
+    width:max-content !important;
+    min-width:0 !important;
+    max-width:none !important;
+    padding:0 14px !important;
+    font-size:12px !important;
+    font-weight:700 !important;
+    letter-spacing:.1px !important;
+    white-space:nowrap !important;
+  }
+
+  /* Search takes every remaining pixel. */
+  .mobile-search-filter-row .mobile-inventory-search{
+    grid-column:2 !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  .mobile-search-filter-row .mobile-inventory-search input[type="search"]{
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  /* Keep active filter count compact inside the smaller button. */
+  .mobile-search-filter-row .filter-count-badge{
+    margin-left:3px !important;
+  }
+}
+
+@media(max-width:390px){
+  .mobile-search-filter-row{
+    gap:3px !important;
+  }
+
+  .mobile-search-filter-row .mobile-search-filter-btn{
+    padding:0 12px !important;
+    font-size:11.5px !important;
+  }
+}
+
 </style>
 </head>
 <body>
