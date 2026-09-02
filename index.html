@@ -10,6 +10,7 @@
 <!-- SECURITY STAGE 1: strict image validation + URL hardening; authorization remains enforced by Supabase RLS -->
 <!-- REFACTOR STAGE 1: canonical IDs/card lookup/constants; no functional or visual changes -->
 <!-- REFACTOR STAGE 2: canonical responsive CSS; obsolete late overrides removed -->
+<!-- REFACTOR STAGE 3: JavaScript helpers/routes/lookups consolidated; single-file architecture preserved -->
 <!-- OWNER TOOL: permanent listing deletion with double confirmation -->
 <!-- MOBILE FIX: compact metadata pills + 44px invisible hit targets across iOS/Android -->
 <!-- DESKTOP NAV FIX: Reserved stays primary; duplicate hidden from More -->
@@ -11024,6 +11025,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return cards.findIndex(card=>String(card.id)===target);
   }
 
+  function getDetailsCard(){
+    return detailsCardId ? getCardById(detailsCardId) : null;
+  }
+
+  function replaceCardInMemory(card){
+    if(!card) return false;
+    const index=getCardIndexById(card.id);
+    if(index<0) return false;
+    cards[index]=card;
+    return true;
+  }
+
   async function verifyOwnerSession(session){
     if(!session?.user?.id) return false;
 
@@ -11138,7 +11151,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(!owner && typeof currentRoute==="function"){
       const route=currentRoute();
       if(isOwnerOnlyRoute(route)){
-        location.hash="#/inventory";
+        goToRoute("inventory");
       }
     }
   }
@@ -11158,9 +11171,33 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     "by-game"
   ]);
 
+  const INVENTORY_ROUTES=new Set(["inventory","collection","reserved","sold"]);
+  const PUBLIC_LISTING_ROUTES=new Set(["home","inventory","collection","reserved","sold","favorites","recent"]);
+
+  function routeBase(route){
+    return String(route||"").split("?")[0].trim().toLowerCase();
+  }
+
+  function isInventoryRoute(route){
+    return INVENTORY_ROUTES.has(routeBase(route));
+  }
+
+  function goToRoute(route){
+    const next=String(route||"inventory").replace(/^#\/?/,"");
+    location.hash=`#/${next}`;
+  }
+
+  function refreshCurrentListingRoute(){
+    const route=currentRoute();
+    if(isInventoryRoute(route)){
+      renderInventoryPage(route);
+      return true;
+    }
+    return false;
+  }
+
   function isOwnerOnlyRoute(route){
-    const base=String(route||"").split("?")[0].trim().toLowerCase();
-    return OWNER_ONLY_ROUTES.has(base);
+    return OWNER_ONLY_ROUTES.has(routeBase(route));
   }
 
   function requireOwner(action = "perform this action"){
@@ -11178,6 +11215,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       console.error(`Owner action failed: ${action}`,error);
       throw error;
     }
+  }
+
+  function confirmOwnerAction(message){
+    if(!isOwnerMode()) return false;
+    return window.confirm(String(message||""));
   }
 
   async function refreshOwnerSession(){
@@ -11821,8 +11863,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const saved=await updateCardStorage(candidate);
     if(!saved) return false;
 
-    const index=getCardIndexById(card.id);
-    if(index>-1) cards[index]=saved;
+    replaceCardInMemory(saved);
     return true;
   }
 
@@ -11836,13 +11877,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       return false;
     }
 
-    const confirmed=confirm(
+    const confirmed=confirmOwnerAction(
       `Permanently delete "${card.name}"?\n\n` +
       `This is different from Archive. The listing will be removed from the database and cannot be restored from this website.`
     );
     if(!confirmed) return false;
 
-    const confirmedAgain=confirm(
+    const confirmedAgain=confirmOwnerAction(
       `Final confirmation:\n\nDelete "${card.name}" permanently?`
     );
     if(!confirmedAgain) return false;
@@ -11938,6 +11979,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     showToast("Listing permanently deleted");
     updateSidebarFooter();
     return true;
+  }
+
+  function errorText(error,fallback="Something went wrong"){
+    const raw=String(error?.message||error?.error||error?.details||"").trim();
+    return raw || fallback;
   }
 
   function cardWriteErrorText(error,action="save"){
@@ -12476,7 +12522,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function captureFilteredResultsBrowseContext(list){
     const route=currentRoute();
-    if(!["inventory","collection","reserved","sold"].includes(route)) return;
+    if(!isInventoryRoute(route)) return;
 
     const sourceHash=safeListingBrowseHash(location.hash||`#/${route}`);
     if(!sourceHash) return;
@@ -12541,13 +12587,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     const raw=safeHash.replace(/^#\/?/,"");
     const route=raw.split("?")[0].trim();
-    return ["inventory","collection","reserved","sold"].includes(route) ? route : "";
+    return isInventoryRoute(route) ? route : "";
   }
 
   function currentListingDomScope(){
     const tools=view?.querySelector?.(".listing-filter-tools[data-listing-scope]");
     const scope=String(tools?.dataset?.listingScope||"");
-    if(!["inventory","collection","reserved","sold"].includes(scope)) return "";
+    if(!isInventoryRoute(scope)) return "";
     return view.querySelector("#invGrid") ? scope : "";
   }
 
@@ -12630,7 +12676,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         ? safeListingBrowseHash(current)
         : "";
 
-      if(!["inventory","collection","reserved","sold"].includes(route)){
+      if(!isInventoryRoute(route)){
         clearFilteredResultsBrowseContext();
       }
     }
@@ -12708,7 +12754,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   function listingRouteForScope(scope = listingAvailabilityScope){
-    return ["inventory","collection","reserved","sold"].includes(scope) ? scope : "inventory";
+    return isInventoryRoute(scope) ? scope : "inventory";
   }
 
   function updateListingUrlFromControls(){
@@ -12775,7 +12821,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     // well as clicks from desktop/mobile navigation.
     if(isOwnerOnlyRoute(route) && !isOwnerMode()){
       if(location.hash!=="#/inventory"){
-        location.hash="#/inventory";
+        goToRoute("inventory");
         return;
       }
     }
@@ -12860,46 +12906,46 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     else if(route === "favorites") renderFavoritesPage();
     else if(route === "by-game"){
       if(isOwnerMode()) renderByGamePage();
-      else { location.hash="#/inventory"; return; }
+      else { goToRoute("inventory"); return; }
     }
     else if(route === "showcase") renderShowcasePage();
         else if(route === "giveaway") renderGiveawayPage();
-    else if(route === "insights"){ if(isOwnerMode()) renderInsightsPage(); else { location.hash="#/inventory"; return; } }
+    else if(route === "insights"){ if(isOwnerMode()) renderInsightsPage(); else { goToRoute("inventory"); return; } }
     else if(route === "fb-tools"){
       if(isOwnerMode()) renderFacebookToolsPage();
-      else { location.hash="#/inventory"; return; }
+      else { goToRoute("inventory"); return; }
     }
     else if(route === "fb-posts"){
       if(isOwnerMode()) { location.hash="#/fb-tools?mode=single"; return; }
-      else { location.hash="#/inventory"; return; }
+      else { goToRoute("inventory"); return; }
     }
     else if(route === "fb-card-list"){
       if(isOwnerMode()) { location.hash="#/fb-tools?mode=list"; return; }
-      else { location.hash="#/inventory"; return; }
+      else { goToRoute("inventory"); return; }
     }
     else if(route === "quality"){
       if(isOwnerMode()) renderDataQualityPage();
-      else { location.hash="#/inventory"; return; }
+      else { goToRoute("inventory"); return; }
     }
     else if(route === "inventory-tools"){
       if(isOwnerMode()) renderInventoryToolsPage();
-      else { location.hash="#/inventory"; return; }
+      else { goToRoute("inventory"); return; }
     }
     else if(route === "bulk-prices"){
       if(isOwnerMode()) { location.hash="#/inventory-tools?mode=bulk&sub=prices"; return; }
-      else { location.hash="#/inventory"; return; }
+      else { goToRoute("inventory"); return; }
     }
     else if(route === "bulk-metadata"){
       if(isOwnerMode()) { location.hash="#/inventory-tools?mode=bulk&sub=metadata"; return; }
-      else { location.hash="#/inventory"; return; }
+      else { goToRoute("inventory"); return; }
     }
     else if(route === "recent-edits"){
       if(isOwnerMode()) { location.hash="#/inventory-tools?mode=activity&sub=recent"; return; }
-      else { location.hash="#/inventory"; return; }
+      else { goToRoute("inventory"); return; }
     }
     else if(route === "export"){
       if(isOwnerMode()) renderInventoryExportPage();
-      else { location.hash="#/inventory"; return; }
+      else { goToRoute("inventory"); return; }
     }
     else if(route === "add"){
       if(isOwnerMode()) renderAddPage();
@@ -13437,7 +13483,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(message.includes("row-level") || message.includes("policy") || message.includes("unauthorized")){
         throw new Error("card-images Storage permission denied");
       }
-      throw new Error(`card image upload failed: ${String(error.message||error.error||"unknown Storage error").slice(0,220)}`);
+      throw new Error(`card image upload failed: ${errorText(error,"unknown Storage error").slice(0,220)}`);
     }
 
     const {data}=supabaseClient.storage.from(CARD_IMAGE_STORAGE_BUCKET).getPublicUrl(path);
@@ -16070,7 +16116,7 @@ function wireShimmer(container){
         updateListingUrlFromControls();
 
         const route = currentRoute();
-        if(["inventory","collection","reserved","sold"].includes(route)){
+        if(isInventoryRoute(route)){
           renderInventoryPage(route);
         }else{
           location.hash = "#/inventory";
@@ -16082,7 +16128,7 @@ function wireShimmer(container){
       if(highValueContact){
         e.preventDefault();
         e.stopPropagation();
-        location.hash="#/contact";
+        goToRoute("contact");
         return;
       }
 
@@ -16127,7 +16173,7 @@ function wireShimmer(container){
           const status=String(btn.dataset.status||"");
           if(!["draft","archived"].includes(status)) return;
           const verb=status==="archived" ? "Archive" : "Move to Draft";
-          if(!confirm(`${verb} "${card.name}"?${status==="archived" ? "\n\nArchived listings remain recoverable by the owner and are hidden from visitors." : "\n\nDraft listings are hidden from visitors until published."}`)) return;
+          if(!confirmOwnerAction(`${verb} "${card.name}"?${status==="archived" ? "\n\nArchived listings remain recoverable by the owner and are hidden from visitors." : "\n\nDraft listings are hidden from visitors until published."}`)) return;
           const ok=await setCardLifecycle(card,status);
           if(ok){
             showToast(status==="archived" ? "Listing archived" : "Moved to Draft");
@@ -16531,7 +16577,7 @@ function wireShimmer(container){
     const inventorySignal=inventoryRenderController.signal;
 
     updateStatusNavCounts();
-    listingAvailabilityScope = ["inventory","collection","reserved","sold"].includes(scope) ? scope : "inventory";
+    listingAvailabilityScope = isInventoryRoute(scope) ? scope : "inventory";
     const scopeMeta = listingScopeMeta(listingAvailabilityScope);
     const requestedQuick=safeUrlFilterText(currentHashParams().get("quick"),24);
     activeQuickFilter=["all","new","graded","raw","sealed","championship","vintage"].includes(requestedQuick)
@@ -18107,7 +18153,7 @@ function wireShimmer(container){
 
   // ---------------- Insights ----------------
   async function renderInsightsPage(){
-    if(!isOwnerMode()){ location.hash="#/inventory"; return; }
+    if(!isOwnerMode()){ goToRoute("inventory"); return; }
 
     view.innerHTML = `
       <div class="page-head">
@@ -25167,7 +25213,7 @@ function wireShimmer(container){
                 : "Card added · images stored in Supabase Storage · private notes/tags were not saved"));
         }
 
-        location.hash="#/inventory";
+        goToRoute("inventory");
       }catch(error){
         console.error("Add card submit error:",error);
         if(preparedImages?.uploadedPaths?.length){
@@ -25514,7 +25560,7 @@ function wireShimmer(container){
   }
 
   async function shareCurrentCard(){
-    const card=getCardById(detailsCardId);
+    const card = getDetailsCard();
     if(!card || (!isOwnerMode() && !isLiveLifecycle(card))) return;
 
     const url=getCardShareUrl(card.id);
@@ -25569,7 +25615,7 @@ function wireShimmer(container){
   }
 
   async function messageSellerOnFacebook(){
-    const card=getCardById(detailsCardId);
+    const card = getDetailsCard();
     if(!card || (!isOwnerMode() && !isLiveLifecycle(card))) return;
 
     // Messenger does not reliably support arbitrary prefilled text in a safe
@@ -25591,7 +25637,7 @@ function wireShimmer(container){
   }
 
   function shareCurrentCardWhatsApp(){
-    const card=getCardById(detailsCardId);
+    const card = getDetailsCard();
     if(!card) return;
 
     const url=getCardShareUrl(card.id);
@@ -26010,7 +26056,7 @@ function wireShimmer(container){
     });
 
     detailsMount.querySelectorAll("[data-high-value-contact]").forEach(btn=>btn.addEventListener("click",()=>{
-      location.hash="#/contact";
+      goToRoute("contact");
       closeDetailsModal(false);
     }));
 
@@ -26189,7 +26235,7 @@ function wireShimmer(container){
   $("imageLightboxDownload").addEventListener("click", e=>{
     e.stopPropagation();
     if(!lightboxImages.length) return;
-    const card = getCardById(detailsCardId);
+    const card = getDetailsCard();
     downloadImageSource(
       lightboxImages[lightboxIndex],
       card?.name || card?.card_code || "card",
@@ -26276,13 +26322,13 @@ function wireShimmer(container){
   });
 
   $("detailsSharePreviewBtn").addEventListener("click",async()=>{
-    const card=getCardById(detailsCardId);
+    const card = getDetailsCard();
     if(!card || (!isOwnerMode() && !isLiveLifecycle(card))) return;
     await downloadPublicCardSharePreview(card);
   });
 
   $("detailsDownloadBtn").addEventListener("click", ()=>{
-    const card = getCardById(detailsCardId);
+    const card = getDetailsCard();
     if(!card) return;
     const images = getImages(card);
     if(!images.length){
@@ -26306,7 +26352,7 @@ function wireShimmer(container){
     closeDetailsMoreMenu(false);
     const ok=await deleteListingPermanently(card);
     if(ok){
-      location.hash="#/inventory";
+      goToRoute("inventory");
       router();
     }
   });
@@ -26324,7 +26370,7 @@ function wireShimmer(container){
 
   $("detailsEditBtn").addEventListener("click", ()=>{
     if(!requireOwner()) return;
-    const card = getCardById(detailsCardId);
+    const card = getDetailsCard();
     if(card){
       closeDetailsModal(false);
       openEditModal(card);
@@ -26562,7 +26608,7 @@ function wireShimmer(container){
         return;
       }
 
-      if(currentRoute()==="add") location.hash="#/inventory";
+      if(currentRoute()==="add") goToRoute("inventory");
       else router();
 
       showToast("Logged out");
@@ -26654,7 +26700,7 @@ function wireShimmer(container){
           "recent-edits","export","add"
         ]);
         if(ownerOnlyRoutes.has(currentRoute())){
-          location.hash="#/inventory";
+          goToRoute("inventory");
         }
       }
 
@@ -27209,7 +27255,7 @@ function wireShimmer(container){
       target.click();
       return;
     }
-    location.hash="#/contact";
+    goToRoute("contact");
   });
 
   let updateTimer=null;
