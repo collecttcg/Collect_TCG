@@ -17625,14 +17625,33 @@ function wireShimmer(container){
 
     mobileSearch?.addEventListener("focus",renderMobileSearchSuggestions);
 
+    function dismissMobileSearchSuggestions(){
+      if(mobileSearchSuggestions) mobileSearchSuggestions.hidden=true;
+    }
+
     mobileSearch?.addEventListener("keydown",e=>{
-      if(e.key==="Enter"){
-        if(mobileSearchSuggestions) mobileSearchSuggestions.hidden=true;
+      if(e.key==="Enter" || e.key==="Search"){
+        dismissMobileSearchSuggestions();
         mobileSearch.blur();
       }else if(e.key==="Escape"){
-        if(mobileSearchSuggestions) mobileSearchSuggestions.hidden=true;
+        dismissMobileSearchSuggestions();
         mobileSearch.blur();
       }
+    });
+
+    // iPhone/Android keyboards can use a Done/Search/tick action that does
+    // not always arrive as a normal Enter keydown. The native "search" event
+    // on <input type="search"> covers that keyboard action.
+    mobileSearch?.addEventListener("search",()=>{
+      dismissMobileSearchSuggestions();
+      mobileSearch.blur();
+    });
+
+    // Some mobile keyboards commit through change/blur instead of keydown.
+    mobileSearch?.addEventListener("change",dismissMobileSearchSuggestions);
+    mobileSearch?.addEventListener("blur",()=>{
+      // Delay slightly so tapping a visible suggestion still gets its click.
+      setTimeout(dismissMobileSearchSuggestions,80);
     });
 
     mobileSearchClear?.addEventListener("click",()=>{
