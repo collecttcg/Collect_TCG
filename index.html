@@ -19127,6 +19127,10 @@ function wireShimmer(container){
       const button=e.target.closest(".listing-page-btn");
       if(!button || button.disabled) return;
 
+      // Do not let a pagination button that is about to be replaced keep
+      // browser focus and pull the viewport back toward the old bottom area.
+      try{ button.blur(); }catch{}
+
       const list=getFiltered();
       const totalPages=Math.max(1,Math.ceil(list.length/listingPerPage));
       let nextPage=listingCurrentPage;
@@ -19149,18 +19153,37 @@ function wireShimmer(container){
       draw();
 
       if(fromBottom){
-        // When paging from the bottom controls, start the user at the
-        // beginning of the newly rendered listing results.
-        const grid=$("invGrid");
-        if(grid){
-          const rect=grid.getBoundingClientRect();
-          const target=window.scrollY + rect.top - 8;
+        // Mobile Safari can restore the old viewport/focus after this click
+        // because the pagination buttons are replaced during draw().
+        // Wait until the new result page has painted, then place the first
+        // listing at the top. Repeat once after layout settles.
+        const scrollNewPageToTop=()=>{
+          const grid=$("invGrid");
+          if(!grid) return;
+
+          const target=Math.max(
+            0,
+            window.scrollY + grid.getBoundingClientRect().top - 6
+          );
+
           window.scrollTo({
-            top:Math.max(0,target),
+            top:target,
             left:window.scrollX,
             behavior:"auto"
           });
-        }
+        };
+
+        requestAnimationFrame(()=>{
+          scrollNewPageToTop();
+
+          requestAnimationFrame(()=>{
+            scrollNewPageToTop();
+          });
+
+          // iOS Safari can make a later visual-viewport correction after
+          // the animation frame, especially with the bottom browser bar.
+          setTimeout(scrollNewPageToTop,80);
+        });
       }
     };
 
