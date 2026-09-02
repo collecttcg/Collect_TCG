@@ -11460,6 +11460,41 @@ body.interest-contact-open{
   }
 }
 
+
+/* =========================================================
+   CONDITION BADGE VISUAL RESTORE
+   Keep condition badges black like grading badges while
+   preserving click-to-filter behavior.
+   ========================================================= */
+.overview-grade-overlay.condition-filter-btn,
+.clean-grade-badge.condition-filter-btn{
+  background:#0b0c0f !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.16) !important;
+  box-shadow:0 5px 14px rgba(0,0,0,.34) !important;
+}
+
+.overview-grade-overlay.condition-filter-btn:hover,
+.overview-grade-overlay.condition-filter-btn:focus-visible,
+.clean-grade-badge.condition-filter-btn:hover,
+.clean-grade-badge.condition-filter-btn:focus-visible{
+  background:#0b0c0f !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.28) !important;
+  box-shadow:
+    0 5px 14px rgba(0,0,0,.34),
+    0 0 0 2px rgba(255,255,255,.06) !important;
+}
+
+/* Do not show teal selected styling on the condition badge itself.
+   The active-filter area already communicates the applied filter. */
+.overview-grade-overlay.condition-filter-btn.pill-selected,
+.clean-grade-badge.condition-filter-btn.pill-selected{
+  background:#0b0c0f !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.22) !important;
+}
+
 </style>
 </head>
 <body>
