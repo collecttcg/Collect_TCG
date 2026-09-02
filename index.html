@@ -9,6 +9,7 @@
 <!-- UX PHASE 6: technical cleanup and performance -->
 <!-- SECURITY STAGE 1: strict image validation + URL hardening; authorization remains enforced by Supabase RLS -->
 <!-- REFACTOR STAGE 1: canonical IDs/card lookup/constants; no functional or visual changes -->
+<!-- REFACTOR STAGE 2: canonical responsive CSS; obsolete late overrides removed -->
 <!-- OWNER TOOL: permanent listing deletion with double confirmation -->
 <!-- MOBILE FIX: compact metadata pills + 44px invisible hit targets across iOS/Android -->
 <!-- DESKTOP NAV FIX: Reserved stays primary; duplicate hidden from More -->
@@ -52,7 +53,7 @@
   .shop-logo{width:72px;height:72px;object-fit:contain;flex-shrink:0;border-radius:50%;filter:drop-shadow(0 0 10px rgba(227,179,65,.28));}
   .shop-brand-text{min-width:0;}
   .shop-brand-text h1{font-size:20px;line-height:1;color:var(--text);white-space:nowrap;}
-  .owner-only{display:none !important;}
+  
   body.owner-mode .owner-only{display:flex !important;}
   body.owner-mode a.owner-only{display:flex !important;}
   body.owner-mode .card-actions.owner-only{display:flex !important;}
@@ -10103,24 +10104,54 @@ input:focus-visible{
 }
 
 
-/* =========================================================
-   MOBILE RESPONSIVE PILL FIX
-   Keep card metadata visually compact while preserving a
-   finger-friendly hit area across iOS and Android.
-   ========================================================= */
+/* Desktop nav cleanup: Reserved is already a primary desktop tab.
+   Keep the duplicate Reserved entry only for mobile More. */
+@media (min-width:801px){
+  #mobileMoreMenu > a[data-route="reserved"]{
+    display:none !important;
+  }
+}
 
-/* Phase 4 made every .filter-pill-btn visually 44px tall.
-   Card metadata pills also use that class, which caused the oversized pills.
-   Only real UI controls should have a visible 44px box. */
+
+/* ==========================================================
+   RESPONSIVE OVERVIEW SYSTEM — CANONICAL
+   Consolidates the former pill sizing, all-row visibility and
+   mobile card-height overrides without changing final behavior.
+   Breakpoints:
+     Phone / portrait mobile  <= 800px
+     Compact phone            <= 390px
+     Wide phone / foldable    540–800px
+   ========================================================== */
+
 @media (max-width:800px){
+
+  /* Compact visual pills. Clickable metadata retains an expanded invisible
+     hit target while real controls remain visibly finger-sized. */
   #invGrid .clean-all-pills .filter-pill-btn,
   #homeRecentGrid .clean-all-pills .filter-pill-btn,
   .home-storefront-grid .clean-all-pills .filter-pill-btn,
   .recently-viewed-grid .clean-all-pills .filter-pill-btn{
+    position:relative !important;
+    isolation:isolate;
+    flex:0 1 auto !important;
     min-width:0 !important;
     min-height:0 !important;
-    height:auto !important;
     width:auto !important;
+    height:auto !important;
+  }
+
+  #invGrid .clean-all-pills .filter-pill-btn::after,
+  #homeRecentGrid .clean-all-pills .filter-pill-btn::after,
+  .home-storefront-grid .clean-all-pills .filter-pill-btn::after,
+  .recently-viewed-grid .clean-all-pills .filter-pill-btn::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:max(100%,44px);
+    height:44px;
+    transform:translate(-50%,-50%);
+    z-index:-1;
   }
 
   #invGrid .clean-all-pills,
@@ -10132,8 +10163,11 @@ input:focus-visible{
     align-items:center !important;
     align-content:flex-start !important;
     gap:5px !important;
-    max-height:58px !important;
-    overflow:hidden !important;
+    width:100% !important;
+    max-height:none !important;
+    height:auto !important;
+    overflow:visible !important;
+    flex:0 0 auto !important;
   }
 
   #invGrid .clean-all-pills .clean-grade-badge,
@@ -10164,143 +10198,16 @@ input:focus-visible{
     text-overflow:ellipsis !important;
   }
 
-  /* Long set/game names should not dominate the card. */
   #invGrid .clean-game-pill,
   #invGrid .clean-series-pill,
   #homeRecentGrid .clean-game-pill,
   #homeRecentGrid .clean-series-pill,
   .home-storefront-grid .clean-game-pill,
   .home-storefront-grid .clean-series-pill{
-    max-width:min(100%, 190px) !important;
+    max-width:min(100%,190px) !important;
   }
 
-  /* Clickable metadata stays easy to tap without visually becoming 44px tall.
-     The invisible hit box expands around the compact pill. */
-  #invGrid .clean-all-pills .filter-pill-btn,
-  #homeRecentGrid .clean-all-pills .filter-pill-btn,
-  .home-storefront-grid .clean-all-pills .filter-pill-btn,
-  .recently-viewed-grid .clean-all-pills .filter-pill-btn{
-    position:relative !important;
-    isolation:isolate;
-  }
-
-  #invGrid .clean-all-pills .filter-pill-btn::after,
-  #homeRecentGrid .clean-all-pills .filter-pill-btn::after,
-  .home-storefront-grid .clean-all-pills .filter-pill-btn::after,
-  .recently-viewed-grid .clean-all-pills .filter-pill-btn::after{
-    content:"";
-    position:absolute;
-    left:50%;
-    top:50%;
-    width:max(100%, 44px);
-    height:44px;
-    transform:translate(-50%,-50%);
-    z-index:-1;
-  }
-}
-
-/* Standard phones: iPhone 14/15/16, Pixel, Galaxy S-series, etc. */
-@media (min-width:391px) and (max-width:800px){
-  #invGrid .clean-all-pills .clean-grade-badge,
-  #invGrid .clean-all-pills .clean-meta-pill,
-  #homeRecentGrid .clean-all-pills .clean-grade-badge,
-  #homeRecentGrid .clean-all-pills .clean-meta-pill{
-    padding:5px 8px !important;
-    font-size:9.5px !important;
-  }
-}
-
-/* Compact phones: iPhone SE/mini widths and narrow Android devices. */
-@media (max-width:390px){
-  #invGrid .clean-all-pills,
-  #homeRecentGrid .clean-all-pills,
-  .home-storefront-grid .clean-all-pills,
-  .recently-viewed-grid .clean-all-pills{
-    gap:4px !important;
-    max-height:52px !important;
-  }
-
-  #invGrid .clean-all-pills .clean-grade-badge,
-  #invGrid .clean-all-pills .clean-meta-pill,
-  #homeRecentGrid .clean-all-pills .clean-grade-badge,
-  #homeRecentGrid .clean-all-pills .clean-meta-pill,
-  .home-storefront-grid .clean-all-pills .clean-grade-badge,
-  .home-storefront-grid .clean-all-pills .clean-meta-pill,
-  .recently-viewed-grid .clean-all-pills .clean-grade-badge,
-  .recently-viewed-grid .clean-all-pills .clean-meta-pill{
-    padding:4px 6px !important;
-    font-size:8.5px !important;
-    letter-spacing:0 !important;
-  }
-
-  #invGrid .clean-game-pill,
-  #invGrid .clean-series-pill,
-  #homeRecentGrid .clean-game-pill,
-  #homeRecentGrid .clean-series-pill{
-    max-width:145px !important;
-  }
-}
-
-/* Wider phones / foldables in portrait: don't let pills become large just
-   because more width is available. */
-@media (min-width:540px) and (max-width:800px){
-  #invGrid .clean-all-pills .clean-grade-badge,
-  #invGrid .clean-all-pills .clean-meta-pill,
-  #homeRecentGrid .clean-all-pills .clean-grade-badge,
-  #homeRecentGrid .clean-all-pills .clean-meta-pill{
-    padding:5px 9px !important;
-    font-size:10px !important;
-  }
-}
-
-/* Actual filter controls remain properly finger-sized. */
-@media (max-width:800px){
-  .pill-filter-summary .filter-pill-btn,
-  .grade-shortcuts .filter-pill-btn,
-  .filter-drawer-shell .overview-select-btn,
-  .mobile-filter-open-btn,
-  .sticky-mobile-results-action{
-    min-height:44px !important;
-  }
-}
-
-
-/* Desktop nav cleanup: Reserved is already a primary desktop tab.
-   Keep the duplicate Reserved entry only for mobile More. */
-@media (min-width:801px){
-  #mobileMoreMenu > a[data-route="reserved"]{
-    display:none !important;
-  }
-}
-
-
-/* =========================================================
-   MOBILE OVERVIEW — SHOW ALL METADATA PILL ROWS
-   Pills remain together above price. Cards grow vertically
-   when metadata needs 3+ rows.
-   ========================================================= */
-@media (max-width:800px){
-
-  /* Never clip pill rows on mobile overview cards. */
-  #invGrid .clean-all-pills,
-  #homeRecentGrid .clean-all-pills,
-  .home-storefront-grid .clean-all-pills,
-  .recently-viewed-grid .clean-all-pills{
-    display:flex !important;
-    flex-wrap:wrap !important;
-    align-items:center !important;
-    align-content:flex-start !important;
-    gap:5px !important;
-    width:100% !important;
-    max-height:none !important;
-    height:auto !important;
-    overflow:visible !important;
-    flex:0 0 auto !important;
-  }
-
-  /* The body and card must expand with the metadata rather than cropping it. */
-  #invGrid .card,
-  #homeRecentGrid .card,
+  /* General overview cards grow with metadata. */
   .home-storefront-grid .card,
   .recently-viewed-grid .card{
     height:auto !important;
@@ -10309,8 +10216,6 @@ input:focus-visible{
     align-items:stretch !important;
   }
 
-  #invGrid .clean-card-body,
-  #homeRecentGrid .clean-card-body,
   .home-storefront-grid .clean-card-body,
   .recently-viewed-grid .clean-card-body{
     height:auto !important;
@@ -10320,51 +10225,7 @@ input:focus-visible{
     justify-content:flex-start !important;
   }
 
-  /* Price is always a separate block AFTER every pill row. */
-  #invGrid .clean-price-block,
-  #homeRecentGrid .clean-price-block,
-  .home-storefront-grid .clean-price-block,
-  .recently-viewed-grid .clean-price-block{
-    position:relative !important;
-    order:initial !important;
-    width:100% !important;
-    flex:0 0 auto !important;
-    margin-top:7px !important;
-    padding-top:10px !important;
-    clear:both !important;
-  }
-
-  /* Never allow price contents to float into the metadata area. */
-  #invGrid .clean-price-primary,
-  #invGrid .clean-price-secondary,
-  #homeRecentGrid .clean-price-primary,
-  #homeRecentGrid .clean-price-secondary{
-    display:block !important;
-    width:100% !important;
-  }
-}
-
-/* Narrow phones can use tighter pill spacing, but still show every row. */
-@media (max-width:390px){
-  #invGrid .clean-all-pills,
-  #homeRecentGrid .clean-all-pills,
-  .home-storefront-grid .clean-all-pills,
-  .recently-viewed-grid .clean-all-pills{
-    gap:4px !important;
-    max-height:none !important;
-    overflow:visible !important;
-  }
-}
-
-
-/* =========================================================
-   MOBILE OVERVIEW CARD HEIGHT FIX
-   The information column determines the listing height.
-   The image fills/crops to that height instead of making the
-   whole card excessively tall.
-   ========================================================= */
-@media (max-width:800px){
-
+  /* Inventory + Recently Added use the compact content-driven card row. */
   #invGrid .card,
   #homeRecentGrid .card{
     display:grid !important;
@@ -10377,7 +10238,6 @@ input:focus-visible{
     overflow:hidden !important;
   }
 
-  /* Let the right/content column determine the row height. */
   #invGrid .clean-card-body,
   #homeRecentGrid .clean-card-body{
     grid-column:2 !important;
@@ -10390,9 +10250,6 @@ input:focus-visible{
     justify-content:flex-start !important;
   }
 
-  /* The image wrapper stretches to the content-defined row.
-     Its image is absolutely positioned so image dimensions do
-     not contribute to grid-row height. */
   #invGrid .card > .thumb-wrap,
   #homeRecentGrid .card > .thumb-wrap{
     position:relative !important;
@@ -10420,7 +10277,6 @@ input:focus-visible{
     object-position:center !important;
   }
 
-  /* Placeholder follows the same compact row height. */
   #invGrid .card > .thumb-placeholder,
   #homeRecentGrid .card > .thumb-placeholder{
     grid-column:1 !important;
@@ -10433,24 +10289,97 @@ input:focus-visible{
     aspect-ratio:auto !important;
   }
 
-  /* Keep every pill visible and keep price immediately after them. */
-  #invGrid .clean-all-pills,
-  #homeRecentGrid .clean-all-pills{
-    max-height:none !important;
-    height:auto !important;
-    overflow:visible !important;
+  /* Price is always after the complete metadata group. */
+  #invGrid .clean-price-block,
+  #homeRecentGrid .clean-price-block,
+  .home-storefront-grid .clean-price-block,
+  .recently-viewed-grid .clean-price-block{
+    position:relative !important;
+    order:initial !important;
+    width:100% !important;
+    flex:0 0 auto !important;
+    margin-top:7px !important;
+    clear:both !important;
   }
 
   #invGrid .clean-price-block,
   #homeRecentGrid .clean-price-block{
-    margin-top:7px !important;
     padding-top:9px !important;
+  }
+
+  .home-storefront-grid .clean-price-block,
+  .recently-viewed-grid .clean-price-block{
+    padding-top:10px !important;
+  }
+
+  #invGrid .clean-price-primary,
+  #invGrid .clean-price-secondary,
+  #homeRecentGrid .clean-price-primary,
+  #homeRecentGrid .clean-price-secondary{
+    display:block !important;
+    width:100% !important;
+  }
+
+  /* Actual interaction controls keep a visible 44px target. */
+  .pill-filter-summary .filter-pill-btn,
+  .grade-shortcuts .filter-pill-btn,
+  .filter-drawer-shell .overview-select-btn,
+  .mobile-filter-open-btn,
+  .sticky-mobile-results-action{
+    min-height:44px !important;
   }
 }
 
-/* Smaller phones: use a slightly narrower image column so text has room,
-   but retain the same content-driven height model. */
+@media (min-width:391px) and (max-width:800px){
+  #invGrid .clean-all-pills .clean-grade-badge,
+  #invGrid .clean-all-pills .clean-meta-pill,
+  #homeRecentGrid .clean-all-pills .clean-grade-badge,
+  #homeRecentGrid .clean-all-pills .clean-meta-pill{
+    padding:5px 8px !important;
+    font-size:9.5px !important;
+  }
+}
+
+@media (min-width:540px) and (max-width:800px){
+  #invGrid .clean-all-pills .clean-grade-badge,
+  #invGrid .clean-all-pills .clean-meta-pill,
+  #homeRecentGrid .clean-all-pills .clean-grade-badge,
+  #homeRecentGrid .clean-all-pills .clean-meta-pill{
+    padding:5px 9px !important;
+    font-size:10px !important;
+  }
+}
+
 @media (max-width:390px){
+  #invGrid .clean-all-pills,
+  #homeRecentGrid .clean-all-pills,
+  .home-storefront-grid .clean-all-pills,
+  .recently-viewed-grid .clean-all-pills{
+    gap:4px !important;
+    max-height:none !important;
+    overflow:visible !important;
+  }
+
+  #invGrid .clean-all-pills .clean-grade-badge,
+  #invGrid .clean-all-pills .clean-meta-pill,
+  #homeRecentGrid .clean-all-pills .clean-grade-badge,
+  #homeRecentGrid .clean-all-pills .clean-meta-pill,
+  .home-storefront-grid .clean-all-pills .clean-grade-badge,
+  .home-storefront-grid .clean-all-pills .clean-meta-pill,
+  .recently-viewed-grid .clean-all-pills .clean-grade-badge,
+  .recently-viewed-grid .clean-all-pills .clean-meta-pill{
+    padding:4px 6px !important;
+    font-size:8.5px !important;
+    letter-spacing:0 !important;
+  }
+
+  #invGrid .clean-game-pill,
+  #invGrid .clean-series-pill,
+  #homeRecentGrid .clean-game-pill,
+  #homeRecentGrid .clean-series-pill{
+    max-width:145px !important;
+  }
+
   #invGrid .card,
   #homeRecentGrid .card{
     grid-template-columns:minmax(104px,35%) minmax(0,1fr) !important;
@@ -10466,7 +10395,6 @@ input:focus-visible{
     min-height:210px !important;
   }
 }
-
 </style>
 </head>
 <body>
