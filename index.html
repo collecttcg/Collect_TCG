@@ -11419,6 +11419,24 @@ body.interest-contact-open{
   }
 }
 
+
+/* =========================================================
+   ZERO-JUMP PAGINATION VIEWPORT GUARD
+   Keeps the current scroll position valid when a new page is
+   shorter than the page being replaced.
+   ========================================================= */
+.listing-pagination-viewport-guard{
+  height:0;
+  pointer-events:none;
+  visibility:hidden;
+}
+
+@media(max-width:800px){
+  .listing-pagination-viewport-guard{
+    width:100%;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -17589,6 +17607,7 @@ function wireShimmer(container){
       <div id="invGrid" aria-busy="true">${inventorySkeletonHTML(8)}</div>
 
       <div class="listing-pagination-shell listing-pagination-bottom" id="listingPaginationBottom" hidden></div>
+      <div class="listing-pagination-viewport-guard" id="listingPaginationViewportGuard" aria-hidden="true"></div>
 
       <div class="sticky-mobile-results-bar" id="stickyMobileResultsBar" aria-label="Results controls">
         <div class="sticky-mobile-results-count">
@@ -18508,6 +18527,9 @@ function wireShimmer(container){
     },{signal:inventorySignal});
 
     $("listingPerPageSelect")?.addEventListener("change",e=>{
+      const guard=$("listingPaginationViewportGuard");
+      if(guard) guard.style.height="0px";
+
       const value=Number(e.target.value);
       listingPerPage=setSavedListingPerPage(value);
       listingCurrentPage=1;
@@ -18534,28 +18556,55 @@ function wireShimmer(container){
       nextPage=Math.min(Math.max(1,nextPage),totalPages);
       if(nextPage===listingCurrentPage) return;
 
-      // Preserve the clicked pagination control's exact visual position.
-      // Different pages can have different card heights; without this,
-      // browser scroll anchoring can move the viewport slightly.
+      // Preserve the viewport exactly. If the next page is shorter, the browser
+      // would otherwise clamp scrollY before any post-render correction can run.
       const paginationShell=button.closest(".listing-pagination-shell");
       const paginationShellId=paginationShell?.id || "";
+      const guard=$("listingPaginationViewportGuard");
+      const oldScrollY=window.scrollY;
+      const oldDocHeight=document.documentElement.scrollHeight;
       const anchorTop=paginationShell?.getBoundingClientRect().top;
+
+      // Give the document temporary extra height before replacing the cards.
+      // This prevents immediate browser scroll clamping on shorter pages.
+      if(guard){
+        guard.style.height=`${Math.max(window.innerHeight,oldDocHeight)}px`;
+      }
 
       listingCurrentPage=nextPage;
       updateListingUrlFromControls();
       draw();
 
-      if(paginationShellId && Number.isFinite(anchorTop)){
-        requestAnimationFrame(()=>{
-          const nextShell=$(paginationShellId);
-          if(!nextShell) return;
+      requestAnimationFrame(()=>{
+        const nextShell=paginationShellId ? $(paginationShellId) : null;
+        let targetScrollY=oldScrollY;
+
+        if(nextShell && Number.isFinite(anchorTop)){
           const nextTop=nextShell.getBoundingClientRect().top;
-          const delta=nextTop-anchorTop;
-          if(Math.abs(delta)>.5){
-            window.scrollBy({top:delta,left:0,behavior:"auto"});
-          }
+          targetScrollY=window.scrollY + (nextTop-anchorTop);
+        }
+
+        // Work out only the guard height actually required to make the target
+        // scroll position legal after the new, possibly shorter, page renders.
+        if(guard){
+          guard.style.height="0px";
+
+          const naturalHeight=document.documentElement.scrollHeight;
+          const requiredDocumentHeight=targetScrollY + window.innerHeight;
+          const requiredGuard=Math.max(0,requiredDocumentHeight-naturalHeight);
+
+          guard.style.height=`${Math.ceil(requiredGuard)}px`;
+        }
+
+        // Set the absolute scroll position after the guard has established
+        // enough document height. No smooth scrolling, no visual alignment.
+        window.scrollTo({top:Math.max(0,targetScrollY),left:window.scrollX,behavior:"auto"});
+
+        // A second frame handles Safari/iOS viewport recalculation.
+        requestAnimationFrame(()=>{
+          window.scrollTo({top:Math.max(0,targetScrollY),left:window.scrollX,behavior:"auto"});
         });
-      }
+      });
     };
 
     $("listingPaginationTop")?.addEventListener("click",handlePaginationClick);
