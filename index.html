@@ -11408,6 +11408,17 @@ body.interest-contact-open{
   }
 }
 
+
+/* =========================================================
+   PAGINATION + CONDITION FILTER FINAL FIX
+   ========================================================= */
+@media(max-width:800px){
+  #invGrid,
+  .listing-pagination-shell{
+    overflow-anchor:none;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -11812,6 +11823,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const value=String(condition||"").trim();
     if(!value) return "";
     return RAW_CONDITION_SHORT[value.toUpperCase()] || value.toUpperCase();
+  }
+
+  function rawConditionFilterLabel(condition){
+    const value=String(condition||"").trim();
+    if(!value) return "";
+    return CONDITION_LABEL[value] || CONDITION_LABEL[value.toUpperCase()] || value;
   }
   const LANGUAGE_OPTIONS = ["JP","ENG","KR","CN"];
   const ERA_OPTIONS = ["Modern","Mid-Era","Vintage"];
@@ -14816,12 +14833,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const status=normalizeFilterValue(card.availability||"Available");
     const avoidStatusCorner=status==="sold" || status==="reserved";
 
+    const filterValue=rawConditionFilterLabel(card.condition);
     return `<button type="button"
-                    class="overview-grade-overlay filter-pill-btn ${avoidStatusCorner?"overview-grade-overlay-right":""} ${pillFilterState.grade.has(condition)?"pill-selected":""}"
+                    class="overview-grade-overlay filter-pill-btn ${avoidStatusCorner?"overview-grade-overlay-right":""} ${selectedSetMatches(pillFilterState.grade,filterValue)?"pill-selected":""}"
                     data-pill-filter="grade"
-                    data-pill-value="${escapeHtml(condition)}"
-                    title="Filter by ${escapeHtml(condition)}"
-                    aria-label="${escapeHtml(`Filter by raw condition ${condition}`)}">
+                    data-pill-value="${escapeHtml(filterValue)}"
+                    title="Filter by ${escapeHtml(filterValue)}"
+                    aria-label="${escapeHtml(`Filter by raw condition ${filterValue}`)}">
       <strong>${escapeHtml(condition)}</strong>
       <small>RAW</small>
     </button>`;
@@ -17015,6 +17033,13 @@ function relatedCardHTML(c){
     const gradeText = grades.length
       ? `${grades[0].company} ${grades[0].grade || ""}`.trim()
       : (format === "Sealed" ? "Sealed" : (rawConditionShortLabel(c.condition) || "—"));
+
+    const gradeFilterText = grades.length
+      ? gradeText
+      : (format === "Sealed"
+          ? "Sealed"
+          : (rawConditionFilterLabel(c.condition) || gradeText));
+
     const seriesText = normalizeStoredLabel(c.series || "");
     return `
       <div class="card ${shimmer ? "shimmer" : ""} ${isCompareSelected(c.id) ? "compare-selected" : ""} ${normalizeFilterValue(c.availability)==="collection (nfs)" ? "nfs-collection-card" : ""}" style="--stripe:${normalizeFilterValue(c.availability)==="collection (nfs)" ? "#a855f7" : color}" data-shimmer="${shimmer}" data-card-id="${escapeHtml(c.id)}" tabindex="0" role="button" aria-label="View details for ${escapeHtml(c.name)}">
@@ -17070,7 +17095,7 @@ function relatedCardHTML(c){
             <div class="clean-card-subrow clean-all-pills">
               ${c.game ? `<button type="button" class="clean-meta-pill clean-game-pill filter-pill-btn ${selectedSetMatches(pillFilterState.game, c.game) && pillFilterState.game.size ? "pill-selected" : ""}" data-pill-filter="game" data-pill-value="${escapeHtml(String(c.game))}" title="Filter by ${escapeHtml(String(c.game))}">${escapeHtml(String(c.game))}</button>` : ""}
               ${(grades.length || format === "Raw" || format === "Sealed")
-                ? `<button type="button" class="clean-grade-badge filter-pill-btn ${pillFilterState.grade.has(gradeText) ? "pill-selected" : ""}" data-pill-filter="grade" data-pill-value="${escapeHtml(gradeText)}" title="Filter by ${escapeHtml(gradeText)}">${escapeHtml(gradeText)}</button>`
+                ? `<button type="button" class="clean-grade-badge filter-pill-btn ${selectedSetMatches(pillFilterState.grade,gradeFilterText) ? "pill-selected" : ""}" data-pill-filter="grade" data-pill-value="${escapeHtml(gradeFilterText)}" title="Filter by ${escapeHtml(gradeFilterText)}">${escapeHtml(gradeText)}</button>`
                 : `<span class="clean-grade-badge">${escapeHtml(gradeText)}</span>`}
               ${c.availability ? `<button type="button" class="clean-meta-pill clean-availability-pill filter-pill-btn ${selectedSetMatches(pillFilterState.availability, c.availability) && pillFilterState.availability.size ? "pill-selected" : ""}" data-pill-filter="availability" data-pill-value="${escapeHtml(canonicalAvailability(c.availability))}" title="Filter by ${escapeHtml(canonicalAvailability(c.availability))}">${escapeHtml(canonicalAvailability(c.availability))}</button>` : ""}
               ${c.language ? `<button type="button" class="clean-meta-pill clean-language-pill filter-pill-btn ${selectedSetMatches(pillFilterState.language, c.language) && pillFilterState.language.size ? "pill-selected" : ""}" data-pill-filter="language" data-pill-value="${escapeHtml(String(c.language).toUpperCase())}" title="Filter by ${escapeHtml(String(c.language).toUpperCase())}">${escapeHtml(String(c.language).toUpperCase())}</button>` : ""}
@@ -18509,9 +18534,28 @@ function wireShimmer(container){
       nextPage=Math.min(Math.max(1,nextPage),totalPages);
       if(nextPage===listingCurrentPage) return;
 
+      // Preserve the clicked pagination control's exact visual position.
+      // Different pages can have different card heights; without this,
+      // browser scroll anchoring can move the viewport slightly.
+      const paginationShell=button.closest(".listing-pagination-shell");
+      const paginationShellId=paginationShell?.id || "";
+      const anchorTop=paginationShell?.getBoundingClientRect().top;
+
       listingCurrentPage=nextPage;
       updateListingUrlFromControls();
       draw();
+
+      if(paginationShellId && Number.isFinite(anchorTop)){
+        requestAnimationFrame(()=>{
+          const nextShell=$(paginationShellId);
+          if(!nextShell) return;
+          const nextTop=nextShell.getBoundingClientRect().top;
+          const delta=nextTop-anchorTop;
+          if(Math.abs(delta)>.5){
+            window.scrollBy({top:delta,left:0,behavior:"auto"});
+          }
+        });
+      }
     };
 
     $("listingPaginationTop")?.addEventListener("click",handlePaginationClick);
