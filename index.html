@@ -12592,6 +12592,33 @@ body.light-mode .sticky-mobile-results-action small{
   }
 }
 
+
+/* =========================================================
+   PC COLLECTION OVERVIEW LABEL — PREVENT LEFT-EDGE CLIPPING
+   The rounded section/card styling could visually trim the first letter
+   when the eyebrow sits flush against an overflow-clipped boundary.
+   ========================================================= */
+@media(min-width:1001px){
+  #view .home-collection-stats-section{
+    overflow:visible !important;
+  }
+
+  #view .home-collection-stats-section .home-section-head{
+    overflow:visible !important;
+    padding-left:2px !important;
+  }
+
+  #view .home-collection-stats-section .eyebrow{
+    display:inline-block !important;
+    overflow:visible !important;
+    padding-left:1px !important;
+    margin-left:0 !important;
+    border-radius:0 !important;
+    clip-path:none !important;
+    -webkit-clip-path:none !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -17633,7 +17660,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   <span class="home-stat-value">${stats.graded.toLocaleString()}</span>
   <span class="home-stat-label">Graded</span>
 </a>
-              <a href="#/inventory?era=Vintage" class="home-stat-card">
+              <a href="#/inventory?quick=vintage" class="home-stat-card">
   <span class="home-stat-value">${stats.vintage.toLocaleString()}</span>
   <span class="home-stat-label">Vintage</span>
 </a>
