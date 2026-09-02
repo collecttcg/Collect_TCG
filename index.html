@@ -12518,6 +12518,23 @@ body.light-mode .sticky-mobile-results-action small{
   }
 }
 
+
+/* =========================================================
+   MOBILE SECURITY UX — OWNER MODE DISABLED
+   JavaScript also blocks authentication/owner state. This CSS is a
+   presentation fail-safe so owner controls cannot appear on mobile.
+   ========================================================= */
+@media(max-width:800px){
+  .owner-toggle,
+  .owner-status,
+  .owner-only,
+  body.owner-mode .owner-only,
+  body.owner-mode a.owner-only,
+  body.owner-mode .card-actions.owner-only{
+    display:none !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -13158,8 +13175,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   let inventoryStickyObserver = null;
   let detailsPreservedListingHash = "";
 
+  // Owner tools are intentionally desktop-only. Keep this aligned with the
+  // site's existing mobile breakpoint so phones cannot enter owner mode.
+  function isMobileOwnerBlocked(){
+    return window.matchMedia("(max-width:800px)").matches;
+  }
+
   function isOwnerMode(){
-    return !!ownerSession && ownerVerified === true;
+    return !isMobileOwnerBlocked() && !!ownerSession && ownerVerified === true;
   }
 
   let cardLookupVersion=-1;
@@ -13383,6 +13406,20 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(error) console.error("Auth session error:",error);
 
     ownerSession=data?.session||null;
+
+    if(isMobileOwnerBlocked()){
+      ownerVerified=false;
+      if(ownerSession){
+        try{ await supabaseClient.auth.signOut(); }catch(error){
+          console.warn("Could not clear owner session on mobile:",error);
+        }
+        ownerSession=null;
+      }
+      clearOwnerOnlyClientState();
+      applyOwnerMode();
+      return;
+    }
+
     ownerVerified=await verifyOwnerSession(ownerSession);
 
     if(ownerSession && !ownerVerified){
@@ -29396,6 +29433,14 @@ function wireShimmer(container){
 
   wireCardActions(view);
   async function openOwnerAccess(){
+    if(isMobileOwnerBlocked()){
+      ownerVerified=false;
+      clearOwnerOnlyClientState();
+      applyOwnerMode();
+      showToast("Owner mode is available on desktop only");
+      return;
+    }
+
     if(isOwnerMode()){
       await supabaseClient.auth.signOut();
       ownerSession=null;
@@ -29471,6 +29516,26 @@ function wireShimmer(container){
     const wasOwner=isOwnerMode();
 
     ownerSession=session;
+
+    if(isMobileOwnerBlocked()){
+      ownerVerified=false;
+      clearOwnerOnlyClientState();
+      applyOwnerMode();
+
+      if(session){
+        // Sign out outside the auth callback to avoid re-entering the auth client.
+        setTimeout(async()=>{
+          try{ await supabaseClient.auth.signOut(); }catch(error){
+            console.warn("Could not clear owner session on mobile:",error);
+          }
+          ownerSession=null;
+          ownerVerified=false;
+          clearOwnerOnlyClientState();
+          applyOwnerMode();
+        },0);
+      }
+      return;
+    }
 
     if(!session){
       clearOwnerOnlyClientState();
