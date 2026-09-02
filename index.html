@@ -11305,6 +11305,39 @@ body.interest-contact-open{
   }
 }
 
+
+/* MOBILE: remove redundant Collect TCG MY & SG footer label to save space. */
+@media(max-width:800px){
+  .sidebar-footer .sidebar-footer-brand,
+  .sidebar-footer .footer-brand,
+  .sidebar-footer .brand-name,
+  .sidebar-footer .shop-name{
+    display:none !important;
+  }
+}
+
+
+@media(max-width:800px){
+  /* Exact redundant footer label: "Collect TCG MY & SG". */
+  .sidebar-footer > div:nth-child(2){
+    display:none !important;
+  }
+
+  /* With the brand line removed, keep count + theme button as the only public row. */
+  .sidebar-footer > div:first-child{
+    grid-column:1 !important;
+    grid-row:1 !important;
+  }
+  .sidebar-footer > .theme-toggle{
+    grid-column:2 !important;
+    grid-row:1 !important;
+  }
+  .sidebar-footer > .owner-status{
+    grid-column:1 / -1 !important;
+    grid-row:2 !important;
+  }
+}
+
 </style>
 </head>
 <body>
