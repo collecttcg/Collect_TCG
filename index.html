@@ -12503,6 +12503,34 @@ body.light-mode .sticky-mobile-results-action small{
   }
 }
 
+
+/* =========================================================
+   MOBILE OWNER MENU — PLACE BELOW TOP-RIGHT CARD BADGE
+   Keeps grade / sealed / condition badge clear on Sold/Reserved
+   cards while leaving desktop behavior unchanged.
+   ========================================================= */
+@media(max-width:800px){
+  .card .quick-card-actions{
+    top:56px !important;
+    right:8px !important;
+    left:auto !important;
+    z-index:9 !important;
+  }
+
+  .card .quick-card-menu-toggle{
+    width:30px !important;
+    min-width:30px !important;
+    height:30px !important;
+    min-height:30px !important;
+    border-radius:999px !important;
+  }
+
+  .card:has(.status-corner-sold) .quick-card-actions,
+  .card:has(.status-corner-reserved) .quick-card-actions{
+    top:68px !important;
+  }
+}
+
 </style>
 </head>
 <body>
