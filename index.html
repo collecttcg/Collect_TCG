@@ -11982,10 +11982,66 @@ html{
 
 
 /* =========================================================
-   MOBILE HOME PILLS — MATCH INVENTORY
-   Home card pills now use the same compact sizing as Inventory.
+   CONDITION BADGE SIZE — MATCH GRADED / SEALED
+   Only raw-condition badges are changed.
+   ========================================================= */
+.overview-grade-overlay.condition-filter-btn{
+  min-width:70px !important;
+  max-width:calc(100% - 16px) !important;
+  width:auto !important;
+  height:auto !important;
+  min-height:0 !important;
+  padding:6px 9px 5px !important;
+  border-radius:10px !important;
+}
+
+@media(max-width:800px){
+  .overview-grade-overlay.condition-filter-btn{
+    min-width:70px !important;
+    max-width:calc(100% - 16px) !important;
+    width:auto !important;
+    height:auto !important;
+    min-height:0 !important;
+    padding:6px 9px 5px !important;
+    border-radius:10px !important;
+  }
+}
+
+
+/* CONDITION BADGE TEXT: center within badge. */
+.overview-grade-overlay.condition-filter-btn{
+  align-items:center !important;
+  text-align:center !important;
+}
+
+.overview-grade-overlay.condition-filter-btn strong,
+.overview-grade-overlay.condition-filter-btn small{
+  width:100% !important;
+  text-align:center !important;
+}
+
+
+/* ALL OVERLAY BADGES: center text for Condition, Sealed, and Graded. */
+.overview-grade-overlay{
+  align-items:center !important;
+  text-align:center !important;
+}
+
+.overview-grade-overlay strong,
+.overview-grade-overlay small{
+  width:100% !important;
+  text-align:center !important;
+}
+
+
+/* =========================================================
+   MOBILE HOME — STORE FRONT CARD HEIGHT FIX
+   High Value / Vintage / Recently Sold use content-driven
+   horizontal cards like Inventory. Removes large empty space.
    ========================================================= */
 @media(max-width:800px){
+
+  /* Match Home metadata pill sizing to Inventory. */
   .home-recent-grid .clean-all-pills .clean-grade-badge,
   .home-recent-grid .clean-all-pills .clean-meta-pill,
   .home-storefront-grid .clean-all-pills .clean-grade-badge,
@@ -12005,14 +12061,120 @@ html{
     font-size:8.5px !important;
     line-height:1.1 !important;
     letter-spacing:0 !important;
-    white-space:nowrap !important;
-    overflow:hidden !important;
-    text-overflow:ellipsis !important;
   }
 
-  .home-recent-grid .clean-all-pills,
+  /* Home storefront sections: one compact horizontal card per row. */
+  .home-storefront-grid{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:12px !important;
+    width:100% !important;
+    overflow:visible !important;
+    padding-bottom:0 !important;
+  }
+
+  .home-storefront-grid > .card{
+    display:grid !important;
+    grid-template-columns:minmax(112px,36%) minmax(0,1fr) !important;
+    grid-template-rows:auto !important;
+    align-items:stretch !important;
+    width:100% !important;
+    min-width:0 !important;
+    min-height:220px !important;
+    height:auto !important;
+    max-height:none !important;
+    padding:0 !important;
+    gap:0 !important;
+    overflow:hidden !important;
+  }
+
+  /* This is the rule that was causing the large blank area.
+     Do NOT let the body be 100% of the entire card height. */
+  .home-storefront-grid .clean-card-body{
+    grid-column:2 !important;
+    grid-row:1 !important;
+    align-self:start !important;
+    box-sizing:border-box !important;
+    min-width:0 !important;
+    min-height:220px !important;
+    height:auto !important;
+    max-height:none !important;
+    padding:15px 14px !important;
+    gap:9px !important;
+    overflow:visible !important;
+    justify-content:flex-start !important;
+  }
+
+  .home-storefront-grid .card > .thumb-wrap{
+    position:relative !important;
+    grid-column:1 !important;
+    grid-row:1 !important;
+    align-self:stretch !important;
+    width:100% !important;
+    height:auto !important;
+    min-height:220px !important;
+    max-height:none !important;
+    aspect-ratio:auto !important;
+    overflow:hidden !important;
+    border-radius:0 !important;
+  }
+
+  .home-storefront-grid .card > .thumb-wrap .thumb{
+    position:absolute !important;
+    inset:0 !important;
+    width:100% !important;
+    height:100% !important;
+    min-height:0 !important;
+    max-height:none !important;
+    aspect-ratio:auto !important;
+    object-fit:cover !important;
+    object-position:center !important;
+    border-radius:0 !important;
+  }
+
+  .home-storefront-grid .card > .thumb-placeholder{
+    grid-column:1 !important;
+    grid-row:1 !important;
+    align-self:stretch !important;
+    width:100% !important;
+    min-height:220px !important;
+    height:auto !important;
+    max-height:none !important;
+    aspect-ratio:auto !important;
+    border-radius:0 !important;
+  }
+
+  .home-storefront-grid .clean-price-block{
+    position:relative !important;
+    width:100% !important;
+    flex:0 0 auto !important;
+    margin-top:7px !important;
+    padding-top:9px !important;
+  }
+
   .home-storefront-grid .clean-all-pills{
     gap:4px !important;
+    height:auto !important;
+    max-height:none !important;
+    overflow:visible !important;
+  }
+}
+
+@media(max-width:390px){
+  .home-storefront-grid > .card{
+    grid-template-columns:minmax(104px,35%) minmax(0,1fr) !important;
+    min-height:210px !important;
+  }
+
+  .home-storefront-grid .clean-card-body,
+  .home-storefront-grid .card > .thumb-wrap,
+  .home-storefront-grid .card > .thumb-placeholder{
+    min-height:210px !important;
+  }
+
+  .home-storefront-grid .clean-card-body{
+    padding:13px 12px !important;
+    gap:8px !important;
   }
 }
 
