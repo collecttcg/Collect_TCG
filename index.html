@@ -11437,6 +11437,29 @@ body.interest-contact-open{
   }
 }
 
+
+.condition-filter-btn{
+  pointer-events:auto !important;
+  cursor:pointer !important;
+  appearance:none !important;
+  -webkit-appearance:none !important;
+}
+.overview-grade-overlay.condition-filter-btn{
+  margin:0;
+  font:inherit;
+  text-align:left;
+}
+@media(max-width:800px){
+  .condition-filter-btn{
+    min-width:44px;
+    min-height:44px;
+    touch-action:manipulation;
+  }
+  #invGrid,.listing-pagination-shell{
+    overflow-anchor:none;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -14846,16 +14869,15 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(!card || normalizeFilterValue(effectiveFormat(card))!=="raw") return "";
 
     const condition=rawConditionShortLabel(card.condition);
-    if(!condition) return "";
+    const filterValue=rawConditionFilterLabel(card.condition);
+    if(!condition || !filterValue) return "";
 
     const status=normalizeFilterValue(card.availability||"Available");
     const avoidStatusCorner=status==="sold" || status==="reserved";
 
-    const filterValue=rawConditionFilterLabel(card.condition);
     return `<button type="button"
-                    class="overview-grade-overlay filter-pill-btn ${avoidStatusCorner?"overview-grade-overlay-right":""} ${selectedSetMatches(pillFilterState.grade,filterValue)?"pill-selected":""}"
-                    data-pill-filter="grade"
-                    data-pill-value="${escapeHtml(filterValue)}"
+                    class="overview-grade-overlay condition-filter-btn ${avoidStatusCorner?"overview-grade-overlay-right":""}"
+                    data-condition-filter-value="${escapeHtml(filterValue)}"
                     title="Filter by ${escapeHtml(filterValue)}"
                     aria-label="${escapeHtml(`Filter by raw condition ${filterValue}`)}">
       <strong>${escapeHtml(condition)}</strong>
@@ -17283,6 +17305,33 @@ function wireShimmer(container){
         return;
       }
 
+      const conditionFilterBtn=e.target.closest("[data-condition-filter-value]");
+      if(conditionFilterBtn){
+        e.preventDefault();
+        e.stopPropagation();
+
+        const value=String(conditionFilterBtn.dataset.conditionFilterValue||"").trim();
+        if(!value) return;
+
+        activeQuickFilter="all";
+        listingCurrentPage=1;
+        pillFilterState.grade.clear();
+
+        if(isInventoryRoute(currentRoute()) && $("filterGrade")){
+          $("filterGrade").value=value;
+          const label=$("filterGradeBtn")?.querySelector("span");
+          if(label) label.textContent=value;
+          updateListingUrlFromControls();
+          draw();
+        }else{
+          const params=new URLSearchParams();
+          params.set("grade",value);
+          params.set("per",String(getSavedListingPerPage()));
+          location.hash=`#/inventory?${params.toString()}`;
+        }
+        return;
+      }
+
       const filterPill = e.target.closest(".filter-pill-btn[data-pill-filter]");
       if(filterPill){
         e.stopPropagation();
@@ -18556,55 +18605,47 @@ function wireShimmer(container){
       nextPage=Math.min(Math.max(1,nextPage),totalPages);
       if(nextPage===listingCurrentPage) return;
 
-      // Preserve the viewport exactly. If the next page is shorter, the browser
-      // would otherwise clamp scrollY before any post-render correction can run.
       const paginationShell=button.closest(".listing-pagination-shell");
       const paginationShellId=paginationShell?.id || "";
       const guard=$("listingPaginationViewportGuard");
+      const oldAnchorTop=paginationShell?.getBoundingClientRect().top;
       const oldScrollY=window.scrollY;
       const oldDocHeight=document.documentElement.scrollHeight;
-      const anchorTop=paginationShell?.getBoundingClientRect().top;
 
-      // Give the document temporary extra height before replacing the cards.
-      // This prevents immediate browser scroll clamping on shorter pages.
+      // Prevent scroll clamping while the grid is replaced.
       if(guard){
-        guard.style.height=`${Math.max(window.innerHeight,oldDocHeight)}px`;
+        guard.style.height=`${Math.max(oldDocHeight,window.innerHeight*2)}px`;
+        void guard.offsetHeight;
       }
 
       listingCurrentPage=nextPage;
       updateListingUrlFromControls();
       draw();
 
-      requestAnimationFrame(()=>{
-        const nextShell=paginationShellId ? $(paginationShellId) : null;
-        let targetScrollY=oldScrollY;
+      // Measure and correct immediately, before the browser paints.
+      const nextShell=paginationShellId ? $(paginationShellId) : null;
+      let targetScrollY=oldScrollY;
 
-        if(nextShell && Number.isFinite(anchorTop)){
-          const nextTop=nextShell.getBoundingClientRect().top;
-          targetScrollY=window.scrollY + (nextTop-anchorTop);
-        }
+      if(nextShell && Number.isFinite(oldAnchorTop)){
+        const newAnchorTop=nextShell.getBoundingClientRect().top;
+        targetScrollY=window.scrollY + (newAnchorTop-oldAnchorTop);
+      }
 
-        // Work out only the guard height actually required to make the target
-        // scroll position legal after the new, possibly shorter, page renders.
-        if(guard){
-          guard.style.height="0px";
+      if(guard){
+        guard.style.height="0px";
+        void guard.offsetHeight;
 
-          const naturalHeight=document.documentElement.scrollHeight;
-          const requiredDocumentHeight=targetScrollY + window.innerHeight;
-          const requiredGuard=Math.max(0,requiredDocumentHeight-naturalHeight);
+        const naturalHeight=document.documentElement.scrollHeight;
+        const requiredHeight=targetScrollY + window.innerHeight + 2;
+        const requiredGuard=Math.max(0,requiredHeight-naturalHeight);
 
+        if(requiredGuard>0){
           guard.style.height=`${Math.ceil(requiredGuard)}px`;
+          void guard.offsetHeight;
         }
+      }
 
-        // Set the absolute scroll position after the guard has established
-        // enough document height. No smooth scrolling, no visual alignment.
-        window.scrollTo({top:Math.max(0,targetScrollY),left:window.scrollX,behavior:"auto"});
-
-        // A second frame handles Safari/iOS viewport recalculation.
-        requestAnimationFrame(()=>{
-          window.scrollTo({top:Math.max(0,targetScrollY),left:window.scrollX,behavior:"auto"});
-        });
-      });
+      window.scrollTo(window.scrollX,Math.max(0,targetScrollY));
     };
 
     $("listingPaginationTop")?.addEventListener("click",handlePaginationClick);
