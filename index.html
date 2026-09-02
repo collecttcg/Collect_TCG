@@ -12664,6 +12664,41 @@ body.light-mode .sticky-mobile-results-action small{
   }
 }
 
+
+/* =========================================================
+   OWNER HIDDEN LISTINGS
+   Draft lifecycle = hidden from public visitors, still manageable by owner.
+   ========================================================= */
+body.owner-mode .card:has(.owner-hidden-listing-badge){
+  border-style:dashed !important;
+  border-color:rgba(227,179,65,.55) !important;
+}
+
+.owner-hidden-listing-badge{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:20px;
+  padding:3px 7px;
+  border:1px solid rgba(227,179,65,.55);
+  border-radius:999px;
+  background:rgba(227,179,65,.12);
+  color:var(--accent-gold);
+  font-size:8.5px;
+  font-weight:900;
+  letter-spacing:.65px;
+  line-height:1;
+  white-space:nowrap;
+}
+
+@media(max-width:800px){
+  .owner-hidden-listing-badge{
+    font-size:8px;
+    padding:3px 6px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -18002,7 +18037,15 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   function cardMatchesListingScope(card, scope = listingAvailabilityScope){
-    if(!isLiveLifecycle(card)) return false;
+    const lifecycle=cardLifecycle(card);
+
+    // Public visitors only ever see live listings. Verified owners may also
+    // browse Draft listings directly in the normal Inventory/Reserved/Sold/NFS
+    // pages so newly added hidden cards remain easy to manage. Archived items
+    // stay in the dedicated owner lifecycle tools.
+    if(lifecycle==="archived") return false;
+    if(lifecycle!=="live" && !(isOwnerMode() && lifecycle==="draft")) return false;
+
     const availability = normalizeFilterValue(card && card.availability ? card.availability : "Available");
     if(scope === "collection") return availability === "collection (nfs)";
     if(scope === "reserved") return availability === "reserved";
@@ -18488,7 +18531,11 @@ function relatedCardHTML(c){
               ${normalizeFilterValue(c.availability)!=="sold" ? `<button type="button" class="quick-card-danger-soft" data-action="availability" data-status="Sold" data-id="${escapeHtml(c.id)}">Mark Sold</button>` : ""}
               ${lifecycleSupported ? `
                 <div class="quick-card-menu-separator"></div>
-                ${cardLifecycle(c)==="live" ? `<button type="button" data-action="lifecycle" data-status="draft" data-id="${escapeHtml(c.id)}">Move to Draft</button>` : ""}
+                ${cardLifecycle(c)==="live"
+                  ? `<button type="button" data-action="lifecycle" data-status="draft" data-id="${escapeHtml(c.id)}">Hide from visitors</button>`
+                  : (cardLifecycle(c)==="draft"
+                      ? `<button type="button" data-action="lifecycle" data-status="live" data-id="${escapeHtml(c.id)}">Unhide / Publish</button>`
+                      : "")}
                 <button type="button" class="quick-card-danger-soft" data-action="lifecycle" data-status="archived" data-id="${escapeHtml(c.id)}">Archive</button>
               ` : ""}
               <div class="quick-card-menu-separator"></div>
@@ -18499,6 +18546,9 @@ function relatedCardHTML(c){
           <div class="clean-card-main">
             <div class="clean-card-title-row">
               <div class="card-name clean-card-name">${escapeHtml(c.name).toUpperCase()}</div>
+              ${isOwnerMode() && cardLifecycle(c)==="draft"
+                ? `<span class="owner-hidden-listing-badge" title="Hidden from normal visitors">HIDDEN</span>`
+                : ""}
               <div class="card-title-actions">
                 <button type="button"
                   class="compare-card-btn ${isCompareSelected(c.id) ? "active" : ""}"
@@ -18787,12 +18837,23 @@ function wireShimmer(container){
         }else if(action==="lifecycle"){
           if(!requireOwner("change listing lifecycle")) return;
           const status=String(btn.dataset.status||"");
-          if(!["draft","archived"].includes(status)) return;
-          const verb=status==="archived" ? "Archive" : "Move to Draft";
-          if(!confirmOwnerAction(`${verb} "${card.name}"?${status==="archived" ? "\n\nArchived listings remain recoverable by the owner and are hidden from visitors." : "\n\nDraft listings are hidden from visitors until published."}`)) return;
+          if(!["live","draft","archived"].includes(status)) return;
+
+          const prompt=status==="archived"
+            ? `Archive "${card.name}"?\n\nArchived listings remain recoverable in Owner tools and are hidden from visitors.`
+            : (status==="draft"
+                ? `Hide "${card.name}" from normal visitors?\n\nIt will remain visible to you in Owner Mode and can be edited or published later.`
+                : `Unhide "${card.name}"?\n\nIt will become visible to normal visitors immediately.`);
+
+          if(!confirmOwnerAction(prompt)) return;
+
           const ok=await setCardLifecycle(card,status);
           if(ok){
-            showToast(status==="archived" ? "Listing archived" : "Moved to Draft");
+            showToast(
+              status==="archived"
+                ? "Listing archived"
+                : (status==="draft" ? "Listing hidden from visitors" : "Listing published")
+            );
             router();
           }
         }else if(action==="delete-listing"){
