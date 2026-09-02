@@ -12561,6 +12561,37 @@ body.light-mode .sticky-mobile-results-action small{
   color:#fff !important;
 }
 
+
+/* =========================================================
+   COLLECTION AT A GLANCE — BALANCED DESKTOP 4 + 3 LAYOUT
+   Mobile/tablet rules remain unchanged.
+   ========================================================= */
+@media(min-width:1001px){
+  #view .home-collection-stats-section .home-collection-stats{
+    display:grid !important;
+    grid-template-columns:repeat(8,minmax(0,1fr)) !important;
+    gap:10px !important;
+    width:100% !important;
+  }
+
+  #view .home-collection-stats-section .home-stat-card{
+    grid-column:span 2 !important;
+    min-width:0 !important;
+  }
+
+  #view .home-collection-stats-section .home-stat-card:nth-child(5){
+    grid-column:2 / span 2 !important;
+  }
+
+  #view .home-collection-stats-section .home-stat-card:nth-child(6){
+    grid-column:4 / span 2 !important;
+  }
+
+  #view .home-collection-stats-section .home-stat-card:nth-child(7){
+    grid-column:6 / span 2 !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -17597,15 +17628,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
                 <span class="home-stat-value">${stats.sold.toLocaleString()}</span>
                 <span class="home-stat-label">Sold</span>
               </a>
-              <a href="#/inventory?format=graded" class="home-stat-card">
+              <!-- These three links must use filters understood by restoreListingFiltersFromUrl(). -->
+              <a href="#/inventory?quick=graded" class="home-stat-card">
   <span class="home-stat-value">${stats.graded.toLocaleString()}</span>
   <span class="home-stat-label">Graded</span>
 </a>
-              <a href="#/inventory?quick=vintage" class="home-stat-card">
+              <a href="#/inventory?era=Vintage" class="home-stat-card">
   <span class="home-stat-value">${stats.vintage.toLocaleString()}</span>
   <span class="home-stat-label">Vintage</span>
 </a>
-              <a href="#/inventory?format=sealed" class="home-stat-card">
+              <a href="#/inventory?quick=sealed" class="home-stat-card">
   <span class="home-stat-value">${stats.sealed.toLocaleString()}</span>
   <span class="home-stat-label">Sealed</span>
 </a>
