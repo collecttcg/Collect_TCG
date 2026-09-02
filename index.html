@@ -18404,7 +18404,6 @@ function wireShimmer(container){
       listingCurrentPage=1;
       updateListingUrlFromControls();
       draw();
-      scrollToListingStart();
     });
 
     const handlePaginationClick=e=>{
@@ -18429,7 +18428,6 @@ function wireShimmer(container){
       listingCurrentPage=nextPage;
       updateListingUrlFromControls();
       draw();
-      scrollToListingStart();
     };
 
     $("listingPaginationTop")?.addEventListener("click",handlePaginationClick);
