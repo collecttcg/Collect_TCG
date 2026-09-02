@@ -19151,8 +19151,8 @@ function wireShimmer(container){
 
       if(fromBottom){
         const scrollToNewListingTop=()=>{
-          const grid=$("invGrid");
-          if(!grid) return;
+          const heading=document.querySelector(".listing-page-head");
+          if(!heading) return;
 
           const shell=document.querySelector(".shell");
           const mobileShellScroll=
@@ -19161,13 +19161,12 @@ function wireShimmer(container){
             getComputedStyle(shell).overflowY!=="visible";
 
           if(mobileShellScroll){
-            // Mobile uses .shell as the real scrolling viewport because
-            // html/body are overflow:hidden.
+            // Mobile uses .shell as the real scrolling viewport.
             const shellRect=shell.getBoundingClientRect();
-            const gridRect=grid.getBoundingClientRect();
+            const headingRect=heading.getBoundingClientRect();
             const target=
               shell.scrollTop +
-              (gridRect.top-shellRect.top) -
+              (headingRect.top-shellRect.top) -
               6;
 
             shell.scrollTo({
@@ -19179,7 +19178,7 @@ function wireShimmer(container){
             // Desktop/laptop use the normal document viewport.
             const target=
               window.scrollY +
-              grid.getBoundingClientRect().top -
+              heading.getBoundingClientRect().top -
               6;
 
             window.scrollTo({
