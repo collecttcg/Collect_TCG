@@ -15,6 +15,7 @@
 <!-- STAGE 4 HOTFIX: restored valid JS after partial helper removal -->
 <!-- MOBILE ENQUIRY: platform chooser for Instagram/Facebook/Carousell + copy inquiry -->
 <!-- DETAIL ACTION CLEANUP: redundant Message/PM button removed -->
+<!-- REFACTOR STAGE 5: startup/render performance optimizations; behavior unchanged -->
 <!-- OWNER TOOL: permanent listing deletion with double confirmation -->
 <!-- MOBILE FIX: compact metadata pills + 44px invisible hit targets across iOS/Android -->
 <!-- DESKTOP NAV FIX: Reserved stays primary; duplicate hidden from More -->
@@ -11037,17 +11038,17 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   function getRecentlyViewedCards(){
-    const byId=new Map(cards.filter(isLiveLifecycle).map(c=>[String(c.id),c]));
+    const lookup=ensureCardLookup();
     return getRecentlyViewedEntries()
-      .map(entry=>byId.get(entry.id))
-      .filter(Boolean);
+      .map(entry=>lookup.get(entry.id))
+      .filter(card=>card && isLiveLifecycle(card));
   }
 
   function getRecentlyViewedCardEntries(){
-    const byId=new Map(cards.filter(isLiveLifecycle).map(c=>[String(c.id),c]));
+    const lookup=ensureCardLookup();
     return getRecentlyViewedEntries()
-      .map(entry=>({card:byId.get(entry.id),viewed_at:entry.viewed_at}))
-      .filter(entry=>entry.card);
+      .map(entry=>({card:lookup.get(entry.id),viewed_at:entry.viewed_at}))
+      .filter(entry=>entry.card && isLiveLifecycle(entry.card));
   }
 
   function recentViewedTimeLabel(timestamp){
@@ -11081,9 +11082,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   const FAVORITES_KEY = "collect-tcg-favorites";
 
+  let favoriteCacheRaw=null;
+  let favoriteCacheSet=new Set();
+
   function getFavoriteIds(){
     try{
-      const raw=JSON.parse(localStorage.getItem(FAVORITES_KEY)||"[]");
+      const stored=localStorage.getItem(FAVORITES_KEY)||"[]";
+      if(stored===favoriteCacheRaw) return new Set(favoriteCacheSet);
+      const raw=JSON.parse(stored);
       if(!Array.isArray(raw)) return new Set();
 
       const ids=[];
@@ -11094,8 +11100,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         seen.add(id);
         ids.push(id);
       });
-      return new Set(ids);
+      favoriteCacheRaw=stored;
+      favoriteCacheSet=new Set(ids);
+      return new Set(favoriteCacheSet);
     }catch{
+      favoriteCacheRaw=null;
+      favoriteCacheSet=new Set();
       return new Set();
     }
   }
@@ -11110,7 +11120,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         seen.add(id);
         ids.push(id);
       });
-      localStorage.setItem(FAVORITES_KEY,JSON.stringify(ids));
+      const stored=JSON.stringify(ids);
+      localStorage.setItem(FAVORITES_KEY,stored);
+      favoriteCacheRaw=stored;
+      favoriteCacheSet=new Set(ids);
       return true;
     }catch{
       return false;
@@ -11177,6 +11190,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     window.COLLECT_TCG_SUPABASE_URL,
     window.COLLECT_TCG_SUPABASE_KEY
   );
+  function runWhenIdle(callback,timeout=1200){
+    if("requestIdleCallback" in window){
+      return requestIdleCallback(callback,{timeout});
+    }
+    return setTimeout(callback,80);
+  }
+
   let ownerSession = null;
   let ownerVerified = false;
   let inventoryRenderController = null;
@@ -11187,16 +11207,33 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return !!ownerSession && ownerVerified === true;
   }
 
+  let cardLookupVersion=-1;
+  let cardLookupMap=new Map();
+
+  function ensureCardLookup(){
+    if(cardLookupVersion===cards.length && cardLookupMap.size===cards.length) return cardLookupMap;
+    cardLookupMap=new Map(cards.map(card=>[String(card.id),card]));
+    cardLookupVersion=cards.length;
+    return cardLookupMap;
+  }
+
+  function invalidateCardLookup(){
+    cardLookupVersion=-1;
+  }
+
   function getCardById(id){
     const target=String(id||"");
     if(!target) return null;
-    return cards.find(card=>String(card.id)===target) || null;
+    return ensureCardLookup().get(target) || null;
   }
 
   function getCardIndexById(id){
     const target=String(id||"");
     if(!target) return -1;
-    return cards.findIndex(card=>String(card.id)===target);
+    for(let i=0;i<cards.length;i++){
+      if(String(cards[i].id)===target) return i;
+    }
+    return -1;
   }
 
   function getDetailsCard(){
@@ -11208,6 +11245,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const index=getCardIndexById(card.id);
     if(index<0) return false;
     cards[index]=card;
+    invalidateCardLookup();
     return true;
   }
 
@@ -12113,6 +12151,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     // Remove stale local references immediately.
     cards=cards.filter(c=>String(c.id)!==id);
+    invalidateCardLookup();
     compareSelectedIds.delete(id);
     updateCompareTray();
 
@@ -27296,7 +27335,14 @@ function wireShimmer(container){
 
   window.addEventListener("scroll", updateBackToTop, { passive: true });
   if(shell) shell.addEventListener("scroll", updateBackToTop, { passive: true });
-  window.addEventListener("resize", updateBackToTop, { passive: true });
+  let backToTopResizeRaf=0;
+  window.addEventListener("resize", ()=>{
+    if(backToTopResizeRaf) cancelAnimationFrame(backToTopResizeRaf);
+    backToTopResizeRaf=requestAnimationFrame(()=>{
+      backToTopResizeRaf=0;
+      updateBackToTop();
+    });
+  }, { passive: true });
   updateBackToTop();
 })();
 </script>
@@ -27551,10 +27597,12 @@ function wireShimmer(container){
     return "";
   }
 
+  const mobileMedia=window.matchMedia("(max-width:800px)");
+
   function update(){
-    const mobile=window.matchMedia("(max-width:800px)").matches;
-    const detailsVisible=document.getElementById("detailsOverlay") &&
-      !document.getElementById("detailsOverlay").hidden;
+    const mobile=mobileMedia.matches;
+    const detailsOverlayEl=document.getElementById("detailsOverlay");
+    const detailsVisible=detailsOverlayEl && !detailsOverlayEl.hidden;
 
     if(!mobile || (!isDetailRoute() && !detailsVisible)){
       if(!bar.hidden) bar.hidden=true;
