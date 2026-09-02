@@ -19,6 +19,7 @@
 <!-- MOBILE PRICE SYNC: sticky enquiry price follows card-detail currency changes -->
 <!-- SEALED OVERVIEW: sealed listings now show condition overlay badge -->
 <!-- STICKY PRICE FINAL FIX: reads .detail-price-primary after currency re-render -->
+<!-- GLOBAL CURRENCY SYNC: changing currency updates details, sticky price and all rendered overview cards -->
 <!-- OWNER TOOL: permanent listing deletion with double confirmation -->
 <!-- MOBILE FIX: compact metadata pills + 44px invisible hit targets across iOS/Android -->
 <!-- DESKTOP NAV FIX: Reserved stays primary; duplicate hidden from More -->
@@ -11505,6 +11506,50 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return safe;
   }
 
+  function syncCurrencyEverywhere(currency=getPriceCurrencyPreference()){
+    const safe=["USD","MYR","SGD"].includes(String(currency||"").toUpperCase())
+      ? String(currency).toUpperCase()
+      : getPriceCurrencyPreference();
+
+    // Keep every currency selector in sync, even when it is behind an open modal.
+    ["homeCurrencyPreference","currencyPreference","detailsCurrencyPreference"].forEach(id=>{
+      const el=$(id);
+      if(el && el.value!==safe) el.value=safe;
+    });
+
+    const priceLabel=document.querySelector(".price-range-label");
+    if(priceLabel) priceLabel.textContent=`Price (${safe})`;
+
+    // Refresh every currently-rendered overview card in place. This includes
+    // Inventory, Home sections and Recently Viewed, without rebuilding the page.
+    document.querySelectorAll('.card[data-card-id]').forEach(tile=>{
+      const card=getCardById(tile.dataset.cardId);
+      if(!card) return;
+
+      const current=tile.querySelector(".clean-price-block");
+      const nextHtml=cardPriceDisplayHTML(card);
+
+      if(current && nextHtml){
+        const holder=document.createElement("div");
+        holder.innerHTML=nextHtml.trim();
+        const next=holder.firstElementChild;
+        if(next) current.replaceWith(next);
+      }else if(current && !nextHtml){
+        current.remove();
+      }
+    });
+
+    // If Compare is open, refresh its price order too.
+    const compareOverlay=$("compareOverlay");
+    if(compareOverlay && !compareOverlay.hidden && compareSelectedCards().length>=2){
+      renderCompareModal();
+    }
+
+    window.dispatchEvent(new CustomEvent("collecttcg:pricecurrencychange",{
+      detail:{currency:safe}
+    }));
+  }
+
   function getInventoryViewMode(){
     try{
       return localStorage.getItem(INVENTORY_VIEW_KEY)==="compact" ? "compact" : "grid";
@@ -15601,8 +15646,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     view.querySelectorAll(".home-storefront-grid").forEach(grid=>wireShimmer(grid));
 
     $("homeCurrencyPreference")?.addEventListener("change",e=>{
-      setPriceCurrencyPreference(e.target.value);
+      const currency=setPriceCurrencyPreference(e.target.value);
       renderHomePage();
+      syncCurrencyEverywhere(currency);
       showToast(`Primary price set to ${getPriceCurrencyPreference()}`);
     });
 
@@ -17379,12 +17425,12 @@ function wireShimmer(container){
     },{signal:inventorySignal});
 
     $("currencyPreference")?.addEventListener("change",e=>{
-      setPriceCurrencyPreference(e.target.value);
+      const currency=setPriceCurrencyPreference(e.target.value);
       const priceLabel=document.querySelector(".price-range-label");
       if(priceLabel) priceLabel.textContent=`Price (${getPriceCurrencyPreference()})`;
       updateListingUrlFromControls();
       draw();
-      if(!$("compareOverlay").hidden && compareSelectedCards().length>=2) renderCompareModal();
+      syncCurrencyEverywhere(currency);
       showToast(`${getPriceCurrencyPreference()} prices shown first`);
     });
 
@@ -26270,14 +26316,11 @@ function wireShimmer(container){
     });
 
     $("detailsCurrencyPreference")?.addEventListener("change",async e=>{
-      setPriceCurrencyPreference(e.target.value);
+      const currency=setPriceCurrencyPreference(e.target.value);
       await openDetailsModal(card);
 
-      // The mobile enquiry bar lives outside the details modal, so notify it
-      // only after the newly selected currency has finished rendering.
-      window.dispatchEvent(new CustomEvent("collecttcg:pricecurrencychange",{
-        detail:{currency:getPriceCurrencyPreference(),cardId:String(card.id||"")}
-      }));
+      // Card details and every overview surface now share one currency setting.
+      syncCurrencyEverywhere(currency);
 
       showToast(`Primary price set to ${getPriceCurrencyPreference()}`);
     });
