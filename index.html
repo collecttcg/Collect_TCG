@@ -16,6 +16,7 @@
 <!-- MOBILE ENQUIRY: platform chooser for Instagram/Facebook/Carousell + copy inquiry -->
 <!-- DETAIL ACTION CLEANUP: redundant Message/PM button removed -->
 <!-- REFACTOR STAGE 5: startup/render performance optimizations; behavior unchanged -->
+<!-- MOBILE PRICE SYNC: sticky enquiry price follows card-detail currency changes -->
 <!-- OWNER TOOL: permanent listing deletion with double confirmation -->
 <!-- MOBILE FIX: compact metadata pills + 44px invisible hit targets across iOS/Android -->
 <!-- DESKTOP NAV FIX: Reserved stays primary; duplicate hidden from More -->
@@ -26254,6 +26255,13 @@ function wireShimmer(container){
     $("detailsCurrencyPreference")?.addEventListener("change",async e=>{
       setPriceCurrencyPreference(e.target.value);
       await openDetailsModal(card);
+
+      // The mobile enquiry bar lives outside the details modal, so notify it
+      // only after the newly selected currency has finished rendering.
+      window.dispatchEvent(new CustomEvent("collecttcg:pricecurrencychange",{
+        detail:{currency:getPriceCurrencyPreference(),cardId:String(card.id||"")}
+      }));
+
       showToast(`Primary price set to ${getPriceCurrencyPreference()}`);
     });
 
@@ -27579,10 +27587,15 @@ function wireShimmer(container){
 
   function findVisiblePrice(){
     const selectors=[
+      "#detailsMount .detail-price",
+      "#detailsMount .card-detail-price",
+      "#detailsMount [data-detail-price]",
+      "#detailsMount .clean-price-primary",
+      "#detailsMount .price-primary",
       ".detail-price",
       ".card-detail-price",
-      ".clean-price-primary",
       "[data-detail-price]",
+      ".clean-price-primary",
       ".price-primary",
       ".price"
     ];
@@ -27713,6 +27726,13 @@ function wireShimmer(container){
   });
 
   window.addEventListener("popstate",()=>scheduleUpdate(50));
+
+  // Card details can change currency without changing route. Refresh the
+  // external sticky price after that detail render has completed.
+  window.addEventListener("collecttcg:pricecurrencychange",()=>{
+    scheduleUpdate(0);
+  });
+
   window.addEventListener("resize",()=>scheduleUpdate(20),{passive:true});
 
   // Smooth previous/next card navigation uses history.replaceState and does
