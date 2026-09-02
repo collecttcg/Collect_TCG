@@ -10803,6 +10803,49 @@ body.interest-contact-open{
   }
 }
 
+
+/* =========================================================
+   MOBILE NAV — COLLECTION PRIMARY
+   Row 1: Home | Inventory
+   Row 2: Sold | Collection
+   Row 3: More
+   Favorites remains available through More.
+   ========================================================= */
+@media (max-width:800px){
+  nav.mainnav > a[data-route="favorites"].mobile-secondary-nav{
+    display:none !important;
+  }
+
+  nav.mainnav > a[data-route="collection"].collection-primary-nav{
+    display:flex !important;
+    order:4 !important;
+    grid-column:2 !important;
+    min-height:46px !important;
+    padding:9px 10px !important;
+    justify-content:flex-start !important;
+    align-items:center !important;
+    gap:8px !important;
+    border-radius:11px !important;
+    font-size:13px !important;
+  }
+
+  nav.mainnav > .mobile-more-menu > a[data-route="favorites"]{
+    display:flex !important;
+  }
+
+  nav.mainnav > .mobile-more-menu > a[data-route="collection"]{
+    display:none !important;
+  }
+}
+
+@media (max-width:360px){
+  nav.mainnav > a[data-route="collection"].collection-primary-nav{
+    padding:8px 7px !important;
+    gap:5px !important;
+    font-size:12px !important;
+  }
+}
+
 </style>
 </head>
 <body>
