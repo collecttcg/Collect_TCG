@@ -10994,6 +10994,67 @@ body.interest-contact-open{
   }
 }
 
+
+/* =========================================================
+   ACTIVE FILTER PLACEMENT
+   Search/Filters/Sort -> Active filters -> Results/Pagination
+   ========================================================= */
+.active-filter-result-bridge{
+  margin:8px 0 7px !important;
+}
+
+@media(max-width:800px){
+  .active-filter-result-bridge:not([hidden]){
+    position:relative !important;
+    top:auto !important;
+    z-index:12 !important;
+    display:flex !important;
+    flex-wrap:nowrap !important;
+    align-items:center !important;
+    gap:6px !important;
+    width:100% !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    padding:7px 2px 8px !important;
+    margin:4px 0 7px !important;
+    background:transparent !important;
+    scrollbar-width:none;
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .active-filter-result-bridge:not([hidden])::-webkit-scrollbar{
+    display:none;
+  }
+
+  .active-filter-result-bridge > *{
+    flex:0 0 auto !important;
+  }
+
+  /* Do not let active filters become a multi-row wall on phones. */
+  .active-filter-result-bridge .filter-pill,
+  .active-filter-result-bridge .filter-pill-btn,
+  .active-filter-result-bridge button{
+    white-space:nowrap !important;
+  }
+
+  /* Mobile search visually comes first, then Filter/Sort drawer actions,
+     then this active-filter strip and pagination. */
+  .mobile-inventory-search{
+    margin-bottom:6px !important;
+  }
+}
+
+@media(min-width:801px){
+  .active-filter-result-bridge:not([hidden]){
+    display:flex !important;
+    flex-wrap:wrap !important;
+    align-items:center !important;
+    gap:6px !important;
+    padding:2px 0 !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -17025,8 +17086,6 @@ function wireShimmer(container){
         </div>
       </div>
 
-      <div class="pill-filter-summary" id="pillFilterSummary" hidden></div>
-
       <div class="mobile-inventory-search" id="mobileInventorySearchWrap">
         <span class="mobile-inventory-search-icon" aria-hidden="true">⌕</span>
         <input type="search"
@@ -17128,6 +17187,10 @@ function wireShimmer(container){
           <button type="button" class="btn-primary filter-drawer-apply" id="mobileFilterApplyBtn">Show Results</button>
         </div>
       </section>
+
+      <!-- Active filters belong between the controls that created them and
+           the result/pagination area they affect. -->
+      <div class="pill-filter-summary active-filter-result-bridge" id="pillFilterSummary" hidden></div>
 
       <div class="listing-pagination-shell listing-pagination-top" id="listingPaginationTop" hidden></div>
 
