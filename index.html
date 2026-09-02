@@ -12456,6 +12456,19 @@ body.light-mode .sticky-mobile-results-action small{
   }
 }
 
+
+/* =========================================================
+   CARD DETAILS STATUS CORNER — ANCHOR TO VISIBLE PHOTO
+   The slider uses object-fit:contain, so the visible card photo
+   may not fill the entire stage. JS supplies the real photo bounds.
+   ========================================================= */
+.modal.card-details-modal .detail-slider-stage .status-corner{
+  left:var(--detail-status-left,0px) !important;
+  top:var(--detail-status-top,0px) !important;
+  width:var(--detail-status-size,46%) !important;
+  max-width:none !important;
+}
+
 </style>
 </head>
 <body>
@@ -27810,6 +27823,51 @@ function wireShimmer(container){
   let detailsLastFocusedElement = null;
 
 
+  function syncDetailsStatusCornerToVisibleImage(){
+    const stage=detailsMount?.querySelector(".detail-slider-stage");
+    const img=stage?.querySelector(".detail-slider-image");
+    const corner=stage?.querySelector(".status-corner");
+    if(!stage || !img || !corner) return;
+
+    const naturalW=Number(img.naturalWidth||0);
+    const naturalH=Number(img.naturalHeight||0);
+    if(!naturalW || !naturalH) return;
+
+    const style=getComputedStyle(img);
+    const padLeft=parseFloat(style.paddingLeft)||0;
+    const padRight=parseFloat(style.paddingRight)||0;
+    const padTop=parseFloat(style.paddingTop)||0;
+    const padBottom=parseFloat(style.paddingBottom)||0;
+
+    const boxW=Math.max(0,img.clientWidth-padLeft-padRight);
+    const boxH=Math.max(0,img.clientHeight-padTop-padBottom);
+    if(!boxW || !boxH) return;
+
+    const scale=Math.min(boxW/naturalW,boxH/naturalH);
+    const renderedW=naturalW*scale;
+    const renderedH=naturalH*scale;
+
+    const imageLeft=img.offsetLeft+padLeft+Math.max(0,(boxW-renderedW)/2);
+    const imageTop=img.offsetTop+padTop+Math.max(0,(boxH-renderedH)/2);
+
+    const triangleSize=Math.max(
+      90,
+      Math.min(renderedW*0.46,renderedH*0.46,360)
+    );
+
+    corner.style.setProperty("--detail-status-left",`${imageLeft}px`);
+    corner.style.setProperty("--detail-status-top",`${imageTop}px`);
+    corner.style.setProperty("--detail-status-size",`${triangleSize}px`);
+  }
+
+  function scheduleDetailsStatusCornerSync(){
+    requestAnimationFrame(()=>{
+      syncDetailsStatusCornerToVisibleImage();
+      requestAnimationFrame(syncDetailsStatusCornerToVisibleImage);
+    });
+  }
+
+
   let lightboxImages = [];
   let lightboxIndex = 0;
 
@@ -28803,7 +28861,10 @@ function wireShimmer(container){
         slideImg.classList.add("is-switching");
         slideImg.src = images[slideIndex];
         slideImg.alt = `${card.name} image ${slideIndex + 1}`;
-        const settle=()=>slideImg.classList.remove("is-switching");
+        const settle=()=>{
+          slideImg.classList.remove("is-switching");
+          scheduleDetailsStatusCornerSync();
+        };
         if(slideImg.complete) requestAnimationFrame(settle);
         else slideImg.addEventListener("load",settle,{once:true});
         if(countEl) countEl.textContent = `${slideIndex + 1} / ${images.length}`;
@@ -28817,6 +28878,12 @@ function wireShimmer(container){
       }
 
       preloadDetailNeighbors(0);
+
+      if(slideImg.complete && slideImg.naturalWidth){
+        scheduleDetailsStatusCornerSync();
+      }else{
+        slideImg.addEventListener("load",scheduleDetailsStatusCornerSync,{once:true});
+      }
 
       const prev = slider.querySelector(".detail-slider-btn.prev");
       const next = slider.querySelector(".detail-slider-btn.next");
@@ -28900,6 +28967,14 @@ function wireShimmer(container){
       if(location.hash!==target) location.hash=target;
     }
   }
+
+  window.addEventListener("resize",()=>{
+    if(!detailsOverlay.hidden) scheduleDetailsStatusCornerSync();
+  },{passive:true});
+
+  window.addEventListener("orientationchange",()=>{
+    if(!detailsOverlay.hidden) setTimeout(scheduleDetailsStatusCornerSync,80);
+  });
 
   $("imageLightboxClose").addEventListener("click", closeImageLightbox);
   $("imageLightboxDownload").addEventListener("click", e=>{
