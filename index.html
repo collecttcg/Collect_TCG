@@ -27916,20 +27916,25 @@ function wireShimmer(container){
     return clean || "card";
   }
 
+  // Downloaded-image watermark matches the on-screen status overlay styling.
   function getDownloadStatusWatermarkMeta(availability){
     const value = String(availability || "").trim().toLowerCase();
     if(value === "sold"){
       return {
         label:"SOLD",
         color:"#ff1f1f",
-        shadow:"rgba(140,0,0,.30)"
+        shadow:"rgba(140,0,0,.30)",
+        textColor:"#ffffff",
+        strokeColor:"rgba(0,0,0,.20)"
       };
     }
     if(value === "reserved"){
       return {
         label:"RESERVE",
         color:"#ffd400",
-        shadow:"rgba(140,112,0,.30)"
+        shadow:"rgba(140,112,0,.30)",
+        textColor:"#171717",
+        strokeColor:"rgba(255,255,255,.35)"
       };
     }
     return null;
@@ -27997,9 +28002,9 @@ function wireShimmer(container){
     ctx.textBaseline = "middle";
     ctx.lineJoin = "round";
     ctx.lineWidth = Math.max(7, Math.round(tri * 0.038));
-    ctx.strokeStyle = "rgba(255,255,255,.28)";
+    ctx.strokeStyle = meta.strokeColor || "rgba(0,0,0,.20)";
     ctx.strokeText(text,0,0);
-    ctx.fillStyle = "#000000";
+    ctx.fillStyle = meta.textColor || "#ffffff";
     ctx.fillText(text,0,0);
     ctx.restore();
 
