@@ -14632,6 +14632,43 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return new URLSearchParams(qIndex >= 0 ? raw.slice(qIndex + 1) : "");
   }
 
+  function scrollListingPageHeaderIntoView(){
+    const heading=document.querySelector(".listing-page-head");
+    if(!heading) return false;
+
+    const shell=document.querySelector(".shell");
+    const mobileShellScroll=
+      window.matchMedia("(max-width:800px)").matches &&
+      shell &&
+      getComputedStyle(shell).overflowY!=="visible";
+
+    if(mobileShellScroll){
+      const shellRect=shell.getBoundingClientRect();
+      const headingRect=heading.getBoundingClientRect();
+      const target=shell.scrollTop + (headingRect.top-shellRect.top) - 6;
+      shell.scrollTo({top:Math.max(0,target),left:0,behavior:"auto"});
+    }else{
+      const target=window.scrollY + heading.getBoundingClientRect().top - 6;
+      window.scrollTo({top:Math.max(0,target),left:window.scrollX,behavior:"auto"});
+    }
+    return true;
+  }
+
+  function consumeHomeViewAllScrollTarget(){
+    let shouldScroll=false;
+    try{
+      shouldScroll=sessionStorage.getItem("collect_tcg_scroll_listing_header_once")==="1";
+      if(shouldScroll) sessionStorage.removeItem("collect_tcg_scroll_listing_header_once");
+    }catch{}
+    if(!shouldScroll) return;
+
+    // Wait for the destination route/cards to paint, then align to the page header.
+    requestAnimationFrame(()=>{
+      scrollListingPageHeaderIntoView();
+      requestAnimationFrame(scrollListingPageHeaderIntoView);
+    });
+  }
+
   function safeUrlFilterText(value, maxLength = 100){
     return String(value ?? "").trim().slice(0, maxLength);
   }
@@ -17271,7 +17308,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         ` : "";
 
         return [
-          storefrontRow("High Value","Premium listings at USD 6,000+.",highValue,"#/inventory"),
+          /* High Value View All mirrors the Home threshold: USD 6,000+. */
+          storefrontRow("High Value","Premium listings at USD 6,000+.",highValue,"#/inventory?pc=USD&pmin=6000"),
           storefrontRow("Vintage","Older collectible releases currently available.",vintage,"#/inventory?quick=vintage"),
           storefrontRow("Recently Sold","Recently sold cards from the archive.",recentlySold,"#/sold")
         ].join("");
@@ -17308,6 +17346,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       renderHomePage();
       syncCurrencyEverywhere(currency);
       showToast(`Primary price set to ${getPriceCurrencyPreference()}`);
+    });
+
+    view.querySelectorAll(".home-section-link").forEach(link=>{
+      link.addEventListener("click",()=>{
+        try{ sessionStorage.setItem("collect_tcg_scroll_listing_header_once","1"); }catch{}
+      });
     });
 
     view.querySelectorAll("[data-home-filter]").forEach(btn=>{
@@ -19474,6 +19518,8 @@ function wireShimmer(container){
     $("mobileFilterCloseBtn")?.addEventListener("click",closeMobileFilterDrawer);
     $("mobileFilterApplyBtn")?.addEventListener("click",closeMobileFilterDrawer);
     $("mobileFilterBackdrop")?.addEventListener("click",closeMobileFilterDrawer);
+
+    consumeHomeViewAllScrollTarget();
 
     function clearAllInventoryFilters(){
       $("search").value="";
