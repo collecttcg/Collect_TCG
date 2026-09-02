@@ -11753,6 +11753,93 @@ html{
   }
 }
 
+
+/* =========================================================
+   MOBILE SEARCH + FILTER — TRUE SHARED ROW
+   Search uses available width; Filters stays compact beside it.
+   ========================================================= */
+.mobile-search-filter-row{
+  display:none;
+}
+
+@media(max-width:800px){
+
+  /* The display-tools area no longer needs to reserve space for Filters. */
+  .listing-filter-tools .inventory-display-tools{
+    display:none !important;
+  }
+
+  .mobile-search-filter-row{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    align-items:stretch !important;
+    gap:7px !important;
+    width:100% !important;
+    margin:0 0 7px !important;
+  }
+
+  .mobile-search-filter-row .mobile-inventory-search{
+    display:block !important;
+    position:relative !important;
+    width:100% !important;
+    min-width:0 !important;
+    margin:0 !important;
+  }
+
+  .mobile-search-filter-row .mobile-inventory-search input[type="search"]{
+    width:100% !important;
+    height:46px !important;
+    min-height:46px !important;
+    margin:0 !important;
+    padding-right:38px !important;
+  }
+
+  .mobile-search-filter-btn{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:5px !important;
+    width:auto !important;
+    min-width:88px !important;
+    max-width:112px !important;
+    min-height:46px !important;
+    height:46px !important;
+    margin:0 !important;
+    padding:0 13px !important;
+    white-space:nowrap !important;
+  }
+
+  /* Previous experimental grid positioning is no longer needed. */
+  .listing-filter-tools{
+    display:block !important;
+  }
+
+  .listing-filter-tools .quick-filters{
+    margin-bottom:7px !important;
+  }
+
+  .inventory-mobile-compact-result{
+    margin-top:0 !important;
+  }
+}
+
+@media(max-width:390px){
+  .mobile-search-filter-row{
+    gap:6px !important;
+  }
+
+  .mobile-search-filter-row .mobile-inventory-search input[type="search"],
+  .mobile-search-filter-btn{
+    height:44px !important;
+    min-height:44px !important;
+  }
+
+  .mobile-search-filter-btn{
+    min-width:82px !important;
+    padding:0 10px !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -17827,10 +17914,6 @@ function wireShimmer(container){
             ${compact?"▦ Grid View":"☷ Compact View"}
           </button>
 
-          <button type="button" class="mobile-filter-open-btn" id="mobileFilterOpenBtn" aria-expanded="false">
-            Filters <span class="filter-count-badge" id="mobileFilterCountBadge" hidden>0</span>
-          </button>
-
           <button type="button" class="copy-filter-link-btn" id="copyFilterLinkBtn" title="Copy a link to these filters">
             <span class="copy-filter-link-desktop">Copy Filtered Link</span>
             <span class="copy-filter-link-mobile">Copy Filter Link</span>
@@ -17838,17 +17921,26 @@ function wireShimmer(container){
         </div>
       </div>
 
-      <div class="mobile-inventory-search" id="mobileInventorySearchWrap">
-        <span class="mobile-inventory-search-icon" aria-hidden="true">⌕</span>
-        <input type="search"
-               id="mobileInventorySearch"
-               maxlength="100"
-               autocomplete="off"
-               placeholder="Search name, code, year or series…"
-               aria-autocomplete="list"
-               aria-controls="mobileSearchSuggestions">
-        <button type="button" class="mobile-inventory-search-clear" id="mobileInventorySearchClear" aria-label="Clear search" hidden>×</button>
-        <div class="search-suggestions mobile-search-suggestions" id="mobileSearchSuggestions" role="listbox" hidden></div>
+      <div class="mobile-search-filter-row">
+        <div class="mobile-inventory-search" id="mobileInventorySearchWrap">
+          <span class="mobile-inventory-search-icon" aria-hidden="true">⌕</span>
+          <input type="search"
+                 id="mobileInventorySearch"
+                 maxlength="100"
+                 autocomplete="off"
+                 placeholder="Search cards…"
+                 aria-autocomplete="list"
+                 aria-controls="mobileSearchSuggestions">
+          <button type="button" class="mobile-inventory-search-clear" id="mobileInventorySearchClear" aria-label="Clear search" hidden>×</button>
+          <div class="search-suggestions mobile-search-suggestions" id="mobileSearchSuggestions" role="listbox" hidden></div>
+        </div>
+
+        <button type="button"
+                class="mobile-filter-open-btn mobile-search-filter-btn"
+                id="mobileFilterOpenBtn"
+                aria-expanded="false">
+          Filters <span class="filter-count-badge" id="mobileFilterCountBadge" hidden>0</span>
+        </button>
       </div>
 
       <div class="mobile-filter-backdrop" id="mobileFilterBackdrop" hidden></div>
