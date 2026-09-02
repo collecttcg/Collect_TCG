@@ -11548,6 +11548,211 @@ html{
   scroll-behavior:auto;
 }
 
+
+/* =========================================================
+   MOBILE INVENTORY — COMPACT FIRST-CARD LAYOUT
+   Goal: get users to the first listing much faster.
+   Desktop is unchanged.
+   ========================================================= */
+@media(max-width:800px){
+
+  /* 1) Collapse the large page intro. Keep only the title. */
+  .listing-page-head{
+    margin-bottom:8px !important;
+    padding-bottom:0 !important;
+  }
+
+  .listing-page-head .eyebrow,
+  .listing-page-head p{
+    display:none !important;
+  }
+
+  .listing-page-head h2{
+    margin:0 !important;
+    font-size:22px !important;
+    line-height:1.1 !important;
+  }
+
+  /* 2) Keep quick filters as one compact horizontal strip. */
+  .listing-filter-tools .quick-filters{
+    order:1 !important;
+    margin:0 0 7px !important;
+    padding:0 0 2px !important;
+    gap:6px !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    flex-wrap:nowrap !important;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .listing-filter-tools .quick-filters::-webkit-scrollbar{
+    display:none;
+  }
+
+  .listing-filter-tools .quick-filter{
+    flex:0 0 auto !important;
+    min-height:38px !important;
+    padding:8px 13px !important;
+    border-radius:999px !important;
+    font-size:10px !important;
+    white-space:nowrap !important;
+  }
+
+  /* Hide the standalone toolbar context above the cards.
+     Result count is shown in the compact mobile row below. */
+  .listing-filter-tools .inventory-toolbar-context{
+    display:none !important;
+  }
+
+  /* 3) Hide secondary controls from the main mobile surface.
+        They remain available inside the existing Filters drawer. */
+  .listing-filter-tools .currency-preference-control,
+  .listing-filter-tools .listing-per-page-control,
+  .listing-filter-tools .copy-filter-link-btn{
+    display:none !important;
+  }
+
+  /* The old three-column display toolbar no longer needs to consume a row. */
+  .listing-filter-tools .inventory-display-tools{
+    order:3 !important;
+    display:block !important;
+    margin:0 !important;
+    min-height:0 !important;
+  }
+
+  /* Keep only the Filters button from this toolbar. */
+  .listing-filter-tools .mobile-filter-open-btn{
+    display:flex !important;
+    width:auto !important;
+    min-width:96px !important;
+    min-height:46px !important;
+    align-items:center !important;
+    justify-content:center !important;
+    padding:0 14px !important;
+    margin:0 !important;
+  }
+
+  /* Desktop-only view toggle stays hidden on mobile. */
+  .listing-filter-tools .desktop-compact-view-toggle{
+    display:none !important;
+  }
+
+  /* 4) Search becomes the primary mobile action, beside Filters. */
+  .mobile-inventory-search{
+    order:2 !important;
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    gap:7px !important;
+    align-items:stretch !important;
+    margin:0 0 8px !important;
+  }
+
+  .mobile-inventory-search .inventory-search-wrap{
+    min-width:0 !important;
+    margin:0 !important;
+  }
+
+  .mobile-inventory-search input[type="search"]{
+    min-height:46px !important;
+    height:46px !important;
+  }
+
+  /* Move the existing Filters button visually into the search row. */
+  .listing-filter-tools{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    grid-template-areas:
+      "quick quick"
+      "search filter"
+      "active active"
+      "results results" !important;
+    gap:0 7px !important;
+  }
+
+  .listing-filter-tools .quick-filters{
+    grid-area:quick !important;
+  }
+
+  .listing-filter-tools .mobile-inventory-search{
+    grid-area:search !important;
+  }
+
+  .listing-filter-tools .inventory-display-tools{
+    grid-area:filter !important;
+    align-self:stretch !important;
+  }
+
+  .listing-filter-tools .active-filter-result-bridge{
+    grid-area:active !important;
+  }
+
+  /* Compact result line directly above first card. */
+  .listing-filter-tools .inventory-mobile-compact-result{
+    grid-area:results !important;
+  }
+
+  /* 5) Top pagination is unnecessary on mobile.
+        Users start browsing immediately; bottom pagination remains. */
+  #listingPaginationTop{
+    display:none !important;
+  }
+
+  /* Reduce vertical gaps before the grid. */
+  .active-filter-result-bridge{
+    margin:3px 0 5px !important;
+  }
+
+  #invGrid{
+    margin-top:5px !important;
+  }
+}
+
+/* Extra tightening for narrow phones. */
+@media(max-width:390px){
+  .listing-page-head h2{
+    font-size:20px !important;
+  }
+
+  .listing-filter-tools .quick-filter{
+    min-height:36px !important;
+    padding:7px 11px !important;
+  }
+
+  .mobile-inventory-search input[type="search"],
+  .listing-filter-tools .mobile-filter-open-btn{
+    min-height:44px !important;
+    height:44px !important;
+  }
+
+  .listing-filter-tools .mobile-filter-open-btn{
+    min-width:88px !important;
+    padding:0 11px !important;
+  }
+}
+
+
+.inventory-mobile-compact-result{
+  display:none;
+}
+@media(max-width:800px){
+  .inventory-mobile-compact-result{
+    display:flex !important;
+    align-items:center;
+    gap:4px;
+    min-height:24px;
+    margin:0 0 2px;
+    color:var(--text-muted);
+    font-size:9px;
+    line-height:1.2;
+  }
+  .inventory-mobile-compact-result strong{
+    color:var(--text);
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -17739,6 +17944,9 @@ function wireShimmer(container){
            the result/pagination area they affect. -->
       <div class="pill-filter-summary active-filter-result-bridge" id="pillFilterSummary" hidden></div>
 
+      <div class="inventory-mobile-compact-result" aria-live="polite">
+        <strong id="inventoryMobileCompactResultCount">0</strong> listings
+      </div>
       <div class="listing-pagination-shell listing-pagination-top" id="listingPaginationTop" hidden></div>
 
       <div id="invGrid" aria-busy="true">${inventorySkeletonHTML(8)}</div>
@@ -18408,6 +18616,8 @@ function wireShimmer(container){
         if(mobileResultCount) mobileResultCount.textContent="0";
         const desktopResultCount=$("inventoryResultCount");
         if(desktopResultCount) desktopResultCount.textContent="0";
+        const compactMobileResultCount=$("inventoryMobileCompactResultCount");
+        if(compactMobileResultCount) compactMobileResultCount.textContent="0";
         const footerResultCount=$("mobileFilterFooterResultCount");
         if(footerResultCount) footerResultCount.textContent="0";
         renderPagination(0);
@@ -18423,6 +18633,8 @@ function wireShimmer(container){
       if(mobileResultCount) mobileResultCount.textContent=String(list.length);
       const desktopResultCount=$("inventoryResultCount");
       if(desktopResultCount) desktopResultCount.textContent=list.length.toLocaleString();
+      const compactMobileResultCount=$("inventoryMobileCompactResultCount");
+      if(compactMobileResultCount) compactMobileResultCount.textContent=list.length.toLocaleString();
       const footerResultCount=$("mobileFilterFooterResultCount");
       if(footerResultCount) footerResultCount.textContent=list.length.toLocaleString();
       if(list.length===0){
