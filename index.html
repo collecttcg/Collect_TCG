@@ -18,6 +18,7 @@
 <!-- REFACTOR STAGE 5: startup/render performance optimizations; behavior unchanged -->
 <!-- MOBILE PRICE SYNC: sticky enquiry price follows card-detail currency changes -->
 <!-- SEALED OVERVIEW: sealed listings now show condition overlay badge -->
+<!-- STICKY PRICE FINAL FIX: reads .detail-price-primary after currency re-render -->
 <!-- OWNER TOOL: permanent listing deletion with double confirmation -->
 <!-- MOBILE FIX: compact metadata pills + 44px invisible hit targets across iOS/Android -->
 <!-- DESKTOP NAV FIX: Reserved stays primary; duplicate hidden from More -->
@@ -27603,11 +27604,19 @@ function wireShimmer(container){
 
   function findVisiblePrice(){
     const selectors=[
+      // Card details use this exact class for the selected primary currency.
+      "#detailsMount .detail-price-primary",
+      "#detailsMount .detail-summary-price .detail-price-primary",
+
+      // Compatibility fallbacks for older detail layouts.
       "#detailsMount .detail-price",
       "#detailsMount .card-detail-price",
       "#detailsMount [data-detail-price]",
       "#detailsMount .clean-price-primary",
       "#detailsMount .price-primary",
+
+      // Only fall back outside the details modal as a last resort.
+      ".detail-price-primary",
       ".detail-price",
       ".card-detail-price",
       "[data-detail-price]",
@@ -27747,6 +27756,9 @@ function wireShimmer(container){
   // external sticky price after that detail render has completed.
   window.addEventListener("collecttcg:pricecurrencychange",()=>{
     scheduleUpdate(0);
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>update());
+    });
   });
 
   window.addEventListener("resize",()=>scheduleUpdate(20),{passive:true});
