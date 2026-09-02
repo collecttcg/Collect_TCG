@@ -39,8 +39,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Collect TCG">
   <link rel="manifest" href="./collect-tcg-manifest.webmanifest">
-<link rel="apple-touch-icon" href="./collect-tcg-icon-192.png">
-<link rel="icon" type="image/png" href="./collect-tcg-icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./collect-tcg-apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="./collect-tcg-favicon.png">
 <title>Collect TCG MY & SG — Inventory</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -12176,6 +12176,264 @@ html{
     padding:13px 12px !important;
     gap:8px !important;
   }
+}
+
+
+/* =========================================================
+   LIGHT MODE READABILITY PASS
+   Dark mode is untouched.
+   ========================================================= */
+body.light-mode{
+  --bg:#f3f1ec;
+  --sidebar:#f8f7f3;
+  --surface:#ffffff;
+  --surface-2:#f6f4ef;
+  --surface-3:#ebe8e1;
+  --border:#c9c5bc;
+  --border-soft:#dedbd4;
+  --text:#1f252b;
+  --text-muted:#505861;
+  --text-dim:#69717a;
+  --accent-teal:#176f68;
+  --accent-gold:#946b18;
+  color-scheme:light;
+}
+
+body.light-mode{
+  background-image:
+    radial-gradient(circle at 1px 1px,rgba(40,45,50,.035) 1px,transparent 0);
+}
+body.light-mode::before{
+  opacity:.008 !important;
+}
+
+/* General light surfaces */
+body.light-mode .sidebar{
+  background:rgba(248,247,243,.98) !important;
+  box-shadow:1px 0 0 rgba(31,37,43,.07) !important;
+}
+
+body.light-mode .card,
+body.light-mode .panel,
+body.light-mode .form-card,
+body.light-mode .detail-section,
+body.light-mode .detail-summary-card,
+body.light-mode .home-shipping-item,
+body.light-mode .home-feature{
+  background:#fff !important;
+  border-color:var(--border) !important;
+}
+
+/* ---------------------------------------------------------
+   COLLECTION AT A GLANCE — dedicated light-mode treatment
+   --------------------------------------------------------- */
+body.light-mode #view .home-collection-stats-section{
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+
+body.light-mode #view .home-collection-stats-section .home-section-head h3{
+  color:#20262c !important;
+}
+
+body.light-mode #view .home-collection-stats-section .home-section-head p{
+  color:#59616a !important;
+}
+
+body.light-mode #view .home-collection-stats .home-stat-card{
+  background:
+    linear-gradient(145deg,#f8fbfb,#eef4f3) !important;
+  border-color:#aebfbd !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    0 5px 14px rgba(38,48,50,.08) !important;
+}
+
+body.light-mode #view .home-collection-stats .home-stat-card::before{
+  background:linear-gradient(90deg,#2f8d87,#4c9aa1) !important;
+  opacity:.9 !important;
+}
+
+body.light-mode #view .home-collection-stats .home-stat-card::after{
+  background:rgba(47,141,135,.055) !important;
+}
+
+body.light-mode #view .home-collection-stats .home-stat-value{
+  color:#173c3a !important;
+  text-shadow:none !important;
+}
+
+body.light-mode #view .home-collection-stats .home-stat-label{
+  color:#4e5c61 !important;
+  text-shadow:none !important;
+}
+
+body.light-mode #view .home-collection-stats .home-stat-card:hover{
+  background:
+    linear-gradient(145deg,#f1f8f7,#e8f1ef) !important;
+  border-color:#7fa9a4 !important;
+}
+
+/* Navigation */
+body.light-mode nav.mainnav a,
+body.light-mode .mobile-more-toggle{
+  color:#555d66 !important;
+}
+body.light-mode nav.mainnav a:hover,
+body.light-mode nav.mainnav a:focus-visible,
+body.light-mode .mobile-more-toggle:hover,
+body.light-mode .mobile-more-toggle:focus-visible{
+  color:#20262c !important;
+  background:#ece9e2 !important;
+}
+body.light-mode nav.mainnav a.active{
+  color:#163f3b !important;
+  background:#e7efed !important;
+}
+
+/* Secondary text */
+body.light-mode .hint,
+body.light-mode .notes,
+body.light-mode .clean-card-reference,
+body.light-mode .home-section-head p,
+body.light-mode .detail-label,
+body.light-mode .detail-summary-card span,
+body.light-mode .inventory-result-count,
+body.light-mode .inventory-mobile-compact-result,
+body.light-mode .listing-pagination-summary{
+  color:#59616a !important;
+}
+
+/* Inputs */
+body.light-mode input,
+body.light-mode textarea,
+body.light-mode select,
+body.light-mode .overview-select-btn,
+body.light-mode .global-currency-control,
+body.light-mode .listing-per-page-control,
+body.light-mode .currency-preference-control{
+  background:#fffdfa !important;
+  color:#22282e !important;
+  border-color:#bbb7ae !important;
+}
+body.light-mode input::placeholder,
+body.light-mode textarea::placeholder{
+  color:#747c84 !important;
+  opacity:1 !important;
+}
+
+/* Buttons */
+body.light-mode .btn-ghost,
+body.light-mode .theme-toggle,
+body.light-mode .mobile-filter-open-btn,
+body.light-mode .copy-filter-link-btn,
+body.light-mode .view-mode-toggle,
+body.light-mode .listing-page-btn{
+  background:#f5f3ee !important;
+  color:#333a42 !important;
+  border-color:#c3bfb6 !important;
+}
+
+body.light-mode .btn-primary{
+  background:#176f68 !important;
+  border-color:#176f68 !important;
+  color:#fff !important;
+}
+
+/* Price colors */
+body.light-mode .clean-price-primary,
+body.light-mode .detail-price-primary,
+body.light-mode .detail-price-values span,
+body.light-mode .owner-view-count{
+  color:#795810 !important;
+}
+body.light-mode .clean-price-secondary,
+body.light-mode .detail-price-secondary{
+  color:#59616a !important;
+}
+
+/* Pills */
+body.light-mode .clean-meta-pill,
+body.light-mode .clean-grade-badge{
+  background:#f1efe9 !important;
+  border-color:#c8c3b8 !important;
+  color:#343b42 !important;
+}
+
+body.light-mode .clean-game-pill{
+  color:#72530f !important;
+  border-color:#c9b77f !important;
+  background:#f7f0dc !important;
+}
+body.light-mode .clean-era-pill{
+  color:#17655f !important;
+  border-color:#a8cbc6 !important;
+  background:#e9f3f1 !important;
+}
+body.light-mode .clean-language-pill{
+  color:#40546d !important;
+  border-color:#b6c2d0 !important;
+  background:#edf1f5 !important;
+}
+body.light-mode .clean-series-pill{
+  color:#4e5660 !important;
+  border-color:#c6c3bc !important;
+  background:#f1f0ec !important;
+}
+
+body.light-mode .clean-availability-pill[data-pill-value="Available"]{
+  color:#246137 !important;
+  border-color:#9fc7aa !important;
+  background:#eaf4ed !important;
+}
+body.light-mode .clean-availability-pill[data-pill-value="Reserved"]{
+  color:#775612 !important;
+  border-color:#d1bd88 !important;
+  background:#f7f0dc !important;
+}
+body.light-mode .clean-availability-pill[data-pill-value="Sold"]{
+  color:#8b3030 !important;
+  border-color:#d6aaaa !important;
+  background:#f8eaea !important;
+}
+body.light-mode .clean-availability-pill[data-pill-value="Collection (NFS)"],
+body.light-mode .clean-availability-pill[data-pill-value="Collection (NFS)"].pill-selected{
+  color:#69408a !important;
+  border-color:#c7afd9 !important;
+  background:#f2ebf7 !important;
+  box-shadow:none !important;
+}
+
+/* Menus */
+body.light-mode .overview-select-menu,
+body.light-mode .search-suggestions,
+body.light-mode nav.mainnav > .mobile-more-menu{
+  background:#fffdfa !important;
+  border-color:#bbb7ae !important;
+  box-shadow:0 14px 32px rgba(41,45,49,.13) !important;
+}
+body.light-mode .overview-select-option:hover,
+body.light-mode .overview-select-option:focus,
+body.light-mode .search-suggestions button:hover,
+body.light-mode .search-suggestions button.active{
+  background:#ece9e2 !important;
+  color:#20262c !important;
+}
+
+/* Mobile sticky controls */
+body.light-mode .sticky-mobile-results-bar{
+  background:rgba(248,247,243,.97) !important;
+  border-top-color:#c9c5bc !important;
+  box-shadow:0 -8px 22px rgba(40,45,50,.10) !important;
+}
+body.light-mode .sticky-mobile-results-count strong,
+body.light-mode .sticky-mobile-results-action{
+  color:#20262c !important;
+}
+body.light-mode .sticky-mobile-results-count span,
+body.light-mode .sticky-mobile-results-action small{
+  color:#59616a !important;
 }
 
 </style>
@@ -29374,7 +29632,7 @@ function wireShimmer(container){
     window.addEventListener("load",async()=>{
       try{
         const registration=await navigator.serviceWorker.register(
-          "./collect-tcg-service-worker.js",
+          "./collect-tcg-service-worker-v3.js",
           {scope:"./",updateViaCache:"none"}
         );
 
