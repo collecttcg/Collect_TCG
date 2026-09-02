@@ -20,6 +20,7 @@
 <!-- SEALED OVERVIEW: sealed listings now show condition overlay badge -->
 <!-- STICKY PRICE FINAL FIX: reads .detail-price-primary after currency re-render -->
 <!-- GLOBAL CURRENCY SYNC: changing currency updates details, sticky price and all rendered overview cards -->
+<!-- MOBILE NAV FINAL: Home | Inventory | Favorites | More; no mobile Favorites duplication -->
 <!-- OWNER TOOL: permanent listing deletion with double confirmation -->
 <!-- MOBILE FIX: compact metadata pills + 44px invisible hit targets across iOS/Android -->
 <!-- DESKTOP NAV FIX: Reserved stays primary; duplicate hidden from More -->
@@ -10578,6 +10579,116 @@ body.interest-contact-open{
 @media(max-width:800px){
   body.interest-contact-open .shell{
     overflow:hidden !important;
+  }
+}
+
+
+/* =========================================================
+   FINAL MOBILE PRIMARY NAV
+   Home | Inventory | Favorites | More
+   Keep desktop More contents unchanged.
+   ========================================================= */
+@media (max-width:800px){
+  nav.mainnav{
+    display:grid !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    align-items:stretch !important;
+    gap:4px !important;
+  }
+
+  /* Only these four controls belong in the primary mobile row. */
+  nav.mainnav > a[data-route="home"]{
+    display:flex !important;
+    order:1 !important;
+    grid-column:auto !important;
+  }
+
+  nav.mainnav > a[data-route="inventory"]{
+    display:flex !important;
+    order:2 !important;
+    grid-column:auto !important;
+  }
+
+  nav.mainnav > a[data-route="favorites"].mobile-secondary-nav{
+    display:flex !important;
+    order:3 !important;
+    grid-column:auto !important;
+  }
+
+  nav.mainnav > .mobile-more-toggle{
+    display:flex !important;
+    order:4 !important;
+    grid-column:auto !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  /* Everything else stays out of the primary mobile row. */
+  nav.mainnav > a[data-route="collection"],
+  nav.mainnav > a[data-route="reserved"],
+  nav.mainnav > a[data-route="sold"],
+  nav.mainnav > a[data-route="showcase"],
+  nav.mainnav > a[data-route="giveaway"],
+  nav.mainnav > a[data-route="about"],
+  nav.mainnav > a[data-route="contact"],
+  nav.mainnav > a[data-route="recent"],
+  nav.mainnav > a[data-route="by-game"],
+  nav.mainnav > a.owner-only,
+  nav.mainnav > a.mobile-secondary-nav:not([data-route="favorites"]){
+    display:none !important;
+  }
+
+  /* Favorites already has its own primary mobile tab, so don't repeat it
+     inside the opened More menu. */
+  nav.mainnav > .mobile-more-menu > a[data-route="favorites"]{
+    display:none !important;
+  }
+
+  /* The More dropdown appears underneath all four primary tabs. */
+  nav.mainnav > .mobile-more-menu{
+    order:5 !important;
+    grid-column:1 / -1 !important;
+    width:100% !important;
+  }
+
+  /* Consistent sizing across narrow Android phones and iPhones. */
+  nav.mainnav > a[data-route="home"],
+  nav.mainnav > a[data-route="inventory"],
+  nav.mainnav > a[data-route="favorites"].mobile-secondary-nav,
+  nav.mainnav > .mobile-more-toggle{
+    min-height:46px !important;
+    padding:8px 4px !important;
+    justify-content:center !important;
+    align-items:center !important;
+    gap:4px !important;
+    font-size:11px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+  }
+
+  nav.mainnav > a[data-route="inventory"] .nav-count{
+    flex:0 0 auto !important;
+  }
+}
+
+/* Extra-narrow phones: keep four equal tabs without wrapping. */
+@media (max-width:360px){
+  nav.mainnav{
+    gap:2px !important;
+  }
+
+  nav.mainnav > a[data-route="home"],
+  nav.mainnav > a[data-route="inventory"],
+  nav.mainnav > a[data-route="favorites"].mobile-secondary-nav,
+  nav.mainnav > .mobile-more-toggle{
+    padding-left:2px !important;
+    padding-right:2px !important;
+    font-size:10px !important;
+    gap:2px !important;
+  }
+
+  nav.mainnav > a[data-route="inventory"] .nav-count{
+    display:none !important;
   }
 }
 
