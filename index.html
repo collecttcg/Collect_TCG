@@ -27858,7 +27858,102 @@ function wireShimmer(container){
     return clean || "card";
   }
 
-  async function downloadImageSource(src, filenameBase, imageNumber = 1){
+  function getDownloadStatusWatermarkMeta(availability){
+    const value = String(availability || "").trim().toLowerCase();
+    if(value === "sold"){
+      return {
+        label:"SOLD",
+        color:"#b42318",
+        shadow:"rgba(0,0,0,.24)"
+      };
+    }
+    if(value === "reserved"){
+      return {
+        label:"RESERVE",
+        color:"#9a6700",
+        shadow:"rgba(0,0,0,.22)"
+      };
+    }
+    return null;
+  }
+
+  async function createStatusWatermarkedDownloadBlob(src, availability){
+    const meta = getDownloadStatusWatermarkMeta(availability);
+    if(!meta) return null;
+
+    const loaded = await loadImageElementFromSource(src);
+    if(!loaded || !loaded.img) throw new Error("Could not load image for watermarking");
+
+    const {img} = loaded;
+    const width = img.naturalWidth || img.width || 0;
+    const height = img.naturalHeight || img.height || 0;
+    if(!width || !height) throw new Error("Invalid image size");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if(!ctx) throw new Error("Could not get canvas context");
+
+    ctx.drawImage(img,0,0,width,height);
+
+    const tri = Math.max(150, Math.min(Math.round(Math.min(width,height) * 0.28), 460));
+
+    // Filled top-left triangle.
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.lineTo(tri,0);
+    ctx.lineTo(0,tri);
+    ctx.closePath();
+    ctx.fillStyle = meta.color;
+    ctx.shadowColor = meta.shadow;
+    ctx.shadowBlur = Math.max(12, Math.round(tri * 0.08));
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = Math.max(2, Math.round(tri * 0.02));
+    ctx.fill();
+    ctx.restore();
+
+    // Subtle inner stroke for definition.
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.lineTo(tri,0);
+    ctx.lineTo(0,tri);
+    ctx.closePath();
+    ctx.strokeStyle = "rgba(255,255,255,.24)";
+    ctx.lineWidth = Math.max(2, Math.round(tri * 0.012));
+    ctx.stroke();
+    ctx.restore();
+
+    // Diagonal text centered in the triangle.
+    ctx.save();
+    const text = meta.label;
+    const diagonalFont = text.length > 5
+      ? Math.round(tri * 0.12)
+      : Math.round(tri * 0.14);
+    ctx.translate(tri * 0.34, tri * 0.34);
+    ctx.rotate(-Math.PI / 4);
+    ctx.font = `900 ${Math.max(18, diagonalFont)}px Inter, Arial, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = Math.max(5, Math.round(tri * 0.03));
+    ctx.strokeStyle = "rgba(0,0,0,.20)";
+    ctx.strokeText(text,0,0);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(text,0,0);
+    ctx.restore();
+
+    return new Promise((resolve,reject)=>{
+      canvas.toBlob(blob=>{
+        if(blob) resolve(blob);
+        else reject(new Error("Could not encode watermarked image"));
+      },"image/jpeg",0.94);
+    });
+  }
+
+  async function downloadImageSource(src, filenameBase, imageNumber = 1, cardOrAvailability = null){
     if(!src) return;
 
     const filename = `${safeDownloadName(filenameBase)}-${imageNumber}.jpg`;
@@ -27866,8 +27961,16 @@ function wireShimmer(container){
     try{
       let href = src;
       let revoke = false;
+      const availability = typeof cardOrAvailability === "string"
+        ? cardOrAvailability
+        : cardOrAvailability?.availability;
 
-      if(!/^data:/i.test(src) && !/^blob:/i.test(src)){
+      const watermarkMeta = getDownloadStatusWatermarkMeta(availability);
+      if(watermarkMeta){
+        const watermarkedBlob = await createStatusWatermarkedDownloadBlob(src, availability);
+        href = URL.createObjectURL(watermarkedBlob);
+        revoke = true;
+      }else if(!/^data:/i.test(src) && !/^blob:/i.test(src)){
         const response = await fetch(src, {
           mode:"cors",
           credentials:"omit",
@@ -28806,7 +28909,8 @@ function wireShimmer(container){
     downloadImageSource(
       lightboxImages[lightboxIndex],
       card?.name || card?.card_code || "card",
-      lightboxIndex + 1
+      lightboxIndex + 1,
+      card
     );
   });
   $("imageLightboxPrev").addEventListener("click", e=>{ e.stopPropagation(); renderLightboxImage(lightboxIndex - 1); });
@@ -28893,6 +28997,7 @@ function wireShimmer(container){
     await downloadPublicCardSharePreview(card);
   });
 
+  // Downloaded Sold / Reserved images receive a top-left corner status triangle watermark.
   $("detailsDownloadBtn").addEventListener("click", ()=>{
     const card = getDetailsCard();
     if(!card) return;
@@ -28902,7 +29007,7 @@ function wireShimmer(container){
       return;
     }
     const index = Math.min(detailsImageIndex, images.length - 1);
-    downloadImageSource(images[index], card.name || card.card_code || "card", index + 1);
+    downloadImageSource(images[index], card.name || card.card_code || "card", index + 1, card);
   });
   $("detailsCloseBtn").addEventListener("click", ()=>closeDetailsModal(true));
   $("detailsCloneBtn").addEventListener("click", ()=>{
