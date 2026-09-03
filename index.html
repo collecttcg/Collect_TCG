@@ -26433,7 +26433,7 @@ function wireShimmer(container){
     const format = effectiveFormat(card || {});
     if(normalizeFilterValue(format) === "sealed") return "SEALED";
     if(normalizeFilterValue(format) === "graded") return "GRADED";
-    return "RAW";
+    return rawConditionPostLabel(card);
   }
 
   function postEraLabel(card){
@@ -27491,7 +27491,7 @@ function wireShimmer(container){
       ? `${String(grade.company||"").trim().toUpperCase()} ${String(grade.grade||"").trim()}`.trim()
       : (normalizeFilterValue(effectiveFormat(card))==="sealed"
           ? "SEALED"
-          : String(CONDITION_LABEL[card.condition]||card.condition||"RAW").toUpperCase());
+          : rawConditionPostLabel(card));
     const carousellName=[card.name,card.card_code].filter(Boolean).join(" ").trim();
     if(carousellName){
       lines.push(`【${carousellFormatLabel}】${postEraLabel(card)} ${carousellName}`.replace(/\s+/g," ").trim());
@@ -27886,10 +27886,8 @@ function wireShimmer(container){
   }
 
   function rawConditionPostLabel(card){
-    const c = String(card.condition || "").toUpperCase();
-    if(c === "NM" || c === "M") return "NM/BETTER";
-    if(c === "LP") return "LP/BELOW";
-    if(c === "MP" || c === "HP" || c === "DMG") return compactGeneratedPostSpacing(`${c}/BELOW`);
+    const c = String(card?.condition || "").trim().toUpperCase();
+    if(c && c !== "NA" && c !== "SEALED") return c;
     return "RAW";
   }
 
