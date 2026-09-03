@@ -15009,31 +15009,6 @@ body:not(.owner-mode) .giveaway-grid#pastWinnersGrid .giveaway-winner-name{
   }
 }
 
-
-/* =========================================================
-   GIVEAWAY OVERVIEW — SHOW THE FULL IMAGE
-   Keep a consistent overview frame without cropping the photo.
-   ========================================================= */
-.giveaway-card > img{
-  width:100% !important;
-  height:auto !important;
-  aspect-ratio:4 / 3 !important;
-  object-fit:contain !important;
-  object-position:center !important;
-  padding:6px !important;
-  box-sizing:border-box !important;
-  background:#111216 !important;
-}
-
-/* Add/Edit Giveaway preview should also show the whole selected image. */
-.giveaway-image-preview img{
-  width:100% !important;
-  height:100% !important;
-  object-fit:contain !important;
-  object-position:center !important;
-  background:#111216 !important;
-}
-
 </style>
 </head>
 <body>
@@ -26422,6 +26397,11 @@ function wireShimmer(container){
     return "RAW";
   }
 
+  function postEraLabel(card){
+    const era=String(card?.era||"").trim();
+    return era ? `【${era.toUpperCase()}】` : "";
+  }
+
   function fbGameLabel(card){
     const game = String(card?.game || "").trim();
     if(normalizeFilterValue(game) === "one piece card game") return "ONE PIECE";
@@ -26439,7 +26419,7 @@ function wireShimmer(container){
       card.card_code || ""
     ].filter(Boolean);
 
-    return `WTS【${fbFormatLabel(card)}】${parts.join(" ")}`.replace(/\s+/g," ").trim().toUpperCase();
+    return `WTS【${fbFormatLabel(card)}】${postEraLabel(card)} ${parts.join(" ")}`.replace(/\s+/g," ").trim().toUpperCase();
   }
 
   function defaultFbHashtags(card){
@@ -27468,18 +27448,19 @@ function wireShimmer(container){
       ? card.grading.find(g=>g && String(g.company||"").trim())
       : null;
 
-    if(card.name) lines.push(`Card: ${String(card.name).trim()}`);
-    if(card.card_code) lines.push(`Card Code: ${String(card.card_code).trim()}`);
+    const carousellFormatLabel=grade
+      ? `${String(grade.company||"").trim().toUpperCase()} ${String(grade.grade||"").trim()}`.trim()
+      : (normalizeFilterValue(effectiveFormat(card))==="sealed"
+          ? "SEALED"
+          : String(CONDITION_LABEL[card.condition]||card.condition||"RAW").toUpperCase());
+    const carousellName=[card.name,card.card_code].filter(Boolean).join(" ").trim();
+    if(carousellName){
+      lines.push(`【${carousellFormatLabel}】${postEraLabel(card)} ${carousellName}`.replace(/\s+/g," ").trim());
+    }
     if(card.year) lines.push(`Year: ${card.year}`);
     if(card.series) lines.push(`Series: ${String(card.series).trim()}`);
     if(card.game) lines.push(`Game: ${String(card.game).trim()}`);
     if(card.language) lines.push(`Language: ${String(card.language).trim()}`);
-
-    if(grade){
-      lines.push(`Grade: ${String(grade.company||"").trim().toUpperCase()} ${String(grade.grade||"").trim()}`.trim());
-    }else if(card.condition){
-      lines.push(`Condition: ${CONDITION_LABEL[card.condition]||card.condition}`);
-    }
 
     const savedTerm=normalizePriceNegotiability(
       card.price_negotiability || priceNegotiabilityFromNotes(card.notes||"")
@@ -27697,7 +27678,7 @@ function wireShimmer(container){
         </div>
         <div class="fb-post-card-copy">
           <strong>${escapeHtml(selectedCard.name||"Untitled card")}</strong>
-          <span>${escapeHtml([selectedCard.card_code,selectedCard.year,selectedCard.series].filter(Boolean).join(" · "))}</span>
+          <span>${escapeHtml([selectedCard.card_code,selectedCard.era,selectedCard.year,selectedCard.series].filter(Boolean).join(" · "))}</span>
           <small>${escapeHtml(selectedCard.availability||"Available")}</small>
         </div>
       `;
@@ -27918,7 +27899,7 @@ function wireShimmer(container){
       String(card.card_code || "").toUpperCase()
     ].filter(Boolean);
 
-    return `-【${label}】${nameParts.join(" ").replace(/\s+/g," ").trim()}`;
+    return `-【${label}】${postEraLabel(card)} ${nameParts.join(" ").replace(/\s+/g," ").trim()}`.replace(/\s+/g," ").trim();
   }
 
   function sortCardListCards(list){
