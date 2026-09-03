@@ -13335,6 +13335,31 @@ body.light-mode .mobile-cards-per-page-control select{
   }
 }
 
+
+/* Show numeric values above each traffic-chart bar */
+.insights-axis-bars .insights-bar-wrap{
+  position:relative;
+}
+.insights-axis-bars .insights-bar-value{
+  flex:0 0 auto;
+  margin-bottom:4px;
+  color:var(--text-muted);
+  font-family:'JetBrains Mono',monospace;
+  font-size:6.5px;
+  line-height:1;
+  text-align:center;
+  white-space:nowrap;
+}
+.insights-axis-bars .insights-bar{
+  margin-top:auto;
+}
+@media(max-width:800px){
+  .insights-axis-bars .insights-bar-value{
+    font-size:6px;
+    margin-bottom:3px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -22555,6 +22580,7 @@ function wireShimmer(container){
                   const value=Math.max(0,Number(row[key]||0));
                   const pct=axisMax ? value/axisMax*100 : 0;
                   return `<div class="insights-bar-wrap" title="${escapeHtml(String(row.bucket))}: ${value}">
+                    <div class="insights-bar-value">${value.toLocaleString()}</div>
                     <div class="insights-bar ${site?"insights-bar-site":""}" style="height:${Math.max(value?2:0,pct)}%"></div>
                     <div class="insights-bar-label">${escapeHtml(String(row.label||row.bucket))}</div>
                   </div>`;
