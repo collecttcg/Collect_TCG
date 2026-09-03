@@ -14872,6 +14872,101 @@ body:not(.owner-mode) .giveaway-grid#pastWinnersGrid .giveaway-winner-name{
   }
 }
 
+
+/* =========================================================
+   CARD DETAILS — PROMINENT DESKTOP CONTACT CTA
+   ========================================================= */
+@media(min-width:801px){
+  .details-desktop-contact-socials{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:center;
+    gap:18px;
+    margin-top:14px;
+    padding:16px 18px;
+    border:1px solid rgba(227,179,65,.44);
+    border-radius:14px;
+    background:
+      linear-gradient(135deg,rgba(227,179,65,.09),rgba(227,179,65,.025)),
+      var(--surface-2);
+    box-shadow:0 8px 24px rgba(0,0,0,.12);
+  }
+
+  .details-contact-copy{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:6px;
+    min-width:0;
+  }
+
+  .details-contact-copy strong{
+    color:var(--text);
+    font-size:14px;
+    font-weight:850;
+    letter-spacing:-.01em;
+    line-height:1.25;
+  }
+
+  .details-contact-location{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    padding:5px 9px;
+    border:1px solid var(--border-soft);
+    border-radius:999px;
+    background:var(--surface-1);
+    color:var(--text-muted);
+    font-size:9px;
+    font-weight:750;
+    line-height:1;
+  }
+
+  .details-contact-actions{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:7px;
+  }
+
+  .details-contact-via-label{
+    color:var(--text-muted) !important;
+    font-size:9px !important;
+    font-weight:750 !important;
+    letter-spacing:.02em;
+    text-transform:uppercase;
+  }
+
+  .details-desktop-contact-socials .collect-social-links{
+    gap:9px;
+    justify-content:flex-end;
+  }
+
+  .details-desktop-contact-socials .collect-social-icon{
+    min-width:58px;
+    height:42px;
+    padding:0 12px;
+    border-color:rgba(227,179,65,.28);
+    background:var(--surface-1);
+    font-weight:800;
+  }
+
+  .details-desktop-contact-socials .collect-social-icon span{
+    font-size:15px;
+  }
+
+  .details-desktop-contact-socials .collect-social-icon small{
+    font-size:9px;
+  }
+
+  .details-desktop-contact-socials .collect-social-icon:hover,
+  .details-desktop-contact-socials .collect-social-icon:focus-visible{
+    border-color:rgba(227,179,65,.72);
+    box-shadow:0 0 0 3px rgba(227,179,65,.10);
+    transform:translateY(-2px);
+  }
+}
+
 </style>
 </head>
 <body>
@@ -33692,8 +33787,14 @@ function wireShimmer(container){
               Contact us to confirm current availability, transaction method and delivery / meetup options before payment.
             </div>
             <div class="details-desktop-contact-socials">
-              <span>Contact via</span>
-              ${collectSocialLinksHtml("details-social-links")}
+              <div class="details-contact-copy">
+                <strong>Interested? Contact us directly</strong>
+                <span class="details-contact-location">📍 Malaysia &amp; Singapore</span>
+              </div>
+              <div class="details-contact-actions">
+                <span class="details-contact-via-label">Contact via</span>
+                ${collectSocialLinksHtml("details-social-links")}
+              </div>
             </div>
           ` : ""}
         </div>
