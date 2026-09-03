@@ -13621,6 +13621,59 @@ body.light-mode .clean-game-pill.filter-pill-btn:focus-visible{
   background:#f7f0dc !important;
 }
 
+
+/* =========================================================
+   HOVER — PRESERVE EACH PILL'S EXISTING BASE COLOR
+   Hover should highlight a pill, not repaint it.
+   ========================================================= */
+
+/* Compact Graded / Sealed pills keep their normal teal fill/text. */
+.clean-grade-badge.filter-pill-btn:not(.condition-filter-btn):hover,
+.clean-grade-badge.filter-pill-btn:not(.condition-filter-btn):focus-visible{
+  background:rgba(95,212,196,.08) !important;
+  color:var(--accent-teal) !important;
+  border-color:rgba(95,212,196,.58) !important;
+  box-shadow:
+    0 0 0 2px rgba(95,212,196,.10),
+    0 4px 12px rgba(0,0,0,.14) !important;
+}
+
+/* Compact raw Condition pills keep their existing black badge appearance. */
+.clean-grade-badge.condition-filter-btn:hover,
+.clean-grade-badge.condition-filter-btn:focus-visible{
+  background:#0b0c0f !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.30) !important;
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,.07),
+    0 4px 12px rgba(0,0,0,.22) !important;
+}
+
+/* Overview image badges are intentionally black in the current design.
+   Hover preserves that exact fill/text and only adds an outline/glow. */
+.overview-grade-overlay.filter-pill-btn:hover,
+.overview-grade-overlay.filter-pill-btn:focus-visible,
+.overview-grade-overlay.condition-filter-btn:hover,
+.overview-grade-overlay.condition-filter-btn:focus-visible{
+  background:rgba(8,9,11,.95) !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.34) !important;
+  box-shadow:
+    0 5px 16px rgba(0,0,0,.42),
+    0 0 0 2px rgba(255,255,255,.08) !important;
+}
+
+.overview-grade-overlay.filter-pill-btn:hover strong,
+.overview-grade-overlay.filter-pill-btn:hover small,
+.overview-grade-overlay.filter-pill-btn:focus-visible strong,
+.overview-grade-overlay.filter-pill-btn:focus-visible small,
+.overview-grade-overlay.condition-filter-btn:hover strong,
+.overview-grade-overlay.condition-filter-btn:hover small,
+.overview-grade-overlay.condition-filter-btn:focus-visible strong,
+.overview-grade-overlay.condition-filter-btn:focus-visible small{
+  color:inherit !important;
+}
+
 </style>
 </head>
 <body>
