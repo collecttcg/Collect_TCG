@@ -26086,7 +26086,11 @@ function wireShimmer(container){
       out.push(line);
     }
 
-    return out.join("\n").replace(/\n{3,}/g,"\n\n").trim();
+    return out.join("\n")
+      .replace(/\n{3,}/g,"\n\n")
+      .replace(/\n\n(━{4,})/g,"\n$1")
+      .replace(/(━{4,})\n\n/g,"$1\n")
+      .trim();
   }
 
 
@@ -26812,33 +26816,20 @@ function wireShimmer(container){
 
     const lines=[
       `🎁 GIVEAWAY #${number} 🎁`,
-      "",
       `🏆 ${winnerHeadline}`,
-      "",
       `🥇 ${prizeLine}`,
-      "",
       divider,
-      "",
       "📌 HOW TO ENTER:",
-      "",
       "(PLEASE MAKE SURE TO DO BOTH STEPS)",
-      "",
       "1️⃣ LIKE this giveaway post and FOLLOW our Facebook Page + Instagram:",
-      "",
       `Facebook: ${safeHttpUrl(values.facebookPageUrl)||"[LINK NOT SET]"}`,
-      "",
       `Instagram: ${safeHttpUrl(values.instagramUrl)||"[LINK NOT SET]"}`,
-      "",
       `2️⃣ Comment: ${giveawayComment}`,
-      "",
       divider,
-      "",
-      "‼️IMPORTANT:",
-      "",
+      "‼️ IMPORTANT:",
       "Only participants who complete BOTH steps above will be eligible for the draw.",
       "",
       "📩 HOW THE WINNER WILL BE CONTACTED:",
-      "",
       `Facebook Pages cannot send the first message to personal accounts. We will reply to the winner’s comment, and the winner must PM our Facebook Page within ${claimHours} hours to claim the prize.`,
       ""
     ];
@@ -26846,7 +26837,6 @@ function wireShimmer(container){
     if(values.includeMultiGroupNotice){
       lines.push(
         "📢 IMPORTANT:",
-        "",
         "This giveaway post has been shared across multiple groups. All eligible entries from every group will be combined into one single pool for the final draw.",
         ""
       );
@@ -26854,32 +26844,21 @@ function wireShimmer(container){
 
     lines.push(
       "🎲 WINNER SELECTION:",
-      "",
       `The winner will be selected randomly using ${winnerTool}.`,
       "",
       "🔎 WINNER VERIFICATION:",
-      "",
       "When the winner is announced, we will also include the winner’s Facebook profile URL for transparency and verification purposes.",
       "",
       "🍀 GOOD LUCK, EVERYONE!",
-      "",
       divider,
-      "",
       `🗓️ GIVEAWAY ENDS: ${giveawayEnds}`,
-      "",
       `📍 COD: ${cod}`,
-      "",
       `📦 Postage: ${postage}`,
-      "",
       divider,
-      "",
       "OTHER PRODUCTS INFO",
       `WEBSITE : ${getWebsiteShareUrl()}`,
-      "",
       ...collectSocialPostLines(),
-      "",
       divider,
-      "",
       "HASHTAG :",
       hashtags
     );
