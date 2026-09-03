@@ -12699,6 +12699,76 @@ body.owner-mode .card:has(.owner-hidden-listing-badge){
   }
 }
 
+
+/* =========================================================
+   MOBILE FILTER — CARDS PER PAGE
+   ========================================================= */
+.mobile-cards-per-page-control{
+  display:none;
+}
+
+@media(max-width:800px){
+  .filter-drawer-shell .mobile-cards-per-page-control{
+    grid-column:1 / -1 !important;
+    width:100% !important;
+    min-height:52px;
+    padding:8px 10px;
+    display:flex !important;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:var(--surface);
+  }
+
+  .mobile-cards-per-page-control > span{
+    min-width:0;
+  }
+
+  .mobile-cards-per-page-control strong,
+  .mobile-cards-per-page-control small{
+    display:block;
+  }
+
+  .mobile-cards-per-page-control strong{
+    color:var(--text);
+    font-size:10px;
+    line-height:1.15;
+  }
+
+  .mobile-cards-per-page-control small{
+    margin-top:3px;
+    color:var(--text-muted);
+    font-size:7.5px;
+    line-height:1.2;
+  }
+
+  .mobile-cards-per-page-control select{
+    flex:0 0 74px;
+    width:74px !important;
+    min-width:74px !important;
+    min-height:36px !important;
+    padding:6px 24px 6px 9px !important;
+    border:1px solid var(--border) !important;
+    border-radius:8px !important;
+    background-color:var(--bg) !important;
+    color:var(--text) !important;
+    font-size:11px !important;
+    font-weight:700;
+  }
+}
+
+body.light-mode .mobile-cards-per-page-control{
+  background:#fffdfa !important;
+  border-color:#bbb7ae !important;
+}
+body.light-mode .mobile-cards-per-page-control select{
+  background:#fffdfa !important;
+  color:#22282e !important;
+  border-color:#bbb7ae !important;
+}
+
 </style>
 </head>
 <body>
@@ -19083,6 +19153,18 @@ function wireShimmer(container){
             </div>
           ` : ""}
 
+          <label class="mobile-cards-per-page-control" for="mobileListingPerPageSelect">
+            <span>
+              <strong>Cards per page</strong>
+              <small>Choose how many listings to load on each page</small>
+            </span>
+            <select id="mobileListingPerPageSelect" aria-label="Cards per page">
+              ${LISTING_PER_PAGE_OPTIONS.map(value=>`
+                <option value="${value}" ${listingPerPage===value?"selected":""}>${value}</option>
+              `).join("")}
+            </select>
+          </label>
+
           <a href="#/add" class="btn-primary owner-only" style="display:inline-block;">+ Add card</a>
         </div>
 
@@ -20032,12 +20114,29 @@ function wireShimmer(container){
       }
     },{signal:inventorySignal});
 
-    $("listingPerPageSelect")?.addEventListener("change",e=>{
-      const value=Number(e.target.value);
-      listingPerPage=setSavedListingPerPage(value);
+    function changeListingPerPage(value){
+      listingPerPage=setSavedListingPerPage(Number(value));
       listingCurrentPage=1;
+
+      // Keep desktop and mobile controls synchronized. The desktop control is
+      // hidden on phones but still exists in the page markup.
+      ["listingPerPageSelect","mobileListingPerPageSelect"].forEach(id=>{
+        const select=$(id);
+        if(select && Number(select.value)!==listingPerPage){
+          select.value=String(listingPerPage);
+        }
+      });
+
       updateListingUrlFromControls();
       draw();
+    }
+
+    $("listingPerPageSelect")?.addEventListener("change",e=>{
+      changeListingPerPage(e.target.value);
+    });
+
+    $("mobileListingPerPageSelect")?.addEventListener("change",e=>{
+      changeListingPerPage(e.target.value);
     });
 
     const handlePaginationClick=e=>{
@@ -28935,6 +29034,15 @@ function wireShimmer(container){
     rememberRecentlyViewed(card && card.id);
     detailsCardId = card.id;
     detailsImageIndex = 0;
+
+    // Always open card details from the top. The modal element is reused
+    // between cards, so browsers otherwise preserve its previous scrollTop.
+    const detailsModal = detailsOverlay?.querySelector(".card-details-modal");
+    if(detailsModal){
+      detailsModal.scrollTop = 0;
+      detailsModal.scrollLeft = 0;
+    }
+
     recordCardViewEvent(card);
     const images = getImages(card);
     const imageHTML = images.length
