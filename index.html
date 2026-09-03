@@ -15523,7 +15523,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   const CARD_VIEW_QUALIFY_MS=5000;
   const CARD_VIEW_DEDUPE_MS=30*60*1000;
-  const CARD_VIEW_DEDUPE_KEY="collect_tcg_card_view_dedupe_v2";
+  const CARD_VIEW_DEDUPE_KEY="collect_tcg_card_view_dedupe_fresh_v1";
   let cardViewQualificationToken=0;
   const cardViewFallbackTimestamps=new Map();
 
@@ -15644,7 +15644,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     "share",
     "download"
   ]);
-  const CARD_ENGAGEMENT_DEDUPE_KEY="collect_tcg_engagement_dedupe_v3";
+  const CARD_ENGAGEMENT_DEDUPE_KEY="collect_tcg_engagement_dedupe_fresh_v1";
   let engagementTrackingBackendState="unknown";
 
   function engagementDedupeWindowMs(eventType){
@@ -15886,7 +15886,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     recordCardEngagement(cardId,eventType,platform);
   window.collectCurrentDetailsCardId=()=>safeCardId(detailsCardId||"");
 
-  const WEBSITE_VISIT_SESSION_KEY="collect_tcg_website_visit_recorded_v1";
+  const WEBSITE_VISIT_SESSION_KEY="collect_tcg_website_visit_recorded_fresh_v1";
 
   async function recordWebsiteVisit(){
     // Owner activity should not inflate buyer-facing traffic analytics.
@@ -22587,15 +22587,6 @@ function wireShimmer(container){
       const mostContact=rows.slice().sort((a,b)=>b._contactActions-a._contactActions)[0];
 
       $("insightsOverview").innerHTML=`
-        ${
-          (statusSel.value || gameSel.value) && state.filteredSeriesSupported && !state.series.length
-            ? `<div class="insights-v5-filter-history-note">
-                <strong>Why is this filtered graph empty?</strong>
-                <span>V5 starts storing per-card timeline data from the moment the migration is installed. Your older Qualified Views are still preserved in the unfiltered graph, but older views cannot be accurately split by Status/Game because that detail was not stored previously.</span>
-              </div>`
-            : ""
-        }
-
         <div class="insights-v4-grid-2 insights-v4-traffic-primary">
           <section class="insights-v4-card">
             <div class="insights-v4-card-head table-head">
@@ -22711,7 +22702,7 @@ function wireShimmer(container){
           const filtered=!!(statusSel?.value || gameSel?.value);
           mount.innerHTML=`<div class="hint">${
             isQualifiedChart && filtered
-              ? "No qualified views recorded for this filter since V5 tracking started."
+              ? "No qualified views recorded for this filter yet."
               : "No data yet."
           }</div>`;
           return;
@@ -22768,18 +22759,16 @@ function wireShimmer(container){
         if(statusSel.value) parts.push(statusSel.value);
         if(gameSel.value) parts.push(gameSel.value);
 
-        if(parts.length){
-          if(state.filteredSeriesSupported){
-            chartNote.textContent=state.series.length
-              ? `Filtered timeline · ${parts.join(" · ")}`
-              : `No V5 qualified views yet for ${parts.join(" · ")} · new views will appear here`;
-          }else{
-            chartNote.textContent="Run the V5 migration to filter the timeline by Status or Game";
-          }
-        }else if(state.seriesUsingHistoricalFallback){
-          chartNote.textContent="Historical qualified views · V5 filterable tracking is collecting new views from now on";
+        if(!state.filteredSeriesSupported){
+          chartNote.textContent="Run the V5 migration to enable fresh qualified-view analytics";
+        }else if(parts.length){
+          chartNote.textContent=state.series.length
+            ? `Fresh filtered timeline · ${parts.join(" · ")}`
+            : `No qualified views yet for ${parts.join(" · ")}`;
         }else{
-          chartNote.textContent="All qualified card views · 5+ seconds";
+          chartNote.textContent=state.series.length
+            ? "Fresh qualified views · 5+ seconds"
+            : "No qualified views recorded since the analytics reset";
         }
       }
     }
@@ -23109,28 +23098,11 @@ function wireShimmer(container){
       state={
         ...state,
         start:startDate,end:endDate,rows,
-        // Preserve the historical Qualified Views chart when no Status/Game
-        // filter is active. V5's filterable event table starts collecting only
-        // after the migration is installed, so it cannot recreate older
-        // per-card timeline events that were never stored.
-        series:(
-          selectedStatus || selectedGame
-            ? (filteredSeriesResult.supported ? filteredSeriesResult.rows : [])
-            : (
-                filteredSeriesResult.supported && filteredSeriesResult.rows.length
-                  ? filteredSeriesResult.rows
-                  : (Array.isArray(series)?series:[])
-              )
-        ),
-        seriesFiltered:!!(
-          (selectedStatus || selectedGame) &&
-          filteredSeriesResult.supported
-        ),
-        seriesUsingHistoricalFallback:!!(
-          !selectedStatus &&
-          !selectedGame &&
-          (!filteredSeriesResult.supported || !filteredSeriesResult.rows.length)
-        ),
+        // Fresh-start analytics: use only the V5 per-card qualified-view
+        // timeline. Legacy historical series is intentionally not mixed in.
+        series:filteredSeriesResult.supported ? filteredSeriesResult.rows : [],
+        seriesFiltered:filteredSeriesResult.supported,
+        seriesUsingHistoricalFallback:false,
         filteredSeriesSupported:filteredSeriesResult.supported,
         websiteSeries:alignWebsiteVisitSeriesToCardSeries(series,siteSeries),
         engagementSupported:engagement.supported,
