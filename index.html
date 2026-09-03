@@ -13674,6 +13674,36 @@ body.light-mode .clean-game-pill.filter-pill-btn:focus-visible{
   color:inherit !important;
 }
 
+
+/* =========================================================
+   GAME PILL — HOVER / FOCUS / SELECTED MATCH BASE COLOR
+   ========================================================= */
+
+/* Dark mode: exact same foreground, border and fill as .clean-game-pill.
+   Only a subtle gold glow is added for interaction feedback. */
+.clean-game-pill.filter-pill-btn:hover,
+.clean-game-pill.filter-pill-btn:focus-visible,
+.clean-game-pill.filter-pill-btn.pill-selected{
+  color:var(--accent-gold) !important;
+  border-color:rgba(227,179,65,.22) !important;
+  background:rgba(227,179,65,.045) !important;
+  box-shadow:
+    0 0 0 2px rgba(227,179,65,.09),
+    0 4px 12px rgba(0,0,0,.14) !important;
+}
+
+/* Light mode: exact same colors as the normal light-mode Game pill. */
+body.light-mode .clean-game-pill.filter-pill-btn:hover,
+body.light-mode .clean-game-pill.filter-pill-btn:focus-visible,
+body.light-mode .clean-game-pill.filter-pill-btn.pill-selected{
+  color:#72530f !important;
+  border-color:#c9b77f !important;
+  background:#f7f0dc !important;
+  box-shadow:
+    0 0 0 2px rgba(185,155,78,.12),
+    0 4px 10px rgba(0,0,0,.08) !important;
+}
+
 </style>
 </head>
 <body>
