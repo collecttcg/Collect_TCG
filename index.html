@@ -17897,7 +17897,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     const gradeText=`${company} ${value}`.trim();
     return `<button type="button"
-                    class="overview-grade-overlay filter-pill-btn ${avoidStatusCorner?"overview-grade-overlay-right":""} ${pillFilterState.grade.has(gradeText)?"pill-selected":""}"
+                    class="overview-grade-overlay filter-pill-btn ${avoidStatusCorner?"overview-grade-overlay-right":""} ${pillFilterState.grade.size && pillFilterState.grade.has(gradeText)?"pill-selected":""}"
                     data-pill-filter="grade"
                     data-pill-value="${escapeHtml(gradeText)}"
                     title="Filter by ${escapeHtml(gradeText)}"
@@ -17918,7 +17918,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const avoidStatusCorner=status==="sold" || status==="reserved";
 
     return `<button type="button"
-                    class="overview-grade-overlay condition-filter-btn filter-pill-btn ${avoidStatusCorner?"overview-grade-overlay-right":""} ${selectedSetMatches(pillFilterState.grade,filterValue) ? "pill-selected" : ""}"
+                    class="overview-grade-overlay condition-filter-btn filter-pill-btn ${avoidStatusCorner?"overview-grade-overlay-right":""} ${pillFilterState.grade.size && selectedSetMatches(pillFilterState.grade,filterValue) ? "pill-selected" : ""}"
                     data-pill-filter="grade"
                     data-pill-value="${escapeHtml(filterValue)}"
                     title="Filter by ${escapeHtml(filterValue)}"
@@ -17937,7 +17937,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     const sealedFilterValue="Sealed";
     return `<button type="button"
-                    class="overview-grade-overlay filter-pill-btn ${avoidStatusCorner?"overview-grade-overlay-right":""} ${pillFilterState.grade.has(sealedFilterValue)?"pill-selected":""}"
+                    class="overview-grade-overlay filter-pill-btn ${avoidStatusCorner?"overview-grade-overlay-right":""} ${pillFilterState.grade.size && pillFilterState.grade.has(sealedFilterValue)?"pill-selected":""}"
                     data-pill-filter="grade"
                     data-pill-value="${sealedFilterValue}"
                     title="Filter by Sealed"
@@ -20274,7 +20274,7 @@ function relatedCardHTML(c){
             <div class="clean-card-subrow clean-all-pills">
               ${c.game ? `<button type="button" class="clean-meta-pill clean-game-pill filter-pill-btn ${selectedSetMatches(pillFilterState.game, c.game) && pillFilterState.game.size ? "pill-selected" : ""}" data-pill-filter="game" data-pill-value="${escapeHtml(String(c.game))}" title="Filter by ${escapeHtml(String(c.game))}">${escapeHtml(String(c.game))}</button>` : ""}
               ${(grades.length || format === "Raw" || format === "Sealed")
-                ? `<button type="button" class="clean-grade-badge filter-pill-btn ${selectedSetMatches(pillFilterState.grade,gradeFilterText) ? "pill-selected" : ""}" data-pill-filter="grade" data-pill-value="${escapeHtml(gradeFilterText)}" title="Filter by ${escapeHtml(gradeFilterText)}">${escapeHtml(gradeText)}</button>`
+                ? `<button type="button" class="clean-grade-badge filter-pill-btn ${pillFilterState.grade.size && selectedSetMatches(pillFilterState.grade,gradeFilterText) ? "pill-selected" : ""}" data-pill-filter="grade" data-pill-value="${escapeHtml(gradeFilterText)}" title="Filter by ${escapeHtml(gradeFilterText)}">${escapeHtml(gradeText)}</button>`
                 : `<span class="clean-grade-badge">${escapeHtml(gradeText)}</span>`}
               ${c.availability ? `<button type="button" class="clean-meta-pill clean-availability-pill filter-pill-btn ${selectedSetMatches(pillFilterState.availability, c.availability) && pillFilterState.availability.size ? "pill-selected" : ""}" data-pill-filter="availability" data-pill-value="${escapeHtml(canonicalAvailability(c.availability))}" title="Filter by ${escapeHtml(canonicalAvailability(c.availability))}">${escapeHtml(canonicalAvailability(c.availability))}</button>` : ""}
               ${c.language ? `<button type="button" class="clean-meta-pill clean-language-pill filter-pill-btn ${selectedSetMatches(pillFilterState.language, c.language) && pillFilterState.language.size ? "pill-selected" : ""}" data-pill-filter="language" data-pill-value="${escapeHtml(String(c.language).toUpperCase())}" title="Filter by ${escapeHtml(String(c.language).toUpperCase())}">${escapeHtml(String(c.language).toUpperCase())}</button>` : ""}
