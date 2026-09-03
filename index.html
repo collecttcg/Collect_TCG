@@ -15009,6 +15009,45 @@ body:not(.owner-mode) .giveaway-grid#pastWinnersGrid .giveaway-winner-name{
   }
 }
 
+
+/* =========================================================
+   GIVEAWAY IMAGE FIXES
+   - Keep giveaway watermark feature intact
+   - Show full image in overview and preview (no crop)
+   ========================================================= */
+.giveaway-card > img{
+  width:100% !important;
+  height:auto !important;
+  aspect-ratio:4 / 3 !important;
+  object-fit:contain !important;
+  object-position:center !important;
+  display:block !important;
+  padding:6px !important;
+  box-sizing:border-box !important;
+  background:var(--surface-2) !important;
+}
+
+.giveaway-grid#pastWinnersGrid .giveaway-winner-card > img{
+  width:100% !important;
+  height:auto !important;
+  aspect-ratio:4 / 3 !important;
+  object-fit:contain !important;
+  object-position:center !important;
+  display:block !important;
+  padding:6px !important;
+  box-sizing:border-box !important;
+  background:var(--surface-2) !important;
+}
+
+.giveaway-image-preview img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  object-position:center !important;
+  display:block !important;
+  background:var(--surface-2) !important;
+}
+
 </style>
 </head>
 <body>
