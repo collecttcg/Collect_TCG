@@ -13704,6 +13704,142 @@ body.light-mode .clean-game-pill.filter-pill-btn.pill-selected{
     0 4px 10px rgba(0,0,0,.08) !important;
 }
 
+
+/* =========================================================
+   FIX STUCK HOVER LOOK FOR GRADED / CONDITION / SEALED
+   ========================================================= */
+
+/* Selected state should NOT inherit hover/focus glow. */
+.overview-grade-overlay.filter-pill-btn.pill-selected,
+.overview-grade-overlay.condition-filter-btn.pill-selected,
+.clean-grade-badge.filter-pill-btn.pill-selected,
+.clean-grade-badge.condition-filter-btn.pill-selected{
+  box-shadow:none !important;
+}
+
+/* Hover/focus keeps a temporary interaction glow only. */
+.overview-grade-overlay.filter-pill-btn:hover,
+.overview-grade-overlay.filter-pill-btn:focus-visible,
+.overview-grade-overlay.condition-filter-btn:hover,
+.overview-grade-overlay.condition-filter-btn:focus-visible{
+  box-shadow:
+    0 5px 16px rgba(0,0,0,.42),
+    0 0 0 2px rgba(255,255,255,.08) !important;
+}
+
+.clean-grade-badge.filter-pill-btn:not(.condition-filter-btn):hover,
+.clean-grade-badge.filter-pill-btn:not(.condition-filter-btn):focus-visible{
+  box-shadow:
+    0 0 0 2px rgba(95,212,196,.10),
+    0 4px 12px rgba(0,0,0,.14) !important;
+}
+
+.clean-grade-badge.condition-filter-btn:hover,
+.clean-grade-badge.condition-filter-btn:focus-visible{
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,.07),
+    0 4px 12px rgba(0,0,0,.22) !important;
+}
+
+/* Remove persistent focus outline after pointer click, while preserving
+   keyboard focus-visible accessibility. */
+.filter-pill-btn:focus:not(:focus-visible){
+  outline:none !important;
+  box-shadow:none !important;
+}
+
+
+/* =========================================================
+   BADGE INTERACTION STATE FIX
+   Inactive = plain. Hover = temporary glow. Selected = persistent glow.
+   ========================================================= */
+
+/* OVERVIEW Graded / Sealed / Condition — inactive state must be plain. */
+.overview-grade-overlay.filter-pill-btn:not(.pill-selected):not(:hover):not(:focus-visible),
+.overview-grade-overlay.condition-filter-btn:not(.pill-selected):not(:hover):not(:focus-visible){
+  background:rgba(8,9,11,.95) !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.22) !important;
+  box-shadow:0 5px 16px rgba(0,0,0,.42) !important;
+}
+
+/* Actual pointer hover / keyboard focus = temporary light ring. */
+.overview-grade-overlay.filter-pill-btn:not(.pill-selected):hover,
+.overview-grade-overlay.filter-pill-btn:not(.pill-selected):focus-visible,
+.overview-grade-overlay.condition-filter-btn:not(.pill-selected):hover,
+.overview-grade-overlay.condition-filter-btn:not(.pill-selected):focus-visible{
+  background:rgba(8,9,11,.95) !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.36) !important;
+  box-shadow:
+    0 5px 16px rgba(0,0,0,.42),
+    0 0 0 2px rgba(255,255,255,.09) !important;
+}
+
+/* Active filter = persistent glow, even after pointer leaves. */
+.overview-grade-overlay.filter-pill-btn.pill-selected,
+.overview-grade-overlay.condition-filter-btn.pill-selected{
+  background:rgba(8,9,11,.95) !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.42) !important;
+  box-shadow:
+    0 5px 16px rgba(0,0,0,.42),
+    0 0 0 2px rgba(255,255,255,.13),
+    0 0 12px rgba(255,255,255,.08) !important;
+}
+
+/* Compact Graded / Sealed — inactive is plain teal without glow. */
+.clean-grade-badge.filter-pill-btn:not(.condition-filter-btn):not(.pill-selected):not(:hover):not(:focus-visible){
+  background:rgba(95,212,196,.08) !important;
+  color:var(--accent-teal) !important;
+  border-color:rgba(95,212,196,.28) !important;
+  box-shadow:none !important;
+}
+
+/* Compact Graded / Sealed — temporary hover. */
+.clean-grade-badge.filter-pill-btn:not(.condition-filter-btn):not(.pill-selected):hover,
+.clean-grade-badge.filter-pill-btn:not(.condition-filter-btn):not(.pill-selected):focus-visible{
+  background:rgba(95,212,196,.08) !important;
+  color:var(--accent-teal) !important;
+  border-color:rgba(95,212,196,.58) !important;
+  box-shadow:
+    0 0 0 2px rgba(95,212,196,.10),
+    0 4px 12px rgba(0,0,0,.14) !important;
+}
+
+/* Compact Graded / Sealed — persistent active glow. */
+.clean-grade-badge.filter-pill-btn:not(.condition-filter-btn).pill-selected{
+  background:rgba(95,212,196,.08) !important;
+  color:var(--accent-teal) !important;
+  border-color:rgba(95,212,196,.62) !important;
+  box-shadow:
+    0 0 0 2px rgba(95,212,196,.13),
+    0 0 12px rgba(95,212,196,.10) !important;
+}
+
+/* Compact Condition — same state behavior, black base. */
+.clean-grade-badge.condition-filter-btn:not(.pill-selected):not(:hover):not(:focus-visible){
+  background:#0b0c0f !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.16) !important;
+  box-shadow:none !important;
+}
+.clean-grade-badge.condition-filter-btn:not(.pill-selected):hover,
+.clean-grade-badge.condition-filter-btn:not(.pill-selected):focus-visible{
+  background:#0b0c0f !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.30) !important;
+  box-shadow:0 0 0 2px rgba(255,255,255,.07) !important;
+}
+.clean-grade-badge.condition-filter-btn.pill-selected{
+  background:#0b0c0f !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.38) !important;
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,.10),
+    0 0 12px rgba(255,255,255,.07) !important;
+}
+
 </style>
 </head>
 <body>
