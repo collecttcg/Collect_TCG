@@ -14498,7 +14498,7 @@ body:not(.owner-mode) .giveaway-grid#pastWinnersGrid .giveaway-winner-name{
         </select>
       </div>
       <div class="field">
-        <label for="giveawayEndsAt">End date/time</label>
+        <label for="giveawayEndsAt">End date/time <span class="field-optional">(MY/SG time · GMT+8)</span></label>
         <input id="giveawayEndsAt" type="datetime-local">
       </div>
     </div>
@@ -22591,7 +22591,56 @@ function wireShimmer(container){
     if(!value) return "No end date";
     const d = new Date(value);
     if(Number.isNaN(d.getTime())) return value;
-    return d.toLocaleString();
+    return new Intl.DateTimeFormat("en-US",{
+      timeZone:"Asia/Kuala_Lumpur",
+      year:"numeric",
+      month:"short",
+      day:"numeric",
+      hour:"numeric",
+      minute:"2-digit",
+      hour12:true
+    }).format(d);
+  }
+
+  // Giveaway deadlines are entered and edited in Malaysia/Singapore time
+  // (UTC+08:00), independent of the owner's current browser timezone.
+  function giveawayEndsInputToIso(value){
+    const safe=String(value||"").trim();
+    if(!safe) return null;
+    if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(safe)) return null;
+
+    // datetime-local has no timezone. Explicitly attach +08:00 so "22:00"
+    // always means 22:00 in Malaysia/Singapore.
+    const d=new Date(`${safe}:00+08:00`);
+    return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  }
+
+  function giveawayEndsIsoToInputValue(value){
+    if(!value) return "";
+    const d=new Date(value);
+    if(Number.isNaN(d.getTime())) return "";
+
+    // Convert the stored instant into MY/SG wall-clock components.
+    const parts=new Intl.DateTimeFormat("en-CA",{
+      timeZone:"Asia/Kuala_Lumpur",
+      year:"numeric",
+      month:"2-digit",
+      day:"2-digit",
+      hour:"2-digit",
+      minute:"2-digit",
+      hourCycle:"h23"
+    }).formatToParts(d);
+
+    const map={};
+    for(const part of parts){
+      if(part.type!=="literal") map[part.type]=part.value;
+    }
+
+    if(!map.year || !map.month || !map.day || map.hour===undefined || map.minute===undefined){
+      return "";
+    }
+
+    return `${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}`;
   }
 
   async function uploadOwnerImage(file, bucket, errorLabel){
@@ -23489,7 +23538,7 @@ function wireShimmer(container){
     syncGiveawayWinnerField();
     $("giveawayHowToEnter").value = g ? g.how_to_enter : "";
     $("giveawayDetails").value = g ? g.details : "";
-    $("giveawayEndsAt").value = g && g.ends_at ? new Date(g.ends_at).toISOString().slice(0,16) : "";
+    $("giveawayEndsAt").value = g && g.ends_at ? giveawayEndsIsoToInputValue(g.ends_at) : "";
     giveawayOverlay.hidden = false;
   }
 
@@ -23566,13 +23615,20 @@ function wireShimmer(container){
       return;
     }
 
+    const giveawayEndsIso=endsValue ? giveawayEndsInputToIso(endsValue) : null;
+    if(endsValue && !giveawayEndsIso){
+      showToast("Please enter a valid giveaway end date/time");
+      $("giveawayEndsAt").focus();
+      return;
+    }
+
     const existing=id ? giveaways.find(g=>String(g.id)===String(id)) : null;
     const payload = {
       title: $("giveawayTitle").value.trim(),
       card_name: $("giveawayCardName").value.trim(),
       image_url: giveawayImageUrl,
       status,
-      ends_at: endsValue ? new Date(endsValue).toISOString() : null,
+      ends_at: giveawayEndsIso,
       how_to_enter: $("giveawayHowToEnter").value.trim(),
       details: $("giveawayDetails").value.trim(),
       winner_name: status==="gave_away" ? winnerName : null,
