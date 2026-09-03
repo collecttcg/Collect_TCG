@@ -13383,6 +13383,63 @@ body.light-mode .mobile-cards-per-page-control select{
   align-self:stretch;
 }
 
+
+/* Fix percentage bar geometry: plot row has a definite height and both the
+   bar and its value label are anchored to the same zero baseline. */
+.insights-axis-bars .insights-bar-wrap{
+  display:grid !important;
+  grid-template-rows:minmax(0,1fr) 20px !important;
+  height:100% !important;
+  min-height:0 !important;
+  justify-items:stretch !important;
+}
+
+.insights-axis-bars .insights-bar-stack{
+  position:relative !important;
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  min-height:0 !important;
+}
+
+.insights-axis-bars .insights-bar-stack .insights-bar{
+  position:absolute !important;
+  left:50% !important;
+  bottom:0 !important;
+  width:min(68%,18px) !important;
+  min-width:7px !important;
+  max-height:none !important;
+  margin:0 !important;
+  transform:translateX(-50%) !important;
+  border-radius:4px 4px 1px 1px !important;
+}
+
+.insights-axis-bars .insights-bar-stack .insights-bar-value{
+  position:absolute !important;
+  left:50% !important;
+  z-index:3 !important;
+  margin:0 !important;
+  transform:translateX(-50%) !important;
+  color:var(--text-muted) !important;
+  font-family:'JetBrains Mono',monospace !important;
+  font-size:7px !important;
+  font-weight:700 !important;
+  line-height:1 !important;
+  text-align:center !important;
+  white-space:nowrap !important;
+  pointer-events:none !important;
+}
+
+.insights-axis-bars .insights-bar-label{
+  align-self:end !important;
+}
+
+@media(max-width:800px){
+  .insights-axis-bars .insights-bar-stack .insights-bar-value{
+    font-size:6.5px !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -22602,10 +22659,11 @@ function wireShimmer(container){
                 ${safeSeries.map(row=>{
                   const value=Math.max(0,Number(row[key]||0));
                   const pct=axisMax ? value/axisMax*100 : 0;
+                  const barPct=Math.max(value?2:0,pct);
                   return `<div class="insights-bar-wrap" title="${escapeHtml(String(row.bucket))}: ${value}">
                     <div class="insights-bar-stack">
-                      <div class="insights-bar-value">${value.toLocaleString()}</div>
-                      <div class="insights-bar ${site?"insights-bar-site":""}" style="height:${Math.max(value?2:0,pct)}%"></div>
+                      <div class="insights-bar-value" style="bottom:calc(${barPct}% + 5px)">${value.toLocaleString()}</div>
+                      <div class="insights-bar ${site?"insights-bar-site":""}" style="height:${barPct}%"></div>
                     </div>
                     <div class="insights-bar-label">${escapeHtml(String(row.label||row.bucket))}</div>
                   </div>`;
