@@ -15009,6 +15009,31 @@ body:not(.owner-mode) .giveaway-grid#pastWinnersGrid .giveaway-winner-name{
   }
 }
 
+
+/* =========================================================
+   GIVEAWAY OVERVIEW — SHOW THE FULL IMAGE
+   Keep a consistent overview frame without cropping the photo.
+   ========================================================= */
+.giveaway-card > img{
+  width:100% !important;
+  height:auto !important;
+  aspect-ratio:4 / 3 !important;
+  object-fit:contain !important;
+  object-position:center !important;
+  padding:6px !important;
+  box-sizing:border-box !important;
+  background:#111216 !important;
+}
+
+/* Add/Edit Giveaway preview should also show the whole selected image. */
+.giveaway-image-preview img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  object-position:center !important;
+  background:#111216 !important;
+}
+
 </style>
 </head>
 <body>
