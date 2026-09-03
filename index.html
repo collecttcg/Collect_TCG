@@ -14072,12 +14072,72 @@ body.light-mode .clean-game-pill.filter-pill-btn.pill-selected{
 
 
 /* Drag handle is the actual draggable element. */
-.giveaway-winner-drag-handle[draggable="true"]{
-  -webkit-user-drag:element;
-  user-select:none;
-}
 .giveaway-winner-grid-dragging{
   cursor:grabbing;
+}
+
+
+/* =========================================================
+   PAST WINNERS — EXPLICIT REARRANGE MODE
+   ========================================================= */
+.giveaway-winner-section-actions{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+#toggleWinnerRearrangeBtn.active{
+  color:var(--accent-gold);
+  border-color:rgba(227,179,65,.62);
+  background:rgba(227,179,65,.10);
+  box-shadow:0 0 0 2px rgba(227,179,65,.08);
+}
+.giveaway-rearrange-mode .giveaway-winner-card{
+  cursor:grab;
+  user-select:none;
+  touch-action:none;
+  border-color:rgba(227,179,65,.24);
+}
+.giveaway-rearrange-mode .giveaway-winner-card:hover{
+  border-color:rgba(227,179,65,.52);
+  box-shadow:0 0 0 2px rgba(227,179,65,.08);
+}
+.giveaway-rearrange-mode .giveaway-winner-card:active{
+  cursor:grabbing;
+}
+.giveaway-winner-pointer-dragging{
+  opacity:.93;
+  transform:scale(.99);
+  box-shadow:
+    0 18px 40px rgba(0,0,0,.42),
+    0 0 0 2px rgba(227,179,65,.24) !important;
+}
+.giveaway-winner-placeholder{
+  border:2px dashed rgba(227,179,65,.52);
+  border-radius:12px;
+  background:rgba(227,179,65,.055);
+  box-sizing:border-box;
+}
+body.giveaway-rearranging-body{
+  cursor:grabbing !important;
+  user-select:none !important;
+}
+.giveaway-rearrange-mode .giveaway-owner-actions{
+  pointer-events:none;
+  opacity:.38;
+}
+.giveaway-rearrange-mode .giveaway-winner-profile-link{
+  pointer-events:none;
+}
+@media(max-width:700px){
+  .giveaway-winner-section-actions{
+    width:100%;
+    justify-content:space-between;
+  }
+  #toggleWinnerRearrangeBtn{
+    flex:1;
+  }
 }
 
 </style>
@@ -22892,107 +22952,218 @@ function wireShimmer(container){
     return ok;
   }
 
-  function setupGiveawayWinnerDragReorder(){
+  function setupGiveawayWinnerRearrangeMode(){
     if(!isOwnerMode()) return;
 
     const container=$("pastWinnersGrid");
-    if(!container) return;
+    const toggleBtn=$("toggleWinnerRearrangeBtn");
+    if(!container || !toggleBtn) return;
 
+    let rearrangeMode=false;
     let draggedCard=null;
+    let pointerId=null;
     let originalOrder="";
+    let dragOffsetX=0;
+    let dragOffsetY=0;
+    let placeholder=null;
 
     const cards=()=>[...container.querySelectorAll("[data-giveaway-winner-card]")];
 
-    cards().forEach(card=>{
-      const handle=card.querySelector("[data-giveaway-drag-handle]");
-      if(!handle) return;
+    function orderKey(){
+      return cards()
+        .map(card=>String(card.dataset.giveawayWinnerCard||""))
+        .join("|");
+    }
 
-      handle.setAttribute("draggable","true");
+    function setMode(enabled){
+      rearrangeMode=!!enabled;
+      container.classList.toggle("giveaway-rearrange-mode",rearrangeMode);
+      toggleBtn.classList.toggle("active",rearrangeMode);
+      toggleBtn.setAttribute("aria-pressed",String(rearrangeMode));
+      toggleBtn.textContent=rearrangeMode ? "Done Rearranging" : "Rearrange Winners";
 
-      handle.addEventListener("dragstart",event=>{
-        draggedCard=card;
-        originalOrder=cards()
-          .map(item=>String(item.dataset.giveawayWinnerCard||""))
-          .join("|");
-
-        card.classList.add("giveaway-winner-dragging");
-        container.classList.add("giveaway-winner-grid-dragging");
-
-        try{
-          event.dataTransfer.effectAllowed="move";
-          event.dataTransfer.setData(
-            "text/plain",
-            String(card.dataset.giveawayWinnerCard||"")
-          );
-
-          // Use the whole card as the drag preview when supported.
-          if(typeof event.dataTransfer.setDragImage==="function"){
-            event.dataTransfer.setDragImage(
-              card,
-              Math.min(36,card.offsetWidth/2),
-              24
-            );
-          }
-        }catch{}
+      cards().forEach(card=>{
+        card.classList.toggle("giveaway-reorder-enabled",rearrangeMode);
+        card.setAttribute("aria-grabbed","false");
       });
 
-      handle.addEventListener("dragend",async()=>{
-        if(!draggedCard) return;
+      if(rearrangeMode){
+        showToast("Rearrange mode on — drag any winner card");
+      }
+    }
 
-        draggedCard.classList.remove("giveaway-winner-dragging");
-        container.classList.remove("giveaway-winner-grid-dragging");
+    function cleanupDrag(){
+      if(draggedCard){
+        draggedCard.classList.remove("giveaway-winner-pointer-dragging");
+        draggedCard.style.position="";
+        draggedCard.style.left="";
+        draggedCard.style.top="";
+        draggedCard.style.width="";
+        draggedCard.style.height="";
+        draggedCard.style.zIndex="";
+        draggedCard.style.pointerEvents="";
+        draggedCard.style.margin="";
+        draggedCard.setAttribute("aria-grabbed","false");
+      }
 
-        const newOrder=cards()
-          .map(item=>String(item.dataset.giveawayWinnerCard||""))
-          .join("|");
+      if(placeholder?.parentNode){
+        placeholder.replaceWith(draggedCard);
+      }
 
-        const changed=originalOrder && newOrder!==originalOrder;
+      draggedCard=null;
+      placeholder=null;
+      pointerId=null;
+      container.classList.remove("giveaway-rearranging-active");
+      document.body.classList.remove("giveaway-rearranging-body");
+    }
 
-        draggedCard=null;
-        originalOrder="";
-
-        if(changed){
-          const ok=await saveGiveawayWinnerDomOrder();
-          if(!ok){
-            await loadGiveaways();
-            renderGiveawayPage();
-          }
-        }
-      });
-    });
-
-    container.addEventListener("dragover",event=>{
+    async function finishDrag(){
       if(!draggedCard) return;
+
+      const card=draggedCard;
+
+      if(placeholder?.parentNode){
+        placeholder.replaceWith(card);
+      }
+
+      card.classList.remove("giveaway-winner-pointer-dragging");
+      card.style.position="";
+      card.style.left="";
+      card.style.top="";
+      card.style.width="";
+      card.style.height="";
+      card.style.zIndex="";
+      card.style.pointerEvents="";
+      card.style.margin="";
+      card.setAttribute("aria-grabbed","false");
+
+      container.classList.remove("giveaway-rearranging-active");
+      document.body.classList.remove("giveaway-rearranging-body");
+
+      const newOrder=orderKey();
+      const changed=originalOrder && newOrder!==originalOrder;
+
+      draggedCard=null;
+      placeholder=null;
+      pointerId=null;
+      originalOrder="";
+
+      if(changed){
+        const ok=await saveGiveawayWinnerDomOrder();
+        if(!ok){
+          await loadGiveaways();
+          renderGiveawayPage();
+        }
+      }
+    }
+
+    function findDropTarget(x,y){
+      const candidates=cards().filter(card=>card!==draggedCard);
+      if(!candidates.length) return null;
+
+      let nearest=null;
+      let nearestDistance=Infinity;
+
+      for(const card of candidates){
+        const rect=card.getBoundingClientRect();
+        const cx=rect.left+rect.width/2;
+        const cy=rect.top+rect.height/2;
+        const distance=Math.hypot(x-cx,y-cy);
+
+        if(distance<nearestDistance){
+          nearestDistance=distance;
+          nearest={card,rect,cx,cy};
+        }
+      }
+
+      return nearest;
+    }
+
+    container.addEventListener("pointerdown",event=>{
+      if(!rearrangeMode) return;
+      if(event.button!==undefined && event.button!==0) return;
+
+      const card=event.target?.closest?.("[data-giveaway-winner-card]");
+      if(!card || !container.contains(card)) return;
+
+      // In rearrange mode, the whole card is the drag surface.
       event.preventDefault();
 
-      try{ event.dataTransfer.dropEffect="move"; }catch{}
+      const rect=card.getBoundingClientRect();
+      originalOrder=orderKey();
+      draggedCard=card;
+      pointerId=event.pointerId;
+      dragOffsetX=event.clientX-rect.left;
+      dragOffsetY=event.clientY-rect.top;
 
-      const target=event.target?.closest?.("[data-giveaway-winner-card]");
-      if(!target || target===draggedCard) return;
+      placeholder=document.createElement("div");
+      placeholder.className="giveaway-winner-placeholder";
+      placeholder.style.width=`${rect.width}px`;
+      placeholder.style.height=`${rect.height}px`;
 
-      const targetRect=target.getBoundingClientRect();
-      const draggedRect=draggedCard.getBoundingClientRect();
+      card.replaceWith(placeholder);
+      document.body.appendChild(card);
 
-      const targetCenterX=targetRect.left+targetRect.width/2;
-      const targetCenterY=targetRect.top+targetRect.height/2;
+      card.classList.add("giveaway-winner-pointer-dragging");
+      card.setAttribute("aria-grabbed","true");
+      card.style.position="fixed";
+      card.style.left=`${rect.left}px`;
+      card.style.top=`${rect.top}px`;
+      card.style.width=`${rect.width}px`;
+      card.style.height=`${rect.height}px`;
+      card.style.zIndex="99999";
+      card.style.pointerEvents="none";
+      card.style.margin="0";
 
-      const rowTolerance=Math.min(targetRect.height,draggedRect.height)*0.45;
-      const sameRow=Math.abs(draggedRect.top-targetRect.top)<rowTolerance;
+      container.classList.add("giveaway-rearranging-active");
+      document.body.classList.add("giveaway-rearranging-body");
 
-      const before=sameRow
-        ? event.clientX<targetCenterX
-        : event.clientY<targetCenterY;
+      try{
+        container.setPointerCapture(pointerId);
+      }catch{}
+    });
 
-      const referenceNode=before ? target : target.nextSibling;
+    container.addEventListener("pointermove",event=>{
+      if(!draggedCard || event.pointerId!==pointerId) return;
 
-      if(referenceNode!==draggedCard){
-        container.insertBefore(draggedCard,referenceNode);
+      event.preventDefault();
+
+      draggedCard.style.left=`${event.clientX-dragOffsetX}px`;
+      draggedCard.style.top=`${event.clientY-dragOffsetY}px`;
+
+      const nearest=findDropTarget(event.clientX,event.clientY);
+      if(!nearest || !placeholder) return;
+
+      const {card,rect,cx,cy}=nearest;
+
+      // Decide before/after using the dominant axis of the grid position.
+      const horizontalBias=Math.abs(event.clientX-cx) > Math.abs(event.clientY-cy);
+      const before=horizontalBias
+        ? event.clientX<cx
+        : event.clientY<cy;
+
+      const reference=before ? card : card.nextSibling;
+
+      if(reference!==placeholder){
+        container.insertBefore(placeholder,reference);
       }
     });
 
-    container.addEventListener("drop",event=>{
-      if(!draggedCard) return;
+    container.addEventListener("pointerup",event=>{
+      if(!draggedCard || event.pointerId!==pointerId) return;
       event.preventDefault();
+      finishDrag();
+    });
+
+    container.addEventListener("pointercancel",event=>{
+      if(!draggedCard || event.pointerId!==pointerId) return;
+      cleanupDrag();
+      renderGiveawayPage();
+    });
+
+    toggleBtn.addEventListener("click",()=>{
+      if(draggedCard) return;
+      setMode(!rearrangeMode);
     });
   }
 
@@ -23056,13 +23227,6 @@ function wireShimmer(container){
           ${g.details ? `<div class="giveaway-section"><h4>Giveaway details</h4><p>${escapeHtml(g.details)}</p></div>` : ""}
 
           <div class="giveaway-owner-actions owner-only">
-            <div class="giveaway-winner-drag-hint" aria-hidden="true">
-              <span class="giveaway-winner-drag-handle"
-                    data-giveaway-drag-handle
-                    draggable="true"
-                    title="Drag to reorder winners">⋮⋮</span>
-              <span>Drag to reorder</span>
-            </div>
             <button type="button" class="btn-ghost" data-giveaway-edit="${escapeHtml(g.id)}">Edit Winner</button>
             <button type="button" class="btn-ghost" data-giveaway-restore="${escapeHtml(g.id)}">Move Back to Current</button>
             <button type="button" class="btn-ghost" data-giveaway-delete="${escapeHtml(g.id)}" style="color:var(--danger)">Delete</button>
@@ -23091,7 +23255,7 @@ function wireShimmer(container){
         </div>
 
         ${currentGiveaways.length
-          ? `<div class="giveaway-grid" id="pastWinnersGrid">${currentGiveaways.map(currentCardHTML).join("")}</div>`
+          ? `<div class="giveaway-grid">${currentGiveaways.map(currentCardHTML).join("")}</div>`
           : `<div class="giveaway-empty-section">No current giveaways right now. Check back again soon.</div>`}
       </section>
 
@@ -23101,18 +23265,26 @@ function wireShimmer(container){
             <h3>Past Winners</h3>
             <p>Previous giveaways that have been completed and awarded.</p>
           </div>
-          <span class="giveaway-section-count">${pastWinners.length}</span>
+          <div class="giveaway-winner-section-actions">
+            <button type="button"
+                    class="btn-ghost owner-only"
+                    id="toggleWinnerRearrangeBtn"
+                    aria-pressed="false">
+              Rearrange Winners
+            </button>
+            <span class="giveaway-section-count">${pastWinners.length}</span>
+          </div>
         </div>
 
         ${pastWinners.length
-          ? `<div class="giveaway-grid">${pastWinners.map(winnerCardHTML).join("")}</div>`
+          ? `<div class="giveaway-grid" id="pastWinnersGrid">${pastWinners.map(winnerCardHTML).join("")}</div>`
           : `<div class="giveaway-empty-section">Past giveaway winners will appear here.</div>`}
       </section>
     `;
 
     $("addGiveawayBtn")?.addEventListener("click",()=>openGiveawayForm());
 
-    setupGiveawayWinnerDragReorder();
+    setupGiveawayWinnerRearrangeMode();
 
     view.querySelectorAll("[data-giveaway-edit]").forEach(btn=>{
       btn.addEventListener("click",()=>{
