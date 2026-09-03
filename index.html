@@ -12769,6 +12769,13 @@ body.light-mode .mobile-cards-per-page-control select{
   border-color:#bbb7ae !important;
 }
 
+
+/* Card Details is a reused scrolling modal. Do not let browser scroll anchoring
+   restore a previous card's vertical position after its contents are replaced. */
+.modal.card-details-modal{
+  overflow-anchor:none !important;
+}
+
 </style>
 </head>
 <body>
@@ -29035,8 +29042,9 @@ function wireShimmer(container){
     detailsCardId = card.id;
     detailsImageIndex = 0;
 
-    // Always open card details from the top. The modal element is reused
-    // between cards, so browsers otherwise preserve its previous scrollTop.
+    // Clear the reused modal's previous position immediately. A second,
+    // post-render reset below guarantees the new card starts at the top on
+    // mobile browsers that restore scroll after DOM/layout changes.
     const detailsModal = detailsOverlay?.querySelector(".card-details-modal");
     if(detailsModal){
       detailsModal.scrollTop = 0;
@@ -29260,6 +29268,27 @@ function wireShimmer(container){
     `;
 
     detailsOverlay.hidden = false;
+
+    // The Card Details modal is reused between listings. Reset its actual
+    // scrolling element only AFTER the new card has been rendered and the
+    // overlay is visible; otherwise mobile Safari/Chrome may restore the old
+    // scroll position during layout.
+    const openedDetailsModal=detailsOverlay?.querySelector(".card-details-modal");
+    const resetOpenedDetailsScroll=()=>{
+      if(!openedDetailsModal) return;
+      openedDetailsModal.scrollTop=0;
+      openedDetailsModal.scrollLeft=0;
+      if(typeof openedDetailsModal.scrollTo==="function"){
+        try{ openedDetailsModal.scrollTo({top:0,left:0,behavior:"instant"}); }
+        catch{ openedDetailsModal.scrollTo(0,0); }
+      }
+    };
+
+    resetOpenedDetailsScroll();
+    requestAnimationFrame(()=>{
+      resetOpenedDetailsScroll();
+      requestAnimationFrame(resetOpenedDetailsScroll);
+    });
 
     // Move focus into the dialog without causing the page to jump.
     requestAnimationFrame(()=>{
