@@ -13840,6 +13840,116 @@ body.light-mode .clean-game-pill.filter-pill-btn.pill-selected{
     0 0 12px rgba(255,255,255,.07) !important;
 }
 
+
+/* =========================================================
+   VERIFIED FINAL STATE RULES — GRADED / CONDITION / SEALED
+   These are intentionally last in the stylesheet.
+   ========================================================= */
+
+/* ---------- OVERVIEW BADGES ---------- */
+/* INACTIVE: preserve base black pill, absolutely no glow/shadow. */
+.overview-grade-overlay.filter-pill-btn,
+.overview-grade-overlay.condition-filter-btn{
+  background:rgba(8,9,11,.95) !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.22) !important;
+  box-shadow:none !important;
+}
+
+/* HOVER/KEYBOARD FOCUS ONLY: temporary glow. */
+.overview-grade-overlay.filter-pill-btn:not(.pill-selected):hover,
+.overview-grade-overlay.filter-pill-btn:not(.pill-selected):focus-visible,
+.overview-grade-overlay.condition-filter-btn:not(.pill-selected):hover,
+.overview-grade-overlay.condition-filter-btn:not(.pill-selected):focus-visible{
+  background:rgba(8,9,11,.95) !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.38) !important;
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,.10),
+    0 0 12px rgba(255,255,255,.07) !important;
+}
+
+/* ACTIVE FILTER: persistent glow after pointer leaves. */
+.overview-grade-overlay.filter-pill-btn.pill-selected,
+.overview-grade-overlay.condition-filter-btn.pill-selected{
+  background:rgba(8,9,11,.95) !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.46) !important;
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,.14),
+    0 0 14px rgba(255,255,255,.10) !important;
+}
+
+/* Keep text colors unchanged in every state. */
+.overview-grade-overlay.filter-pill-btn strong,
+.overview-grade-overlay.condition-filter-btn strong{
+  color:#fff !important;
+}
+.overview-grade-overlay.filter-pill-btn small,
+.overview-grade-overlay.condition-filter-btn small{
+  color:rgba(255,255,255,.68) !important;
+}
+
+/* ---------- COMPACT GRADED / SEALED PILLS ---------- */
+/* INACTIVE: native teal appearance, no glow. */
+.clean-grade-badge.filter-pill-btn:not(.condition-filter-btn){
+  background:rgba(95,212,196,.08) !important;
+  color:var(--accent-teal) !important;
+  border-color:rgba(95,212,196,.28) !important;
+  box-shadow:none !important;
+}
+
+/* Temporary hover/focus glow. */
+.clean-grade-badge.filter-pill-btn:not(.condition-filter-btn):not(.pill-selected):hover,
+.clean-grade-badge.filter-pill-btn:not(.condition-filter-btn):not(.pill-selected):focus-visible{
+  background:rgba(95,212,196,.08) !important;
+  color:var(--accent-teal) !important;
+  border-color:rgba(95,212,196,.58) !important;
+  box-shadow:
+    0 0 0 2px rgba(95,212,196,.10),
+    0 0 12px rgba(95,212,196,.08) !important;
+}
+
+/* Persistent active glow. */
+.clean-grade-badge.filter-pill-btn:not(.condition-filter-btn).pill-selected{
+  background:rgba(95,212,196,.08) !important;
+  color:var(--accent-teal) !important;
+  border-color:rgba(95,212,196,.64) !important;
+  box-shadow:
+    0 0 0 2px rgba(95,212,196,.14),
+    0 0 14px rgba(95,212,196,.10) !important;
+}
+
+/* ---------- COMPACT CONDITION ---------- */
+/* INACTIVE: black, no glow. */
+.clean-grade-badge.condition-filter-btn{
+  background:#0b0c0f !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.16) !important;
+  box-shadow:none !important;
+}
+
+/* Temporary hover/focus glow. */
+.clean-grade-badge.condition-filter-btn:not(.pill-selected):hover,
+.clean-grade-badge.condition-filter-btn:not(.pill-selected):focus-visible{
+  background:#0b0c0f !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.30) !important;
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,.08),
+    0 0 12px rgba(255,255,255,.05) !important;
+}
+
+/* Persistent active glow. */
+.clean-grade-badge.condition-filter-btn.pill-selected{
+  background:#0b0c0f !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.40) !important;
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,.12),
+    0 0 14px rgba(255,255,255,.08) !important;
+}
+
 </style>
 </head>
 <body>
