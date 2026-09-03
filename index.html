@@ -13215,6 +13215,101 @@ body.light-mode .mobile-cards-per-page-control select{
   .insights-v4-quality-pill,.insights-v4-tab-title>span{display:none}
 }
 
+
+/* Overview traffic chart: always visible directly under the filters */
+.insights-v4-traffic-primary{
+  margin-bottom:10px;
+}
+.insights-v4-dual-chart{
+  min-height:190px;
+  height:210px;
+  display:flex;
+  align-items:flex-end;
+  gap:6px;
+  padding:12px 4px 4px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:thin;
+}
+.insights-v4-dual-bar-group{
+  flex:1 0 34px;
+  min-width:34px;
+  height:100%;
+  display:grid;
+  grid-template-rows:minmax(0,1fr) auto;
+  gap:5px;
+  align-items:end;
+}
+.insights-v4-dual-bars{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  gap:3px;
+}
+.insights-v4-dual-bars i{
+  display:block;
+  width:38%;
+  min-width:5px;
+  max-width:14px;
+  border-radius:4px 4px 1px 1px;
+}
+.insights-v4-dual-bars i.site{
+  background:var(--accent-teal);
+}
+.insights-v4-dual-bars i.card{
+  background:var(--accent-gold);
+}
+.insights-v4-dual-bar-group>span{
+  min-height:18px;
+  overflow:hidden;
+  color:var(--text-muted);
+  font-size:6.5px;
+  line-height:1.15;
+  text-align:center;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.insights-v4-chart-legend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  align-items:center;
+  padding-top:7px;
+  border-top:1px solid var(--border-soft);
+  color:var(--text-muted);
+  font-size:7.5px;
+}
+.insights-v4-chart-legend span{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+.insights-v4-chart-legend i{
+  width:8px;
+  height:8px;
+  border-radius:2px;
+}
+.insights-v4-chart-legend i.site{
+  background:var(--accent-teal);
+}
+.insights-v4-chart-legend i.card{
+  background:var(--accent-gold);
+}
+
+@media(max-width:800px){
+  .insights-v4-dual-chart{
+    height:180px;
+    min-height:165px;
+    gap:5px;
+  }
+  .insights-v4-dual-bar-group{
+    flex-basis:30px;
+    min-width:30px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -22292,8 +22387,22 @@ function wireShimmer(container){
       const mostContact=rows.slice().sort((a,b)=>b._contactActions-a._contactActions)[0];
 
       $("insightsOverview").innerHTML=`
+        <section class="insights-v4-card insights-v4-traffic-primary">
+          <div class="insights-v4-card-head table-head">
+            <div>
+              <h3>Traffic & Card Interest</h3>
+              <span>Website visits and qualified card views across the selected period.</span>
+            </div>
+          </div>
+          <div class="insights-v4-dual-chart" id="insightsTrafficCombined"></div>
+          <div class="insights-v4-chart-legend" aria-label="Traffic chart legend">
+            <span><i class="site"></i>Website Visits</span>
+            <span><i class="card"></i>Qualified Card Views</span>
+          </div>
+        </section>
+
         <div class="insights-v4-intro">
-          <div><strong>Start here</strong><span>These are the numbers that matter most for the selected period.</span></div>
+          <div><strong>At a Glance</strong><span>These are the numbers that matter most for the selected period.</span></div>
           <div class="insights-v4-quality-pill">✓ Owner activity excluded</div>
         </div>
 
@@ -22361,27 +22470,44 @@ function wireShimmer(container){
           </div>
         </section>
 
-        <details class="insights-v4-details">
-          <summary>Show traffic charts</summary>
-          <div class="insights-v4-grid-2 details-grid">
-            <section class="insights-v4-card"><h3>Qualified Card Views</h3><div id="insightsChart" class="insights-chart insights-time-chart"></div></section>
-            <section class="insights-v4-card"><h3>Website Visits</h3><div id="insightsWebsiteChart" class="insights-chart insights-time-chart"></div></section>
-          </div>
-        </details>
       `;
 
-      function bars(id,series,key,site=false){
-        const mount=$(id);
+      function renderCombinedTrafficChart(){
+        const mount=$("insightsTrafficCombined");
         if(!mount) return;
-        const max=Math.max(1,...series.map(r=>Number(r[key]||0)));
-        mount.innerHTML=series.length?series.map(r=>`
-          <div class="insights-bar-wrap" title="${escapeHtml(String(r.bucket))}: ${Number(r[key]||0)}">
-            <div class="insights-bar ${site?"insights-bar-site":""}" style="height:${Math.max(2,Number(r[key]||0)/max*100)}%"></div>
-            <div class="insights-bar-label">${escapeHtml(String(r.label||r.bucket))}</div>
-          </div>`).join(""):`<div class="hint">No data yet.</div>`;
+
+        const cardSeries=Array.isArray(state.series)?state.series:[];
+        const siteSeries=Array.isArray(state.websiteSeries)?state.websiteSeries:[];
+        const length=Math.max(cardSeries.length,siteSeries.length);
+
+        if(!length){
+          mount.innerHTML=`<div class="hint">No traffic data yet.</div>`;
+          return;
+        }
+
+        const rows=Array.from({length},(_,index)=>{
+          const card=cardSeries[index]||{};
+          const site=siteSeries[index]||{};
+          return {
+            label:String(card.label||site.label||card.bucket||site.bucket||""),
+            visits:Number(site.visits||0),
+            views:Number(card.views||0)
+          };
+        });
+
+        const max=Math.max(1,...rows.flatMap(row=>[row.visits,row.views]));
+        mount.innerHTML=rows.map(row=>`
+          <div class="insights-v4-dual-bar-group" title="${escapeHtml(row.label)} · Website ${row.visits} · Card views ${row.views}">
+            <div class="insights-v4-dual-bars">
+              <i class="site" style="height:${Math.max(row.visits?3:0,row.visits/max*100)}%"></i>
+              <i class="card" style="height:${Math.max(row.views?3:0,row.views/max*100)}%"></i>
+            </div>
+            <span>${escapeHtml(row.label)}</span>
+          </div>
+        `).join("");
       }
-      bars("insightsChart",state.series,"views");
-      bars("insightsWebsiteChart",state.websiteSeries,"visits",true);
+
+      renderCombinedTrafficChart();
     }
 
     function renderRecommendations(){
