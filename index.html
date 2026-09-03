@@ -14140,6 +14140,28 @@ body.giveaway-rearranging-body{
   }
 }
 
+
+/* =========================================================
+   DESKTOP NAV — RESTORE SHOWCASE PRIMARY TAB
+   An older desktop rule hid Showcase with display:none!important.
+   Keep this final override last so Showcase is visible on PC.
+   ========================================================= */
+@media (min-width:801px){
+  nav.mainnav > a[data-route="showcase"]{
+    display:flex !important;
+    order:6 !important;
+    flex:0 0 auto !important;
+    min-height:38px !important;
+    align-items:center !important;
+    justify-content:center !important;
+  }
+
+  /* Avoid showing a duplicate Showcase inside More on desktop. */
+  nav.mainnav > .mobile-more-menu > a[data-route="showcase"]{
+    display:none !important;
+  }
+}
+
 </style>
 </head>
 <body>
