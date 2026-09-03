@@ -12776,6 +12776,100 @@ body.light-mode .mobile-cards-per-page-control select{
   overflow-anchor:none !important;
 }
 
+
+/* =========================================================
+   INSIGHTS V2 — DATA QUALITY + PERIOD COMPARISON
+   ========================================================= */
+.insights-quality-note{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  margin:0 0 14px;
+  padding:11px 13px;
+  border:1px solid rgba(95,212,196,.24);
+  border-radius:11px;
+  background:rgba(95,212,196,.045);
+}
+.insights-quality-note strong{
+  flex:0 0 auto;
+  color:var(--accent-teal);
+  font-size:10px;
+}
+.insights-quality-note span{
+  color:var(--text-muted);
+  font-size:9px;
+  line-height:1.45;
+}
+.insights-stats{
+  grid-template-columns:repeat(auto-fit,minmax(145px,1fr)) !important;
+}
+.insights-stat small{
+  display:block;
+  margin-top:5px;
+  color:var(--text-muted);
+  font-size:8px;
+  line-height:1.35;
+}
+.insights-stat-card-name{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-family:'Inter',sans-serif !important;
+  font-size:13px !important;
+}
+.insights-panel-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+  margin-bottom:10px;
+}
+.insights-panel-head h3{
+  margin:0 0 4px !important;
+}
+.insights-panel-head p{
+  margin:0;
+  color:var(--text-muted);
+  font-size:8.5px;
+  line-height:1.4;
+}
+.insights-status-tag{
+  display:inline-flex;
+  align-items:center;
+  min-height:21px;
+  padding:3px 7px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  color:var(--text-muted);
+  font-size:8px;
+  font-weight:700;
+}
+.trend-tag.rising{
+  border-color:var(--accent-teal);
+  color:var(--accent-teal);
+}
+
+@media(max-width:800px){
+  .insights-quality-note{
+    display:block;
+  }
+  .insights-quality-note strong,
+  .insights-quality-note span{
+    display:block;
+  }
+  .insights-quality-note span{
+    margin-top:5px;
+  }
+  .insights-stats{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+@media(max-width:430px){
+  .insights-stats{
+    grid-template-columns:1fr !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -14818,20 +14912,107 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return id;
   }
 
-  async function recordCardViewEvent(card){
+  const CARD_VIEW_QUALIFY_MS=5000;
+  const CARD_VIEW_DEDUPE_MS=30*60*1000;
+  const CARD_VIEW_DEDUPE_KEY="collect_tcg_card_view_dedupe_v2";
+  let cardViewQualificationToken=0;
+  const cardViewFallbackTimestamps=new Map();
+
+  function cancelPendingCardViewQualification(){
+    cardViewQualificationToken+=1;
+  }
+
+  function readCardViewDedupeMap(){
     try{
-      const visitorId = getVisitorId();
-      const { error } = await supabaseClient.functions.invoke("record-card-view", {
-        body: {
-          card_id: card.id,
-          visitor_id: visitorId
+      const parsed=JSON.parse(localStorage.getItem(CARD_VIEW_DEDUPE_KEY)||"{}");
+      return parsed && typeof parsed==="object" && !Array.isArray(parsed) ? parsed : {};
+    }catch{
+      return {};
+    }
+  }
+
+  function recentlyRecordedQualifiedCardView(cardId,now=Date.now()){
+    const id=String(cardId||"");
+    if(!id) return false;
+
+    const stored=readCardViewDedupeMap();
+    const ts=Number(stored[id]||0) || Number(cardViewFallbackTimestamps.get(id)||0);
+    return Number.isFinite(ts) && ts>0 && (now-ts)<CARD_VIEW_DEDUPE_MS;
+  }
+
+  function markQualifiedCardViewRecorded(cardId,now=Date.now()){
+    const id=String(cardId||"");
+    if(!id) return;
+
+    cardViewFallbackTimestamps.set(id,now);
+
+    try{
+      const stored=readCardViewDedupeMap();
+      stored[id]=now;
+
+      // Keep storage bounded. The newest 250 card timestamps are plenty for
+      // the 30-minute anti-duplicate window.
+      const compact=Object.entries(stored)
+        .filter(([,ts])=>Number.isFinite(Number(ts)) && now-Number(ts)<7*24*60*60*1000)
+        .sort((a,b)=>Number(b[1])-Number(a[1]))
+        .slice(0,250);
+
+      localStorage.setItem(CARD_VIEW_DEDUPE_KEY,JSON.stringify(Object.fromEntries(compact)));
+    }catch{}
+  }
+
+  async function sendQualifiedCardViewEvent(card,token){
+    try{
+      const cardId=safeCardId(card?.id);
+      if(!cardId) return false;
+
+      // Owner/testing activity must never inflate buyer-facing analytics.
+      if(isOwnerMode()) return false;
+
+      // A qualified view requires the same card to still be open, visible and
+      // in the foreground after the engagement delay.
+      if(token!==cardViewQualificationToken) return false;
+      if(detailsOverlay?.hidden) return false;
+      if(String(detailsCardId||"")!==cardId) return false;
+      if(document.visibilityState && document.visibilityState!=="visible") return false;
+
+      const now=Date.now();
+      if(recentlyRecordedQualifiedCardView(cardId,now)) return false;
+
+      const visitorId=getVisitorId();
+      const {error}=await supabaseClient.functions.invoke("record-card-view",{
+        body:{
+          card_id:cardId,
+          visitor_id:visitorId
         }
       });
-      if(error) console.error("Record view event error:", error);
-      if(isOwnerMode()) card.view_count = Number(card.view_count || 0) + 1;
-    }catch(e){
-      console.error("Record view event error:", e);
+
+      if(error){
+        console.error("Record qualified view event error:",error);
+        return false;
+      }
+
+      markQualifiedCardViewRecorded(cardId,now);
+      return true;
+    }catch(error){
+      console.error("Record qualified view event error:",error);
+      return false;
     }
+  }
+
+  function recordCardViewEvent(card){
+    // The existing analytics backend continues to store one card-view event,
+    // but the frontend now submits only meaningful buyer views:
+    // 5+ seconds open, owner excluded, and one event per card/browser/30 min.
+    cancelPendingCardViewQualification();
+    if(isOwnerMode()) return false;
+
+    const token=cardViewQualificationToken;
+    window.setTimeout(()=>{
+      sendQualifiedCardViewEvent(card,token);
+    },CARD_VIEW_QUALIFY_MS);
+
+    return true;
   }
 
   const WEBSITE_VISIT_SESSION_KEY="collect_tcg_website_visit_recorded_v1";
@@ -14897,14 +15078,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return { start, end };
   }
 
-  async function fetchInsights(start, end){
-    const { data, error } = await supabaseClient.rpc("get_card_insights", {
-      p_start: start.toISOString(),
-      p_end: end.toISOString()
+  async function fetchInsights(start,end,{silent=false}={}){
+    const {data,error}=await supabaseClient.rpc("get_card_insights",{
+      p_start:start.toISOString(),
+      p_end:end.toISOString()
     });
     if(error){
-      console.error("Insights error:", error);
-      showToast("Could not load insights");
+      console.error("Insights error:",error);
+      if(!silent) showToast("Could not load insights");
       return [];
     }
     return Array.isArray(data) ? data : [];
@@ -14969,11 +15150,84 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     });
   }
 
-  function insightTrend(row, avg){
-    const views = Number(row.views || 0);
-    if(views >= Math.max(5, avg * 1.5)) return "hot";
-    if(views === 0 || views < Math.max(1, avg * 0.25)) return "low";
-    return "";
+  function insightRowKey(row){
+    const id=safeCardId(row?.card_id || row?.id || "");
+    if(id) return `id:${id}`;
+    return `name:${normalizeFilterValue(row?.name)}|${normalizeFilterValue(row?.game)}`;
+  }
+
+  function insightCardForRow(row){
+    const id=safeCardId(row?.card_id || row?.id || "");
+    if(id){
+      const direct=getCardById(id);
+      if(direct) return direct;
+    }
+
+    const name=normalizeFilterValue(row?.name);
+    const game=normalizeFilterValue(row?.game);
+    return cards.find(card=>
+      normalizeFilterValue(card?.name)===name &&
+      (!game || normalizeFilterValue(card?.game)===game)
+    ) || null;
+  }
+
+  function insightStatusLabel(row){
+    const card=insightCardForRow(row);
+    if(!card) return "Unknown";
+
+    const lifecycle=cardLifecycle(card);
+    if(lifecycle==="draft") return "Hidden";
+    if(lifecycle==="archived") return "Archived";
+
+    const availability=canonicalAvailability(card.availability);
+    return availability==="Collection (NFS)" ? "Collection (NFS)" : availability;
+  }
+
+  function previousInsightsRange(start,end,preset){
+    if(preset==="all") return null;
+
+    const startMs=start.getTime();
+    const endMs=end.getTime();
+    if(!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs<=startMs) return null;
+
+    const span=endMs-startMs;
+    const previousEnd=new Date(startMs-1);
+    const previousStart=new Date(previousEnd.getTime()-span);
+    return {start:previousStart,end:previousEnd};
+  }
+
+  function insightTrendMeta(row,previousRow){
+    const current=Math.max(0,Number(row?.unique_views||0));
+    const previous=Math.max(0,Number(previousRow?.unique_views||0));
+    const delta=current-previous;
+
+    if(previous===0){
+      if(current>=3) return {className:"hot",label:"New ↑",score:1000+current,current,previous,pct:null};
+      if(current>0) return {className:"",label:"New",score:100+current,current,previous,pct:null};
+      return {className:"low",label:"No interest",score:-100,current,previous,pct:null};
+    }
+
+    const pct=(delta/previous)*100;
+
+    if(current>=3 && delta>=2 && pct>=50){
+      return {className:"hot",label:`+${Math.round(pct)}% ↑`,score:pct,current,previous,pct};
+    }
+    if(delta>=1 && pct>=20){
+      return {className:"rising",label:`+${Math.round(pct)}%`,score:pct,current,previous,pct};
+    }
+    if(delta<=-1 && pct<=-30){
+      return {className:"low",label:`${Math.round(pct)}% ↓`,score:pct,current,previous,pct};
+    }
+
+    const prefix=pct>0 ? "+" : "";
+    return {
+      className:"",
+      label:Math.abs(pct)<10 ? "Stable" : `${prefix}${Math.round(pct)}%`,
+      score:pct,
+      current,
+      previous,
+      pct
+    };
   }
 
   // ---------------- PSA POP sync ----------------
@@ -21221,17 +21475,22 @@ function wireShimmer(container){
   async function renderInsightsPage(){
     if(!isOwnerMode()){ goToRoute("inventory"); return; }
 
-    view.innerHTML = `
+    view.innerHTML=`
       <div class="page-head">
         <div>
-          <div class="eyebrow">Owner analytics</div>
+          <div class="eyebrow">Owner analytics · V2</div>
           <h2>Insights</h2>
-          <p>See which cards attract the most interest over time.</p>
+          <p>Buyer-interest analytics with qualified views, anti-duplicate tracking and period-over-period trends.</p>
         </div>
       </div>
 
+      <div class="insights-quality-note">
+        <strong>Improved tracking is active.</strong>
+        <span>Owner views are excluded · card must stay open for at least 5 seconds · repeat opens of the same card/browser within 30 minutes are ignored. Historical data is preserved, so older periods may still contain the previous raw-open behavior.</span>
+      </div>
+
       <div class="insights-controls">
-        <select id="insightsRange">
+        <select id="insightsRange" aria-label="Insights date range">
           <option value="today">Today</option>
           <option value="7d" selected>Last 7 Days</option>
           <option value="30d">Last 30 Days</option>
@@ -21241,16 +21500,31 @@ function wireShimmer(container){
         </select>
 
         <div class="insights-range-custom" id="insightsCustom">
-          <input type="date" id="insightsStart">
-          <input type="date" id="insightsEnd">
+          <input type="date" id="insightsStart" aria-label="Insights start date">
+          <input type="date" id="insightsEnd" aria-label="Insights end date">
         </div>
 
-        <select id="insightsSort">
-          <option value="views-desc">Views: Highest to Lowest</option>
-          <option value="views-asc">Views: Lowest to Highest</option>
-          <option value="unique-desc">Unique Views: Highest to Lowest</option>
-          <option value="price-high">Price: Highest to Lowest</option>
-          <option value="price-low">Price: Lowest to Highest</option>
+        <select id="insightsStatus" aria-label="Listing status">
+          <option value="">All Statuses</option>
+          <option value="Available">Available</option>
+          <option value="Reserved">Reserved</option>
+          <option value="Sold">Sold</option>
+          <option value="Collection (NFS)">Collection (NFS)</option>
+          <option value="Hidden">Hidden</option>
+          <option value="Archived">Archived</option>
+        </select>
+
+        <select id="insightsGame" aria-label="Game">
+          <option value="">All Games</option>
+        </select>
+
+        <select id="insightsSort" aria-label="Insights sorting">
+          <option value="trend-desc">Trend: Strongest Growth</option>
+          <option value="views-desc">Qualified Views: Highest</option>
+          <option value="unique-desc">Unique: Highest</option>
+          <option value="repeat-low">Repeat Rate: Lowest</option>
+          <option value="price-high">Price: Highest</option>
+          <option value="price-low">Price: Lowest</option>
           <option value="name">Name</option>
         </select>
       </div>
@@ -21258,27 +21532,44 @@ function wireShimmer(container){
       <div class="insights-stats" id="insightsStats"></div>
 
       <div class="insights-panel">
-        <h3>Card Views Over Time</h3>
+        <div class="insights-panel-head">
+          <div>
+            <h3>Card Views Over Time</h3>
+            <p>All card-view events stored for this date range. New events use the qualified-view rules above.</p>
+          </div>
+        </div>
         <div id="insightsChart" class="insights-chart insights-time-chart"></div>
       </div>
 
       <div class="insights-panel">
-        <h3>Website Visits Over Time</h3>
+        <div class="insights-panel-head">
+          <div>
+            <h3>Website Visits Over Time</h3>
+            <p>One website visit per browser session. Owner sessions are excluded.</p>
+          </div>
+        </div>
         <div id="insightsWebsiteChart" class="insights-chart insights-time-chart"></div>
       </div>
 
       <div class="insights-panel">
-        <h3>Card Performance</h3>
+        <div class="insights-panel-head">
+          <div>
+            <h3>Card Performance</h3>
+            <p id="insightsComparisonLabel">Trend compares unique card viewers with the immediately preceding period.</p>
+          </div>
+        </div>
         <div class="insights-table-wrap">
           <table class="insights-table">
             <thead>
               <tr>
                 <th>Rank</th>
                 <th>Card</th>
+                <th>Status</th>
                 <th>Game</th>
                 <th>Price</th>
                 <th>Views</th>
                 <th>Unique</th>
+                <th>Repeat</th>
                 <th>Trend</th>
               </tr>
             </thead>
@@ -21288,99 +21579,216 @@ function wireShimmer(container){
       </div>
     `;
 
-    const rangeSel = $("insightsRange");
-    const custom = $("insightsCustom");
-    const sortSel = $("insightsSort");
-    const startInput = $("insightsStart");
-    const endInput = $("insightsEnd");
+    const rangeSel=$("insightsRange");
+    const custom=$("insightsCustom");
+    const statusSel=$("insightsStatus");
+    const gameSel=$("insightsGame");
+    const sortSel=$("insightsSort");
+    const startInput=$("insightsStart");
+    const endInput=$("insightsEnd");
 
-    const now = new Date();
-    const seven = dateRangeForPreset("7d");
-    startInput.value = seven.start.toISOString().slice(0,10);
-    endInput.value = now.toISOString().slice(0,10);
+    const now=new Date();
+    const seven=dateRangeForPreset("7d");
+    startInput.value=seven.start.toISOString().slice(0,10);
+    endInput.value=now.toISOString().slice(0,10);
+
+    function rowRepeatRate(row){
+      const views=Math.max(0,Number(row?.views||0));
+      const unique=Math.max(0,Number(row?.unique_views||0));
+      if(!views) return 0;
+      return Math.max(0,Math.min(1,(views-Math.min(unique,views))/views));
+    }
+
+    function syncGameOptions(rows){
+      const selected=gameSel.value;
+      const games=[...new Set(
+        rows.map(row=>String(row?.game||insightCardForRow(row)?.game||"").trim()).filter(Boolean)
+      )].sort((a,b)=>a.localeCompare(b));
+
+      gameSel.innerHTML=`<option value="">All Games</option>`+
+        games.map(game=>`<option value="${escapeHtml(game)}">${escapeHtml(game)}</option>`).join("");
+
+      if(games.includes(selected)) gameSel.value=selected;
+    }
 
     async function refresh(){
-      let start, end;
-      if(rangeSel.value === "custom"){
-        const s = startInput.value ? new Date(startInput.value + "T00:00:00") : new Date();
-        const e = endInput.value ? new Date(endInput.value + "T23:59:59.999") : new Date();
-        start = s; end = e;
+      let start,end;
+      if(rangeSel.value==="custom"){
+        const s=startInput.value ? new Date(startInput.value+"T00:00:00") : new Date();
+        const e=endInput.value ? new Date(endInput.value+"T23:59:59.999") : new Date();
+        start=s;
+        end=e;
       }else{
-        ({start,end} = dateRangeForPreset(rangeSel.value));
+        ({start,end}=dateRangeForPreset(rangeSel.value));
       }
 
-      const [rows, series, websiteSeriesRaw] = await Promise.all([
+      if(end<start){
+        $("insightsRows").innerHTML=`<tr><td colspan="9" class="hint">End date must be on or after the start date.</td></tr>`;
+        return;
+      }
+
+      const previousRange=previousInsightsRange(start,end,rangeSel.value);
+
+      const [rowsRaw,series,websiteSeriesRaw,previousRowsRaw]=await Promise.all([
         fetchInsights(start,end),
         fetchViewSeries(start,end),
-        fetchWebsiteVisitSeries(start,end)
+        fetchWebsiteVisitSeries(start,end),
+        previousRange
+          ? fetchInsights(previousRange.start,previousRange.end,{silent:true})
+          : Promise.resolve([])
       ]);
+
+      const rows=rowsRaw.map(row=>({
+        ...row,
+        _status:insightStatusLabel(row),
+        _card:insightCardForRow(row)
+      }));
+
+      syncGameOptions(rows);
+
+      const previousMap=new Map(previousRowsRaw.map(row=>[insightRowKey(row),row]));
       const websiteSeries=alignWebsiteVisitSeriesToCardSeries(series,websiteSeriesRaw);
 
-      const totalViews = rows.reduce((s,r)=>s+Number(r.views||0),0);
-      const totalUnique = rows.reduce((s,r)=>s+Number(r.unique_views||0),0);
-      const totalWebsiteVisits = websiteSeries.reduce((s,r)=>s+Number(r.visits||0),0);
-      const viewedCards = rows.filter(r=>Number(r.views||0)>0).length;
-      const top = rows.slice().sort((a,b)=>Number(b.views||0)-Number(a.views||0))[0];
-      const avg = rows.length ? totalViews / rows.length : 0;
+      const selectedStatus=statusSel.value;
+      const selectedGame=gameSel.value;
 
-      $("insightsStats").innerHTML = `
-        <div class="insights-stat"><div class="k">Total Card Views</div><div class="v">${totalViews.toLocaleString()}</div></div>
-        <div class="insights-stat"><div class="k">Website Visits</div><div class="v">${totalWebsiteVisits.toLocaleString()}</div></div>
-        <div class="insights-stat"><div class="k">Unique Card Views</div><div class="v">${totalUnique.toLocaleString()}</div></div>
-        <div class="insights-stat"><div class="k">Cards Viewed</div><div class="v">${viewedCards.toLocaleString()}</div></div>
-        <div class="insights-stat"><div class="k">Most Viewed Card</div><div class="v" style="font-size:15px">${top ? escapeHtml(top.name) : "—"}</div></div>
+      let visibleRows=rows.filter(row=>{
+        if(selectedStatus && row._status!==selectedStatus) return false;
+        if(selectedGame && String(row.game||row._card?.game||"")!==selectedGame) return false;
+        return true;
+      });
+
+      visibleRows=visibleRows.map(row=>({
+        ...row,
+        _trend:previousRange
+          ? insightTrendMeta(row,previousMap.get(insightRowKey(row)))
+          : {className:"",label:"—",score:0,current:Number(row.unique_views||0),previous:0,pct:null},
+        _repeatRate:rowRepeatRate(row)
+      }));
+
+      const totalViews=visibleRows.reduce((sum,row)=>sum+Number(row.views||0),0);
+      const totalUniquePairs=visibleRows.reduce((sum,row)=>sum+Number(row.unique_views||0),0);
+      const totalWebsiteVisits=websiteSeries.reduce((sum,row)=>sum+Number(row.visits||0),0);
+      const viewedCards=visibleRows.filter(row=>Number(row.views||0)>0).length;
+      const repeatOpens=Math.max(0,totalViews-Math.min(totalUniquePairs,totalViews));
+      const repeatRate=totalViews ? repeatOpens/totalViews : 0;
+      const top=visibleRows.slice().sort((a,b)=>Number(b.unique_views||0)-Number(a.unique_views||0))[0];
+
+      $("insightsStats").innerHTML=`
+        <div class="insights-stat">
+          <div class="k">Qualified Card Views</div>
+          <div class="v">${totalViews.toLocaleString()}</div>
+          <small>5s + 30-min dedupe for new views</small>
+        </div>
+        <div class="insights-stat">
+          <div class="k">Website Visits</div>
+          <div class="v">${totalWebsiteVisits.toLocaleString()}</div>
+          <small>Site-wide · selected date range</small>
+        </div>
+        <div class="insights-stat">
+          <div class="k">Unique Card-Viewer Pairs</div>
+          <div class="v">${totalUniquePairs.toLocaleString()}</div>
+          <small>One visitor may appear on multiple cards</small>
+        </div>
+        <div class="insights-stat">
+          <div class="k">Repeat Open Rate</div>
+          <div class="v">${Math.round(repeatRate*100)}%</div>
+          <small>${repeatOpens.toLocaleString()} repeat event${repeatOpens===1?"":"s"}</small>
+        </div>
+        <div class="insights-stat">
+          <div class="k">Cards Viewed</div>
+          <div class="v">${viewedCards.toLocaleString()}</div>
+          <small>${visibleRows.length.toLocaleString()} cards in current filter</small>
+        </div>
+        <div class="insights-stat">
+          <div class="k">Top Unique Interest</div>
+          <div class="v insights-stat-card-name">${top ? escapeHtml(top.name||"—") : "—"}</div>
+          <small>${top ? `${Number(top.unique_views||0).toLocaleString()} unique` : "No views"}</small>
+        </div>
       `;
 
-      const maxSeries = Math.max(1,...series.map(x=>Number(x.views||0)));
-      $("insightsChart").innerHTML = series.length ? series.map(x=>{
-        const pct = Math.max(2, Number(x.views||0)/maxSeries*100);
-        return `<div class="insights-bar-wrap" title="${escapeHtml(String(x.bucket))}: ${Number(x.views||0)} views">
+      const maxSeries=Math.max(1,...series.map(row=>Number(row.views||0)));
+      $("insightsChart").innerHTML=series.length ? series.map(row=>{
+        const pct=Math.max(2,Number(row.views||0)/maxSeries*100);
+        return `<div class="insights-bar-wrap" title="${escapeHtml(String(row.bucket))}: ${Number(row.views||0)} views">
           <div class="insights-bar" style="height:${pct}%"></div>
-          <div class="insights-bar-label">${escapeHtml(String(x.label || x.bucket))}</div>
+          <div class="insights-bar-label">${escapeHtml(String(row.label||row.bucket))}</div>
         </div>`;
-      }).join("") : `<div class="hint">No views recorded for this period.</div>`;
+      }).join("") : `<div class="hint">No card views recorded for this period.</div>`;
 
-      const maxWebsiteSeries=Math.max(1,...websiteSeries.map(x=>Number(x.visits||0)));
-      $("insightsWebsiteChart").innerHTML=websiteSeries.length ? websiteSeries.map(x=>{
-        const pct=Math.max(2,Number(x.visits||0)/maxWebsiteSeries*100);
-        return `<div class="insights-bar-wrap" title="${escapeHtml(String(x.bucket))}: ${Number(x.visits||0)} website visits">
+      const maxWebsiteSeries=Math.max(1,...websiteSeries.map(row=>Number(row.visits||0)));
+      $("insightsWebsiteChart").innerHTML=websiteSeries.length ? websiteSeries.map(row=>{
+        const pct=Math.max(2,Number(row.visits||0)/maxWebsiteSeries*100);
+        return `<div class="insights-bar-wrap" title="${escapeHtml(String(row.bucket))}: ${Number(row.visits||0)} website visits">
           <div class="insights-bar insights-bar-site" style="height:${pct}%"></div>
-          <div class="insights-bar-label">${escapeHtml(String(x.label || x.bucket))}</div>
+          <div class="insights-bar-label">${escapeHtml(String(row.label||row.bucket))}</div>
         </div>`;
       }).join("") : `<div class="hint">No website visits recorded for this period.</div>`;
 
-      let sorted = rows.slice();
-      switch(sortSel.value){
-        case "views-asc": sorted.sort((a,b)=>Number(a.views||0)-Number(b.views||0)); break;
-        case "unique-desc": sorted.sort((a,b)=>Number(b.unique_views||0)-Number(a.unique_views||0)); break;
-        case "price-high": sorted.sort((a,b)=>Number(b.price_usd||0)-Number(a.price_usd||0)); break;
-        case "price-low": sorted.sort((a,b)=>Number(a.price_usd||0)-Number(b.price_usd||0)); break;
-        case "name": sorted.sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""))); break;
-        default: sorted.sort((a,b)=>Number(b.views||0)-Number(a.views||0));
+      const comparison=$("insightsComparisonLabel");
+      if(comparison){
+        comparison.textContent=previousRange
+          ? `Trend compares unique card viewers with the immediately preceding ${rangeSel.options[rangeSel.selectedIndex]?.textContent||"period"}.`
+          : "All Time has no equivalent preceding period, so trend comparison is not shown.";
       }
 
-      $("insightsRows").innerHTML = sorted.map((r,i)=>{
-        const trend = insightTrend(r, avg);
-        const trendText = trend === "hot" ? "Trending" : trend === "low" ? "Low Interest" : "Normal";
+      switch(sortSel.value){
+        case "views-desc":
+          visibleRows.sort((a,b)=>Number(b.views||0)-Number(a.views||0));
+          break;
+        case "unique-desc":
+          visibleRows.sort((a,b)=>Number(b.unique_views||0)-Number(a.unique_views||0));
+          break;
+        case "repeat-low":
+          visibleRows.sort((a,b)=>a._repeatRate-b._repeatRate || Number(b.unique_views||0)-Number(a.unique_views||0));
+          break;
+        case "price-high":
+          visibleRows.sort((a,b)=>Number(b.price_usd||b._card?.price_usd||0)-Number(a.price_usd||a._card?.price_usd||0));
+          break;
+        case "price-low":
+          visibleRows.sort((a,b)=>Number(a.price_usd||a._card?.price_usd||0)-Number(b.price_usd||b._card?.price_usd||0));
+          break;
+        case "name":
+          visibleRows.sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
+          break;
+        default:
+          visibleRows.sort((a,b)=>b._trend.score-a._trend.score || Number(b.unique_views||0)-Number(a.unique_views||0));
+      }
+
+      $("insightsRows").innerHTML=visibleRows.length ? visibleRows.map((row,index)=>{
+        const card=row._card;
+        const usd=row.price_usd ?? card?.price_usd ?? card?.price ?? 0;
+        const myr=row.price_myr ?? card?.price_myr ?? 0;
+        const game=row.game || card?.game || "";
+        const repeatPct=Math.round(row._repeatRate*100);
+
         return `<tr>
-          <td class="insights-rank">${i+1}</td>
-          <td class="insights-card-name">${escapeHtml(r.name || "")}</td>
-          <td>${escapeHtml(r.game || "")}</td>
-          <td>${fmtMoney(r.price_usd || 0)} / ${fmtMYR(r.price_myr || 0)}</td>
-          <td>${Number(r.views||0).toLocaleString()}</td>
-          <td>${Number(r.unique_views||0).toLocaleString()}</td>
-          <td><span class="trend-tag ${trend}">${trendText}</span></td>
+          <td class="insights-rank">${index+1}</td>
+          <td class="insights-card-name">${escapeHtml(row.name||card?.name||"")}</td>
+          <td><span class="insights-status-tag">${escapeHtml(row._status)}</span></td>
+          <td>${escapeHtml(game)}</td>
+          <td>${Number(usd)>0 ? `${fmtMoney(usd)} / ${fmtMYR(myr)}` : "—"}</td>
+          <td>${Number(row.views||0).toLocaleString()}</td>
+          <td>${Number(row.unique_views||0).toLocaleString()}</td>
+          <td title="Share of recorded opens beyond the first unique viewer event">${repeatPct}%</td>
+          <td>
+            <span class="trend-tag ${row._trend.className}" title="Current unique: ${row._trend.current} · Previous: ${row._trend.previous}">
+              ${escapeHtml(row._trend.label)}
+            </span>
+          </td>
         </tr>`;
-      }).join("");
+      }).join("") : `<tr><td colspan="9" class="hint">No cards match the selected filters for this period.</td></tr>`;
     }
 
-    rangeSel.addEventListener("change", ()=>{
-      custom.classList.toggle("show", rangeSel.value === "custom");
+    rangeSel.addEventListener("change",()=>{
+      custom.classList.toggle("show",rangeSel.value==="custom");
       refresh();
     });
-    sortSel.addEventListener("change", refresh);
-    startInput.addEventListener("change", ()=>{ if(rangeSel.value==="custom") refresh(); });
-    endInput.addEventListener("change", ()=>{ if(rangeSel.value==="custom") refresh(); });
+    statusSel.addEventListener("change",refresh);
+    gameSel.addEventListener("change",refresh);
+    sortSel.addEventListener("change",refresh);
+    startInput.addEventListener("change",()=>{ if(rangeSel.value==="custom") refresh(); });
+    endInput.addEventListener("change",()=>{ if(rangeSel.value==="custom") refresh(); });
 
     refresh();
   }
@@ -29444,6 +29852,7 @@ function wireShimmer(container){
   }
 
   function closeDetailsModal(navigateBack = true){
+    cancelPendingCardViewQualification();
     closeDetailsMoreMenu();
 
     if(detailsCardTransitionTimer){
