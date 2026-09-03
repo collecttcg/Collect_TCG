@@ -14768,6 +14768,110 @@ body:not(.owner-mode) .giveaway-grid#pastWinnersGrid .giveaway-winner-name{
   scroll-margin-top:88px;
 }
 
+
+/* Global social links below every page */
+.page-social-footer{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin:24px 0 6px;
+  padding:16px 10px 4px;
+  border-top:1px solid var(--border-soft);
+}
+.page-social-footer > span{
+  color:var(--text-muted);
+  font-size:9px;
+  font-weight:700;
+}
+.collect-social-links{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.collect-social-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  min-width:40px;
+  height:34px;
+  padding:0 9px;
+  border:1px solid var(--border-soft);
+  border-radius:999px;
+  background:var(--surface-2);
+  color:var(--text);
+  text-decoration:none;
+  transition:transform .12s ease,border-color .12s ease,box-shadow .12s ease;
+}
+.collect-social-icon span{
+  min-width:14px;
+  text-align:center;
+  font-size:13px;
+  font-weight:900;
+}
+.collect-social-icon small{
+  font-size:7.5px;
+  font-weight:800;
+}
+.collect-social-icon:hover,
+.collect-social-icon:focus-visible{
+  transform:translateY(-1px);
+  border-color:rgba(227,179,65,.52);
+  box-shadow:0 0 0 2px rgba(227,179,65,.08);
+}
+
+.details-desktop-contact-socials{
+  display:none;
+}
+@media(min-width:801px){
+  .details-desktop-contact-socials{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-top:10px;
+    padding:10px 12px;
+    border:1px solid var(--border-soft);
+    border-radius:11px;
+    background:var(--surface-2);
+  }
+  .details-desktop-contact-socials > span{
+    color:var(--text-muted);
+    font-size:9px;
+    font-weight:700;
+    white-space:nowrap;
+  }
+  .details-desktop-contact-socials .collect-social-links{
+    justify-content:flex-end;
+  }
+}
+@media(max-width:800px){
+  .details-desktop-contact-socials{display:none !important;}
+  .page-social-footer{
+    display:block;
+    margin-top:18px;
+    padding-top:14px;
+    text-align:center;
+  }
+  .page-social-footer > span{
+    display:block;
+    margin-bottom:9px;
+  }
+  .page-social-links{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    width:min(100%,360px);
+    margin:0 auto;
+  }
+  .page-social-links .collect-social-icon{
+    width:100%;
+    min-width:0;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -14859,6 +14963,15 @@ body:not(.owner-mode) .giveaway-grid#pastWinnersGrid .giveaway-winner-name{
 
   <div class="main">
     <div id="view"></div>
+    <div class="page-social-footer" aria-label="Connect with Collect TCG">
+      <span>Connect with us</span>
+      <div class="collect-social-links page-social-links">
+        <a href="https://www.instagram.com/collecttcg.mysg/" target="_blank" rel="noopener noreferrer" class="collect-social-icon" aria-label="Instagram" title="Instagram"><span aria-hidden="true">◎</span><small>IG</small></a>
+        <a href="https://www.facebook.com/profile.php?id=61590041416102" target="_blank" rel="noopener noreferrer" class="collect-social-icon" aria-label="Facebook" title="Facebook"><span aria-hidden="true">f</span><small>FB</small></a>
+        <a href="https://www.carousell.com.my/u/collect_tcg_my_sg/" target="_blank" rel="noopener noreferrer" class="collect-social-icon" aria-label="Carousell Malaysia" title="Carousell Malaysia"><span aria-hidden="true">C</span><small>MY</small></a>
+        <a href="https://www.carousell.sg/u/collect_tcg_sg/" target="_blank" rel="noopener noreferrer" class="collect-social-icon" aria-label="Carousell Singapore" title="Carousell Singapore"><span aria-hidden="true">C</span><small>SG</small></a>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -16711,6 +16824,35 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       winner_announced_at: row.winner_announced_at || null,
       created_at: row.created_at || null
     };
+  }
+
+
+  const COLLECT_SOCIAL_LINKS=Object.freeze({
+    instagram:"https://www.instagram.com/collecttcg.mysg/",
+    facebook:"https://www.facebook.com/profile.php?id=61590041416102",
+    carousellMY:"https://www.carousell.com.my/u/collect_tcg_my_sg/",
+    carousellSG:"https://www.carousell.sg/u/collect_tcg_sg/"
+  });
+
+  function collectSocialLinksHtml(extraClass=""){
+    return `
+      <div class="collect-social-links ${escapeHtml(extraClass)}" aria-label="Collect TCG social links">
+        <a href="${COLLECT_SOCIAL_LINKS.instagram}" target="_blank" rel="noopener noreferrer" class="collect-social-icon" aria-label="Instagram" title="Instagram"><span aria-hidden="true">◎</span><small>IG</small></a>
+        <a href="${COLLECT_SOCIAL_LINKS.facebook}" target="_blank" rel="noopener noreferrer" class="collect-social-icon" aria-label="Facebook" title="Facebook"><span aria-hidden="true">f</span><small>FB</small></a>
+        <a href="${COLLECT_SOCIAL_LINKS.carousellMY}" target="_blank" rel="noopener noreferrer" class="collect-social-icon" aria-label="Carousell Malaysia" title="Carousell Malaysia"><span aria-hidden="true">C</span><small>MY</small></a>
+        <a href="${COLLECT_SOCIAL_LINKS.carousellSG}" target="_blank" rel="noopener noreferrer" class="collect-social-icon" aria-label="Carousell Singapore" title="Carousell Singapore"><span aria-hidden="true">C</span><small>SG</small></a>
+      </div>
+    `;
+  }
+
+  function collectSocialPostLines(){
+    return [
+      "SOCIALS",
+      `Instagram: ${COLLECT_SOCIAL_LINKS.instagram}`,
+      `Facebook: ${COLLECT_SOCIAL_LINKS.facebook}`,
+      `Carousell Malaysia: ${COLLECT_SOCIAL_LINKS.carousellMY}`,
+      `Carousell Singapore: ${COLLECT_SOCIAL_LINKS.carousellSG}`
+    ];
   }
 
   function safePublicProfileUrl(value){
@@ -25788,12 +25930,42 @@ function wireShimmer(container){
   });
 
   function compactGeneratedPostSpacing(value){
-    return String(value||"")
+    const lines=String(value||"")
       .replace(/\r\n?/g,"\n")
-      .replace(/[ \t]+\n/g,"\n")
-      .replace(/\n[ \t]+/g,"\n")
-      .replace(/\n{3,}/g,"\n\n")
-      .trim();
+      .split("\n")
+      .map(line=>line.replace(/[ \t]+$/g,""));
+
+    const isHeader=line=>{
+      const s=String(line||"").trim();
+      return /^\([^)]{2,80}\)$/.test(s) ||
+        /^【.+】$/.test(s) ||
+        /^\[[^\]]+\]$/.test(s) ||
+        /^(SOCIALS|HASHTAG\s*:|VIEW MORE OF OUR PRODUCTS\s*:|OTHER PRODUCTS INFO)$/i.test(s);
+    };
+    const isUrl=line=>/^https?:\/\/\S+$/i.test(String(line||"").trim());
+    const isCompact=line=>/^(📩|💰|👥|📍|❌|Instagram:|Facebook:|Carousell Malaysia:|Carousell Singapore:|PRICE\s*:|-【)/i.test(String(line||"").trim());
+
+    const out=[];
+    for(const raw of lines){
+      const line=raw.trim();
+      if(!line){
+        if(out.length && out[out.length-1]!=="") out.push("");
+        continue;
+      }
+      if(out.length && out[out.length-1]===""){
+        const prev=out[out.length-2]||"";
+        if(
+          (isHeader(prev) && (isUrl(line)||isCompact(line))) ||
+          (isUrl(prev) && isCompact(line)) ||
+          (isCompact(prev) && isCompact(line))
+        ){
+          out.pop();
+        }
+      }
+      out.push(line);
+    }
+
+    return out.join("\n").replace(/\n{3,}/g,"\n\n").trim();
   }
 
 
@@ -25942,24 +26114,15 @@ function wireShimmer(container){
 
     lines.push(
       "",
-      "VIEW MORE OF OUR PRODUCTS :",
-      "",
-      "(CAROUSELL)",
-      "",
-      carousellShopUrl,
-      "",
-      "(INSTAGRAM)",
-      "",
-      instagramUrl,
+      ...collectSocialPostLines(),
       "",
       divider,
       "",
       "HASHTAG :",
-      "",
       hashtags
     );
 
-    return lines.join("\n");
+    return compactGeneratedPostSpacing(lines.join("\n"));
   }
 
   async function copyTextToClipboard(text){
@@ -26589,21 +26752,17 @@ function wireShimmer(container){
       divider,
       "",
       "OTHER PRODUCTS INFO",
-      "",
       `WEBSITE : ${getWebsiteShareUrl()}`,
       "",
-      `CAROUSELL MALAYSIA : ${safeHttpUrl(values.carousellMalaysiaUrl)||"[LINK NOT SET]"}`,
-      "",
-      `CAROUSELL SINGAPORE : ${safeHttpUrl(values.carousellSingaporeUrl)||"[LINK NOT SET]"}`,
+      ...collectSocialPostLines(),
       "",
       divider,
       "",
       "HASHTAG :",
-      "",
       hashtags
     );
 
-    return lines.join("\n");
+    return compactGeneratedPostSpacing(lines.join("\n"));
   }
 
   function renderFbGiveawayPostGeneratorPage(){
@@ -26997,7 +27156,7 @@ function wireShimmer(container){
   function buildCarousellPostText(productDetails){
     const details=String(productDetails||"").trim()||"[Add product/card explanation here]";
 
-    return [
+    const lines = [
       "NO TRADE, ONLY SELL",
       "",
       "[FB PAGE]",
@@ -27068,8 +27227,12 @@ function wireShimmer(container){
       "",
       "2. Please be respectful during negotiations.",
       "",
-      "3. In good faith, we do not require deposits or advance payments for reservations. However, any backout after confirmation will result in being blacklisted from future dealings."
-    ].join("\n");
+      "3. In good faith, we do not require deposits or advance payments for reservations. However, any backout after confirmation will result in being blacklisted from future dealings.",
+      "",
+      ...collectSocialPostLines()
+    ];
+
+    return compactGeneratedPostSpacing(lines.join("\n"));
   }
 
   function renderCarousellPostGeneratorPage(){
@@ -27447,7 +27610,7 @@ function wireShimmer(container){
       buildFbCardListSection("𝐒𝐄𝐀𝐋𝐄𝐃 𝐏𝐑𝐎𝐃𝐔𝐂𝐓𝐒",sealed,prefs)
     ].filter(Boolean);
 
-    return [
+    const lines = [
       `‼️ CARD LIST ‼️  [UPDATE : ${fbCardListDateLabel()}]`,
       "",
       `WTS【CARD LIST】${String(prefs.listTitle || "AVAILABLE INVENTORY").toUpperCase()}`,
@@ -27474,26 +27637,15 @@ function wireShimmer(container){
       "",
       divider,
       "",
-      "VIEW MORE OF OUR PRODUCTS :",
-      "",
-      "(CAROUSELL MALAYSIA)",
-      "",
-      safeHttpUrl(prefs.carousellMalaysiaUrl),
-      "",
-      "(CAROUSELL SINGAPORE)",
-      "",
-      safeHttpUrl(prefs.carousellSingaporeUrl),
-      "",
-      "(INSTAGRAM)",
-      "",
-      safeHttpUrl(prefs.instagramUrl),
+      ...collectSocialPostLines(),
       "",
       divider,
       "",
       "HASHTAG :",
-      "",
       String(prefs.hashtags || "").trim()
-    ].join("\n");
+    ];
+
+    return compactGeneratedPostSpacing(lines.join("\n"));
   }
 
   function dataUrlToBlob(dataUrl){
@@ -33538,6 +33690,10 @@ function wireShimmer(container){
             <div class="detail-purchase-note">
               <strong>Interested in this card?</strong>
               Contact us to confirm current availability, transaction method and delivery / meetup options before payment.
+            </div>
+            <div class="details-desktop-contact-socials">
+              <span>Contact via</span>
+              ${collectSocialLinksHtml("details-social-links")}
             </div>
           ` : ""}
         </div>
