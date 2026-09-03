@@ -13950,6 +13950,36 @@ body.light-mode .clean-game-pill.filter-pill-btn.pill-selected{
     0 0 14px rgba(255,255,255,.08) !important;
 }
 
+
+/* Giveaway form: make How to Enter comfortable for multi-step instructions. */
+#giveawayForm .giveaway-how-to-enter-field textarea{
+  min-height:170px !important;
+  line-height:1.55;
+}
+
+/* Winner profile link on Past Winners cards. */
+.giveaway-winner-profile-link{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin-top:7px;
+  color:var(--accent-teal);
+  font-size:10px;
+  font-weight:600;
+  text-decoration:none;
+  overflow-wrap:anywhere;
+}
+.giveaway-winner-profile-link:hover,
+.giveaway-winner-profile-link:focus-visible{
+  color:var(--accent-gold);
+  text-decoration:underline;
+}
+@media(max-width:600px){
+  #giveawayForm .giveaway-how-to-enter-field textarea{
+    min-height:150px !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -14225,12 +14255,24 @@ body.light-mode .clean-game-pill.filter-pill-btn.pill-selected{
              maxlength="120"
              autocomplete="off"
              placeholder="e.g. @collector123 or Alex T.">
-      <div class="hint">This name/handle will be shown publicly under Past Winners. Only enter information the winner is comfortable having published.</div>
+
+      <label for="giveawayWinnerProfileUrl" style="margin-top:10px;">User profile link <span class="field-optional">(optional, public)</span></label>
+      <input id="giveawayWinnerProfileUrl"
+             type="url"
+             maxlength="500"
+             inputmode="url"
+             autocomplete="url"
+             placeholder="https://www.instagram.com/username/">
+
+      <div class="hint">The winner name and optional profile link will be shown publicly under Past Winners. Only enter information the winner is comfortable having published.</div>
     </div>
 
-    <div class="field">
+    <div class="field giveaway-how-to-enter-field">
       <label for="giveawayHowToEnter">How to enter</label>
-      <textarea id="giveawayHowToEnter" required placeholder="Example: Follow our Instagram, like the post, and tag 2 friends..."></textarea>
+      <textarea id="giveawayHowToEnter"
+                rows="8"
+                required
+                placeholder="Example: Follow our Instagram, like the post, and tag 2 friends..."></textarea>
     </div>
 
     <div class="field">
@@ -15831,8 +15873,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
 
 
-  const GIVEAWAY_PUBLIC_COLUMNS =
+  const GIVEAWAY_PUBLIC_COLUMNS_BASE =
     "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_announced_at,created_at";
+  const GIVEAWAY_PUBLIC_COLUMNS =
+    "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_profile_url,winner_announced_at,created_at";
+  let giveawayWinnerProfileUrlSupported="unknown";
   const SHOWCASE_PUBLIC_COLUMNS =
     "id,title,category,series,video_url,thumbnail_url,description,featured,sort_order,created_at";
 
@@ -15848,16 +15893,39 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       how_to_enter: row.how_to_enter || "",
       details: row.details || "",
       winner_name: row.winner_name || "",
+      winner_profile_url: row.winner_profile_url || "",
       winner_announced_at: row.winner_announced_at || null,
       created_at: row.created_at || null
     };
   }
 
+  function safePublicProfileUrl(value){
+    const raw=String(value||"").trim();
+    if(!raw) return "";
+    try{
+      const url=new URL(raw);
+      if(url.protocol!=="https:" && url.protocol!=="http:") return "";
+      return url.href;
+    }catch{
+      return "";
+    }
+  }
+
   async function loadGiveaways(){
-    const {data,error}=await supabaseClient
+    let {data,error}=await supabaseClient
       .from("giveaways")
       .select(GIVEAWAY_PUBLIC_COLUMNS)
       .order("created_at",{ascending:false});
+
+    if(error && optionalColumnUnavailable(error,"winner_profile_url")){
+      giveawayWinnerProfileUrlSupported=false;
+      ({data,error}=await supabaseClient
+        .from("giveaways")
+        .select(GIVEAWAY_PUBLIC_COLUMNS_BASE)
+        .order("created_at",{ascending:false}));
+    }else if(!error){
+      giveawayWinnerProfileUrlSupported=true;
+    }
 
     if(error){
       console.error("Load giveaways error:", error);
@@ -15870,19 +15938,50 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   async function saveGiveaway(payload, id){
     if(!requireOwner()) return { data:null, error:new Error("Owner login required") };
-    if(id){
+
+    async function runWrite(writePayload,columns){
+      if(id){
+        return await supabaseClient
+          .from("giveaways")
+          .update(writePayload)
+          .eq("id", id)
+          .select(columns)
+          .single();
+      }
       return await supabaseClient
         .from("giveaways")
-        .update(payload)
-        .eq("id", id)
-        .select(GIVEAWAY_PUBLIC_COLUMNS)
+        .insert(writePayload)
+        .select(columns)
         .single();
     }
-    return await supabaseClient
-      .from("giveaways")
-      .insert(payload)
-      .select(GIVEAWAY_PUBLIC_COLUMNS)
-      .single();
+
+    let writePayload={...payload};
+    if(giveawayWinnerProfileUrlSupported===false){
+      delete writePayload.winner_profile_url;
+    }
+
+    let result=await runWrite(
+      writePayload,
+      giveawayWinnerProfileUrlSupported===false
+        ? GIVEAWAY_PUBLIC_COLUMNS_BASE
+        : GIVEAWAY_PUBLIC_COLUMNS
+    );
+
+    if(
+      result.error &&
+      Object.prototype.hasOwnProperty.call(writePayload,"winner_profile_url") &&
+      optionalColumnUnavailable(result.error,"winner_profile_url")
+    ){
+      giveawayWinnerProfileUrlSupported=false;
+      writePayload={...writePayload};
+      delete writePayload.winner_profile_url;
+      result=await runWrite(writePayload,GIVEAWAY_PUBLIC_COLUMNS_BASE);
+      showToast("Giveaway saved. Run the profile-link migration to save the user profile URL.");
+    }else if(!result.error && Object.prototype.hasOwnProperty.call(writePayload,"winner_profile_url")){
+      giveawayWinnerProfileUrlSupported=true;
+    }
+
+    return result;
   }
 
   async function deleteGiveaway(id){
@@ -22577,6 +22676,14 @@ function wireShimmer(container){
           <div class="giveaway-winner-name">
             <span>Winner</span>
             <strong>${escapeHtml(g.winner_name || "Winner announced")}</strong>
+            ${safePublicProfileUrl(g.winner_profile_url) ? `
+              <a class="giveaway-winner-profile-link"
+                 href="${escapeHtml(safePublicProfileUrl(g.winner_profile_url))}"
+                 target="_blank"
+                 rel="noopener noreferrer">
+                View user profile ↗
+              </a>
+            ` : ""}
             ${g.winner_announced_at ? `<div class="giveaway-winner-date">Announced ${escapeHtml(giveawayWinnerDateLabel(g.winner_announced_at))}</div>` : ""}
           </div>
 
@@ -22683,6 +22790,7 @@ function wireShimmer(container){
         const {error}=await saveGiveaway({
           status:"closed",
           winner_name:null,
+          winner_profile_url:null,
           winner_announced_at:null
         },g.id);
 
@@ -22733,6 +22841,7 @@ function wireShimmer(container){
     renderGiveawayImagePreview(g ? (g.image_url || "") : "");
     $("giveawayStatus").value = g ? g.status : "active";
     $("giveawayWinnerName").value = g ? (g.winner_name || "") : "";
+    $("giveawayWinnerProfileUrl").value = g ? (g.winner_profile_url || "") : "";
     syncGiveawayWinnerField();
     $("giveawayHowToEnter").value = g ? g.how_to_enter : "";
     $("giveawayDetails").value = g ? g.details : "";
@@ -22751,6 +22860,14 @@ function wireShimmer(container){
     const input=$("giveawayWinnerName");
     if(field) field.hidden=!isWinner;
     if(input) input.required=isWinner;
+
+    const profileInput=$("giveawayWinnerProfileUrl");
+    if(profileInput){
+      profileInput.disabled=giveawayWinnerProfileUrlSupported===false;
+      profileInput.title=giveawayWinnerProfileUrlSupported===false
+        ? "Run the giveaway profile-link Supabase migration to enable this field."
+        : "";
+    }
   }
 
   $("giveawayStatus")?.addEventListener("change",syncGiveawayWinnerField);
@@ -22790,6 +22907,14 @@ function wireShimmer(container){
 
     const status=$("giveawayStatus").value;
     const winnerName=$("giveawayWinnerName").value.trim().slice(0,120);
+    const winnerProfileRaw=$("giveawayWinnerProfileUrl").value.trim();
+    const winnerProfileUrl=winnerProfileRaw ? safePublicProfileUrl(winnerProfileRaw) : "";
+
+    if(winnerProfileRaw && !winnerProfileUrl){
+      showToast("Please enter a valid http:// or https:// user profile link");
+      $("giveawayWinnerProfileUrl").focus();
+      return;
+    }
 
     if(status==="gave_away" && !winnerName){
       showToast("Winner display name is required");
@@ -22807,6 +22932,7 @@ function wireShimmer(container){
       how_to_enter: $("giveawayHowToEnter").value.trim(),
       details: $("giveawayDetails").value.trim(),
       winner_name: status==="gave_away" ? winnerName : null,
+      winner_profile_url: status==="gave_away" ? (winnerProfileUrl || null) : null,
       winner_announced_at: status==="gave_away"
         ? (existing?.winner_announced_at || new Date().toISOString())
         : null
