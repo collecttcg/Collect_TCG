@@ -13499,6 +13499,128 @@ body.light-mode .mobile-cards-per-page-control select{
   text-shadow:0 1px 2px var(--bg) !important;
 }
 
+
+/* =========================================================
+   FINAL PILL INTERACTION COLORS
+   ========================================================= */
+
+/* Game pills: preserve their gold/orange identity on hover/focus. */
+.clean-game-pill.filter-pill-btn:hover,
+.clean-game-pill.filter-pill-btn:focus-visible{
+  color:var(--accent-gold) !important;
+  border-color:rgba(227,179,65,.62) !important;
+  background:rgba(227,179,65,.14) !important;
+  box-shadow:
+    0 0 0 2px rgba(227,179,65,.12),
+    0 4px 12px rgba(0,0,0,.18) !important;
+}
+
+/* OVERVIEW Graded / Sealed / Raw Condition:
+   these badges are intentionally black. Hovering and selecting them should
+   never turn them teal. The active-filter chips below communicate selection. */
+.overview-grade-overlay.filter-pill-btn,
+.overview-grade-overlay.filter-pill-btn:hover,
+.overview-grade-overlay.filter-pill-btn:focus-visible,
+.overview-grade-overlay.filter-pill-btn.pill-selected,
+.overview-grade-overlay.condition-filter-btn,
+.overview-grade-overlay.condition-filter-btn:hover,
+.overview-grade-overlay.condition-filter-btn:focus-visible,
+.overview-grade-overlay.condition-filter-btn.pill-selected{
+  background:rgba(8,9,11,.95) !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.22) !important;
+}
+
+.overview-grade-overlay.filter-pill-btn:hover,
+.overview-grade-overlay.filter-pill-btn:focus-visible,
+.overview-grade-overlay.filter-pill-btn.pill-selected{
+  box-shadow:
+    0 5px 16px rgba(0,0,0,.42),
+    0 0 0 2px rgba(255,255,255,.07) !important;
+}
+
+.overview-grade-overlay.filter-pill-btn strong,
+.overview-grade-overlay.filter-pill-btn small,
+.overview-grade-overlay.condition-filter-btn strong,
+.overview-grade-overlay.condition-filter-btn small{
+  color:#fff !important;
+}
+.overview-grade-overlay.filter-pill-btn small,
+.overview-grade-overlay.condition-filter-btn small{
+  color:rgba(255,255,255,.68) !important;
+}
+
+/* Availability pills: each status gets its own matching hover light. */
+.clean-availability-pill[data-pill-value="Available"]:hover,
+.clean-availability-pill[data-pill-value="Available"]:focus-visible{
+  color:#6ee7a0 !important;
+  border-color:rgba(74,222,128,.72) !important;
+  background:rgba(74,222,128,.14) !important;
+  box-shadow:
+    0 0 0 2px rgba(74,222,128,.12),
+    0 0 14px rgba(74,222,128,.18) !important;
+}
+
+.clean-availability-pill[data-pill-value="Reserved"]:hover,
+.clean-availability-pill[data-pill-value="Reserved"]:focus-visible{
+  color:#f1c85c !important;
+  border-color:rgba(227,179,65,.72) !important;
+  background:rgba(227,179,65,.15) !important;
+  box-shadow:
+    0 0 0 2px rgba(227,179,65,.12),
+    0 0 14px rgba(227,179,65,.18) !important;
+}
+
+.clean-availability-pill[data-pill-value="Sold"]:hover,
+.clean-availability-pill[data-pill-value="Sold"]:focus-visible{
+  color:#fb8d8d !important;
+  border-color:rgba(248,113,113,.72) !important;
+  background:rgba(248,113,113,.14) !important;
+  box-shadow:
+    0 0 0 2px rgba(248,113,113,.12),
+    0 0 14px rgba(248,113,113,.18) !important;
+}
+
+.clean-availability-pill[data-pill-value="Collection (NFS)"]:hover,
+.clean-availability-pill[data-pill-value="Collection (NFS)"]:focus-visible{
+  color:#ead7ff !important;
+  border-color:rgba(192,132,252,.78) !important;
+  background:rgba(147,51,234,.25) !important;
+  box-shadow:
+    0 0 0 2px rgba(192,132,252,.12),
+    0 0 14px rgba(192,132,252,.20) !important;
+}
+
+/* Keep availability selection in the same status family rather than allowing
+   the generic selected-pill teal rule to take over. */
+.clean-availability-pill[data-pill-value="Available"].pill-selected{
+  color:#6ee7a0 !important;
+  border-color:rgba(74,222,128,.72) !important;
+  background:rgba(74,222,128,.14) !important;
+}
+.clean-availability-pill[data-pill-value="Reserved"].pill-selected{
+  color:#f1c85c !important;
+  border-color:rgba(227,179,65,.72) !important;
+  background:rgba(227,179,65,.15) !important;
+}
+.clean-availability-pill[data-pill-value="Sold"].pill-selected{
+  color:#fb8d8d !important;
+  border-color:rgba(248,113,113,.72) !important;
+  background:rgba(248,113,113,.14) !important;
+}
+.clean-availability-pill[data-pill-value="Collection (NFS)"].pill-selected{
+  color:#ead7ff !important;
+  border-color:rgba(192,132,252,.78) !important;
+  background:rgba(147,51,234,.25) !important;
+}
+
+body.light-mode .clean-game-pill.filter-pill-btn:hover,
+body.light-mode .clean-game-pill.filter-pill-btn:focus-visible{
+  color:#72530f !important;
+  border-color:#b99b4e !important;
+  background:#f7f0dc !important;
+}
+
 </style>
 </head>
 <body>
@@ -17467,8 +17589,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const avoidStatusCorner=status==="sold" || status==="reserved";
 
     return `<button type="button"
-                    class="overview-grade-overlay condition-filter-btn ${avoidStatusCorner?"overview-grade-overlay-right":""}"
-                    data-condition-filter-value="${escapeHtml(filterValue)}"
+                    class="overview-grade-overlay condition-filter-btn filter-pill-btn ${avoidStatusCorner?"overview-grade-overlay-right":""} ${selectedSetMatches(pillFilterState.grade,filterValue) ? "pill-selected" : ""}"
+                    data-pill-filter="grade"
+                    data-pill-value="${escapeHtml(filterValue)}"
                     title="Filter by ${escapeHtml(filterValue)}"
                     aria-label="${escapeHtml(`Filter by raw condition ${filterValue}`)}">
       <strong>${escapeHtml(condition)}</strong>
@@ -19992,33 +20115,6 @@ function wireShimmer(container){
         favoriteBtn.setAttribute("aria-label", favoriteBtn.title);
         if(currentRoute() === "favorites" && !active){
           renderFavoritesPage();
-        }
-        return;
-      }
-
-      const conditionFilterBtn=e.target.closest("[data-condition-filter-value]");
-      if(conditionFilterBtn){
-        e.preventDefault();
-        e.stopPropagation();
-
-        const value=String(conditionFilterBtn.dataset.conditionFilterValue||"").trim();
-        if(!value) return;
-
-        activeQuickFilter="all";
-        listingCurrentPage=1;
-        pillFilterState.grade.clear();
-
-        if(isInventoryRoute(currentRoute()) && $("filterGrade")){
-          $("filterGrade").value=value;
-          const label=$("filterGradeBtn")?.querySelector("span");
-          if(label) label.textContent=value;
-          updateListingUrlFromControls();
-          draw();
-        }else{
-          const params=new URLSearchParams();
-          params.set("grade",value);
-          params.set("per",String(getSavedListingPerPage()));
-          location.hash=`#/inventory?${params.toString()}`;
         }
         return;
       }
