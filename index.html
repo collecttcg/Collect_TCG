@@ -24631,6 +24631,16 @@ function wireShimmer(container){
     hashtags:"#tcg #onepiece #onepiecetcg #onepiececardgame #TCGCollector"
   });
 
+  function compactGeneratedPostSpacing(value){
+    return String(value||"")
+      .replace(/\r\n?/g,"\n")
+      .replace(/[ \t]+\n/g,"\n")
+      .replace(/\n[ \t]+/g,"\n")
+      .replace(/\n{3,}/g,"\n\n")
+      .trim();
+  }
+
+
   function getFbPostPrefs(){
     try{
       const parsed = JSON.parse(localStorage.getItem(FB_POST_PREFS_KEY) || "{}");
@@ -24844,7 +24854,7 @@ function wireShimmer(container){
       carousell:"Create a ready-to-copy Carousell listing description from your card inventory."
     };
 
-    return `
+    return compactGeneratedPostSpacing(`
       <div class="page-head fb-tools-page-head">
         <div>
           <div class="eyebrow">Owner Tools</div>
@@ -24897,7 +24907,7 @@ function wireShimmer(container){
           </span>
         </a>
       </div>
-    `;
+    `);
   }
 
   function renderFacebookToolsPage(){
@@ -25342,7 +25352,7 @@ function wireShimmer(container){
         weekday:"long"
       }).format(date);
 
-      return `${datePart} at ${timePart} GMT+8 (${weekday})`;
+      return compactGeneratedPostSpacing(`${datePart} at ${timePart} GMT+8 (${weekday})`);
     }catch{
       return "";
     }
@@ -26158,7 +26168,7 @@ function wireShimmer(container){
 
   function ordinalDay(n){
     const v = n % 100;
-    if(v >= 11 && v <= 13) return `${n}TH`;
+    if(v >= 11 && v <= 13) return compactGeneratedPostSpacing(`${n}TH`);
     switch(n % 10){
       case 1:return `${n}ST`;
       case 2:return `${n}ND`;
@@ -26184,7 +26194,7 @@ function wireShimmer(container){
     const c = String(card.condition || "").toUpperCase();
     if(c === "NM" || c === "M") return "NM/BETTER";
     if(c === "LP") return "LP/BELOW";
-    if(c === "MP" || c === "HP" || c === "DMG") return `${c}/BELOW`;
+    if(c === "MP" || c === "HP" || c === "DMG") return compactGeneratedPostSpacing(`${c}/BELOW`);
     return "RAW";
   }
 
@@ -26207,7 +26217,7 @@ function wireShimmer(container){
     );
     const termsSuffix=savedTerm ? ` (${savedTerm.toLowerCase()})` : "";
 
-    return `PRICE : ${pieces.length ? pieces.join(" / ") : "PLEASE INQUIRE"}${termsSuffix}`;
+    return compactGeneratedPostSpacing(`PRICE : ${pieces.length ? pieces.join(" / ") : "PLEASE INQUIRE"}${termsSuffix}`);
   }
 
   function cardListGroupHeading(card){
