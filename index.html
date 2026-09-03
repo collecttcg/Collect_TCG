@@ -14993,6 +14993,22 @@ body:not(.owner-mode) .giveaway-grid#pastWinnersGrid .giveaway-winner-name{
   }
 }
 
+
+/* Giveaway form watermark controls */
+.giveaway-watermark-control{
+  margin-top:10px;
+}
+#giveawayWatermarkState{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+@media(max-width:800px){
+  .giveaway-watermark-control{
+    align-items:flex-start;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -15255,6 +15271,17 @@ body:not(.owner-mode) .giveaway-grid#pastWinnersGrid .giveaway-winner-name{
       <input id="giveawayImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
       <input id="giveawayImage" type="hidden">
       <div id="giveawayImagePreview" style="margin-top:8px;"></div>
+      <div class="owner-only image-watermark-control giveaway-watermark-control" id="giveawayWatermarkControl">
+        <div class="image-watermark-copy">
+          <strong>Giveaway image watermark</strong>
+          <span>Add the Collect TCG logo watermark before saving. You can switch back to the original anytime before saving.</span>
+        </div>
+        <div class="image-watermark-choice" role="group" aria-label="Giveaway image watermark options">
+          <button type="button" class="image-watermark-option active" id="giveawayWatermarkOriginalBtn">Original</button>
+          <button type="button" class="image-watermark-option" id="giveawayWatermarkApplyBtn">Add watermark</button>
+        </div>
+      </div>
+      <div class="owner-only image-watermark-state without-mark" id="giveawayWatermarkState" style="margin-top:6px;">Original</div>
       <div class="hint">Choose an image from your device. The image will be uploaded to Supabase Storage.</div>
     </div>
 
@@ -23591,6 +23618,169 @@ function wireShimmer(container){
     return uploadOwnerImage(file, "giveaway-images", "Giveaway image");
   }
 
+  async function uploadOwnerProcessedImage(dataUrl,bucket,errorLabel){
+    let blob;
+    try{
+      blob=dataUrlToBlob(dataUrl);
+    }catch(error){
+      console.error(`${errorLabel} processed-image decode error:`,error);
+      showToast(`Could not prepare ${errorLabel.toLowerCase()}`);
+      return null;
+    }
+
+    const verifiedMime=normalizedImageMime(blob.type);
+    if(!SAFE_GENERIC_IMAGE_MIMES.has(verifiedMime)){
+      showToast(`Unsupported ${errorLabel.toLowerCase()} format`);
+      return null;
+    }
+    if(blob.size<=0 || blob.size>GENERIC_OWNER_IMAGE_MAX_BYTES){
+      showToast(`${errorLabel} is too large`);
+      return null;
+    }
+
+    const extensionByMime={
+      "image/jpeg":"jpg",
+      "image/png":"png",
+      "image/webp":"webp",
+      "image/gif":"gif"
+    };
+    const safeExt=extensionByMime[verifiedMime];
+    if(!safeExt){
+      showToast(`Unsupported ${errorLabel.toLowerCase()} format`);
+      return null;
+    }
+
+    const randomPart=(crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2,12)}`)
+      .replace(/[^a-zA-Z0-9-]/g,"");
+    const path = `${ownerSession.user.id}/${Date.now()}-${randomPart}.${safeExt}`;
+
+    const { error: uploadError } = await supabaseClient.storage
+      .from(bucket)
+      .upload(path, blob, {
+        cacheControl:"3600",
+        upsert:false,
+        contentType:verifiedMime
+      });
+
+    if(uploadError){
+      console.error(`${errorLabel} processed upload error:`, uploadError);
+      showToast(`Could not upload ${errorLabel.toLowerCase()}`);
+      return null;
+    }
+
+    const { data } = supabaseClient.storage.from(bucket).getPublicUrl(path);
+    const publicUrl=safeHttpUrl(data?.publicUrl||"");
+    if(!publicUrl){
+      await supabaseClient.storage.from(bucket).remove([path]);
+      showToast(`Could not validate uploaded ${errorLabel.toLowerCase()}`);
+      return null;
+    }
+    return publicUrl;
+  }
+
+  const giveawayImageEditorState={
+    cleanSource:"",
+    watermarkedSource:"",
+    watermarkApplied:false,
+    objectUrl:""
+  };
+
+  function revokeGiveawayPreviewObjectUrl(){
+    if(giveawayImageEditorState.objectUrl){
+      try{ URL.revokeObjectURL(giveawayImageEditorState.objectUrl); }catch(_){}
+      giveawayImageEditorState.objectUrl="";
+    }
+  }
+
+  function currentGiveawayPreviewSource(){
+    return giveawayImageEditorState.watermarkApplied && giveawayImageEditorState.watermarkedSource
+      ? giveawayImageEditorState.watermarkedSource
+      : giveawayImageEditorState.cleanSource;
+  }
+
+  function selectedGiveawayFileIsGif(){
+    const file=$("giveawayImageFile")?.files?.[0];
+    return normalizedImageMime(file?.type)==="image/gif";
+  }
+
+  function syncGiveawayWatermarkControls(){
+    const originalBtn=$("giveawayWatermarkOriginalBtn");
+    const applyBtn=$("giveawayWatermarkApplyBtn");
+    const stateEl=$("giveawayWatermarkState");
+    if(!originalBtn || !applyBtn || !stateEl) return;
+
+    const hasImage=Boolean(giveawayImageEditorState.cleanSource);
+    const gifMode=selectedGiveawayFileIsGif();
+    const applied=giveawayImageEditorState.watermarkApplied===true;
+
+    originalBtn.disabled=!hasImage;
+    applyBtn.disabled=!hasImage || gifMode;
+
+    originalBtn.classList.toggle("active", !applied);
+    applyBtn.classList.toggle("active", applied);
+
+    if(!hasImage){
+      stateEl.textContent="No image selected";
+      stateEl.className="owner-only image-watermark-state without-mark";
+      return;
+    }
+
+    if(gifMode && !applied){
+      stateEl.textContent="GIF preview · watermark unavailable";
+      stateEl.className="owner-only image-watermark-state without-mark";
+      return;
+    }
+
+    stateEl.textContent=applied ? "Watermarked preview" : "Original";
+    stateEl.className=`owner-only image-watermark-state ${applied ? "with-mark" : "without-mark"}`;
+  }
+
+  async function setGiveawayImageWatermark(apply){
+    if(!requireOwner("change giveaway image watermark")) return;
+    const source=giveawayImageEditorState.cleanSource || $("giveawayImage")?.value?.trim() || "";
+    if(!source){
+      showToast("Choose a giveaway image first");
+      return;
+    }
+
+    if(!apply){
+      giveawayImageEditorState.watermarkApplied=false;
+      renderGiveawayImagePreview(currentGiveawayPreviewSource());
+      syncGiveawayWatermarkControls();
+      return;
+    }
+
+    if(selectedGiveawayFileIsGif()){
+      showToast("GIF watermark is not supported. Use JPG, PNG, or WEBP instead.");
+      syncGiveawayWatermarkControls();
+      return;
+    }
+
+    try{
+      if(!giveawayImageEditorState.watermarkedSource){
+        const {img}=await loadImageElementFromSource(source);
+        giveawayImageEditorState.watermarkedSource=await renderCardImage(img,1800,0.94,true);
+      }
+      giveawayImageEditorState.watermarkApplied=true;
+      renderGiveawayImagePreview(currentGiveawayPreviewSource());
+      syncGiveawayWatermarkControls();
+      showToast("Giveaway image watermark updated");
+    }catch(error){
+      console.error("Could not watermark giveaway image:",error);
+      showToast("Could not add watermark to this giveaway image");
+      syncGiveawayWatermarkControls();
+    }
+  }
+
+  function resetGiveawayImageEditorState(url=""){
+    revokeGiveawayPreviewObjectUrl();
+    giveawayImageEditorState.cleanSource=url || "";
+    giveawayImageEditorState.watermarkedSource="";
+    giveawayImageEditorState.watermarkApplied=false;
+    renderGiveawayImagePreview(currentGiveawayPreviewSource());
+    syncGiveawayWatermarkControls();
+  }
+
   function renderGiveawayImagePreview(url){
     const mount = $("giveawayImagePreview");
     if(!mount) return;
@@ -24470,7 +24660,7 @@ function wireShimmer(container){
     $("giveawayCardName").value = g ? g.card_name : "";
     $("giveawayImage").value = g ? (g.image_url || "") : "";
     $("giveawayImageFile").value = "";
-    renderGiveawayImagePreview(g ? (g.image_url || "") : "");
+    resetGiveawayImageEditorState(g ? (g.image_url || "") : "");
     $("giveawayStatus").value = g ? g.status : "active";
     $("giveawayWinnerName").value = g ? (g.winner_name || "") : "";
     $("giveawayWinnerProfileUrl").value = g ? (g.winner_profile_url || "") : "";
@@ -24484,6 +24674,7 @@ function wireShimmer(container){
   function closeGiveawayForm(){
     giveawayOverlay.hidden = true;
     $("giveawayForm").reset();
+    resetGiveawayImageEditorState("");
   }
 
   function syncGiveawayWinnerField(){
@@ -24503,17 +24694,34 @@ function wireShimmer(container){
   }
 
   $("giveawayStatus")?.addEventListener("change",syncGiveawayWinnerField);
+  syncGiveawayWatermarkControls();
 
   $("giveawayCancelBtn").addEventListener("click", closeGiveawayForm);
 
   $("giveawayImageFile").addEventListener("change", ()=>{
     const file = $("giveawayImageFile").files?.[0];
+    revokeGiveawayPreviewObjectUrl();
+
     if(!file){
-      renderGiveawayImagePreview($("giveawayImage").value);
+      giveawayImageEditorState.cleanSource=$("giveawayImage").value || "";
+      giveawayImageEditorState.watermarkedSource="";
+      giveawayImageEditorState.watermarkApplied=false;
+      renderGiveawayImagePreview(currentGiveawayPreviewSource());
+      syncGiveawayWatermarkControls();
       return;
     }
-    renderGiveawayImagePreview(URL.createObjectURL(file));
+
+    const objectUrl=URL.createObjectURL(file);
+    giveawayImageEditorState.objectUrl=objectUrl;
+    giveawayImageEditorState.cleanSource=objectUrl;
+    giveawayImageEditorState.watermarkedSource="";
+    giveawayImageEditorState.watermarkApplied=false;
+    renderGiveawayImagePreview(currentGiveawayPreviewSource());
+    syncGiveawayWatermarkControls();
   });
+
+  $("giveawayWatermarkOriginalBtn")?.addEventListener("click", ()=>setGiveawayImageWatermark(false));
+  $("giveawayWatermarkApplyBtn")?.addEventListener("click", ()=>setGiveawayImageWatermark(true));
 
   giveawayOverlay.addEventListener("click", e=>{
     if(e.target === giveawayOverlay) closeGiveawayForm();
@@ -24531,8 +24739,32 @@ function wireShimmer(container){
     let giveawayImageUrl = $("giveawayImage").value.trim();
     const giveawayImageFile = $("giveawayImageFile").files?.[0];
     if(giveawayImageFile){
-      showToast("Uploading giveaway image…");
-      const uploaded = await uploadGiveawayImage(giveawayImageFile);
+      if(giveawayImageEditorState.watermarkApplied && giveawayImageEditorState.watermarkedSource){
+        showToast("Uploading watermarked giveaway image…");
+        const uploaded = await uploadOwnerProcessedImage(
+          giveawayImageEditorState.watermarkedSource,
+          "giveaway-images",
+          "Giveaway image"
+        );
+        if(!uploaded) return;
+        giveawayImageUrl = uploaded;
+      }else{
+        showToast("Uploading giveaway image…");
+        const uploaded = await uploadGiveawayImage(giveawayImageFile);
+        if(!uploaded) return;
+        giveawayImageUrl = uploaded;
+      }
+    }else if(
+      giveawayImageEditorState.watermarkApplied &&
+      giveawayImageEditorState.watermarkedSource &&
+      giveawayImageUrl
+    ){
+      showToast("Uploading watermarked giveaway image…");
+      const uploaded = await uploadOwnerProcessedImage(
+        giveawayImageEditorState.watermarkedSource,
+        "giveaway-images",
+        "Giveaway image"
+      );
       if(!uploaded) return;
       giveawayImageUrl = uploaded;
     }
