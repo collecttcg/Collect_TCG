@@ -15567,6 +15567,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         return false;
       }
 
+      // Mirror the qualified view into the owner analytics event table when V5
+      // is installed. This makes the timeline filterable by current Status/Game.
+      // Failure here never affects the public card-view experience.
+      try{
+        await supabaseClient.rpc("record_qualified_card_view_event",{
+          p_card_id:cardId,
+          p_visitor_id:visitorId
+        });
+      }catch{}
+
       markQualifiedCardViewRecorded(cardId,now);
       return true;
     }catch(error){
@@ -15928,6 +15938,32 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       return [];
     }
     return Array.isArray(data) ? data : [];
+  }
+
+  async function fetchFilteredQualifiedViewSeries(start,end,status="",game=""){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_filtered_qualified_card_view_series",{
+        p_start:start.toISOString(),
+        p_end:end.toISOString(),
+        p_status:status || null,
+        p_game:game || null
+      });
+
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        const unavailable=
+          message.includes("get_filtered_qualified_card_view_series") ||
+          message.includes("function") ||
+          message.includes("schema cache");
+        if(!unavailable) console.warn("Filtered qualified view series error:",error);
+        return {supported:false,rows:[]};
+      }
+
+      return {supported:true,rows:Array.isArray(data)?data:[]};
+    }catch(error){
+      console.warn("Filtered qualified view series unavailable:",error);
+      return {supported:false,rows:[]};
+    }
   }
 
   function alignWebsiteVisitSeriesToCardSeries(cardSeries, websiteSeries){
@@ -22522,7 +22558,7 @@ function wireShimmer(container){
             <div class="insights-v4-card-head table-head">
               <div>
                 <h3>Qualified Card Views</h3>
-                <span>Cards kept open for at least 5 seconds.</span>
+                <span id="insightsQualifiedChartNote">Cards kept open for at least 5 seconds.</span>
               </div>
             </div>
             <div id="insightsChart" class="insights-chart insights-time-chart"></div>
@@ -22676,6 +22712,23 @@ function wireShimmer(container){
 
       renderClassicTrafficBars("insightsChart",state.series,"views");
       renderClassicTrafficBars("insightsWebsiteChart",state.websiteSeries,"visits",true);
+
+      const chartNote=$("insightsQualifiedChartNote");
+      if(chartNote){
+        const parts=[];
+        if(statusSel.value) parts.push(statusSel.value);
+        if(gameSel.value) parts.push(gameSel.value);
+
+        if(state.seriesFiltered){
+          chartNote.textContent=parts.length
+            ? `Filtered timeline · ${parts.join(" · ")}`
+            : "All qualified card views · 5+ seconds";
+        }else{
+          chartNote.textContent=parts.length
+            ? "V5 migration required for filtered historical timeline"
+            : "Cards kept open for at least 5 seconds.";
+        }
+      }
     }
 
     function renderRecommendations(){
@@ -22949,13 +23002,17 @@ function wireShimmer(container){
 
       const previousRange=previousInsightsRange(startDate,endDate,rangeSel.value);
 
-      const [views,series,siteSeries,previous,engagement,saleSnapshots]=await Promise.all([
+      const selectedStatus=statusSel.value;
+      const selectedGame=gameSel.value;
+
+      const [views,series,siteSeries,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
         fetchInsights(startDate,endDate),
         fetchViewSeries(startDate,endDate),
         fetchWebsiteVisitSeries(startDate,endDate),
         previousRange?fetchInsights(previousRange.start,previousRange.end,{silent:true}):Promise.resolve([]),
         fetchCardEngagementInsights(startDate,endDate),
-        fetchSaleConversionSnapshots()
+        fetchSaleConversionSnapshots(),
+        fetchFilteredQualifiedViewSeries(startDate,endDate,selectedStatus,selectedGame)
       ]);
 
       const engagementMap=new Map(engagement.rows.map(row=>[String(row.card_id||""),row]));
@@ -22999,7 +23056,10 @@ function wireShimmer(container){
       state={
         ...state,
         start:startDate,end:endDate,rows,
-        series:Array.isArray(series)?series:[],
+        series:filteredSeriesResult.supported
+          ? filteredSeriesResult.rows
+          : (Array.isArray(series)?series:[]),
+        seriesFiltered:filteredSeriesResult.supported,
         websiteSeries:alignWebsiteVisitSeriesToCardSeries(series,siteSeries),
         engagementSupported:engagement.supported,
         saleSnapshotsSupported:saleSnapshots.supported,
@@ -23007,8 +23067,8 @@ function wireShimmer(container){
       };
 
       state.visible=rows.filter(row=>{
-        if(statusSel.value && row._status!==statusSel.value) return false;
-        if(gameSel.value && String(row.game||row._card?.game||"")!==gameSel.value) return false;
+        if(selectedStatus && row._status!==selectedStatus) return false;
+        if(selectedGame && String(row.game||row._card?.game||"")!==selectedGame) return false;
         return true;
       });
 
