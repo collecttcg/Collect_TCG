@@ -26800,8 +26800,9 @@ function wireShimmer(container){
     const winnerHeadline=String(values.winnerHeadline||"").trim();
     const prizeLine=String(values.prizeLine||"").trim();
     const commentText=String(values.commentText||"").trim();
-    const instagramHandle="@collecttcg.mysg";
-    const giveawayComment=[commentText,instagramHandle].filter(Boolean).join(" ");
+    const giveawayComment=commentText
+      ? `${commentText} + your Instagram handle`
+      : "Your comment + your Instagram handle";
     const claimHours=String(values.claimHours||"24").trim()||"24";
     const winnerTool=String(values.winnerTool||"Wheel of Names").trim()||"Wheel of Names";
     const giveawayEnds=String(values.giveawayEnds||"").trim();
@@ -26971,13 +26972,13 @@ function wireShimmer(container){
 
           <div class="fb-giveaway-condition-card">
             <strong>Condition 2</strong>
-            <span>Set the comment text participants must leave. Our Instagram handle is added automatically.</span>
+            <span>Set the comment text participants must leave. They must also include their own Instagram handle.</span>
           </div>
 
           <div class="field">
             <label for="fbGiveawayCommentText">Comment:</label>
             <input id="fbGiveawayCommentText" maxlength="250" value="${escapeHtml(prefs.commentText)}" placeholder="Type the required comment here">
-            <div class="hint">The generated post automatically adds @collecttcg.mysg after this comment text.</div>
+            <div class="hint">Participants will be asked to include their own Instagram handle with the comment.</div>
           </div>
 
           <div class="fb-card-list-settings-divider"></div>
