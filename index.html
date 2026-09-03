@@ -14967,6 +14967,18 @@ body:not(.owner-mode) .giveaway-grid#pastWinnersGrid .giveaway-winner-name{
   }
 }
 
+
+@media(min-width:801px){
+  .details-contact-description{
+    display:block;
+    max-width:620px;
+    color:var(--text-muted);
+    font-size:9.5px;
+    font-weight:500;
+    line-height:1.45;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -33782,13 +33794,10 @@ function wireShimmer(container){
           ${card.notes ? `<div class="detail-section"><h3>Notes</h3><div class="detail-notes">${escapeHtml(card.notes)}</div></div>` : ""}
 
           ${!isNfsListing && !isSoldListing && normalizeFilterValue(card.availability||"Available")==="available" ? `
-            <div class="detail-purchase-note">
-              <strong>Interested in this card?</strong>
-              Contact us to confirm current availability, transaction method and delivery / meetup options before payment.
-            </div>
             <div class="details-desktop-contact-socials">
               <div class="details-contact-copy">
-                <strong>Interested? Contact us directly</strong>
+                <strong>Interested in this card?</strong>
+                <span class="details-contact-description">Contact us to confirm current availability, transaction method and delivery / meetup options before payment.</span>
                 <span class="details-contact-location">📍 Malaysia &amp; Singapore</span>
               </div>
               <div class="details-contact-actions">
