@@ -14162,6 +14162,78 @@ body.giveaway-rearranging-body{
   }
 }
 
+
+/* =========================================================
+   PAST WINNERS — CONSISTENT CARD ALIGNMENT
+   Reserve consistent space for variable-length title/meta text and
+   anchor owner controls to the bottom of each winner card.
+   ========================================================= */
+.giveaway-grid#pastWinnersGrid{
+  align-items:stretch;
+}
+
+.giveaway-grid#pastWinnersGrid .giveaway-winner-card{
+  display:flex;
+  flex-direction:column;
+  height:100%;
+}
+
+.giveaway-grid#pastWinnersGrid .giveaway-winner-card > img{
+  flex:0 0 auto;
+}
+
+.giveaway-grid#pastWinnersGrid .giveaway-body{
+  display:flex;
+  flex:1 1 auto;
+  flex-direction:column;
+  min-height:0;
+}
+
+/* This is the important part: every card reserves the same amount of
+   space before the winner box, even if the card name wraps to 2+ lines. */
+.giveaway-grid#pastWinnersGrid .giveaway-winner-summary{
+  display:flex;
+  flex-direction:column;
+  min-height:96px;
+}
+
+.giveaway-grid#pastWinnersGrid .giveaway-winner-summary .giveaway-title{
+  line-height:1.08;
+}
+
+.giveaway-grid#pastWinnersGrid .giveaway-winner-summary .giveaway-meta{
+  line-height:1.22;
+  min-height:27px;
+}
+
+.giveaway-grid#pastWinnersGrid .giveaway-winner-summary .giveaway-status{
+  align-self:flex-start;
+  margin-top:auto;
+}
+
+/* Winner information begins at the same vertical position. */
+.giveaway-grid#pastWinnersGrid .giveaway-winner-name{
+  width:100%;
+}
+
+/* Optional giveaway details may vary in length, but owner controls remain
+   aligned along the bottom of all cards. */
+.giveaway-grid#pastWinnersGrid .giveaway-owner-actions{
+  margin-top:auto !important;
+  padding-top:12px;
+}
+
+/* Cards without owner controls still stretch cleanly for public visitors. */
+body:not(.owner-mode) .giveaway-grid#pastWinnersGrid .giveaway-winner-name{
+  margin-bottom:0;
+}
+
+@media(max-width:700px){
+  .giveaway-grid#pastWinnersGrid .giveaway-winner-summary{
+    min-height:88px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -23228,9 +23300,11 @@ function wireShimmer(container){
       <article class="giveaway-card giveaway-winner-card" data-giveaway-winner-card="${escapeHtml(g.id)}">
         ${g.image_url ? `<img src="${escapeHtml(g.image_url)}" alt="${escapeHtml(g.card_name)}" loading="lazy" decoding="async">` : ""}
         <div class="giveaway-body">
-          <div class="giveaway-title">${escapeHtml(g.title)}</div>
-          <div class="giveaway-meta">${escapeHtml(g.card_name)}</div>
-          <span class="giveaway-status closed">Gave Away</span>
+          <div class="giveaway-winner-summary">
+            <div class="giveaway-title">${escapeHtml(g.title)}</div>
+            <div class="giveaway-meta">${escapeHtml(g.card_name)}</div>
+            <span class="giveaway-status closed">Gave Away</span>
+          </div>
 
           <div class="giveaway-winner-name">
             <span>Winner</span>
