@@ -14234,6 +14234,28 @@ body:not(.owner-mode) .giveaway-grid#pastWinnersGrid .giveaway-winner-name{
   }
 }
 
+
+/* Current Giveaway owner visibility controls. */
+.giveaway-status-row{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+}
+.giveaway-hidden-badge{
+  display:inline-flex;
+  align-items:center;
+  min-height:24px;
+  padding:3px 8px;
+  border:1px dashed rgba(227,179,65,.56);
+  border-radius:999px;
+  background:rgba(227,179,65,.08);
+  color:var(--accent-gold);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.08em;
+}
+
 </style>
 </head>
 <body>
@@ -16132,9 +16154,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   const GIVEAWAY_PUBLIC_COLUMNS_PROFILE =
     "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_profile_url,winner_announced_at,created_at";
   const GIVEAWAY_PUBLIC_COLUMNS =
-    "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_profile_url,winner_sort_order,winner_announced_at,created_at";
+    "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_profile_url,winner_sort_order,is_hidden,winner_announced_at,created_at";
   let giveawayWinnerProfileUrlSupported="unknown";
   let giveawayWinnerSortOrderSupported="unknown";
+  let giveawayHiddenSupported="unknown";
   const SHOWCASE_PUBLIC_COLUMNS =
     "id,title,category,series,video_url,thumbnail_url,description,featured,sort_order,created_at";
 
@@ -16154,6 +16177,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       winner_sort_order: Number.isFinite(Number(row.winner_sort_order))
         ? Number(row.winner_sort_order)
         : null,
+      is_hidden: row.is_hidden === true,
       winner_announced_at: row.winner_announced_at || null,
       created_at: row.created_at || null
     };
@@ -16172,57 +16196,63 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function loadGiveaways(){
-    let {data,error}=await supabaseClient
-      .from("giveaways")
-      .select(GIVEAWAY_PUBLIC_COLUMNS)
-      .order("created_at",{ascending:false});
-
-    if(!error){
-      giveawayWinnerProfileUrlSupported=true;
-      giveawayWinnerSortOrderSupported=true;
-    }else{
-      const sortMissing=optionalColumnUnavailable(error,"winner_sort_order");
-      const profileMissing=optionalColumnUnavailable(error,"winner_profile_url");
-
-      if(sortMissing){
-        giveawayWinnerSortOrderSupported=false;
-
-        ({data,error}=await supabaseClient
-          .from("giveaways")
-          .select(GIVEAWAY_PUBLIC_COLUMNS_PROFILE)
-          .order("created_at",{ascending:false}));
-
-        if(!error){
-          giveawayWinnerProfileUrlSupported=true;
-        }else if(optionalColumnUnavailable(error,"winner_profile_url")){
-          giveawayWinnerProfileUrlSupported=false;
-          ({data,error}=await supabaseClient
-            .from("giveaways")
-            .select(GIVEAWAY_PUBLIC_COLUMNS_BASE)
-            .order("created_at",{ascending:false}));
-        }
-      }else if(profileMissing){
-        giveawayWinnerProfileUrlSupported=false;
-
-        // The profile column may be missing while sort order already exists.
-        const columnsWithoutProfile=
-          "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_sort_order,winner_announced_at,created_at";
-
-        ({data,error}=await supabaseClient
-          .from("giveaways")
-          .select(columnsWithoutProfile)
-          .order("created_at",{ascending:false}));
-
-        if(!error){
-          giveawayWinnerSortOrderSupported=true;
-        }else if(optionalColumnUnavailable(error,"winner_sort_order")){
-          giveawayWinnerSortOrderSupported=false;
-          ({data,error}=await supabaseClient
-            .from("giveaways")
-            .select(GIVEAWAY_PUBLIC_COLUMNS_BASE)
-            .order("created_at",{ascending:false}));
-        }
+    const columnSets=[
+      {
+        columns:GIVEAWAY_PUBLIC_COLUMNS,
+        profile:true,
+        sort:true,
+        hidden:true
+      },
+      {
+        columns:"id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_profile_url,winner_sort_order,winner_announced_at,created_at",
+        profile:true,
+        sort:true,
+        hidden:false
+      },
+      {
+        columns:GIVEAWAY_PUBLIC_COLUMNS_PROFILE,
+        profile:true,
+        sort:false,
+        hidden:false
+      },
+      {
+        columns:"id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_sort_order,winner_announced_at,created_at",
+        profile:false,
+        sort:true,
+        hidden:false
+      },
+      {
+        columns:GIVEAWAY_PUBLIC_COLUMNS_BASE,
+        profile:false,
+        sort:false,
+        hidden:false
       }
+    ];
+
+    let data=null;
+    let error=null;
+    let selected=null;
+
+    for(const option of columnSets){
+      const result=await supabaseClient
+        .from("giveaways")
+        .select(option.columns)
+        .order("created_at",{ascending:false});
+
+      data=result.data;
+      error=result.error;
+
+      if(!error){
+        selected=option;
+        break;
+      }
+
+      const optionalMissing=
+        optionalColumnUnavailable(error,"winner_profile_url") ||
+        optionalColumnUnavailable(error,"winner_sort_order") ||
+        optionalColumnUnavailable(error,"is_hidden");
+
+      if(!optionalMissing) break;
     }
 
     if(error){
@@ -16230,6 +16260,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       giveaways = [];
       return false;
     }
+
+    giveawayWinnerProfileUrlSupported=!!selected?.profile;
+    giveawayWinnerSortOrderSupported=!!selected?.sort;
+    giveawayHiddenSupported=!!selected?.hidden;
 
     giveaways = (data || []).map(giveawayFromDb);
     return true;
@@ -16254,52 +16288,47 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         .single();
     }
 
+    function currentColumns(){
+      const cols=[
+        "id","title","card_name","image_url","status","ends_at",
+        "how_to_enter","details","winner_name"
+      ];
+
+      if(giveawayWinnerProfileUrlSupported!==false) cols.push("winner_profile_url");
+      if(giveawayWinnerSortOrderSupported!==false) cols.push("winner_sort_order");
+      if(giveawayHiddenSupported!==false) cols.push("is_hidden");
+
+      cols.push("winner_announced_at","created_at");
+      return cols.join(",");
+    }
+
     let writePayload={...payload};
 
-    if(giveawayWinnerProfileUrlSupported===false){
-      delete writePayload.winner_profile_url;
-    }
-    if(giveawayWinnerSortOrderSupported===false){
-      delete writePayload.winner_sort_order;
-    }
+    if(giveawayWinnerProfileUrlSupported===false) delete writePayload.winner_profile_url;
+    if(giveawayWinnerSortOrderSupported===false) delete writePayload.winner_sort_order;
+    if(giveawayHiddenSupported===false) delete writePayload.is_hidden;
 
-    function selectedGiveawayColumns(){
-      if(giveawayWinnerProfileUrlSupported===false && giveawayWinnerSortOrderSupported===false){
-        return GIVEAWAY_PUBLIC_COLUMNS_BASE;
-      }
-      if(giveawayWinnerSortOrderSupported===false){
-        return GIVEAWAY_PUBLIC_COLUMNS_PROFILE;
-      }
-      if(giveawayWinnerProfileUrlSupported===false){
-        return "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_sort_order,winner_announced_at,created_at";
-      }
-      return GIVEAWAY_PUBLIC_COLUMNS;
-    }
+    let result=await runWrite(writePayload,currentColumns());
 
-    let result=await runWrite(writePayload,selectedGiveawayColumns());
+    const optionalFields=[
+      ["is_hidden","giveawayHiddenSupported"],
+      ["winner_sort_order","giveawayWinnerSortOrderSupported"],
+      ["winner_profile_url","giveawayWinnerProfileUrlSupported"]
+    ];
 
-    if(
-      result.error &&
-      Object.prototype.hasOwnProperty.call(writePayload,"winner_sort_order") &&
-      optionalColumnUnavailable(result.error,"winner_sort_order")
-    ){
-      giveawayWinnerSortOrderSupported=false;
-      writePayload={...writePayload};
-      delete writePayload.winner_sort_order;
-      result=await runWrite(writePayload,selectedGiveawayColumns());
-    }
+    for(const [column,stateName] of optionalFields){
+      if(
+        result.error &&
+        Object.prototype.hasOwnProperty.call(writePayload,column) &&
+        optionalColumnUnavailable(result.error,column)
+      ){
+        if(stateName==="giveawayHiddenSupported") giveawayHiddenSupported=false;
+        if(stateName==="giveawayWinnerSortOrderSupported") giveawayWinnerSortOrderSupported=false;
+        if(stateName==="giveawayWinnerProfileUrlSupported") giveawayWinnerProfileUrlSupported=false;
 
-    if(
-      result.error &&
-      Object.prototype.hasOwnProperty.call(writePayload,"winner_profile_url") &&
-      optionalColumnUnavailable(result.error,"winner_profile_url")
-    ){
-      giveawayWinnerProfileUrlSupported=false;
-      writePayload={...writePayload};
-      delete writePayload.winner_profile_url;
-      result=await runWrite(writePayload,selectedGiveawayColumns());
-      if(!result.error){
-        showToast("Giveaway saved. Run the profile-link migration to save the user profile URL.");
+        writePayload={...writePayload};
+        delete writePayload[column];
+        result=await runWrite(writePayload,currentColumns());
       }
     }
 
@@ -16309,6 +16338,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       }
       if(Object.prototype.hasOwnProperty.call(writePayload,"winner_sort_order")){
         giveawayWinnerSortOrderSupported=true;
+      }
+      if(Object.prototype.hasOwnProperty.call(writePayload,"is_hidden")){
+        giveawayHiddenSupported=true;
       }
     }
 
@@ -16325,6 +16357,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function isPastGiveawayWinner(g){
     return normalizeFilterValue(g?.status)==="gave_away";
+  }
+
+  function isGiveawayHidden(g){
+    return g?.is_hidden === true;
+  }
+
+  function giveawayVisibleToCurrentViewer(g){
+    return isOwnerMode() || !isGiveawayHidden(g);
   }
 
   function giveawayWinnerDateLabel(value){
@@ -23311,8 +23351,8 @@ function wireShimmer(container){
   }
 
   function renderGiveawayPage(){
-    const currentGiveaways=giveaways.filter(g=>!isPastGiveawayWinner(g));
-    const pastWinners=sortedPastGiveawayWinners();
+    const currentGiveaways=giveaways.filter(g=>!isPastGiveawayWinner(g) && giveawayVisibleToCurrentViewer(g));
+    const pastWinners=sortedPastGiveawayWinners().filter(g=>giveawayVisibleToCurrentViewer(g));
 
     const currentCardHTML=g=>`
       <article class="giveaway-card">
@@ -23320,9 +23360,12 @@ function wireShimmer(container){
         <div class="giveaway-body">
           <div class="giveaway-title">${escapeHtml(g.title)}</div>
           <div class="giveaway-meta">${escapeHtml(g.card_name)}</div>
-          <span class="giveaway-status ${normalizeFilterValue(g.status)==="closed" ? "closed" : ""}">
-            ${escapeHtml(normalizeFilterValue(g.status)==="closed" ? "Closed" : "Active")}
-          </span>
+          <div class="giveaway-status-row">
+            <span class="giveaway-status ${normalizeFilterValue(g.status)==="closed" ? "closed" : ""}">
+              ${escapeHtml(normalizeFilterValue(g.status)==="closed" ? "Closed" : "Active")}
+            </span>
+            ${isGiveawayHidden(g) ? `<span class="giveaway-hidden-badge owner-only">HIDDEN</span>` : ""}
+          </div>
 
           <div class="giveaway-section">
             <h4>How to enter</h4>
@@ -23337,6 +23380,11 @@ function wireShimmer(container){
                     class="btn-ghost giveaway-mark-winner"
                     data-giveaway-mark-winner="${escapeHtml(g.id)}">
               Mark Gave Away
+            </button>
+            <button type="button"
+                    class="btn-ghost"
+                    data-giveaway-toggle-hidden="${escapeHtml(g.id)}">
+              ${isGiveawayHidden(g) ? "Unhide" : "Hide"}
             </button>
             <button type="button" class="btn-ghost" data-giveaway-edit="${escapeHtml(g.id)}">Edit</button>
             <button type="button" class="btn-ghost" data-giveaway-delete="${escapeHtml(g.id)}" style="color:var(--danger)">Delete</button>
@@ -23436,6 +23484,46 @@ function wireShimmer(container){
         if(!requireOwner("edit giveaway")) return;
         const g=giveaways.find(x=>String(x.id)===String(btn.dataset.giveawayEdit||""));
         if(g) openGiveawayForm(g);
+      });
+    });
+
+    view.querySelectorAll("[data-giveaway-toggle-hidden]").forEach(btn=>{
+      btn.addEventListener("click",async()=>{
+        if(!requireOwner("hide giveaway")) return;
+
+        const g=giveaways.find(
+          x=>String(x.id)===String(btn.dataset.giveawayToggleHidden||"")
+        );
+        if(!g) return;
+
+        if(giveawayHiddenSupported===false){
+          showToast("Run the giveaway hide migration first");
+          return;
+        }
+
+        const nextHidden=!isGiveawayHidden(g);
+        const action=nextHidden ? "hide" : "unhide";
+
+        if(!confirm(`${nextHidden ? "Hide" : "Unhide"} "${g.title}"${nextHidden ? " from public visitors" : ""}?`)){
+          return;
+        }
+
+        const {error}=await saveGiveaway({is_hidden:nextHidden},g.id);
+
+        if(error){
+          console.error(`${action} giveaway error:`,error);
+          if(optionalColumnUnavailable(error,"is_hidden")){
+            giveawayHiddenSupported=false;
+            showToast("Run the giveaway hide migration first");
+          }else{
+            showToast(`Could not ${action} giveaway`);
+          }
+          return;
+        }
+
+        await loadGiveaways();
+        renderGiveawayPage();
+        showToast(nextHidden ? "Giveaway hidden from visitors" : "Giveaway is public again");
       });
     });
 
