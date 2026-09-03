@@ -15550,6 +15550,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function applyOwnerMode(){
     const owner=isOwnerMode();
     document.body.classList.toggle("owner-mode", owner);
+
+    if(!owner){
+      qualifiedViewTotalsByCard?.clear?.();
+      qualifiedViewTotalsBackendState="unknown";
+    }
+
     const b = $("ownerToggle");
     if(b) b.textContent = owner ? "Owner logout" : "Owner login";
 
@@ -16201,6 +16207,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
 
     cards=(data||[]).map(dbToCard);
+
+    // The eye counter shown to Owner Mode is now sourced from the fresh
+    // qualified-view analytics table, not the legacy cards.view_count field.
+    if(isOwnerMode()){
+      await refreshQualifiedViewTotals();
+    }else{
+      qualifiedViewTotalsByCard.clear();
+      qualifiedViewTotalsBackendState="unknown";
+    }
+
     return true;
   }
 
@@ -17211,6 +17227,64 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
   }
 
+
+  let qualifiedViewTotalsBackendState="unknown";
+  const qualifiedViewTotalsByCard=new Map();
+
+  function freshQualifiedViewCount(cardId){
+    const id=String(cardId||"");
+    if(!id) return 0;
+    return Math.max(0,Number(qualifiedViewTotalsByCard.get(id)||0));
+  }
+
+  function freshQualifiedViewDisplay(cardId){
+    if(qualifiedViewTotalsBackendState==="unavailable" || qualifiedViewTotalsBackendState==="error"){
+      return "—";
+    }
+    return freshQualifiedViewCount(cardId).toLocaleString();
+  }
+
+  async function refreshQualifiedViewTotals(){
+    if(!isOwnerMode()){
+      qualifiedViewTotalsByCard.clear();
+      qualifiedViewTotalsBackendState="unknown";
+      return false;
+    }
+
+    try{
+      const {data,error}=await supabaseClient.rpc("get_qualified_card_view_totals");
+
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(
+          message.includes("get_qualified_card_view_totals") ||
+          message.includes("function") ||
+          message.includes("schema cache")
+        ){
+          qualifiedViewTotalsBackendState="unavailable";
+        }else{
+          console.warn("Qualified view totals unavailable:",error);
+          qualifiedViewTotalsBackendState="error";
+        }
+        qualifiedViewTotalsByCard.clear();
+        return false;
+      }
+
+      qualifiedViewTotalsByCard.clear();
+      (Array.isArray(data)?data:[]).forEach(row=>{
+        const id=String(row.card_id||"");
+        if(id) qualifiedViewTotalsByCard.set(id,Math.max(0,Number(row.qualified_views||0)));
+      });
+
+      qualifiedViewTotalsBackendState="available";
+      return true;
+    }catch(error){
+      console.warn("Qualified view totals unavailable:",error);
+      qualifiedViewTotalsByCard.clear();
+      qualifiedViewTotalsBackendState="error";
+      return false;
+    }
+  }
 
   let saleSnapshotBackendState="unknown";
 
@@ -21283,7 +21357,10 @@ function relatedCardHTML(c){
           ${isOwnerMode() && normalizeFilterValue(c.availability)==="reserved"
             ? `<div class="owner-reserved-age" data-owner-reserved-age-card="${escapeHtml(c.id)}">Checking reserved age…</div>`
             : ""}
-          <div class="owner-only clean-owner-views">👁 ${Number(c.view_count || 0).toLocaleString()}</div>
+          <div class="owner-only clean-owner-views"
+               title="Qualified views · card kept open for at least 5 seconds">
+            👁 ${freshQualifiedViewDisplay(c.id)}
+          </div>
         </div>
       </div>
     `;
@@ -33465,7 +33542,10 @@ function wireShimmer(container){
             ${card.era ? `<div class="detail-item"><div class="detail-label">Era</div><div class="detail-value">${escapeHtml(card.era)}</div></div>` : ""}
             ${card.series ? `<div class="detail-item"><div class="detail-label">Series</div><div class="detail-value">${escapeHtml(card.series)}</div></div>` : ""}
             <div class="detail-item"><div class="detail-label">Pictures</div><div class="detail-value">${images.length}</div></div>
-            <div class="detail-item owner-only"><div class="detail-label">Views</div><div class="detail-value">${Number(card.view_count || 0).toLocaleString()}</div></div>
+            <div class="detail-item owner-only">
+              <div class="detail-label">Qualified Views</div>
+              <div class="detail-value">${freshQualifiedViewDisplay(card.id)}</div>
+            </div>
           </div>
 
           ${card.notes ? `<div class="detail-section"><h3>Notes</h3><div class="detail-notes">${escapeHtml(card.notes)}</div></div>` : ""}
