@@ -14002,6 +14002,74 @@ body.light-mode .clean-game-pill.filter-pill-btn.pill-selected{
   }
 }
 
+
+/* =========================================================
+   PAST WINNERS — OWNER DRAG REORDER
+   ========================================================= */
+.giveaway-winner-drag-hint{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  width:100%;
+  margin-bottom:3px;
+  color:var(--text-muted);
+  font-size:9px;
+  user-select:none;
+}
+.giveaway-winner-drag-handle{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:30px;
+  height:28px;
+  padding:0 8px;
+  border:1px solid var(--border-soft);
+  border-radius:8px;
+  background:var(--surface-2);
+  color:var(--text);
+  font-size:17px;
+  font-weight:800;
+  line-height:1;
+  letter-spacing:-3px;
+  cursor:grab;
+  touch-action:none;
+}
+.giveaway-winner-drag-handle:hover,
+.giveaway-winner-drag-handle:focus-visible{
+  border-color:rgba(227,179,65,.48);
+  box-shadow:0 0 0 2px rgba(227,179,65,.08);
+}
+.giveaway-winner-drag-handle:active{
+  cursor:grabbing;
+}
+.giveaway-winner-card[draggable="true"]{
+  transition:
+    transform .14s ease,
+    opacity .14s ease,
+    box-shadow .14s ease,
+    border-color .14s ease;
+}
+.giveaway-winner-card.giveaway-winner-dragging{
+  opacity:.48;
+  transform:scale(.985);
+  border-color:rgba(227,179,65,.48);
+  box-shadow:
+    0 10px 26px rgba(0,0,0,.28),
+    0 0 0 2px rgba(227,179,65,.09);
+}
+.giveaway-winner-grid-dragging .giveaway-winner-card:not(.giveaway-winner-dragging){
+  transition:transform .12s ease;
+}
+@media(max-width:700px){
+  .giveaway-winner-drag-hint{
+    font-size:8.5px;
+  }
+  .giveaway-winner-drag-handle{
+    min-width:34px;
+    height:30px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -22788,23 +22856,126 @@ function wireShimmer(container){
     return true;
   }
 
-  async function moveGiveawayWinner(id,direction){
-    if(!requireOwner("reorder giveaway winners")) return;
+  function currentWinnerOrderFromDom(){
+    const container=$("pastWinnersGrid");
+    if(!container) return [];
 
-    const ordered=sortedPastGiveawayWinners();
-    const currentIndex=ordered.findIndex(g=>String(g.id)===String(id));
-    if(currentIndex<0) return;
+    const ids=[...container.querySelectorAll("[data-giveaway-winner-card]")]
+      .map(card=>String(card.dataset.giveawayWinnerCard||""))
+      .filter(Boolean);
 
-    const nextIndex=currentIndex+(direction==="up"?-1:1);
-    if(nextIndex<0 || nextIndex>=ordered.length) return;
+    const byId=new Map(
+      giveaways
+        .filter(isPastGiveawayWinner)
+        .map(g=>[String(g.id),g])
+    );
 
-    [ordered[currentIndex],ordered[nextIndex]]=[ordered[nextIndex],ordered[currentIndex]];
+    return ids.map(id=>byId.get(id)).filter(Boolean);
+  }
+
+  async function saveGiveawayWinnerDomOrder(){
+    const ordered=currentWinnerOrderFromDom();
+    if(!ordered.length) return false;
 
     const ok=await persistGiveawayWinnerOrder(ordered);
-    if(!ok) return;
+    if(ok) showToast("Winner order updated");
+    return ok;
+  }
 
-    renderGiveawayPage();
-    showToast("Winner order updated");
+  function setupGiveawayWinnerDragReorder(){
+    if(!isOwnerMode()) return;
+
+    const container=$("pastWinnersGrid");
+    if(!container) return;
+
+    let draggedCard=null;
+    let originalOrder="";
+
+    const cards=()=>[...container.querySelectorAll("[data-giveaway-winner-card]")];
+
+    cards().forEach(card=>{
+      card.setAttribute("draggable","true");
+
+      card.addEventListener("dragstart",event=>{
+        const handleTarget=event.target?.closest?.("[data-giveaway-drag-handle]");
+        if(!handleTarget){
+          event.preventDefault();
+          return;
+        }
+
+        draggedCard=card;
+        originalOrder=cards()
+          .map(item=>String(item.dataset.giveawayWinnerCard||""))
+          .join("|");
+
+        card.classList.add("giveaway-winner-dragging");
+        container.classList.add("giveaway-winner-grid-dragging");
+
+        try{
+          event.dataTransfer.effectAllowed="move";
+          event.dataTransfer.setData("text/plain",String(card.dataset.giveawayWinnerCard||""));
+        }catch{}
+      });
+
+      card.addEventListener("dragend",async()=>{
+        if(!draggedCard) return;
+
+        draggedCard.classList.remove("giveaway-winner-dragging");
+        container.classList.remove("giveaway-winner-grid-dragging");
+
+        const newOrder=cards()
+          .map(item=>String(item.dataset.giveawayWinnerCard||""))
+          .join("|");
+
+        const changed=originalOrder && newOrder!==originalOrder;
+        draggedCard=null;
+        originalOrder="";
+
+        if(changed){
+          const ok=await saveGiveawayWinnerDomOrder();
+          if(!ok){
+            await loadGiveaways();
+            renderGiveawayPage();
+          }
+        }
+      });
+    });
+
+    container.addEventListener("dragover",event=>{
+      if(!draggedCard) return;
+      event.preventDefault();
+
+      try{ event.dataTransfer.dropEffect="move"; }catch{}
+
+      const target=event.target?.closest?.("[data-giveaway-winner-card]");
+      if(!target || target===draggedCard) return;
+
+      const rect=target.getBoundingClientRect();
+      const midpointY=rect.top + rect.height/2;
+      const midpointX=rect.left + rect.width/2;
+
+      // Works for both one-column mobile and multi-column desktop grids.
+      const sameRow=Math.abs(
+        draggedCard.getBoundingClientRect().top - rect.top
+      ) < Math.min(rect.height,draggedCard.getBoundingClientRect().height)*0.5;
+
+      let insertBefore;
+      if(sameRow){
+        insertBefore=event.clientX < midpointX;
+      }else{
+        insertBefore=event.clientY < midpointY;
+      }
+
+      container.insertBefore(
+        draggedCard,
+        insertBefore ? target : target.nextSibling
+      );
+    });
+
+    container.addEventListener("drop",event=>{
+      if(!draggedCard) return;
+      event.preventDefault();
+    });
   }
 
   function renderGiveawayPage(){
@@ -22843,7 +23014,7 @@ function wireShimmer(container){
     `;
 
     const winnerCardHTML=g=>`
-      <article class="giveaway-card giveaway-winner-card">
+      <article class="giveaway-card giveaway-winner-card" data-giveaway-winner-card="${escapeHtml(g.id)}" draggable="${isOwnerMode() ? "true" : "false"}">
         ${g.image_url ? `<img src="${escapeHtml(g.image_url)}" alt="${escapeHtml(g.card_name)}" loading="lazy" decoding="async">` : ""}
         <div class="giveaway-body">
           <div class="giveaway-title">${escapeHtml(g.title)}</div>
@@ -22867,21 +23038,11 @@ function wireShimmer(container){
           ${g.details ? `<div class="giveaway-section"><h4>Giveaway details</h4><p>${escapeHtml(g.details)}</p></div>` : ""}
 
           <div class="giveaway-owner-actions owner-only">
-            <div class="giveaway-winner-order-controls">
-              <button type="button"
-                      class="btn-ghost giveaway-winner-order-btn"
-                      data-giveaway-winner-up="${escapeHtml(g.id)}"
-                      aria-label="Move winner up"
-                      title="Move this winner earlier">
-                ↑ Move Up
-              </button>
-              <button type="button"
-                      class="btn-ghost giveaway-winner-order-btn"
-                      data-giveaway-winner-down="${escapeHtml(g.id)}"
-                      aria-label="Move winner down"
-                      title="Move this winner later">
-                ↓ Move Down
-              </button>
+            <div class="giveaway-winner-drag-hint" aria-hidden="true">
+              <span class="giveaway-winner-drag-handle"
+                    data-giveaway-drag-handle
+                    title="Drag to reorder winners">⋮⋮</span>
+              <span>Drag to reorder</span>
             </div>
             <button type="button" class="btn-ghost" data-giveaway-edit="${escapeHtml(g.id)}">Edit Winner</button>
             <button type="button" class="btn-ghost" data-giveaway-restore="${escapeHtml(g.id)}">Move Back to Current</button>
@@ -22911,7 +23072,7 @@ function wireShimmer(container){
         </div>
 
         ${currentGiveaways.length
-          ? `<div class="giveaway-grid">${currentGiveaways.map(currentCardHTML).join("")}</div>`
+          ? `<div class="giveaway-grid" id="pastWinnersGrid">${currentGiveaways.map(currentCardHTML).join("")}</div>`
           : `<div class="giveaway-empty-section">No current giveaways right now. Check back again soon.</div>`}
       </section>
 
@@ -22932,13 +23093,7 @@ function wireShimmer(container){
 
     $("addGiveawayBtn")?.addEventListener("click",()=>openGiveawayForm());
 
-    view.querySelectorAll("[data-giveaway-winner-up]").forEach(btn=>{
-      btn.addEventListener("click",()=>moveGiveawayWinner(btn.dataset.giveawayWinnerUp,"up"));
-    });
-
-    view.querySelectorAll("[data-giveaway-winner-down]").forEach(btn=>{
-      btn.addEventListener("click",()=>moveGiveawayWinner(btn.dataset.giveawayWinnerDown,"down"));
-    });
+    setupGiveawayWinnerDragReorder();
 
     view.querySelectorAll("[data-giveaway-edit]").forEach(btn=>{
       btn.addEventListener("click",()=>{
