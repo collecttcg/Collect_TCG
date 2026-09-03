@@ -13474,6 +13474,31 @@ body.light-mode .mobile-cards-per-page-control select{
   }
 }
 
+
+/* Traffic chart V2 geometry: clean integer ticks for small values and
+   permanent headroom for numeric labels above maximum-height bars. */
+.insights-axis-chart{
+  --insights-label-headroom:18px;
+}
+.insights-y-axis,
+.insights-y-grid{
+  height:calc(100% - 24px - var(--insights-label-headroom)) !important;
+  margin-top:var(--insights-label-headroom) !important;
+}
+.insights-y-grid{
+  top:0 !important;
+}
+.insights-axis-bars .insights-bar-stack{
+  height:calc(100% - var(--insights-label-headroom)) !important;
+  margin-top:var(--insights-label-headroom) !important;
+}
+.insights-axis-bars .insights-bar-stack .insights-bar-value{
+  color:var(--text) !important;
+  font-size:7px !important;
+  font-weight:800 !important;
+  text-shadow:0 1px 2px var(--bg) !important;
+}
+
 </style>
 </head>
 <body>
@@ -22680,8 +22705,23 @@ function wireShimmer(container){
 
       `;
 
-      function niceInsightsAxisMax(rawMax){
-        const value=Math.max(1,Number(rawMax||0));
+      function insightsAxisConfig(rawMax){
+        const value=Math.max(0,Math.ceil(Number(rawMax||0)));
+
+        // Small integer counts need integer ticks only. Using fractional
+        // quarters and then Math.round() caused labels such as 2,2,1,1,0.
+        if(value<=5){
+          const axisMax=Math.max(1,value);
+          const ticks=[];
+          for(let n=axisMax;n>=0;n-=1){
+            ticks.push({
+              value:n,
+              pct:(axisMax-n)/axisMax*100
+            });
+          }
+          return {axisMax,ticks};
+        }
+
         const magnitude=Math.pow(10,Math.floor(Math.log10(value)));
         const normalized=value/magnitude;
         let nice;
@@ -22689,7 +22729,15 @@ function wireShimmer(container){
         else if(normalized<=2) nice=2;
         else if(normalized<=5) nice=5;
         else nice=10;
-        return Math.max(1,nice*magnitude);
+
+        const axisMax=Math.max(1,nice*magnitude);
+        const tickCount=4;
+        const ticks=Array.from({length:tickCount+1},(_,index)=>({
+          value:Math.round(axisMax*(tickCount-index)/tickCount),
+          pct:index/tickCount*100
+        }));
+
+        return {axisMax,ticks};
       }
 
       function renderClassicTrafficBars(id,series,key,site=false){
@@ -22709,12 +22757,7 @@ function wireShimmer(container){
         }
 
         const rawMax=Math.max(0,...safeSeries.map(row=>Number(row[key]||0)));
-        const axisMax=niceInsightsAxisMax(rawMax);
-        const tickCount=4;
-        const ticks=Array.from({length:tickCount+1},(_,index)=>{
-          const value=Math.round(axisMax*(tickCount-index)/tickCount);
-          return {value,pct:index/tickCount*100};
-        });
+        const {axisMax,ticks}=insightsAxisConfig(rawMax);
 
         mount.innerHTML=`
           <div class="insights-axis-chart">
@@ -22735,11 +22778,16 @@ function wireShimmer(container){
                 ${safeSeries.map(row=>{
                   const value=Math.max(0,Number(row[key]||0));
                   const pct=axisMax ? value/axisMax*100 : 0;
-                  const barPct=Math.max(value?2:0,pct);
+
+                  // The drawable bar area is 88% of the plot height. The top
+                  // 12% is permanently reserved for value labels, so a max bar
+                  // can never push its number outside the chart.
+                  const visualPct=Math.max(value?2:0,pct*0.88);
+
                   return `<div class="insights-bar-wrap" title="${escapeHtml(String(row.bucket))}: ${value}">
                     <div class="insights-bar-stack">
-                      <div class="insights-bar-value" style="bottom:calc(${barPct}% + 5px)">${value.toLocaleString()}</div>
-                      <div class="insights-bar ${site?"insights-bar-site":""}" style="height:${barPct}%"></div>
+                      <div class="insights-bar-value" style="bottom:calc(${visualPct}% + 5px)">${value.toLocaleString()}</div>
+                      <div class="insights-bar ${site?"insights-bar-site":""}" style="height:${visualPct}%"></div>
                     </div>
                     <div class="insights-bar-label">${escapeHtml(String(row.label||row.bucket))}</div>
                   </div>`;
