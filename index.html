@@ -14763,6 +14763,11 @@ body:not(.owner-mode) .giveaway-grid#pastWinnersGrid .giveaway-winner-name{
   border-color:rgba(248,113,113,.48) !important;
 }
 
+
+#reviewSubmitPanel{
+  scroll-margin-top:88px;
+}
+
 </style>
 </head>
 <body>
@@ -25376,6 +25381,15 @@ function wireShimmer(container){
   }
 
   function bindReviewPageEvents(){
+    $("writeReviewBtn")?.addEventListener("click",()=>{
+      const panel=$("reviewSubmitPanel");
+      if(!panel) return;
+      panel.scrollIntoView({behavior:"smooth",block:"start"});
+      setTimeout(()=>{
+        panel.querySelector('input[name="display_name"]')?.focus({preventScroll:true});
+      },350);
+    });
+
     const form=$("reviewSubmitForm");
     if(form){
       const ratingInput=form.querySelector('[name="rating"]');
@@ -25445,7 +25459,7 @@ function wireShimmer(container){
           <h2>Reviews</h2>
           <p>Feedback from collectors who have dealt with Collect TCG MY &amp; SG.</p>
         </div>
-        <a class="btn-ghost" href="#reviewSubmitPanel">Write a Review</a>
+        <button type="button" class="btn-ghost" id="writeReviewBtn">Write a Review</button>
       </div>
 
       ${reviewBackendState==="missing" ? `
