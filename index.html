@@ -12870,6 +12870,163 @@ body.light-mode .mobile-cards-per-page-control select{
   }
 }
 
+
+/* =========================================================
+   INSIGHTS V3 — SIMPLE BUYER-INTENT DASHBOARD
+   ========================================================= */
+.insights-v3-page-head{margin-bottom:12px!important}
+.insights-v3-trust,
+.insights-v3-backend-ok,
+.insights-v3-backend-needed{
+  display:flex;align-items:flex-start;gap:10px;padding:11px 13px;margin-bottom:12px;
+  border:1px solid var(--border);border-radius:12px;background:var(--surface);
+}
+.insights-v3-trust{border-color:rgba(95,212,196,.25);background:rgba(95,212,196,.045)}
+.insights-v3-trust-icon{
+  width:25px;height:25px;flex:0 0 25px;display:grid;place-items:center;border-radius:999px;
+  background:rgba(95,212,196,.12);color:var(--accent-teal);font-weight:900
+}
+.insights-v3-trust strong,.insights-v3-backend-ok strong,.insights-v3-backend-needed strong{display:block;font-size:10px}
+.insights-v3-trust span,.insights-v3-backend-ok span,.insights-v3-backend-needed span{
+  display:block;margin-top:3px;color:var(--text-muted);font-size:8.5px;line-height:1.4
+}
+.insights-v3-backend-ok{border-color:rgba(95,212,196,.20)}
+.insights-v3-backend-needed{border-color:rgba(227,179,65,.32);background:rgba(227,179,65,.055)}
+.insights-v3-backend-needed strong{color:var(--accent-gold)}
+
+.insights-v3-filterbar{
+  margin-bottom:14px;padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--surface)
+}
+.insights-v3-filter-primary{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
+.insights-v3-filter-primary>label{display:grid;gap:4px;min-width:130px;flex:1 1 145px}
+.insights-v3-filter-primary>label>span,.insights-v3-sort>span{
+  color:var(--text-muted);font-size:7.5px;font-weight:800;text-transform:uppercase;letter-spacing:.55px
+}
+.insights-v3-filter-primary select,.insights-v3-filter-primary input{min-height:38px}
+.insights-v3-filter-primary .insights-range-custom{flex:2 1 250px}
+
+.insights-v3-section{
+  margin:0 0 15px;padding:13px;border:1px solid var(--border);border-radius:13px;background:var(--surface)
+}
+.insights-v3-section-head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:11px
+}
+.insights-v3-section-head>div:first-child{display:flex;align-items:flex-start;gap:9px}
+.insights-v3-step{
+  width:24px;height:24px;flex:0 0 24px;display:grid;place-items:center;border-radius:8px;
+  background:var(--surface-3);color:var(--accent-teal);font:800 10px 'JetBrains Mono',monospace
+}
+.insights-v3-section-head h3{margin:0;font-size:13px}
+.insights-v3-section-head p{margin:3px 0 0;color:var(--text-muted);font-size:8.5px;line-height:1.35}
+
+.insights-v3-kpis{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important
+}
+.insights-v3-kpi{
+  min-width:0;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2)
+}
+.insights-v3-kpi>span{display:block;color:var(--text-muted);font-size:8px;font-weight:700}
+.insights-v3-kpi>strong{display:block;margin-top:4px;color:var(--text);font:800 20px 'JetBrains Mono',monospace}
+.insights-v3-kpi>small{display:block;margin-top:4px;color:var(--text-muted);font-size:7.5px;line-height:1.3}
+.insights-v3-kpi.primary{border-color:rgba(95,212,196,.24)}
+.insights-v3-kpi.accent{border-color:rgba(227,179,65,.28)}
+.insights-v3-kpi.accent>strong{color:var(--accent-gold);font-family:'Inter',sans-serif;font-size:12px;line-height:1.25}
+
+.insights-v3-funnel{display:grid;gap:7px}
+.insights-v3-funnel-row{
+  display:grid;grid-template-columns:28px minmax(120px,1.2fr) minmax(120px,2fr) 66px;
+  gap:9px;align-items:center;padding:8px;border-radius:9px;background:var(--surface-2)
+}
+.insights-v3-funnel-index{
+  width:24px;height:24px;display:grid;place-items:center;border:1px solid var(--border);
+  border-radius:999px;color:var(--text-muted);font-size:8px;font-weight:800
+}
+.insights-v3-funnel-copy strong,.insights-v3-funnel-copy small{display:block}
+.insights-v3-funnel-copy strong{font-size:9px}
+.insights-v3-funnel-copy small{margin-top:2px;color:var(--text-muted);font-size:7.5px}
+.insights-v3-funnel-track{height:8px;border-radius:999px;background:var(--surface-3);overflow:hidden}
+.insights-v3-funnel-track i{display:block;height:100%;border-radius:inherit;background:var(--accent-teal)}
+.insights-v3-funnel-value{text-align:right;font:800 12px 'JetBrains Mono',monospace}
+
+.insights-v3-attention{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.insights-v3-alert{
+  padding:10px;border:1px solid rgba(227,179,65,.24);border-radius:10px;background:rgba(227,179,65,.035)
+}
+.insights-v3-alert span{display:block;color:var(--accent-gold);font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.insights-v3-alert strong{display:block;margin-top:3px;font-size:9.5px}
+.insights-v3-alert small{display:block;margin-top:3px;color:var(--text-muted);font-size:7.5px}
+.insights-v3-alert p{margin:7px 0 0;padding-top:7px;border-top:1px solid var(--border-soft);color:var(--text-muted);font-size:8px;line-height:1.4}
+.insights-v3-empty-good{
+  grid-column:1/-1;padding:13px;border:1px solid rgba(95,212,196,.20);border-radius:10px;background:rgba(95,212,196,.035)
+}
+.insights-v3-empty-good strong,.insights-v3-empty-good span{display:block}
+.insights-v3-empty-good strong{color:var(--accent-teal);font-size:9.5px}
+.insights-v3-empty-good span{margin-top:3px;color:var(--text-muted);font-size:8px}
+
+.insights-v3-sort{display:grid;gap:4px;min-width:170px}
+.insights-v3-sort select{min-height:36px}
+.insights-v3-formula{
+  display:flex;gap:8px;align-items:flex-start;margin:-2px 0 9px;padding:7px 9px;border-radius:8px;background:var(--surface-2)
+}
+.insights-v3-formula strong{flex:0 0 auto;color:var(--accent-teal);font-size:7.5px}
+.insights-v3-formula span{color:var(--text-muted);font-size:7.5px;line-height:1.35}
+.insights-v3-score{color:var(--accent-gold);font-family:'JetBrains Mono',monospace}
+.insights-v3-table th,.insights-v3-table td{white-space:nowrap}
+.insights-v3-table .insights-card-name{max-width:220px;white-space:normal}
+
+.insights-v3-advanced{
+  margin:0 0 16px;border:1px solid var(--border);border-radius:13px;background:var(--surface);overflow:hidden
+}
+.insights-v3-advanced>summary{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;cursor:pointer;list-style:none
+}
+.insights-v3-advanced>summary::-webkit-details-marker{display:none}
+.insights-v3-advanced>summary span{font-size:10px;font-weight:800}
+.insights-v3-advanced>summary small{color:var(--text-muted);font-size:8px}
+.insights-v3-advanced[open]>summary{border-bottom:1px solid var(--border)}
+.insights-v3-advanced>.insights-panel,.insights-v3-advanced-grid{margin:12px}
+.insights-v3-advanced-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.insights-v3-advanced-grid>.insights-panel{margin:0}
+
+.insights-v3-price-brackets{display:grid;gap:1px;border:1px solid var(--border);border-radius:9px;overflow:hidden}
+.insights-v3-bracket-head,.insights-v3-bracket-row{
+  display:grid;grid-template-columns:1.25fr repeat(5,minmax(55px,.7fr));gap:6px;align-items:center;padding:8px 9px
+}
+.insights-v3-bracket-head{background:var(--surface-3);color:var(--text-muted);font-size:7px;font-weight:800;text-transform:uppercase}
+.insights-v3-bracket-row{background:var(--surface-2);font-size:8px}
+.insights-v3-bracket-row strong{font-size:8.5px}
+
+.insights-v3-sales-speed{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.insights-v3-sales-speed article{padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2)}
+.insights-v3-sales-speed span,.insights-v3-sales-speed strong,.insights-v3-sales-speed small{display:block}
+.insights-v3-sales-speed span{color:var(--text-muted);font-size:7.5px}
+.insights-v3-sales-speed strong{margin-top:4px;font-size:12px}
+.insights-v3-sales-speed small{margin-top:3px;color:var(--text-muted);font-size:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+@media(max-width:800px){
+  .insights-v3-filter-primary{display:grid;grid-template-columns:1fr 1fr}
+  .insights-v3-filter-primary>label,.insights-v3-filter-primary .insights-range-custom{min-width:0;width:100%;flex:none}
+  .insights-v3-filter-primary .insights-range-custom{grid-column:1/-1}
+  .insights-v3-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .insights-v3-funnel-row{grid-template-columns:26px minmax(0,1fr) 56px}
+  .insights-v3-funnel-track{grid-column:2/-1}
+  .insights-v3-attention{grid-template-columns:1fr}
+  .insights-v3-section-head{flex-direction:column}
+  .insights-v3-sort{width:100%;min-width:0}
+  .insights-v3-advanced-grid{grid-template-columns:1fr}
+  .insights-v3-sales-speed{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .insights-v3-bracket-head,.insights-v3-bracket-row{grid-template-columns:1.2fr repeat(5,58px);min-width:430px}
+  .insights-v3-price-brackets{overflow-x:auto}
+}
+@media(max-width:420px){
+  .insights-v3-kpis{grid-template-columns:1fr!important}
+  .insights-v3-filter-primary{grid-template-columns:1fr}
+  .insights-v3-filter-primary .insights-range-custom{grid-column:auto}
+  .insights-v3-sales-speed{grid-template-columns:1fr}
+  .insights-v3-trust{display:block}
+  .insights-v3-trust-icon{margin-bottom:7px}
+}
+
 </style>
 </head>
 <body>
@@ -13442,11 +13599,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   function toggleFavorite(cardId){
-    const set = getFavoriteIds();
-    if(set.has(cardId)) set.delete(cardId);
+    const set=getFavoriteIds();
+    const wasFavorite=set.has(cardId);
+    if(wasFavorite) set.delete(cardId);
     else set.add(cardId);
     saveFavoriteIds(set);
-    return set.has(cardId);
+
+    const active=set.has(cardId);
+    // Fire-and-forget: favorites must remain instant even if analytics is down.
+    recordCardEngagement(cardId,active ? "favorite_add" : "favorite_remove").catch(()=>{});
+    return active;
   }
 
   function favoriteCards(){
@@ -15014,6 +15176,126 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     return true;
   }
+
+  const CARD_ENGAGEMENT_EVENT_TYPES=new Set([
+    "favorite_add",
+    "favorite_remove",
+    "contact_open",
+    "contact_platform",
+    "inquiry_copy",
+    "image_expand",
+    "share",
+    "download"
+  ]);
+  const CARD_ENGAGEMENT_DEDUPE_KEY="collect_tcg_engagement_dedupe_v3";
+  let engagementTrackingBackendState="unknown";
+
+  function engagementDedupeWindowMs(eventType){
+    if(eventType==="favorite_add" || eventType==="favorite_remove") return 10*60*1000;
+    if(eventType==="contact_open" || eventType==="contact_platform" || eventType==="inquiry_copy") return 5*60*1000;
+    return 30*60*1000;
+  }
+
+  function readEngagementDedupe(){
+    try{
+      const parsed=JSON.parse(sessionStorage.getItem(CARD_ENGAGEMENT_DEDUPE_KEY)||"{}");
+      return parsed && typeof parsed==="object" && !Array.isArray(parsed) ? parsed : {};
+    }catch{
+      return {};
+    }
+  }
+
+  function shouldSkipEngagementEvent(cardId,eventType,platform=""){
+    const key=[String(cardId||""),eventType,String(platform||"")].join("|");
+    const map=readEngagementDedupe();
+    const previous=Number(map[key]||0);
+    const now=Date.now();
+    if(previous && now-previous<engagementDedupeWindowMs(eventType)) return true;
+
+    map[key]=now;
+    try{
+      const compact=Object.entries(map)
+        .filter(([,ts])=>Number.isFinite(Number(ts)) && now-Number(ts)<24*60*60*1000)
+        .sort((a,b)=>Number(b[1])-Number(a[1]))
+        .slice(0,300);
+      sessionStorage.setItem(CARD_ENGAGEMENT_DEDUPE_KEY,JSON.stringify(Object.fromEntries(compact)));
+    }catch{}
+    return false;
+  }
+
+  async function recordCardEngagement(cardId,eventType,platform=""){
+    try{
+      if(isOwnerMode()) return false;
+
+      const id=safeCardId(cardId);
+      const type=String(eventType||"").trim().toLowerCase();
+      const platformText=String(platform||"").trim().slice(0,80);
+
+      if(!id || !CARD_ENGAGEMENT_EVENT_TYPES.has(type)) return false;
+      if(shouldSkipEngagementEvent(id,type,platformText)) return true;
+      if(engagementTrackingBackendState==="unavailable") return false;
+
+      const {data,error}=await supabaseClient.rpc("record_card_engagement",{
+        p_card_id:id,
+        p_visitor_id:getVisitorId(),
+        p_event_type:type,
+        p_platform:platformText || null
+      });
+
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(
+          message.includes("record_card_engagement") ||
+          message.includes("function") ||
+          message.includes("schema cache")
+        ){
+          engagementTrackingBackendState="unavailable";
+        }
+        console.warn("Buyer-intent tracking unavailable:",error);
+        return false;
+      }
+
+      engagementTrackingBackendState="available";
+      return data!==false;
+    }catch(error){
+      console.warn("Buyer-intent tracking unavailable:",error);
+      return false;
+    }
+  }
+
+  async function fetchCardEngagementInsights(start,end){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_card_engagement_insights",{
+        p_start:start.toISOString(),
+        p_end:end.toISOString()
+      });
+
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(
+          message.includes("get_card_engagement_insights") ||
+          message.includes("function") ||
+          message.includes("schema cache")
+        ){
+          engagementTrackingBackendState="unavailable";
+        }
+        console.warn("Buyer-intent insights unavailable:",error);
+        return {supported:false,rows:[]};
+      }
+
+      engagementTrackingBackendState="available";
+      return {supported:true,rows:Array.isArray(data)?data:[]};
+    }catch(error){
+      console.warn("Buyer-intent insights unavailable:",error);
+      return {supported:false,rows:[]};
+    }
+  }
+
+  // The mobile enquiry chooser lives in a later script/IIFE. Expose only the
+  // small tracking interface it needs; owner state and Supabase remain private.
+  window.collectTrackEngagement=(eventType,cardId,platform="")=>
+    recordCardEngagement(cardId,eventType,platform);
+  window.collectCurrentDetailsCardId=()=>safeCardId(detailsCardId||"");
 
   const WEBSITE_VISIT_SESSION_KEY="collect_tcg_website_visit_recorded_v1";
 
@@ -19125,6 +19407,9 @@ function wireShimmer(container){
       if(highValueContact){
         e.preventDefault();
         e.stopPropagation();
+        const cardTile=highValueContact.closest(".card[data-card-id]");
+        const cardId=safeCardId(cardTile?.dataset?.cardId||"");
+        if(cardId) recordCardEngagement(cardId,"contact_open","High Value CTA").catch(()=>{});
         goToRoute("contact");
         return;
       }
@@ -21476,107 +21761,170 @@ function wireShimmer(container){
     if(!isOwnerMode()){ goToRoute("inventory"); return; }
 
     view.innerHTML=`
-      <div class="page-head">
+      <div class="page-head insights-v3-page-head">
         <div>
-          <div class="eyebrow">Owner analytics · V2</div>
+          <div class="eyebrow">Owner analytics · V3</div>
           <h2>Insights</h2>
-          <p>Buyer-interest analytics with qualified views, anti-duplicate tracking and period-over-period trends.</p>
+          <p>See what buyers notice, save and act on — without counting your own testing activity.</p>
         </div>
       </div>
 
-      <div class="insights-quality-note">
-        <strong>Improved tracking is active.</strong>
-        <span>Owner views are excluded · card must stay open for at least 5 seconds · repeat opens of the same card/browser within 30 minutes are ignored. Historical data is preserved, so older periods may still contain the previous raw-open behavior.</span>
-      </div>
-
-      <div class="insights-controls">
-        <select id="insightsRange" aria-label="Insights date range">
-          <option value="today">Today</option>
-          <option value="7d" selected>Last 7 Days</option>
-          <option value="30d">Last 30 Days</option>
-          <option value="month">This Month</option>
-          <option value="all">All Time</option>
-          <option value="custom">Custom Date</option>
-        </select>
-
-        <div class="insights-range-custom" id="insightsCustom">
-          <input type="date" id="insightsStart" aria-label="Insights start date">
-          <input type="date" id="insightsEnd" aria-label="Insights end date">
+      <div class="insights-v3-trust">
+        <div class="insights-v3-trust-icon">✓</div>
+        <div>
+          <strong>Cleaner analytics</strong>
+          <span>Qualified card views require 5 seconds · same card/browser is deduplicated for 30 minutes · Owner Mode is excluded.</span>
         </div>
-
-        <select id="insightsStatus" aria-label="Listing status">
-          <option value="">All Statuses</option>
-          <option value="Available">Available</option>
-          <option value="Reserved">Reserved</option>
-          <option value="Sold">Sold</option>
-          <option value="Collection (NFS)">Collection (NFS)</option>
-          <option value="Hidden">Hidden</option>
-          <option value="Archived">Archived</option>
-        </select>
-
-        <select id="insightsGame" aria-label="Game">
-          <option value="">All Games</option>
-        </select>
-
-        <select id="insightsSort" aria-label="Insights sorting">
-          <option value="trend-desc">Trend: Strongest Growth</option>
-          <option value="views-desc">Qualified Views: Highest</option>
-          <option value="unique-desc">Unique: Highest</option>
-          <option value="repeat-low">Repeat Rate: Lowest</option>
-          <option value="price-high">Price: Highest</option>
-          <option value="price-low">Price: Lowest</option>
-          <option value="name">Name</option>
-        </select>
       </div>
 
-      <div class="insights-stats" id="insightsStats"></div>
+      <section class="insights-v3-filterbar" aria-label="Insights filters">
+        <div class="insights-v3-filter-primary">
+          <label>
+            <span>Period</span>
+            <select id="insightsRange">
+              <option value="today">Today</option>
+              <option value="7d" selected>Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="month">This Month</option>
+              <option value="all">All Time</option>
+              <option value="custom">Custom Date</option>
+            </select>
+          </label>
 
-      <div class="insights-panel">
-        <div class="insights-panel-head">
+          <div class="insights-range-custom" id="insightsCustom">
+            <input type="date" id="insightsStart" aria-label="Start date">
+            <input type="date" id="insightsEnd" aria-label="End date">
+          </div>
+
+          <label>
+            <span>Status</span>
+            <select id="insightsStatus">
+              <option value="">All Statuses</option>
+              <option value="Available">Available</option>
+              <option value="Reserved">Reserved</option>
+              <option value="Sold">Sold</option>
+              <option value="Collection (NFS)">Collection (NFS)</option>
+              <option value="Hidden">Hidden</option>
+              <option value="Archived">Archived</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Game</span>
+            <select id="insightsGame">
+              <option value="">All Games</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <div id="insightsEngagementSetup"></div>
+
+      <section class="insights-v3-section">
+        <div class="insights-v3-section-head">
           <div>
-            <h3>Card Views Over Time</h3>
-            <p>All card-view events stored for this date range. New events use the qualified-view rules above.</p>
+            <span class="insights-v3-step">1</span>
+            <div><h3>At a Glance</h3><p>The few numbers worth checking first.</p></div>
           </div>
         </div>
-        <div id="insightsChart" class="insights-chart insights-time-chart"></div>
-      </div>
+        <div class="insights-v3-kpis" id="insightsStats"></div>
+      </section>
 
-      <div class="insights-panel">
-        <div class="insights-panel-head">
+      <section class="insights-v3-section">
+        <div class="insights-v3-section-head">
           <div>
-            <h3>Website Visits Over Time</h3>
-            <p>One website visit per browser session. Owner sessions are excluded.</p>
+            <span class="insights-v3-step">2</span>
+            <div><h3>Buyer Funnel</h3><p>How traffic turns into meaningful buying actions.</p></div>
           </div>
         </div>
-        <div id="insightsWebsiteChart" class="insights-chart insights-time-chart"></div>
-      </div>
+        <div class="insights-v3-funnel" id="insightsFunnel"></div>
+      </section>
 
-      <div class="insights-panel">
-        <div class="insights-panel-head">
+      <section class="insights-v3-section">
+        <div class="insights-v3-section-head">
           <div>
-            <h3>Card Performance</h3>
-            <p id="insightsComparisonLabel">Trend compares unique card viewers with the immediately preceding period.</p>
+            <span class="insights-v3-step">3</span>
+            <div><h3>Needs Attention</h3><p>Listings that may need a price, visibility or sales follow-up.</p></div>
           </div>
         </div>
+        <div class="insights-v3-attention" id="insightsAttention"></div>
+      </section>
+
+      <section class="insights-v3-section">
+        <div class="insights-v3-section-head">
+          <div>
+            <span class="insights-v3-step">4</span>
+            <div><h3>Card Performance</h3><p>Interest Score combines unique views and buyer actions. Higher means stronger intent.</p></div>
+          </div>
+          <label class="insights-v3-sort">
+            <span>Sort by</span>
+            <select id="insightsSort">
+              <option value="interest-desc">Interest Score</option>
+              <option value="contacts-desc">Contact Actions</option>
+              <option value="favorites-desc">Favorites</option>
+              <option value="trend-desc">Fastest Rising</option>
+              <option value="unique-desc">Unique Views</option>
+              <option value="days-desc">Days Listed</option>
+              <option value="price-high">Price: Highest</option>
+              <option value="name">Name</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="insights-v3-formula">
+          <strong>Interest Score</strong>
+          <span>Unique view ×1 · Image expand ×1 · Favorite ×3 · Share ×4 · Contact open ×4 · Inquiry copy ×6 · Platform click ×8</span>
+        </div>
+
         <div class="insights-table-wrap">
-          <table class="insights-table">
+          <table class="insights-table insights-v3-table">
             <thead>
               <tr>
-                <th>Rank</th>
+                <th>#</th>
                 <th>Card</th>
                 <th>Status</th>
-                <th>Game</th>
                 <th>Price</th>
-                <th>Views</th>
                 <th>Unique</th>
-                <th>Repeat</th>
+                <th>Fav</th>
+                <th>Contact</th>
+                <th>Score</th>
                 <th>Trend</th>
+                <th>Listed</th>
               </tr>
             </thead>
             <tbody id="insightsRows"></tbody>
           </table>
         </div>
-      </div>
+      </section>
+
+      <details class="insights-v3-advanced">
+        <summary>
+          <span>Advanced breakdowns</span>
+          <small>Traffic charts, price brackets and sales speed</small>
+        </summary>
+
+        <div class="insights-v3-advanced-grid">
+          <section class="insights-panel">
+            <div class="insights-panel-head"><div><h3>Qualified Card Views</h3><p>New events use the V3 quality rules.</p></div></div>
+            <div id="insightsChart" class="insights-chart insights-time-chart"></div>
+          </section>
+
+          <section class="insights-panel">
+            <div class="insights-panel-head"><div><h3>Website Visits</h3><p>One visit per browser session; Owner Mode excluded.</p></div></div>
+            <div id="insightsWebsiteChart" class="insights-chart insights-time-chart"></div>
+          </section>
+        </div>
+
+        <section class="insights-panel">
+          <div class="insights-panel-head"><div><h3>Price Bracket Performance</h3><p>Which price ranges attract buyer actions.</p></div></div>
+          <div id="insightsPriceBrackets" class="insights-v3-price-brackets"></div>
+        </section>
+
+        <section class="insights-panel">
+          <div class="insights-panel-head"><div><h3>Sales Speed</h3><p>Based on listings with both created and sold dates.</p></div></div>
+          <div id="insightsSalesSpeed" class="insights-v3-sales-speed"></div>
+        </section>
+      </details>
     `;
 
     const rangeSel=$("insightsRange");
@@ -21587,10 +21935,9 @@ function wireShimmer(container){
     const startInput=$("insightsStart");
     const endInput=$("insightsEnd");
 
-    const now=new Date();
     const seven=dateRangeForPreset("7d");
     startInput.value=seven.start.toISOString().slice(0,10);
-    endInput.value=now.toISOString().slice(0,10);
+    endInput.value=new Date().toISOString().slice(0,10);
 
     function rowRepeatRate(row){
       const views=Math.max(0,Number(row?.views||0));
@@ -21599,185 +21946,339 @@ function wireShimmer(container){
       return Math.max(0,Math.min(1,(views-Math.min(unique,views))/views));
     }
 
+    function cardDaysListed(card){
+      const created=new Date(card?.created_at||"").getTime();
+      if(!Number.isFinite(created)) return null;
+      const end=normalizeFilterValue(card?.availability)==="sold" && card?.sold_at
+        ? new Date(card.sold_at).getTime()
+        : Date.now();
+      if(!Number.isFinite(end) || end<created) return null;
+      return Math.max(0,Math.floor((end-created)/(24*60*60*1000)));
+    }
+
+    function cardTimeToSale(card){
+      if(normalizeFilterValue(card?.availability)!=="sold" || !card?.sold_at || !card?.created_at) return null;
+      const start=new Date(card.created_at).getTime();
+      const sold=new Date(card.sold_at).getTime();
+      if(!Number.isFinite(start)||!Number.isFinite(sold)||sold<start) return null;
+      return Math.max(0,(sold-start)/(24*60*60*1000));
+    }
+
+    function engagementEmpty(){
+      return {
+        favorite_adds:0,favorite_visitors:0,contact_opens:0,contact_visitors:0,
+        platform_clicks:0,inquiry_copies:0,image_expands:0,shares:0,downloads:0,
+        intent_visitors:0
+      };
+    }
+
+    function interestScore(row){
+      return Math.round(
+        Number(row.unique_views||0) +
+        Number(row.image_expands||0) +
+        Number(row.favorite_adds||0)*3 +
+        Number(row.shares||0)*4 +
+        Number(row.contact_opens||0)*4 +
+        Number(row.inquiry_copies||0)*6 +
+        Number(row.platform_clicks||0)*8
+      );
+    }
+
+    function contactActions(row){
+      return Number(row.contact_opens||0)+Number(row.inquiry_copies||0)+Number(row.platform_clicks||0);
+    }
+
+    function priceBracket(usd){
+      const value=Number(usd||0);
+      if(value<100) return "< $100";
+      if(value<500) return "$100–499";
+      if(value<1000) return "$500–999";
+      if(value<3000) return "$1k–2.9k";
+      if(value<6000) return "$3k–5.9k";
+      return "$6k+";
+    }
+
     function syncGameOptions(rows){
       const selected=gameSel.value;
-      const games=[...new Set(
-        rows.map(row=>String(row?.game||insightCardForRow(row)?.game||"").trim()).filter(Boolean)
-      )].sort((a,b)=>a.localeCompare(b));
-
+      const games=[...new Set(rows.map(row=>String(row.game||row._card?.game||"").trim()).filter(Boolean))]
+        .sort((a,b)=>a.localeCompare(b));
       gameSel.innerHTML=`<option value="">All Games</option>`+
         games.map(game=>`<option value="${escapeHtml(game)}">${escapeHtml(game)}</option>`).join("");
-
       if(games.includes(selected)) gameSel.value=selected;
+    }
+
+    function renderSimpleBars(mountId,series,valueKey,emptyText,site=false){
+      const mount=$(mountId);
+      if(!mount) return;
+      const max=Math.max(1,...series.map(row=>Number(row[valueKey]||0)));
+      mount.innerHTML=series.length ? series.map(row=>{
+        const value=Number(row[valueKey]||0);
+        const pct=Math.max(2,value/max*100);
+        return `<div class="insights-bar-wrap" title="${escapeHtml(String(row.bucket))}: ${value}">
+          <div class="insights-bar ${site?"insights-bar-site":""}" style="height:${pct}%"></div>
+          <div class="insights-bar-label">${escapeHtml(String(row.label||row.bucket))}</div>
+        </div>`;
+      }).join("") : `<div class="hint">${escapeHtml(emptyText)}</div>`;
     }
 
     async function refresh(){
       let start,end;
       if(rangeSel.value==="custom"){
-        const s=startInput.value ? new Date(startInput.value+"T00:00:00") : new Date();
-        const e=endInput.value ? new Date(endInput.value+"T23:59:59.999") : new Date();
-        start=s;
-        end=e;
+        start=startInput.value ? new Date(startInput.value+"T00:00:00") : new Date();
+        end=endInput.value ? new Date(endInput.value+"T23:59:59.999") : new Date();
       }else{
         ({start,end}=dateRangeForPreset(rangeSel.value));
       }
 
       if(end<start){
-        $("insightsRows").innerHTML=`<tr><td colspan="9" class="hint">End date must be on or after the start date.</td></tr>`;
+        $("insightsRows").innerHTML=`<tr><td colspan="10" class="hint">End date must be on or after the start date.</td></tr>`;
         return;
       }
 
       const previousRange=previousInsightsRange(start,end,rangeSel.value);
 
-      const [rowsRaw,series,websiteSeriesRaw,previousRowsRaw]=await Promise.all([
+      const [rowsRaw,series,websiteRaw,previousRowsRaw,engagementResult]=await Promise.all([
         fetchInsights(start,end),
         fetchViewSeries(start,end),
         fetchWebsiteVisitSeries(start,end),
-        previousRange
-          ? fetchInsights(previousRange.start,previousRange.end,{silent:true})
-          : Promise.resolve([])
+        previousRange ? fetchInsights(previousRange.start,previousRange.end,{silent:true}) : Promise.resolve([]),
+        fetchCardEngagementInsights(start,end)
       ]);
 
-      const rows=rowsRaw.map(row=>({
-        ...row,
-        _status:insightStatusLabel(row),
-        _card:insightCardForRow(row)
-      }));
+      const engagementMap=new Map(
+        engagementResult.rows.map(row=>[String(row.card_id||""),row])
+      );
+
+      const rows=rowsRaw.map(row=>{
+        const card=insightCardForRow(row);
+        const engagement=engagementMap.get(String(row.card_id||card?.id||""))||engagementEmpty();
+        const previous=previousRowsRaw.find(prev=>insightRowKey(prev)===insightRowKey(row));
+        const trend=previousRange
+          ? insightTrendMeta(row,previous)
+          : {className:"",label:"—",score:0,current:Number(row.unique_views||0),previous:0,pct:null};
+        return {
+          ...row,
+          ...engagement,
+          _card:card,
+          _status:insightStatusLabel(row),
+          _trend:trend,
+          _repeatRate:rowRepeatRate(row)
+        };
+      });
 
       syncGameOptions(rows);
 
-      const previousMap=new Map(previousRowsRaw.map(row=>[insightRowKey(row),row]));
-      const websiteSeries=alignWebsiteVisitSeriesToCardSeries(series,websiteSeriesRaw);
-
       const selectedStatus=statusSel.value;
       const selectedGame=gameSel.value;
-
-      let visibleRows=rows.filter(row=>{
+      let visible=rows.filter(row=>{
         if(selectedStatus && row._status!==selectedStatus) return false;
         if(selectedGame && String(row.game||row._card?.game||"")!==selectedGame) return false;
         return true;
       });
 
-      visibleRows=visibleRows.map(row=>({
-        ...row,
-        _trend:previousRange
-          ? insightTrendMeta(row,previousMap.get(insightRowKey(row)))
-          : {className:"",label:"—",score:0,current:Number(row.unique_views||0),previous:0,pct:null},
-        _repeatRate:rowRepeatRate(row)
-      }));
+      visible.forEach(row=>{
+        row._interestScore=interestScore(row);
+        row._contactActions=contactActions(row);
+        row._daysListed=cardDaysListed(row._card);
+      });
 
-      const totalViews=visibleRows.reduce((sum,row)=>sum+Number(row.views||0),0);
-      const totalUniquePairs=visibleRows.reduce((sum,row)=>sum+Number(row.unique_views||0),0);
-      const totalWebsiteVisits=websiteSeries.reduce((sum,row)=>sum+Number(row.visits||0),0);
-      const viewedCards=visibleRows.filter(row=>Number(row.views||0)>0).length;
-      const repeatOpens=Math.max(0,totalViews-Math.min(totalUniquePairs,totalViews));
-      const repeatRate=totalViews ? repeatOpens/totalViews : 0;
-      const top=visibleRows.slice().sort((a,b)=>Number(b.unique_views||0)-Number(a.unique_views||0))[0];
+      const setup=$("insightsEngagementSetup");
+      if(setup){
+        setup.innerHTML=engagementResult.supported
+          ? `<div class="insights-v3-backend-ok"><strong>Buyer-intent tracking connected</strong><span>Favorites, contact actions, shares and image engagement are being aggregated across visitors.</span></div>`
+          : `<div class="insights-v3-backend-needed"><strong>One setup step remaining</strong><span>Run <b>insights-v3-supabase-migration.sql</b> in Supabase to enable cross-visitor Favorites, Contact, Share and Image analytics. Qualified Views continue working normally.</span></div>`;
+      }
+
+      const websiteSeries=alignWebsiteVisitSeriesToCardSeries(series,websiteRaw);
+      const websiteVisits=websiteSeries.reduce((sum,row)=>sum+Number(row.visits||0),0);
+      const qualifiedViews=visible.reduce((sum,row)=>sum+Number(row.views||0),0);
+      const uniquePairs=visible.reduce((sum,row)=>sum+Number(row.unique_views||0),0);
+      const favorites=visible.reduce((sum,row)=>sum+Number(row.favorite_adds||0),0);
+      const contacts=visible.reduce((sum,row)=>sum+row._contactActions,0);
+      const shares=visible.reduce((sum,row)=>sum+Number(row.shares||0),0);
+      const topInterest=visible.slice().sort((a,b)=>b._interestScore-a._interestScore)[0];
+      const contactRate=uniquePairs ? contacts/uniquePairs : 0;
 
       $("insightsStats").innerHTML=`
-        <div class="insights-stat">
-          <div class="k">Qualified Card Views</div>
-          <div class="v">${totalViews.toLocaleString()}</div>
-          <small>5s + 30-min dedupe for new views</small>
-        </div>
-        <div class="insights-stat">
-          <div class="k">Website Visits</div>
-          <div class="v">${totalWebsiteVisits.toLocaleString()}</div>
-          <small>Site-wide · selected date range</small>
-        </div>
-        <div class="insights-stat">
-          <div class="k">Unique Card-Viewer Pairs</div>
-          <div class="v">${totalUniquePairs.toLocaleString()}</div>
-          <small>One visitor may appear on multiple cards</small>
-        </div>
-        <div class="insights-stat">
-          <div class="k">Repeat Open Rate</div>
-          <div class="v">${Math.round(repeatRate*100)}%</div>
-          <small>${repeatOpens.toLocaleString()} repeat event${repeatOpens===1?"":"s"}</small>
-        </div>
-        <div class="insights-stat">
-          <div class="k">Cards Viewed</div>
-          <div class="v">${viewedCards.toLocaleString()}</div>
-          <small>${visibleRows.length.toLocaleString()} cards in current filter</small>
-        </div>
-        <div class="insights-stat">
-          <div class="k">Top Unique Interest</div>
-          <div class="v insights-stat-card-name">${top ? escapeHtml(top.name||"—") : "—"}</div>
-          <small>${top ? `${Number(top.unique_views||0).toLocaleString()} unique` : "No views"}</small>
-        </div>
+        <article class="insights-v3-kpi primary">
+          <span>Website Visits</span><strong>${websiteVisits.toLocaleString()}</strong>
+          <small>People entering the site</small>
+        </article>
+        <article class="insights-v3-kpi">
+          <span>Qualified Views</span><strong>${qualifiedViews.toLocaleString()}</strong>
+          <small>Card open for 5+ seconds</small>
+        </article>
+        <article class="insights-v3-kpi">
+          <span>Favorites</span><strong>${favorites.toLocaleString()}</strong>
+          <small>Saved by visitors</small>
+        </article>
+        <article class="insights-v3-kpi">
+          <span>Contact Actions</span><strong>${contacts.toLocaleString()}</strong>
+          <small>Contact, copy or platform clicks</small>
+        </article>
+        <article class="insights-v3-kpi">
+          <span>Contact Rate</span><strong>${Math.round(contactRate*100)}%</strong>
+          <small>Contact actions ÷ unique card views</small>
+        </article>
+        <article class="insights-v3-kpi accent">
+          <span>Strongest Interest</span>
+          <strong class="insights-stat-card-name">${topInterest?escapeHtml(topInterest.name||topInterest._card?.name||"—"):"—"}</strong>
+          <small>${topInterest?`${topInterest._interestScore} interest points`:"No activity yet"}</small>
+        </article>
       `;
 
-      const maxSeries=Math.max(1,...series.map(row=>Number(row.views||0)));
-      $("insightsChart").innerHTML=series.length ? series.map(row=>{
-        const pct=Math.max(2,Number(row.views||0)/maxSeries*100);
-        return `<div class="insights-bar-wrap" title="${escapeHtml(String(row.bucket))}: ${Number(row.views||0)} views">
-          <div class="insights-bar" style="height:${pct}%"></div>
-          <div class="insights-bar-label">${escapeHtml(String(row.label||row.bucket))}</div>
-        </div>`;
-      }).join("") : `<div class="hint">No card views recorded for this period.</div>`;
+      const funnelSteps=[
+        {label:"Website visits",value:websiteVisits,help:"Entered the website"},
+        {label:"Qualified card views",value:qualifiedViews,help:websiteVisits?`${Math.round(qualifiedViews/websiteVisits*100)} per 100 visits`:"No traffic yet"},
+        {label:"Favorites",value:favorites,help:qualifiedViews?`${Math.round(favorites/qualifiedViews*100)}% of views`:"—"},
+        {label:"Contact actions",value:contacts,help:qualifiedViews?`${Math.round(contacts/qualifiedViews*100)}% of views`:"—"}
+      ];
+      const funnelMax=Math.max(1,...funnelSteps.map(step=>step.value));
+      $("insightsFunnel").innerHTML=funnelSteps.map((step,index)=>`
+        <div class="insights-v3-funnel-row">
+          <div class="insights-v3-funnel-index">${index+1}</div>
+          <div class="insights-v3-funnel-copy"><strong>${escapeHtml(step.label)}</strong><small>${escapeHtml(step.help)}</small></div>
+          <div class="insights-v3-funnel-track"><i style="width:${Math.max(step.value?6:0,step.value/funnelMax*100)}%"></i></div>
+          <div class="insights-v3-funnel-value">${step.value.toLocaleString()}</div>
+        </div>
+      `).join("");
 
-      const maxWebsiteSeries=Math.max(1,...websiteSeries.map(row=>Number(row.visits||0)));
-      $("insightsWebsiteChart").innerHTML=websiteSeries.length ? websiteSeries.map(row=>{
-        const pct=Math.max(2,Number(row.visits||0)/maxWebsiteSeries*100);
-        return `<div class="insights-bar-wrap" title="${escapeHtml(String(row.bucket))}: ${Number(row.visits||0)} website visits">
-          <div class="insights-bar insights-bar-site" style="height:${pct}%"></div>
-          <div class="insights-bar-label">${escapeHtml(String(row.label||row.bucket))}</div>
-        </div>`;
-      }).join("") : `<div class="hint">No website visits recorded for this period.</div>`;
+      const attention=[];
+      visible.forEach(row=>{
+        const card=row._card;
+        if(!card || row._status!=="Available") return;
+        const unique=Number(row.unique_views||0);
+        const contacts=row._contactActions;
+        const price=cardUsdListedPrice(card)||0;
+        const days=row._daysListed;
 
-      const comparison=$("insightsComparisonLabel");
-      if(comparison){
-        comparison.textContent=previousRange
-          ? `Trend compares unique card viewers with the immediately preceding ${rangeSel.options[rangeSel.selectedIndex]?.textContent||"period"}.`
-          : "All Time has no equivalent preceding period, so trend comparison is not shown.";
+        if(unique>=5 && contacts===0){
+          attention.push({
+            priority:3,
+            title:"Views but no contact",
+            card,
+            detail:`${unique} unique views · no contact actions`,
+            suggestion:"Consider checking price, description or buyer confidence."
+          });
+        }else if(row._trend.className==="hot" && contacts===0){
+          attention.push({
+            priority:2,
+            title:"Rising interest",
+            card,
+            detail:`${row._trend.label} · no contact yet`,
+            suggestion:"Worth watching closely or promoting while interest is rising."
+          });
+        }
+
+        if(price>=HIGH_VALUE_DIRECT_CONTACT_USD && unique<2){
+          attention.push({
+            priority:2,
+            title:"High-value, low visibility",
+            card,
+            detail:`${fmtMoney(price)} · ${unique} unique view${unique===1?"":"s"}`,
+            suggestion:"Consider improving discoverability or sharing the direct listing."
+          });
+        }
+
+        if(Number.isFinite(days) && days>=60 && unique===0){
+          attention.push({
+            priority:1,
+            title:"Stale listing",
+            card,
+            detail:`${days} days listed · no unique views in this period`,
+            suggestion:"Refresh the listing, photo order, title or price."
+          });
+        }
+      });
+
+      attention.sort((a,b)=>b.priority-a.priority);
+      const deduped=[];
+      const seen=new Set();
+      for(const item of attention){
+        const key=`${item.card.id}|${item.title}`;
+        if(seen.has(key)) continue;
+        seen.add(key);
+        deduped.push(item);
+        if(deduped.length>=6) break;
       }
+
+      $("insightsAttention").innerHTML=deduped.length ? deduped.map(item=>`
+        <article class="insights-v3-alert">
+          <div>
+            <span>${escapeHtml(item.title)}</span>
+            <strong>${escapeHtml(item.card.name||"Card")}</strong>
+            <small>${escapeHtml(item.detail)}</small>
+          </div>
+          <p>${escapeHtml(item.suggestion)}</p>
+        </article>
+      `).join("") : `<div class="insights-v3-empty-good"><strong>Nothing urgent right now.</strong><span>No obvious pricing, visibility or stale-listing signals in this period.</span></div>`;
 
       switch(sortSel.value){
-        case "views-desc":
-          visibleRows.sort((a,b)=>Number(b.views||0)-Number(a.views||0));
-          break;
-        case "unique-desc":
-          visibleRows.sort((a,b)=>Number(b.unique_views||0)-Number(a.unique_views||0));
-          break;
-        case "repeat-low":
-          visibleRows.sort((a,b)=>a._repeatRate-b._repeatRate || Number(b.unique_views||0)-Number(a.unique_views||0));
-          break;
-        case "price-high":
-          visibleRows.sort((a,b)=>Number(b.price_usd||b._card?.price_usd||0)-Number(a.price_usd||a._card?.price_usd||0));
-          break;
-        case "price-low":
-          visibleRows.sort((a,b)=>Number(a.price_usd||a._card?.price_usd||0)-Number(b.price_usd||b._card?.price_usd||0));
-          break;
-        case "name":
-          visibleRows.sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
-          break;
-        default:
-          visibleRows.sort((a,b)=>b._trend.score-a._trend.score || Number(b.unique_views||0)-Number(a.unique_views||0));
+        case "contacts-desc": visible.sort((a,b)=>b._contactActions-a._contactActions || b._interestScore-a._interestScore); break;
+        case "favorites-desc": visible.sort((a,b)=>Number(b.favorite_adds||0)-Number(a.favorite_adds||0) || b._interestScore-a._interestScore); break;
+        case "trend-desc": visible.sort((a,b)=>b._trend.score-a._trend.score || b._interestScore-a._interestScore); break;
+        case "unique-desc": visible.sort((a,b)=>Number(b.unique_views||0)-Number(a.unique_views||0)); break;
+        case "days-desc": visible.sort((a,b)=>(b._daysListed??-1)-(a._daysListed??-1)); break;
+        case "price-high": visible.sort((a,b)=>(cardUsdListedPrice(b._card)||0)-(cardUsdListedPrice(a._card)||0)); break;
+        case "name": visible.sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""))); break;
+        default: visible.sort((a,b)=>b._interestScore-a._interestScore || Number(b.unique_views||0)-Number(a.unique_views||0));
       }
 
-      $("insightsRows").innerHTML=visibleRows.length ? visibleRows.map((row,index)=>{
+      $("insightsRows").innerHTML=visible.length ? visible.map((row,index)=>{
         const card=row._card;
-        const usd=row.price_usd ?? card?.price_usd ?? card?.price ?? 0;
-        const myr=row.price_myr ?? card?.price_myr ?? 0;
-        const game=row.game || card?.game || "";
-        const repeatPct=Math.round(row._repeatRate*100);
-
+        const usd=cardUsdListedPrice(card);
         return `<tr>
           <td class="insights-rank">${index+1}</td>
           <td class="insights-card-name">${escapeHtml(row.name||card?.name||"")}</td>
           <td><span class="insights-status-tag">${escapeHtml(row._status)}</span></td>
-          <td>${escapeHtml(game)}</td>
-          <td>${Number(usd)>0 ? `${fmtMoney(usd)} / ${fmtMYR(myr)}` : "—"}</td>
-          <td>${Number(row.views||0).toLocaleString()}</td>
+          <td>${usd!=null?fmtMoney(usd):"—"}</td>
           <td>${Number(row.unique_views||0).toLocaleString()}</td>
-          <td title="Share of recorded opens beyond the first unique viewer event">${repeatPct}%</td>
-          <td>
-            <span class="trend-tag ${row._trend.className}" title="Current unique: ${row._trend.current} · Previous: ${row._trend.previous}">
-              ${escapeHtml(row._trend.label)}
-            </span>
-          </td>
+          <td>${Number(row.favorite_adds||0).toLocaleString()}</td>
+          <td>${row._contactActions.toLocaleString()}</td>
+          <td><strong class="insights-v3-score">${row._interestScore}</strong></td>
+          <td><span class="trend-tag ${row._trend.className}">${escapeHtml(row._trend.label)}</span></td>
+          <td>${row._daysListed==null?"—":`${row._daysListed}d`}</td>
         </tr>`;
-      }).join("") : `<tr><td colspan="9" class="hint">No cards match the selected filters for this period.</td></tr>`;
+      }).join("") : `<tr><td colspan="10" class="hint">No cards match these filters.</td></tr>`;
+
+      renderSimpleBars("insightsChart",series,"views","No qualified card views for this period.");
+      renderSimpleBars("insightsWebsiteChart",websiteSeries,"visits","No website visits for this period.",true);
+
+      const bracketOrder=["< $100","$100–499","$500–999","$1k–2.9k","$3k–5.9k","$6k+"];
+      const bracketMap=new Map(bracketOrder.map(label=>[label,{label,cards:0,unique:0,favorites:0,contacts:0,score:0}]));
+      visible.forEach(row=>{
+        const usd=cardUsdListedPrice(row._card);
+        if(usd==null) return;
+        const bucket=bracketMap.get(priceBracket(usd));
+        if(!bucket) return;
+        bucket.cards+=1;
+        bucket.unique+=Number(row.unique_views||0);
+        bucket.favorites+=Number(row.favorite_adds||0);
+        bucket.contacts+=row._contactActions;
+        bucket.score+=row._interestScore;
+      });
+
+      $("insightsPriceBrackets").innerHTML=`
+        <div class="insights-v3-bracket-head"><span>Price</span><span>Cards</span><span>Unique</span><span>Favorites</span><span>Contact</span><span>Score</span></div>
+        ${bracketOrder.map(label=>{
+          const b=bracketMap.get(label);
+          return `<div class="insights-v3-bracket-row">
+            <strong>${label}</strong><span>${b.cards}</span><span>${b.unique}</span><span>${b.favorites}</span><span>${b.contacts}</span><span>${b.score}</span>
+          </div>`;
+        }).join("")}
+      `;
+
+      const soldTimes=cards.map(card=>({card,days:cardTimeToSale(card)})).filter(item=>item.days!=null);
+      const averageSaleDays=soldTimes.length ? soldTimes.reduce((sum,item)=>sum+item.days,0)/soldTimes.length : null;
+      const fastest=soldTimes.slice().sort((a,b)=>a.days-b.days)[0];
+      const slowest=soldTimes.slice().sort((a,b)=>b.days-a.days)[0];
+
+      $("insightsSalesSpeed").innerHTML=`
+        <article><span>Sold listings measured</span><strong>${soldTimes.length}</strong></article>
+        <article><span>Average time to sale</span><strong>${averageSaleDays==null?"—":`${Math.round(averageSaleDays)} days`}</strong></article>
+        <article><span>Fastest sale</span><strong>${fastest?`${Math.round(fastest.days)} days`:"—"}</strong><small>${fastest?escapeHtml(fastest.card.name):""}</small></article>
+        <article><span>Longest sale</span><strong>${slowest?`${Math.round(slowest.days)} days`:"—"}</strong><small>${slowest?escapeHtml(slowest.card.name):""}</small></article>
+      `;
     }
 
     rangeSel.addEventListener("change",()=>{
@@ -21787,8 +22288,8 @@ function wireShimmer(container){
     statusSel.addEventListener("change",refresh);
     gameSel.addEventListener("change",refresh);
     sortSel.addEventListener("change",refresh);
-    startInput.addEventListener("change",()=>{ if(rangeSel.value==="custom") refresh(); });
-    endInput.addEventListener("change",()=>{ if(rangeSel.value==="custom") refresh(); });
+    startInput.addEventListener("change",()=>{if(rangeSel.value==="custom")refresh();});
+    endInput.addEventListener("change",()=>{if(rangeSel.value==="custom")refresh();});
 
     refresh();
   }
@@ -29200,6 +29701,7 @@ function wireShimmer(container){
           text:preview,
           url
         });
+        recordCardEngagement(card.id,"share","Native Share").catch(()=>{});
         return;
       }catch(error){
         if(error?.name==="AbortError") return;
@@ -29207,6 +29709,7 @@ function wireShimmer(container){
     }
 
     const copied=await copySharePreview(card);
+    if(copied) recordCardEngagement(card.id,"share","Copy Link").catch(()=>{});
     showToast(copied ? "Card preview and link copied" : "Could not copy card link");
   }
 
@@ -29833,6 +30336,7 @@ function wireShimmer(container){
       }));
 
       slideImg.addEventListener("click", ()=>{
+        recordCardEngagement(card.id,"image_expand").catch(()=>{});
         openImageLightbox(images, slideIndex);
       });
 
@@ -30004,7 +30508,8 @@ function wireShimmer(container){
   $("detailsSharePreviewBtn").addEventListener("click",async()=>{
     const card = getDetailsCard();
     if(!card || (!isOwnerMode() && !isLiveLifecycle(card))) return;
-    await downloadPublicCardSharePreview(card);
+    const downloaded=await downloadPublicCardSharePreview(card);
+    if(downloaded) recordCardEngagement(card.id,"download","Share Preview").catch(()=>{});
   });
 
   // Downloaded Sold / Reserved images receive a top-left corner status triangle watermark.
@@ -30017,6 +30522,7 @@ function wireShimmer(container){
       return;
     }
     const index = Math.min(detailsImageIndex, images.length - 1);
+    recordCardEngagement(card.id,"download","Card Image").catch(()=>{});
     downloadImageSource(images[index], card.name || card.card_code || "card", index + 1, card);
   });
   $("detailsCloseBtn").addEventListener("click", ()=>closeDetailsModal(true));
@@ -31051,6 +31557,10 @@ function wireShimmer(container){
         document.execCommand("copy");
         textarea.remove();
       }
+      if(typeof window.collectTrackEngagement==="function"){
+        const cardId=window.collectCurrentDetailsCardId?.()||"";
+        if(cardId) window.collectTrackEngagement("inquiry_copy",cardId,"Copy Inquiry").catch(()=>{});
+      }
       if(typeof showToast==="function") showToast("Inquiry copied");
       if(copyInquiryBtn){
         const strong=copyInquiryBtn.querySelector("strong");
@@ -31070,6 +31580,10 @@ function wireShimmer(container){
 
   function openContactChooser(){
     const ctx=currentCardContext();
+    if(typeof window.collectTrackEngagement==="function"){
+      const cardId=window.collectCurrentDetailsCardId?.()||"";
+      if(cardId) window.collectTrackEngagement("contact_open",cardId,"Interested CTA").catch(()=>{});
+    }
     if(contactCardName) contactCardName.textContent=ctx.name || "Card enquiry";
     if(contactCardRef){
       contactCardRef.textContent=ctx.reference || "Choose a platform to contact us.";
@@ -31200,6 +31714,12 @@ function wireShimmer(container){
 
   contactSheet.querySelectorAll("[data-interest-platform]").forEach(link=>{
     link.addEventListener("click",()=>{
+      const platform=String(link.dataset.interestPlatform||"Contact");
+      if(typeof window.collectTrackEngagement==="function"){
+        const cardId=window.collectCurrentDetailsCardId?.()||"";
+        if(cardId) window.collectTrackEngagement("contact_platform",cardId,platform).catch(()=>{});
+      }
+
       // Copy the exact card context before opening the buyer's chosen platform.
       // Failure to access clipboard must never block navigation.
       copyInquiry().catch(()=>{});
