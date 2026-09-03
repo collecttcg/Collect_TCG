@@ -25560,8 +25560,8 @@ function wireShimmer(container){
           <span>Verified Buyer review${summary.verified===1?"":"s"}</span>
         </div>
         <div class="review-summary-trust">
-          <strong>Moderated</strong>
-          <span>Visitor submissions never publish automatically.</span>
+          <strong>Review Protection</strong>
+          <span>Reviews are checked before publishing.</span>
         </div>
       </section>
 
@@ -25570,7 +25570,6 @@ function wireShimmer(container){
           <div class="reviews-section-head">
             <div>
               <h3>Collector Reviews</h3>
-              <p>Approved reviews only.</p>
             </div>
             <span>${summary.count}</span>
           </div>
@@ -25660,7 +25659,7 @@ function wireShimmer(container){
             </button>
 
             <p class="review-moderation-note">
-              Submissions are pending by default. We may reject spam, abusive content, duplicate reviews, or unrelated content, but genuine positive or negative feedback is welcome.
+              Reviews may be moderated for spam, abusive content, duplicates, or unrelated content. Genuine positive and negative feedback is welcome.
             </p>
             <div class="review-submit-notice" id="reviewSubmitNotice" hidden></div>
           </form>
