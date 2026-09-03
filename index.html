@@ -13027,6 +13027,194 @@ body.light-mode .mobile-cards-per-page-control select{
   .insights-v3-trust-icon{margin-bottom:7px}
 }
 
+
+/* =========================================================
+   INSIGHTS V4 — FRIENDLY TABBED DECISION DASHBOARD
+   ========================================================= */
+.insights-v4-page-head{margin-bottom:10px!important}
+.insights-v4-tabs{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:0 0 10px;
+  padding:6px;border:1px solid var(--border);border-radius:13px;background:var(--surface)
+}
+.insights-v4-tabs button{
+  min-width:0;min-height:54px;padding:8px 9px;border:1px solid transparent;border-radius:9px;
+  background:transparent;color:var(--text-muted);text-align:left;cursor:pointer
+}
+.insights-v4-tabs button span,.insights-v4-tabs button small{display:block}
+.insights-v4-tabs button span{color:inherit;font-size:9.5px;font-weight:800}
+.insights-v4-tabs button small{margin-top:3px;color:var(--text-muted);font-size:7px;line-height:1.2}
+.insights-v4-tabs button:hover{background:var(--surface-2);color:var(--text)}
+.insights-v4-tabs button.active{
+  border-color:rgba(95,212,196,.28);background:rgba(95,212,196,.07);color:var(--accent-teal)
+}
+.insights-v4-filterbar{
+  margin-bottom:12px;padding:9px 10px;border:1px solid var(--border);border-radius:11px;background:var(--surface)
+}
+.insights-v4-filterbar>div{display:flex;flex-wrap:wrap;align-items:end;gap:7px}
+.insights-v4-filterbar label{display:grid;gap:3px;flex:1 1 135px;min-width:120px}
+.insights-v4-filterbar label>span{
+  color:var(--text-muted);font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px
+}
+.insights-v4-filterbar select,.insights-v4-filterbar input{min-height:36px}
+.insights-v4-filterbar .insights-range-custom{flex:2 1 230px}
+.insights-v4-loading{padding:18px;text-align:center;color:var(--text-muted);font-size:9px}
+.insights-v4-loading[hidden]{display:none!important}
+.insights-v4-tab-panel{display:none}
+.insights-v4-tab-panel.active{display:block}
+
+.insights-v4-intro,.insights-v4-tab-title{
+  display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px
+}
+.insights-v4-intro strong,.insights-v4-intro span{display:block}
+.insights-v4-intro strong{font-size:11px}
+.insights-v4-intro span,.insights-v4-tab-title p{margin:3px 0 0;color:var(--text-muted);font-size:8px;line-height:1.35}
+.insights-v4-quality-pill,.insights-v4-tab-title>span{
+  flex:0 0 auto;padding:5px 8px;border:1px solid rgba(95,212,196,.25);border-radius:999px;
+  color:var(--accent-teal);background:rgba(95,212,196,.05);font-size:7.5px;font-weight:800
+}
+.insights-v4-tab-title h3{margin:0;font-size:13px}
+
+.insights-v4-kpis{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px
+}
+.insights-v4-kpis.compact{grid-template-columns:repeat(5,minmax(0,1fr))}
+.insights-v4-kpis article{
+  min-width:0;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--surface)
+}
+.insights-v4-kpis article>span,.insights-v4-kpis article>strong,.insights-v4-kpis article>small{display:block}
+.insights-v4-kpis article>span{color:var(--text-muted);font-size:7.5px;font-weight:700}
+.insights-v4-kpis article>strong{margin-top:4px;font:800 19px 'JetBrains Mono',monospace}
+.insights-v4-kpis article>small{margin-top:4px;color:var(--text-muted);font-size:7px;line-height:1.25}
+.insights-v4-kpis article.highlight{border-color:rgba(227,179,65,.28)}
+.insights-v4-kpis article.highlight>strong{color:var(--accent-gold);font-family:'Inter',sans-serif;font-size:11px;line-height:1.3}
+
+.insights-v4-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.insights-v4-card{
+  padding:12px;border:1px solid var(--border);border-radius:11px;background:var(--surface);min-width:0
+}
+.insights-v4-card-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:9px}
+.insights-v4-card-head h3{margin:0;font-size:10px}
+.insights-v4-card-head span{color:var(--text-muted);font-size:7px}
+.insights-v4-card-head.table-head>div span{display:block;margin-top:3px}
+
+.insights-v4-funnel-row{
+  display:grid;grid-template-columns:minmax(110px,1fr) minmax(80px,1.5fr) 52px;gap:8px;align-items:center;
+  padding:7px 0;border-bottom:1px solid var(--border-soft)
+}
+.insights-v4-funnel-row:last-child{border-bottom:0}
+.insights-v4-funnel-row>span{font-size:8px}
+.insights-v4-funnel-row>i{height:7px;border-radius:99px;background:var(--surface-3);overflow:hidden}
+.insights-v4-funnel-row>i>b{display:block;height:100%;border-radius:inherit;background:var(--accent-teal)}
+.insights-v4-funnel-row>strong{text-align:right;font:800 10px 'JetBrains Mono',monospace}
+
+.insights-v4-winner{padding:8px 0;border-bottom:1px solid var(--border-soft)}
+.insights-v4-winner:last-child{border-bottom:0}
+.insights-v4-winner span,.insights-v4-winner strong,.insights-v4-winner small{display:block}
+.insights-v4-winner span{color:var(--text-muted);font-size:7px}
+.insights-v4-winner strong{margin-top:2px;font-size:9px}
+.insights-v4-winner small{margin-top:2px;color:var(--accent-teal);font-size:7px}
+
+.insights-v4-details{margin:10px 0 0;border:1px solid var(--border);border-radius:10px;background:var(--surface);overflow:hidden}
+.insights-v4-details>summary{padding:10px 12px;cursor:pointer;color:var(--text-muted);font-size:8px;font-weight:800}
+.insights-v4-details[open]>summary{border-bottom:1px solid var(--border)}
+.insights-v4-details .details-grid{padding:10px;margin:0}
+
+.insights-v4-rec-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:10px}
+.insights-v4-rec-summary article{padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--surface)}
+.insights-v4-rec-summary strong,.insights-v4-rec-summary span{display:block}
+.insights-v4-rec-summary strong{font:800 15px 'JetBrains Mono',monospace}
+.insights-v4-rec-summary span{margin-top:3px;color:var(--text-muted);font-size:7px}
+.insights-v4-rec-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.insights-v4-rec{padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+.insights-v4-rec.high{border-color:rgba(248,113,113,.28)}
+.insights-v4-rec.medium{border-color:rgba(227,179,65,.28)}
+.insights-v4-rec.good{border-color:rgba(95,212,196,.25)}
+.insights-v4-rec-type{color:var(--accent-gold);font-size:7px;font-weight:900;text-transform:uppercase;letter-spacing:.5px}
+.insights-v4-rec.good .insights-v4-rec-type{color:var(--accent-teal)}
+.insights-v4-rec h4{margin:4px 0 0;font-size:10px}
+.insights-v4-rec p{margin:4px 0 8px;color:var(--text-muted);font-size:8px}
+.insights-v4-rec>div:not(.insights-v4-rec-type){padding:7px;border-radius:8px;background:var(--surface-2)}
+.insights-v4-rec>div strong,.insights-v4-rec>div span{display:block}
+.insights-v4-rec>div strong{font-size:7px}
+.insights-v4-rec>div span{margin-top:3px;color:var(--text-muted);font-size:7.5px;line-height:1.35}
+.insights-v4-rec button{margin-top:8px}
+.insights-v4-good-empty{grid-column:1/-1;padding:15px;border:1px solid rgba(95,212,196,.22);border-radius:10px;background:rgba(95,212,196,.04)}
+.insights-v4-good-empty strong,.insights-v4-good-empty span{display:block}
+.insights-v4-good-empty strong{color:var(--accent-teal);font-size:10px}
+.insights-v4-good-empty span{margin-top:3px;color:var(--text-muted);font-size:8px}
+
+.insights-v4-history-picker{margin-bottom:10px;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+.insights-v4-history-picker label{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px;align-items:center}
+.insights-v4-history-picker label>span{color:var(--text-muted);font-size:8px;font-weight:800}
+.insights-v4-history-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:10px}
+.insights-v4-history-summary article{padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--surface)}
+.insights-v4-history-summary span,.insights-v4-history-summary strong{display:block}
+.insights-v4-history-summary span{color:var(--text-muted);font-size:7px}
+.insights-v4-history-summary strong{margin-top:4px;font-size:11px}
+.insights-v4-timeline{display:grid;gap:0}
+.insights-v4-timeline>div{position:relative;padding:7px 0 7px 17px;border-left:1px solid var(--border)}
+.insights-v4-timeline>div>i{position:absolute;left:-4px;top:10px;width:7px;height:7px;border-radius:99px;background:var(--accent-teal)}
+.insights-v4-timeline>div span,.insights-v4-timeline>div strong{display:block}
+.insights-v4-timeline>div span{color:var(--text-muted);font-size:6.8px}
+.insights-v4-timeline>div strong{margin-top:2px;font-size:7.8px;font-weight:700}
+
+.insights-v4-backend-ok,.insights-v4-backend-needed{
+  display:flex;gap:8px;align-items:flex-start;margin-bottom:10px;padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--surface)
+}
+.insights-v4-backend-ok{border-color:rgba(95,212,196,.24)}
+.insights-v4-backend-needed{border-color:rgba(227,179,65,.30);background:rgba(227,179,65,.04)}
+.insights-v4-backend-ok strong,.insights-v4-backend-needed strong{font-size:8.5px}
+.insights-v4-backend-ok span,.insights-v4-backend-needed span{color:var(--text-muted);font-size:7.5px}
+
+.insights-v4-health-score{
+  display:flex;align-items:center;gap:12px;margin-bottom:10px;padding:12px;border:1px solid rgba(227,179,65,.28);
+  border-radius:11px;background:rgba(227,179,65,.04)
+}
+.insights-v4-health-score.all-good{border-color:rgba(95,212,196,.28);background:rgba(95,212,196,.04)}
+.insights-v4-health-score>strong{font:900 24px 'JetBrains Mono',monospace;color:var(--accent-gold)}
+.insights-v4-health-score.all-good>strong{color:var(--accent-teal)}
+.insights-v4-health-score span,.insights-v4-health-score small{display:block}
+.insights-v4-health-score span{font-size:9px;font-weight:800}
+.insights-v4-health-score small{margin-top:3px;color:var(--text-muted);font-size:7.5px}
+.insights-v4-health-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:10px}
+.insights-v4-health-list article{display:flex;gap:9px;padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--surface)}
+.insights-v4-health-list article i{width:22px;height:22px;flex:0 0 22px;display:grid;place-items:center;border-radius:99px;font-style:normal;font-weight:900}
+.insights-v4-health-list article.ok i{background:rgba(95,212,196,.10);color:var(--accent-teal)}
+.insights-v4-health-list article.warn i{background:rgba(227,179,65,.10);color:var(--accent-gold)}
+.insights-v4-health-list strong,.insights-v4-health-list span{display:block}
+.insights-v4-health-list strong{font-size:8.5px}
+.insights-v4-health-list span{margin-top:2px;color:var(--text-muted);font-size:7px;line-height:1.3}
+.health-notes p{color:var(--text-muted);font-size:8px;line-height:1.45}
+.health-notes p:last-child{margin-bottom:0}
+
+@media(max-width:800px){
+  .insights-v4-tabs{
+    display:flex;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch
+  }
+  .insights-v4-tabs::-webkit-scrollbar{display:none}
+  .insights-v4-tabs button{flex:0 0 126px;min-height:50px}
+  .insights-v4-filterbar>div{display:grid;grid-template-columns:1fr 1fr}
+  .insights-v4-filterbar label,.insights-v4-filterbar .insights-range-custom{min-width:0;width:100%;flex:none}
+  .insights-v4-filterbar .insights-range-custom{grid-column:1/-1}
+  .insights-v4-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .insights-v4-kpis.compact{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .insights-v4-grid-2{grid-template-columns:1fr}
+  .insights-v4-rec-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .insights-v4-rec-list{grid-template-columns:1fr}
+  .insights-v4-history-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .insights-v4-health-list{grid-template-columns:1fr}
+  .insights-v4-intro,.insights-v4-tab-title{align-items:flex-start}
+}
+@media(max-width:420px){
+  .insights-v4-filterbar>div{grid-template-columns:1fr}
+  .insights-v4-filterbar .insights-range-custom{grid-column:auto}
+  .insights-v4-kpis,.insights-v4-kpis.compact{grid-template-columns:1fr}
+  .insights-v4-rec-summary{grid-template-columns:1fr 1fr}
+  .insights-v4-history-summary{grid-template-columns:1fr 1fr}
+  .insights-v4-history-picker label{grid-template-columns:1fr}
+  .insights-v4-quality-pill,.insights-v4-tab-title>span{display:none}
+}
+
 </style>
 </head>
 <body>
@@ -15288,6 +15476,138 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }catch(error){
       console.warn("Buyer-intent insights unavailable:",error);
       return {supported:false,rows:[]};
+    }
+  }
+
+
+  let saleSnapshotBackendState="unknown";
+
+  async function saveSaleConversionSnapshot(snapshot){
+    try{
+      if(!isOwnerMode() || !snapshot?.card_id) return false;
+      if(saleSnapshotBackendState==="unavailable") return false;
+
+      const {data,error}=await supabaseClient.rpc("save_card_sale_snapshot",{
+        p_card_id:String(snapshot.card_id),
+        p_card_name:String(snapshot.card_name||"").slice(0,240),
+        p_price_usd:snapshot.price_usd==null ? null : Number(snapshot.price_usd),
+        p_price_myr:snapshot.price_myr==null ? null : Number(snapshot.price_myr),
+        p_price_sgd:snapshot.price_sgd==null ? null : Number(snapshot.price_sgd),
+        p_days_listed:snapshot.days_listed==null ? null : Number(snapshot.days_listed),
+        p_qualified_views:Number(snapshot.qualified_views||0),
+        p_unique_views:Number(snapshot.unique_views||0),
+        p_favorite_adds:Number(snapshot.favorite_adds||0),
+        p_contact_actions:Number(snapshot.contact_actions||0),
+        p_shares:Number(snapshot.shares||0),
+        p_interest_score:Number(snapshot.interest_score||0)
+      });
+
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(message.includes("save_card_sale_snapshot")||message.includes("function")||message.includes("schema cache")){
+          saleSnapshotBackendState="unavailable";
+        }
+        console.warn("Sale conversion snapshot unavailable:",error);
+        return false;
+      }
+
+      saleSnapshotBackendState="available";
+      return data!==false;
+    }catch(error){
+      console.warn("Sale conversion snapshot unavailable:",error);
+      return false;
+    }
+  }
+
+  async function fetchSaleConversionSnapshots(){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_card_sale_snapshots");
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(message.includes("get_card_sale_snapshots")||message.includes("function")||message.includes("schema cache")){
+          saleSnapshotBackendState="unavailable";
+        }
+        console.warn("Sale snapshots unavailable:",error);
+        return {supported:false,rows:[]};
+      }
+      saleSnapshotBackendState="available";
+      return {supported:true,rows:Array.isArray(data)?data:[]};
+    }catch(error){
+      console.warn("Sale snapshots unavailable:",error);
+      return {supported:false,rows:[]};
+    }
+  }
+
+  function insightInterestScore(values){
+    return Math.round(
+      Number(values?.unique_views||0) +
+      Number(values?.image_expands||0) +
+      Number(values?.favorite_adds||0)*3 +
+      Number(values?.shares||0)*4 +
+      Number(values?.contact_opens||0)*4 +
+      Number(values?.inquiry_copies||0)*6 +
+      Number(values?.platform_clicks||0)*8
+    );
+  }
+
+  async function captureSaleConversionSnapshot(card){
+    if(!card || !isOwnerMode()) return false;
+
+    try{
+      const createdAt=new Date(card.created_at||"");
+      const start=Number.isNaN(createdAt.getTime())
+        ? new Date("2000-01-01T00:00:00")
+        : createdAt;
+      const end=new Date();
+
+      const [viewRows,engagementResult]=await Promise.all([
+        fetchInsights(start,end,{silent:true}),
+        fetchCardEngagementInsights(start,end)
+      ]);
+
+      const viewRow=viewRows.find(row=>
+        String(row.card_id||row.id||"")===String(card.id)
+      ) || {};
+
+      const engagement=engagementResult.rows.find(row=>
+        String(row.card_id||"")===String(card.id)
+      ) || {};
+
+      const createdMs=start.getTime();
+      const daysListed=Number.isFinite(createdMs)
+        ? Math.max(0,Math.floor((Date.now()-createdMs)/(24*60*60*1000)))
+        : null;
+
+      const contactActions=
+        Number(engagement.contact_opens||0)+
+        Number(engagement.platform_clicks||0)+
+        Number(engagement.inquiry_copies||0);
+
+      return saveSaleConversionSnapshot({
+        card_id:card.id,
+        card_name:card.name,
+        price_usd:card.price_usd ?? card.price ?? null,
+        price_myr:card.price_myr ?? null,
+        price_sgd:card.price_sgd ?? null,
+        days_listed:daysListed,
+        qualified_views:Number(viewRow.views||0),
+        unique_views:Number(viewRow.unique_views||0),
+        favorite_adds:Number(engagement.favorite_adds||0),
+        contact_actions:contactActions,
+        shares:Number(engagement.shares||0),
+        interest_score:insightInterestScore({
+          unique_views:Number(viewRow.unique_views||0),
+          image_expands:Number(engagement.image_expands||0),
+          favorite_adds:Number(engagement.favorite_adds||0),
+          shares:Number(engagement.shares||0),
+          contact_opens:Number(engagement.contact_opens||0),
+          inquiry_copies:Number(engagement.inquiry_copies||0),
+          platform_clicks:Number(engagement.platform_clicks||0)
+        })
+      });
+    }catch(error){
+      console.warn("Could not capture sale conversion snapshot:",error);
+      return false;
     }
   }
 
@@ -19231,6 +19551,10 @@ function wireShimmer(container){
     if(status==="Sold"){
       const ok=confirm(`Mark "${card.name}" as Sold?`);
       if(!ok) return false;
+
+      // Preserve the card's buyer-interest state at the moment of sale.
+      // This is best-effort and never blocks the inventory update.
+      await captureSaleConversionSnapshot(card);
     }
 
     const candidate={...card,availability:status};
@@ -21761,26 +22085,25 @@ function wireShimmer(container){
     if(!isOwnerMode()){ goToRoute("inventory"); return; }
 
     view.innerHTML=`
-      <div class="page-head insights-v3-page-head">
+      <div class="page-head insights-v4-page-head">
         <div>
-          <div class="eyebrow">Owner analytics · V3</div>
+          <div class="eyebrow">Owner analytics · V4</div>
           <h2>Insights</h2>
-          <p>See what buyers notice, save and act on — without counting your own testing activity.</p>
+          <p>Simple buyer-interest analytics with clear recommendations, listing history and sale conversion data.</p>
         </div>
       </div>
 
-      <div class="insights-v3-trust">
-        <div class="insights-v3-trust-icon">✓</div>
+      <nav class="insights-v4-tabs" id="insightsTabs" aria-label="Insights sections">
+        <button type="button" class="active" data-insights-tab="overview"><span>Overview</span><small>What is happening</small></button>
+        <button type="button" data-insights-tab="recommendations"><span>Recommendations</span><small>What to do next</small></button>
+        <button type="button" data-insights-tab="history"><span>Card History</span><small>Views, interest & price</small></button>
+        <button type="button" data-insights-tab="sales"><span>Sales</span><small>What converts</small></button>
+        <button type="button" data-insights-tab="health"><span>Health</span><small>Can I trust the data?</small></button>
+      </nav>
+
+      <section class="insights-v4-filterbar">
         <div>
-          <strong>Cleaner analytics</strong>
-          <span>Qualified card views require 5 seconds · same card/browser is deduplicated for 30 minutes · Owner Mode is excluded.</span>
-        </div>
-      </div>
-
-      <section class="insights-v3-filterbar" aria-label="Insights filters">
-        <div class="insights-v3-filter-primary">
-          <label>
-            <span>Period</span>
+          <label><span>Period</span>
             <select id="insightsRange">
               <option value="today">Today</option>
               <option value="7d" selected>Last 7 Days</option>
@@ -21796,8 +22119,7 @@ function wireShimmer(container){
             <input type="date" id="insightsEnd" aria-label="End date">
           </div>
 
-          <label>
-            <span>Status</span>
+          <label><span>Status</span>
             <select id="insightsStatus">
               <option value="">All Statuses</option>
               <option value="Available">Available</option>
@@ -21809,162 +22131,84 @@ function wireShimmer(container){
             </select>
           </label>
 
-          <label>
-            <span>Game</span>
-            <select id="insightsGame">
-              <option value="">All Games</option>
-            </select>
+          <label><span>Game</span>
+            <select id="insightsGame"><option value="">All Games</option></select>
           </label>
         </div>
       </section>
 
-      <div id="insightsEngagementSetup"></div>
+      <div class="insights-v4-loading" id="insightsLoading">Loading analytics…</div>
 
-      <section class="insights-v3-section">
-        <div class="insights-v3-section-head">
-          <div>
-            <span class="insights-v3-step">1</span>
-            <div><h3>At a Glance</h3><p>The few numbers worth checking first.</p></div>
-          </div>
-        </div>
-        <div class="insights-v3-kpis" id="insightsStats"></div>
+      <section class="insights-v4-tab-panel active" data-insights-panel="overview">
+        <div id="insightsOverview"></div>
       </section>
 
-      <section class="insights-v3-section">
-        <div class="insights-v3-section-head">
-          <div>
-            <span class="insights-v3-step">2</span>
-            <div><h3>Buyer Funnel</h3><p>How traffic turns into meaningful buying actions.</p></div>
-          </div>
-        </div>
-        <div class="insights-v3-funnel" id="insightsFunnel"></div>
+      <section class="insights-v4-tab-panel" data-insights-panel="recommendations">
+        <div id="insightsRecommendations"></div>
       </section>
 
-      <section class="insights-v3-section">
-        <div class="insights-v3-section-head">
-          <div>
-            <span class="insights-v3-step">3</span>
-            <div><h3>Needs Attention</h3><p>Listings that may need a price, visibility or sales follow-up.</p></div>
-          </div>
-        </div>
-        <div class="insights-v3-attention" id="insightsAttention"></div>
+      <section class="insights-v4-tab-panel" data-insights-panel="history">
+        <div id="insightsHistory"></div>
       </section>
 
-      <section class="insights-v3-section">
-        <div class="insights-v3-section-head">
-          <div>
-            <span class="insights-v3-step">4</span>
-            <div><h3>Card Performance</h3><p>Interest Score combines unique views and buyer actions. Higher means stronger intent.</p></div>
-          </div>
-          <label class="insights-v3-sort">
-            <span>Sort by</span>
-            <select id="insightsSort">
-              <option value="interest-desc">Interest Score</option>
-              <option value="contacts-desc">Contact Actions</option>
-              <option value="favorites-desc">Favorites</option>
-              <option value="trend-desc">Fastest Rising</option>
-              <option value="unique-desc">Unique Views</option>
-              <option value="days-desc">Days Listed</option>
-              <option value="price-high">Price: Highest</option>
-              <option value="name">Name</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="insights-v3-formula">
-          <strong>Interest Score</strong>
-          <span>Unique view ×1 · Image expand ×1 · Favorite ×3 · Share ×4 · Contact open ×4 · Inquiry copy ×6 · Platform click ×8</span>
-        </div>
-
-        <div class="insights-table-wrap">
-          <table class="insights-table insights-v3-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Card</th>
-                <th>Status</th>
-                <th>Price</th>
-                <th>Unique</th>
-                <th>Fav</th>
-                <th>Contact</th>
-                <th>Score</th>
-                <th>Trend</th>
-                <th>Listed</th>
-              </tr>
-            </thead>
-            <tbody id="insightsRows"></tbody>
-          </table>
-        </div>
+      <section class="insights-v4-tab-panel" data-insights-panel="sales">
+        <div id="insightsSales"></div>
       </section>
 
-      <details class="insights-v3-advanced">
-        <summary>
-          <span>Advanced breakdowns</span>
-          <small>Traffic charts, price brackets and sales speed</small>
-        </summary>
-
-        <div class="insights-v3-advanced-grid">
-          <section class="insights-panel">
-            <div class="insights-panel-head"><div><h3>Qualified Card Views</h3><p>New events use the V3 quality rules.</p></div></div>
-            <div id="insightsChart" class="insights-chart insights-time-chart"></div>
-          </section>
-
-          <section class="insights-panel">
-            <div class="insights-panel-head"><div><h3>Website Visits</h3><p>One visit per browser session; Owner Mode excluded.</p></div></div>
-            <div id="insightsWebsiteChart" class="insights-chart insights-time-chart"></div>
-          </section>
-        </div>
-
-        <section class="insights-panel">
-          <div class="insights-panel-head"><div><h3>Price Bracket Performance</h3><p>Which price ranges attract buyer actions.</p></div></div>
-          <div id="insightsPriceBrackets" class="insights-v3-price-brackets"></div>
-        </section>
-
-        <section class="insights-panel">
-          <div class="insights-panel-head"><div><h3>Sales Speed</h3><p>Based on listings with both created and sold dates.</p></div></div>
-          <div id="insightsSalesSpeed" class="insights-v3-sales-speed"></div>
-        </section>
-      </details>
+      <section class="insights-v4-tab-panel" data-insights-panel="health">
+        <div id="insightsHealth"></div>
+      </section>
     `;
 
     const rangeSel=$("insightsRange");
     const custom=$("insightsCustom");
     const statusSel=$("insightsStatus");
     const gameSel=$("insightsGame");
-    const sortSel=$("insightsSort");
     const startInput=$("insightsStart");
     const endInput=$("insightsEnd");
+    const loading=$("insightsLoading");
 
     const seven=dateRangeForPreset("7d");
     startInput.value=seven.start.toISOString().slice(0,10);
     endInput.value=new Date().toISOString().slice(0,10);
 
-    function rowRepeatRate(row){
-      const views=Math.max(0,Number(row?.views||0));
-      const unique=Math.max(0,Number(row?.unique_views||0));
-      if(!views) return 0;
-      return Math.max(0,Math.min(1,(views-Math.min(unique,views))/views));
+    let state={
+      start:null,end:null,rows:[],visible:[],series:[],websiteSeries:[],
+      engagementSupported:false,saleSnapshotsSupported:false,saleSnapshots:[],
+      editHistoryRows:[],editHistoryLoaded:false
+    };
+
+    function activeTab(){
+      return $("insightsTabs")?.querySelector("button.active")?.dataset.insightsTab||"overview";
     }
+
+    function switchTab(tab){
+      $("insightsTabs")?.querySelectorAll("[data-insights-tab]").forEach(btn=>{
+        btn.classList.toggle("active",btn.dataset.insightsTab===tab);
+      });
+      view.querySelectorAll("[data-insights-panel]").forEach(panel=>{
+        panel.classList.toggle("active",panel.dataset.insightsPanel===tab);
+      });
+      if(tab==="history") renderHistoryTab();
+      if(tab==="health") renderHealthTab();
+    }
+
+    $("insightsTabs")?.addEventListener("click",e=>{
+      const btn=e.target.closest("[data-insights-tab]");
+      if(btn) switchTab(btn.dataset.insightsTab);
+    });
 
     function cardDaysListed(card){
-      const created=new Date(card?.created_at||"").getTime();
-      if(!Number.isFinite(created)) return null;
-      const end=normalizeFilterValue(card?.availability)==="sold" && card?.sold_at
+      const start=new Date(card?.created_at||"").getTime();
+      if(!Number.isFinite(start)) return null;
+      const sold=normalizeFilterValue(card?.availability)==="sold" && card?.sold_at
         ? new Date(card.sold_at).getTime()
         : Date.now();
-      if(!Number.isFinite(end) || end<created) return null;
-      return Math.max(0,Math.floor((end-created)/(24*60*60*1000)));
+      if(!Number.isFinite(sold)||sold<start) return null;
+      return Math.max(0,Math.floor((sold-start)/(24*60*60*1000)));
     }
 
-    function cardTimeToSale(card){
-      if(normalizeFilterValue(card?.availability)!=="sold" || !card?.sold_at || !card?.created_at) return null;
-      const start=new Date(card.created_at).getTime();
-      const sold=new Date(card.sold_at).getTime();
-      if(!Number.isFinite(start)||!Number.isFinite(sold)||sold<start) return null;
-      return Math.max(0,(sold-start)/(24*60*60*1000));
-    }
-
-    function engagementEmpty(){
+    function emptyEngagement(){
       return {
         favorite_adds:0,favorite_visitors:0,contact_opens:0,contact_visitors:0,
         platform_clicks:0,inquiry_copies:0,image_expands:0,shares:0,downloads:0,
@@ -21972,30 +22216,56 @@ function wireShimmer(container){
       };
     }
 
-    function interestScore(row){
-      return Math.round(
-        Number(row.unique_views||0) +
-        Number(row.image_expands||0) +
-        Number(row.favorite_adds||0)*3 +
-        Number(row.shares||0)*4 +
-        Number(row.contact_opens||0)*4 +
-        Number(row.inquiry_copies||0)*6 +
-        Number(row.platform_clicks||0)*8
-      );
-    }
-
     function contactActions(row){
-      return Number(row.contact_opens||0)+Number(row.inquiry_copies||0)+Number(row.platform_clicks||0);
+      return Number(row.contact_opens||0)+Number(row.platform_clicks||0)+Number(row.inquiry_copies||0);
     }
 
-    function priceBracket(usd){
-      const value=Number(usd||0);
-      if(value<100) return "< $100";
-      if(value<500) return "$100–499";
-      if(value<1000) return "$500–999";
-      if(value<3000) return "$1k–2.9k";
-      if(value<6000) return "$3k–5.9k";
-      return "$6k+";
+    function recommendationFor(row){
+      const card=row._card;
+      if(!card || row._status!=="Available") return null;
+
+      const unique=Number(row.unique_views||0);
+      const fav=Number(row.favorite_adds||0);
+      const contacts=row._contactActions;
+      const days=row._daysListed;
+      const usd=cardUsdListedPrice(card)||0;
+
+      if(unique>=8 && contacts===0){
+        return {
+          level:"high",type:"Review price / confidence",card,
+          reason:`${unique} unique views but no contact actions`,
+          action:"Check price against your market, improve description, or add stronger photos."
+        };
+      }
+      if(contacts>=2 || (fav>=2 && unique>=3)){
+        return {
+          level:"good",type:"Strong demand",card,
+          reason:`${fav} favorite${fav===1?"":"s"} · ${contacts} contact action${contacts===1?"":"s"}`,
+          action:"Avoid unnecessary discounting. Keep visible and respond quickly to inquiries."
+        };
+      }
+      if(row._trend.className==="hot"){
+        return {
+          level:"good",type:"Promote now",card,
+          reason:`Interest is rising ${row._trend.label}`,
+          action:"Share the listing while momentum is increasing."
+        };
+      }
+      if(usd>=HIGH_VALUE_DIRECT_CONTACT_USD && unique<2){
+        return {
+          level:"medium",type:"Low discoverability",card,
+          reason:`${fmtMoney(usd)} listing with only ${unique} unique view${unique===1?"":"s"}`,
+          action:"Improve discoverability, title keywords, or share a direct listing link."
+        };
+      }
+      if(Number.isFinite(days) && days>=60 && unique<=1){
+        return {
+          level:"medium",type:"Stale inventory",card,
+          reason:`${days} days listed with very little current interest`,
+          action:"Refresh photos/title and reassess pricing."
+        };
+      }
+      return null;
     }
 
     function syncGameOptions(rows){
@@ -22007,278 +22277,453 @@ function wireShimmer(container){
       if(games.includes(selected)) gameSel.value=selected;
     }
 
-    function renderSimpleBars(mountId,series,valueKey,emptyText,site=false){
-      const mount=$(mountId);
+    function renderOverview(){
+      const rows=state.visible;
+      const websiteVisits=state.websiteSeries.reduce((s,r)=>s+Number(r.visits||0),0);
+      const qualifiedViews=rows.reduce((s,r)=>s+Number(r.views||0),0);
+      const unique=rows.reduce((s,r)=>s+Number(r.unique_views||0),0);
+      const favorites=rows.reduce((s,r)=>s+Number(r.favorite_adds||0),0);
+      const contacts=rows.reduce((s,r)=>s+r._contactActions,0);
+      const top=rows.slice().sort((a,b)=>b._interestScore-a._interestScore)[0];
+      const contactRate=unique?contacts/unique:0;
+
+      const hottest=rows.slice().sort((a,b)=>b._trend.score-a._trend.score)[0];
+      const mostFav=rows.slice().sort((a,b)=>Number(b.favorite_adds||0)-Number(a.favorite_adds||0))[0];
+      const mostContact=rows.slice().sort((a,b)=>b._contactActions-a._contactActions)[0];
+
+      $("insightsOverview").innerHTML=`
+        <div class="insights-v4-intro">
+          <div><strong>Start here</strong><span>These are the numbers that matter most for the selected period.</span></div>
+          <div class="insights-v4-quality-pill">✓ Owner activity excluded</div>
+        </div>
+
+        <div class="insights-v4-kpis">
+          <article><span>Website Visits</span><strong>${websiteVisits.toLocaleString()}</strong><small>Site sessions</small></article>
+          <article><span>Qualified Views</span><strong>${qualifiedViews.toLocaleString()}</strong><small>Card open 5+ seconds</small></article>
+          <article><span>Favorites</span><strong>${favorites.toLocaleString()}</strong><small>Saved by visitors</small></article>
+          <article><span>Contact Actions</span><strong>${contacts.toLocaleString()}</strong><small>Strong buying intent</small></article>
+          <article><span>Contact Rate</span><strong>${Math.round(contactRate*100)}%</strong><small>Contact ÷ unique views</small></article>
+          <article class="highlight"><span>Strongest Interest</span><strong>${top?escapeHtml(top.name||top._card?.name||"—"):"—"}</strong><small>${top?`${top._interestScore} points`:"No activity"}</small></article>
+        </div>
+
+        <div class="insights-v4-grid-2">
+          <section class="insights-v4-card">
+            <div class="insights-v4-card-head"><h3>Buyer Funnel</h3><span>From traffic to action</span></div>
+            ${[
+              ["Website visits",websiteVisits],
+              ["Qualified card views",qualifiedViews],
+              ["Favorites",favorites],
+              ["Contact actions",contacts]
+            ].map(([label,value],i,all)=>{
+              const max=Math.max(1,...all.map(x=>x[1]));
+              return `<div class="insights-v4-funnel-row">
+                <span>${escapeHtml(label)}</span>
+                <i><b style="width:${Math.max(value?5:0,value/max*100)}%"></b></i>
+                <strong>${Number(value).toLocaleString()}</strong>
+              </div>`;
+            }).join("")}
+          </section>
+
+          <section class="insights-v4-card">
+            <div class="insights-v4-card-head"><h3>Quick Winners</h3><span>What deserves attention</span></div>
+            <div class="insights-v4-winner">
+              <span>Fastest rising</span><strong>${hottest&&hottest._trend.score>0?escapeHtml(hottest.name||"—"):"No clear mover"}</strong>
+              <small>${hottest&&hottest._trend.score>0?escapeHtml(hottest._trend.label):"—"}</small>
+            </div>
+            <div class="insights-v4-winner">
+              <span>Most favorited</span><strong>${mostFav&&Number(mostFav.favorite_adds||0)>0?escapeHtml(mostFav.name||"—"):"No favorites yet"}</strong>
+              <small>${mostFav?`${Number(mostFav.favorite_adds||0)} favorites`:"—"}</small>
+            </div>
+            <div class="insights-v4-winner">
+              <span>Most contact activity</span><strong>${mostContact&&mostContact._contactActions>0?escapeHtml(mostContact.name||"—"):"No contacts yet"}</strong>
+              <small>${mostContact?`${mostContact._contactActions} actions`:"—"}</small>
+            </div>
+          </section>
+        </div>
+
+        <section class="insights-v4-card">
+          <div class="insights-v4-card-head table-head">
+            <div><h3>Top Card Performance</h3><span>Interest Score weighs stronger buyer actions more heavily than views.</span></div>
+          </div>
+          <div class="insights-table-wrap">
+            <table class="insights-table insights-v4-table">
+              <thead><tr><th>#</th><th>Card</th><th>Status</th><th>Unique</th><th>Fav</th><th>Contact</th><th>Score</th><th>Trend</th></tr></thead>
+              <tbody>${rows.slice().sort((a,b)=>b._interestScore-a._interestScore).slice(0,15).map((row,i)=>`
+                <tr>
+                  <td>${i+1}</td><td class="insights-card-name">${escapeHtml(row.name||row._card?.name||"")}</td>
+                  <td><span class="insights-status-tag">${escapeHtml(row._status)}</span></td>
+                  <td>${Number(row.unique_views||0)}</td><td>${Number(row.favorite_adds||0)}</td>
+                  <td>${row._contactActions}</td><td><strong class="insights-v3-score">${row._interestScore}</strong></td>
+                  <td><span class="trend-tag ${row._trend.className}">${escapeHtml(row._trend.label)}</span></td>
+                </tr>`).join("") || `<tr><td colspan="8" class="hint">No activity for this period.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <details class="insights-v4-details">
+          <summary>Show traffic charts</summary>
+          <div class="insights-v4-grid-2 details-grid">
+            <section class="insights-v4-card"><h3>Qualified Card Views</h3><div id="insightsChart" class="insights-chart insights-time-chart"></div></section>
+            <section class="insights-v4-card"><h3>Website Visits</h3><div id="insightsWebsiteChart" class="insights-chart insights-time-chart"></div></section>
+          </div>
+        </details>
+      `;
+
+      function bars(id,series,key,site=false){
+        const mount=$(id);
+        if(!mount) return;
+        const max=Math.max(1,...series.map(r=>Number(r[key]||0)));
+        mount.innerHTML=series.length?series.map(r=>`
+          <div class="insights-bar-wrap" title="${escapeHtml(String(r.bucket))}: ${Number(r[key]||0)}">
+            <div class="insights-bar ${site?"insights-bar-site":""}" style="height:${Math.max(2,Number(r[key]||0)/max*100)}%"></div>
+            <div class="insights-bar-label">${escapeHtml(String(r.label||r.bucket))}</div>
+          </div>`).join(""):`<div class="hint">No data yet.</div>`;
+      }
+      bars("insightsChart",state.series,"views");
+      bars("insightsWebsiteChart",state.websiteSeries,"visits",true);
+    }
+
+    function renderRecommendations(){
+      const recs=state.visible.map(recommendationFor).filter(Boolean);
+      const rank={high:3,medium:2,good:1};
+      recs.sort((a,b)=>rank[b.level]-rank[a.level]);
+
+      $("insightsRecommendations").innerHTML=`
+        <div class="insights-v4-tab-title">
+          <div><h3>Recommended Actions</h3><p>Use these as prompts to review a listing — not automatic pricing decisions.</p></div>
+          <span>${recs.length} signals</span>
+        </div>
+
+        <div class="insights-v4-rec-summary">
+          <article><strong>${recs.filter(r=>r.type==="Review price / confidence").length}</strong><span>Review price/confidence</span></article>
+          <article><strong>${recs.filter(r=>r.type==="Promote now").length}</strong><span>Promote now</span></article>
+          <article><strong>${recs.filter(r=>r.type==="Strong demand").length}</strong><span>Strong demand</span></article>
+          <article><strong>${recs.filter(r=>r.type==="Stale inventory").length}</strong><span>Stale inventory</span></article>
+        </div>
+
+        <div class="insights-v4-rec-list">
+          ${recs.length?recs.map(rec=>`
+            <article class="insights-v4-rec ${rec.level}">
+              <div class="insights-v4-rec-type">${escapeHtml(rec.type)}</div>
+              <h4>${escapeHtml(rec.card.name)}</h4>
+              <p>${escapeHtml(rec.reason)}</p>
+              <div><strong>Suggested action</strong><span>${escapeHtml(rec.action)}</span></div>
+              <button type="button" class="btn-ghost" data-insights-open-card="${escapeHtml(rec.card.id)}">Open card</button>
+            </article>`).join(""):`<div class="insights-v4-good-empty"><strong>No major action signals.</strong><span>Nothing in the selected period currently stands out as needing review.</span></div>`}
+        </div>
+      `;
+
+      $("insightsRecommendations").querySelectorAll("[data-insights-open-card]").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          const card=getCardById(btn.dataset.insightsOpenCard);
+          if(card) openCardRoute(card.id);
+        });
+      });
+    }
+
+    async function renderHistoryTab(){
+      const mount=$("insightsHistory");
       if(!mount) return;
-      const max=Math.max(1,...series.map(row=>Number(row[valueKey]||0)));
-      mount.innerHTML=series.length ? series.map(row=>{
-        const value=Number(row[valueKey]||0);
-        const pct=Math.max(2,value/max*100);
-        return `<div class="insights-bar-wrap" title="${escapeHtml(String(row.bucket))}: ${value}">
-          <div class="insights-bar ${site?"insights-bar-site":""}" style="height:${pct}%"></div>
-          <div class="insights-bar-label">${escapeHtml(String(row.label||row.bucket))}</div>
-        </div>`;
-      }).join("") : `<div class="hint">${escapeHtml(emptyText)}</div>`;
+
+      if(!state.editHistoryLoaded){
+        mount.innerHTML=`<div class="insights-v4-loading-card">Loading card history…</div>`;
+        state.editHistoryRows=editHistorySupported ? await fetchEditHistory() : [];
+        state.editHistoryLoaded=true;
+      }
+
+      const candidates=cards
+        .filter(card=>cardLifecycle(card)!=="archived")
+        .slice()
+        .sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
+
+      const existing=mount.querySelector("#insightsHistoryCard")?.value||"";
+      const selected=existing && candidates.some(c=>String(c.id)===existing)
+        ? existing
+        : String(candidates[0]?.id||"");
+
+      mount.innerHTML=`
+        <div class="insights-v4-tab-title">
+          <div><h3>Card History</h3><p>Review listing changes together with current buyer-interest signals.</p></div>
+        </div>
+
+        <div class="insights-v4-history-picker">
+          <label><span>Select card</span>
+            <select id="insightsHistoryCard">
+              ${candidates.map(card=>`<option value="${escapeHtml(card.id)}" ${String(card.id)===selected?"selected":""}>${escapeHtml(card.name)}${card.card_code?` · ${escapeHtml(card.card_code)}`:""}</option>`).join("")}
+            </select>
+          </label>
+        </div>
+        <div id="insightsHistoryDetail"></div>
+      `;
+
+      function drawCardHistory(){
+        const id=$("insightsHistoryCard")?.value||"";
+        const card=getCardById(id);
+        const detail=$("insightsHistoryDetail");
+        if(!detail||!card) return;
+
+        const insight=state.rows.find(row=>String(row.card_id||row.id||"")===String(card.id));
+        const history=state.editHistoryRows
+          .filter(row=>String(row.card_id||"")===String(card.id))
+          .slice()
+          .sort((a,b)=>new Date(b.edited_at)-new Date(a.edited_at));
+
+        const priceEvents=[];
+        history.forEach(row=>{
+          const before=row.before_data||{};
+          const after=row.after_data||{};
+          const currencies=[
+            ["MYR","price_myr"],["USD","price_usd"],["SGD","price_sgd"]
+          ];
+          currencies.forEach(([label,key])=>{
+            const bv=before[key];
+            const av=after[key];
+            if(String(bv??"")!==String(av??"") && (bv!=null || av!=null)){
+              priceEvents.push({
+                at:row.edited_at,
+                text:`${label}: ${bv==null?"—":bv} → ${av==null?"—":av}`
+              });
+            }
+          });
+        });
+
+        detail.innerHTML=`
+          <div class="insights-v4-history-summary">
+            <article><span>Current price</span><strong>${cardUsdListedPrice(card)!=null?fmtMoney(cardUsdListedPrice(card)):"—"}</strong></article>
+            <article><span>Unique views</span><strong>${Number(insight?.unique_views||0)}</strong></article>
+            <article><span>Favorites</span><strong>${Number(insight?.favorite_adds||0)}</strong></article>
+            <article><span>Contact actions</span><strong>${insight?contactActions(insight):0}</strong></article>
+          </div>
+
+          <div class="insights-v4-grid-2">
+            <section class="insights-v4-card">
+              <div class="insights-v4-card-head"><h3>Price Changes</h3><span>From owner edit history</span></div>
+              <div class="insights-v4-timeline">
+                ${priceEvents.length?priceEvents.slice(0,20).map(ev=>`
+                  <div><i></i><span>${escapeHtml(formatOwnerTimestamp(ev.at))}</span><strong>${escapeHtml(ev.text)}</strong></div>`
+                ).join(""):`<div class="hint">${editHistorySupported?"No recorded price changes in the recent history window.":"Edit History migration is not installed."}</div>`}
+              </div>
+            </section>
+
+            <section class="insights-v4-card">
+              <div class="insights-v4-card-head"><h3>Listing Activity</h3><span>Recent owner changes</span></div>
+              <div class="insights-v4-timeline">
+                ${history.length?history.slice(0,20).map(row=>`
+                  <div><i></i><span>${escapeHtml(formatOwnerTimestamp(row.edited_at))}</span>
+                    <strong>${escapeHtml(historyChangedFields(row).join(", ")||"Listing updated")}</strong></div>`
+                ).join(""):`<div class="hint">No recent edit-history entries for this card.</div>`}
+              </div>
+            </section>
+          </div>
+        `;
+      }
+
+      $("insightsHistoryCard")?.addEventListener("change",drawCardHistory);
+      drawCardHistory();
+    }
+
+    function renderSales(){
+      const snapshots=state.saleSnapshots.slice().sort((a,b)=>new Date(b.sold_at)-new Date(a.sold_at));
+      const soldCards=cards.filter(card=>normalizeFilterValue(card.availability)==="sold");
+      const snapshotAvg=snapshots.length
+        ? snapshots.reduce((s,r)=>s+Number(r.days_listed||0),0)/snapshots.length
+        : null;
+
+      const contactConverters=snapshots.filter(r=>Number(r.contact_actions||0)>0).length;
+      const favoriteConverters=snapshots.filter(r=>Number(r.favorite_adds||0)>0).length;
+
+      $("insightsSales").innerHTML=`
+        <div class="insights-v4-tab-title">
+          <div><h3>Sales & Conversion</h3><p>See what buyer activity existed at the moment a listing was marked Sold.</p></div>
+        </div>
+
+        ${state.saleSnapshotsSupported
+          ? `<div class="insights-v4-backend-ok"><strong>Sale snapshots connected</strong><span>Future Mark Sold actions preserve the conversion state automatically.</span></div>`
+          : `<div class="insights-v4-backend-needed"><strong>Install the V4 migration</strong><span>Run the supplied migration to begin preserving conversion snapshots when cards sell.</span></div>`}
+
+        <div class="insights-v4-kpis compact">
+          <article><span>Sold listings</span><strong>${soldCards.length}</strong><small>Currently marked Sold</small></article>
+          <article><span>Snapshots captured</span><strong>${snapshots.length}</strong><small>Since V4 tracking</small></article>
+          <article><span>Avg. days to sale</span><strong>${snapshotAvg==null?"—":Math.round(snapshotAvg)}</strong><small>Snapshot data</small></article>
+          <article><span>Had contact action</span><strong>${snapshots.length?Math.round(contactConverters/snapshots.length*100):0}%</strong><small>Before sale</small></article>
+          <article><span>Had favorite</span><strong>${snapshots.length?Math.round(favoriteConverters/snapshots.length*100):0}%</strong><small>Before sale</small></article>
+        </div>
+
+        <section class="insights-v4-card">
+          <div class="insights-v4-card-head"><h3>Recent Sale Snapshots</h3><span>Historical cards sold before V4 cannot be reconstructed perfectly.</span></div>
+          <div class="insights-table-wrap">
+            <table class="insights-table insights-v4-table">
+              <thead><tr><th>Sold</th><th>Card</th><th>Price</th><th>Days</th><th>Unique</th><th>Fav</th><th>Contact</th><th>Score</th></tr></thead>
+              <tbody>${snapshots.length?snapshots.slice(0,50).map(row=>`
+                <tr>
+                  <td>${escapeHtml(new Date(row.sold_at).toLocaleDateString())}</td>
+                  <td class="insights-card-name">${escapeHtml(row.card_name||"Card")}</td>
+                  <td>${row.price_usd!=null?fmtMoney(row.price_usd):"—"}</td>
+                  <td>${row.days_listed??"—"}</td>
+                  <td>${row.unique_views||0}</td><td>${row.favorite_adds||0}</td>
+                  <td>${row.contact_actions||0}</td><td><strong class="insights-v3-score">${row.interest_score||0}</strong></td>
+                </tr>`).join(""):`<tr><td colspan="8" class="hint">No sale snapshots yet. New sales will appear here after the V4 migration is installed.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderHealthTab(){
+      const health=$("insightsHealth");
+      if(!health) return;
+
+      const checks=[
+        {
+          label:"Qualified card views",
+          ok:state.rows!==null,
+          note:"5-second qualification + 30-minute card/browser dedupe"
+        },
+        {
+          label:"Website visits",
+          ok:Array.isArray(state.websiteSeries),
+          note:"One visit per browser session; Owner Mode excluded"
+        },
+        {
+          label:"Buyer-intent events",
+          ok:state.engagementSupported,
+          note:state.engagementSupported?"Favorites, contacts, shares and image actions connected":"Run V4 migration"
+        },
+        {
+          label:"Sale conversion snapshots",
+          ok:state.saleSnapshotsSupported,
+          note:state.saleSnapshotsSupported?"Future sales preserve conversion state":"Run V4 migration"
+        },
+        {
+          label:"Listing edit history",
+          ok:editHistorySupported,
+          note:editHistorySupported?"Price/listing change history available":"Owner edit-history migration required"
+        },
+        {
+          label:"Sold date tracking",
+          ok:soldAtSupported,
+          note:soldAtSupported?"sold_at available":"sold_at migration/trigger required"
+        }
+      ];
+
+      const good=checks.filter(c=>c.ok).length;
+      health.innerHTML=`
+        <div class="insights-v4-tab-title">
+          <div><h3>Analytics Health</h3><p>A quick confidence check before making decisions from the dashboard.</p></div>
+          <span>${good}/${checks.length} healthy</span>
+        </div>
+
+        <div class="insights-v4-health-score ${good===checks.length?"all-good":""}">
+          <strong>${Math.round(good/checks.length*100)}%</strong>
+          <div><span>Analytics readiness</span><small>${good===checks.length?"All tracked systems are available.":"Some optional analytics components still need setup."}</small></div>
+        </div>
+
+        <div class="insights-v4-health-list">
+          ${checks.map(check=>`
+            <article class="${check.ok?"ok":"warn"}">
+              <i>${check.ok?"✓":"!"}</i>
+              <div><strong>${escapeHtml(check.label)}</strong><span>${escapeHtml(check.note)}</span></div>
+            </article>`).join("")}
+        </div>
+
+        <section class="insights-v4-card health-notes">
+          <h3>How to read the numbers</h3>
+          <p><strong>Unique views</strong> are unique browser identifiers, not guaranteed unique people. A person using multiple devices or clearing site storage may count more than once.</p>
+          <p><strong>Recommendations</strong> are signals for review, not automatic market valuations. They use activity on your own site and do not know external market prices.</p>
+          <p><strong>Old analytics</strong> collected before the qualified-view update may contain more repeated opens than new data.</p>
+        </section>
+      `;
     }
 
     async function refresh(){
-      let start,end;
+      loading.hidden=false;
+
+      let startDate,endDate;
       if(rangeSel.value==="custom"){
-        start=startInput.value ? new Date(startInput.value+"T00:00:00") : new Date();
-        end=endInput.value ? new Date(endInput.value+"T23:59:59.999") : new Date();
+        startDate=startInput.value?new Date(startInput.value+"T00:00:00"):new Date();
+        endDate=endInput.value?new Date(endInput.value+"T23:59:59.999"):new Date();
       }else{
-        ({start,end}=dateRangeForPreset(rangeSel.value));
+        ({start:startDate,end:endDate}=dateRangeForPreset(rangeSel.value));
       }
 
-      if(end<start){
-        $("insightsRows").innerHTML=`<tr><td colspan="10" class="hint">End date must be on or after the start date.</td></tr>`;
+      if(endDate<startDate){
+        loading.textContent="End date must be on or after the start date.";
         return;
       }
 
-      const previousRange=previousInsightsRange(start,end,rangeSel.value);
+      const previousRange=previousInsightsRange(startDate,endDate,rangeSel.value);
 
-      const [rowsRaw,series,websiteRaw,previousRowsRaw,engagementResult]=await Promise.all([
-        fetchInsights(start,end),
-        fetchViewSeries(start,end),
-        fetchWebsiteVisitSeries(start,end),
-        previousRange ? fetchInsights(previousRange.start,previousRange.end,{silent:true}) : Promise.resolve([]),
-        fetchCardEngagementInsights(start,end)
+      const [views,series,siteSeries,previous,engagement,saleSnapshots]=await Promise.all([
+        fetchInsights(startDate,endDate),
+        fetchViewSeries(startDate,endDate),
+        fetchWebsiteVisitSeries(startDate,endDate),
+        previousRange?fetchInsights(previousRange.start,previousRange.end,{silent:true}):Promise.resolve([]),
+        fetchCardEngagementInsights(startDate,endDate),
+        fetchSaleConversionSnapshots()
       ]);
 
-      const engagementMap=new Map(
-        engagementResult.rows.map(row=>[String(row.card_id||""),row])
-      );
+      const engagementMap=new Map(engagement.rows.map(row=>[String(row.card_id||""),row]));
+      const previousMap=new Map(previous.map(row=>[insightRowKey(row),row]));
 
-      const rows=rowsRaw.map(row=>{
+      let rows=views.map(row=>{
         const card=insightCardForRow(row);
-        const engagement=engagementMap.get(String(row.card_id||card?.id||""))||engagementEmpty();
-        const previous=previousRowsRaw.find(prev=>insightRowKey(prev)===insightRowKey(row));
-        const trend=previousRange
-          ? insightTrendMeta(row,previous)
-          : {className:"",label:"—",score:0,current:Number(row.unique_views||0),previous:0,pct:null};
+        const e=engagementMap.get(String(row.card_id||card?.id||""))||emptyEngagement();
+        const combined={...row,...e};
         return {
-          ...row,
-          ...engagement,
+          ...combined,
           _card:card,
           _status:insightStatusLabel(row),
-          _trend:trend,
-          _repeatRate:rowRepeatRate(row)
+          _trend:previousRange
+            ? insightTrendMeta(row,previousMap.get(insightRowKey(row)))
+            : {className:"",label:"—",score:0,current:Number(row.unique_views||0),previous:0,pct:null},
+          _contactActions:contactActions(combined),
+          _interestScore:insightInterestScore(combined),
+          _daysListed:cardDaysListed(card)
         };
+      });
+
+      // Engagement-only cards may have actions but no qualified view row yet.
+      engagement.rows.forEach(e=>{
+        if(rows.some(row=>String(row.card_id||row._card?.id||"")===String(e.card_id||""))) return;
+        const card=getCardById(e.card_id);
+        if(!card) return;
+        const combined={card_id:e.card_id,name:card.name,game:card.game,views:0,unique_views:0,...e};
+        rows.push({
+          ...combined,
+          _card:card,_status:insightStatusLabel(combined),
+          _trend:{className:"",label:"—",score:0,current:0,previous:0,pct:null},
+          _contactActions:contactActions(combined),
+          _interestScore:insightInterestScore(combined),
+          _daysListed:cardDaysListed(card)
+        });
       });
 
       syncGameOptions(rows);
 
-      const selectedStatus=statusSel.value;
-      const selectedGame=gameSel.value;
-      let visible=rows.filter(row=>{
-        if(selectedStatus && row._status!==selectedStatus) return false;
-        if(selectedGame && String(row.game||row._card?.game||"")!==selectedGame) return false;
+      state={
+        ...state,
+        start:startDate,end:endDate,rows,
+        series:Array.isArray(series)?series:[],
+        websiteSeries:alignWebsiteVisitSeriesToCardSeries(series,siteSeries),
+        engagementSupported:engagement.supported,
+        saleSnapshotsSupported:saleSnapshots.supported,
+        saleSnapshots:saleSnapshots.rows
+      };
+
+      state.visible=rows.filter(row=>{
+        if(statusSel.value && row._status!==statusSel.value) return false;
+        if(gameSel.value && String(row.game||row._card?.game||"")!==gameSel.value) return false;
         return true;
       });
 
-      visible.forEach(row=>{
-        row._interestScore=interestScore(row);
-        row._contactActions=contactActions(row);
-        row._daysListed=cardDaysListed(row._card);
-      });
-
-      const setup=$("insightsEngagementSetup");
-      if(setup){
-        setup.innerHTML=engagementResult.supported
-          ? `<div class="insights-v3-backend-ok"><strong>Buyer-intent tracking connected</strong><span>Favorites, contact actions, shares and image engagement are being aggregated across visitors.</span></div>`
-          : `<div class="insights-v3-backend-needed"><strong>One setup step remaining</strong><span>Run <b>insights-v3-supabase-migration.sql</b> in Supabase to enable cross-visitor Favorites, Contact, Share and Image analytics. Qualified Views continue working normally.</span></div>`;
-      }
-
-      const websiteSeries=alignWebsiteVisitSeriesToCardSeries(series,websiteRaw);
-      const websiteVisits=websiteSeries.reduce((sum,row)=>sum+Number(row.visits||0),0);
-      const qualifiedViews=visible.reduce((sum,row)=>sum+Number(row.views||0),0);
-      const uniquePairs=visible.reduce((sum,row)=>sum+Number(row.unique_views||0),0);
-      const favorites=visible.reduce((sum,row)=>sum+Number(row.favorite_adds||0),0);
-      const contacts=visible.reduce((sum,row)=>sum+row._contactActions,0);
-      const shares=visible.reduce((sum,row)=>sum+Number(row.shares||0),0);
-      const topInterest=visible.slice().sort((a,b)=>b._interestScore-a._interestScore)[0];
-      const contactRate=uniquePairs ? contacts/uniquePairs : 0;
-
-      $("insightsStats").innerHTML=`
-        <article class="insights-v3-kpi primary">
-          <span>Website Visits</span><strong>${websiteVisits.toLocaleString()}</strong>
-          <small>People entering the site</small>
-        </article>
-        <article class="insights-v3-kpi">
-          <span>Qualified Views</span><strong>${qualifiedViews.toLocaleString()}</strong>
-          <small>Card open for 5+ seconds</small>
-        </article>
-        <article class="insights-v3-kpi">
-          <span>Favorites</span><strong>${favorites.toLocaleString()}</strong>
-          <small>Saved by visitors</small>
-        </article>
-        <article class="insights-v3-kpi">
-          <span>Contact Actions</span><strong>${contacts.toLocaleString()}</strong>
-          <small>Contact, copy or platform clicks</small>
-        </article>
-        <article class="insights-v3-kpi">
-          <span>Contact Rate</span><strong>${Math.round(contactRate*100)}%</strong>
-          <small>Contact actions ÷ unique card views</small>
-        </article>
-        <article class="insights-v3-kpi accent">
-          <span>Strongest Interest</span>
-          <strong class="insights-stat-card-name">${topInterest?escapeHtml(topInterest.name||topInterest._card?.name||"—"):"—"}</strong>
-          <small>${topInterest?`${topInterest._interestScore} interest points`:"No activity yet"}</small>
-        </article>
-      `;
-
-      const funnelSteps=[
-        {label:"Website visits",value:websiteVisits,help:"Entered the website"},
-        {label:"Qualified card views",value:qualifiedViews,help:websiteVisits?`${Math.round(qualifiedViews/websiteVisits*100)} per 100 visits`:"No traffic yet"},
-        {label:"Favorites",value:favorites,help:qualifiedViews?`${Math.round(favorites/qualifiedViews*100)}% of views`:"—"},
-        {label:"Contact actions",value:contacts,help:qualifiedViews?`${Math.round(contacts/qualifiedViews*100)}% of views`:"—"}
-      ];
-      const funnelMax=Math.max(1,...funnelSteps.map(step=>step.value));
-      $("insightsFunnel").innerHTML=funnelSteps.map((step,index)=>`
-        <div class="insights-v3-funnel-row">
-          <div class="insights-v3-funnel-index">${index+1}</div>
-          <div class="insights-v3-funnel-copy"><strong>${escapeHtml(step.label)}</strong><small>${escapeHtml(step.help)}</small></div>
-          <div class="insights-v3-funnel-track"><i style="width:${Math.max(step.value?6:0,step.value/funnelMax*100)}%"></i></div>
-          <div class="insights-v3-funnel-value">${step.value.toLocaleString()}</div>
-        </div>
-      `).join("");
-
-      const attention=[];
-      visible.forEach(row=>{
-        const card=row._card;
-        if(!card || row._status!=="Available") return;
-        const unique=Number(row.unique_views||0);
-        const contacts=row._contactActions;
-        const price=cardUsdListedPrice(card)||0;
-        const days=row._daysListed;
-
-        if(unique>=5 && contacts===0){
-          attention.push({
-            priority:3,
-            title:"Views but no contact",
-            card,
-            detail:`${unique} unique views · no contact actions`,
-            suggestion:"Consider checking price, description or buyer confidence."
-          });
-        }else if(row._trend.className==="hot" && contacts===0){
-          attention.push({
-            priority:2,
-            title:"Rising interest",
-            card,
-            detail:`${row._trend.label} · no contact yet`,
-            suggestion:"Worth watching closely or promoting while interest is rising."
-          });
-        }
-
-        if(price>=HIGH_VALUE_DIRECT_CONTACT_USD && unique<2){
-          attention.push({
-            priority:2,
-            title:"High-value, low visibility",
-            card,
-            detail:`${fmtMoney(price)} · ${unique} unique view${unique===1?"":"s"}`,
-            suggestion:"Consider improving discoverability or sharing the direct listing."
-          });
-        }
-
-        if(Number.isFinite(days) && days>=60 && unique===0){
-          attention.push({
-            priority:1,
-            title:"Stale listing",
-            card,
-            detail:`${days} days listed · no unique views in this period`,
-            suggestion:"Refresh the listing, photo order, title or price."
-          });
-        }
-      });
-
-      attention.sort((a,b)=>b.priority-a.priority);
-      const deduped=[];
-      const seen=new Set();
-      for(const item of attention){
-        const key=`${item.card.id}|${item.title}`;
-        if(seen.has(key)) continue;
-        seen.add(key);
-        deduped.push(item);
-        if(deduped.length>=6) break;
-      }
-
-      $("insightsAttention").innerHTML=deduped.length ? deduped.map(item=>`
-        <article class="insights-v3-alert">
-          <div>
-            <span>${escapeHtml(item.title)}</span>
-            <strong>${escapeHtml(item.card.name||"Card")}</strong>
-            <small>${escapeHtml(item.detail)}</small>
-          </div>
-          <p>${escapeHtml(item.suggestion)}</p>
-        </article>
-      `).join("") : `<div class="insights-v3-empty-good"><strong>Nothing urgent right now.</strong><span>No obvious pricing, visibility or stale-listing signals in this period.</span></div>`;
-
-      switch(sortSel.value){
-        case "contacts-desc": visible.sort((a,b)=>b._contactActions-a._contactActions || b._interestScore-a._interestScore); break;
-        case "favorites-desc": visible.sort((a,b)=>Number(b.favorite_adds||0)-Number(a.favorite_adds||0) || b._interestScore-a._interestScore); break;
-        case "trend-desc": visible.sort((a,b)=>b._trend.score-a._trend.score || b._interestScore-a._interestScore); break;
-        case "unique-desc": visible.sort((a,b)=>Number(b.unique_views||0)-Number(a.unique_views||0)); break;
-        case "days-desc": visible.sort((a,b)=>(b._daysListed??-1)-(a._daysListed??-1)); break;
-        case "price-high": visible.sort((a,b)=>(cardUsdListedPrice(b._card)||0)-(cardUsdListedPrice(a._card)||0)); break;
-        case "name": visible.sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""))); break;
-        default: visible.sort((a,b)=>b._interestScore-a._interestScore || Number(b.unique_views||0)-Number(a.unique_views||0));
-      }
-
-      $("insightsRows").innerHTML=visible.length ? visible.map((row,index)=>{
-        const card=row._card;
-        const usd=cardUsdListedPrice(card);
-        return `<tr>
-          <td class="insights-rank">${index+1}</td>
-          <td class="insights-card-name">${escapeHtml(row.name||card?.name||"")}</td>
-          <td><span class="insights-status-tag">${escapeHtml(row._status)}</span></td>
-          <td>${usd!=null?fmtMoney(usd):"—"}</td>
-          <td>${Number(row.unique_views||0).toLocaleString()}</td>
-          <td>${Number(row.favorite_adds||0).toLocaleString()}</td>
-          <td>${row._contactActions.toLocaleString()}</td>
-          <td><strong class="insights-v3-score">${row._interestScore}</strong></td>
-          <td><span class="trend-tag ${row._trend.className}">${escapeHtml(row._trend.label)}</span></td>
-          <td>${row._daysListed==null?"—":`${row._daysListed}d`}</td>
-        </tr>`;
-      }).join("") : `<tr><td colspan="10" class="hint">No cards match these filters.</td></tr>`;
-
-      renderSimpleBars("insightsChart",series,"views","No qualified card views for this period.");
-      renderSimpleBars("insightsWebsiteChart",websiteSeries,"visits","No website visits for this period.",true);
-
-      const bracketOrder=["< $100","$100–499","$500–999","$1k–2.9k","$3k–5.9k","$6k+"];
-      const bracketMap=new Map(bracketOrder.map(label=>[label,{label,cards:0,unique:0,favorites:0,contacts:0,score:0}]));
-      visible.forEach(row=>{
-        const usd=cardUsdListedPrice(row._card);
-        if(usd==null) return;
-        const bucket=bracketMap.get(priceBracket(usd));
-        if(!bucket) return;
-        bucket.cards+=1;
-        bucket.unique+=Number(row.unique_views||0);
-        bucket.favorites+=Number(row.favorite_adds||0);
-        bucket.contacts+=row._contactActions;
-        bucket.score+=row._interestScore;
-      });
-
-      $("insightsPriceBrackets").innerHTML=`
-        <div class="insights-v3-bracket-head"><span>Price</span><span>Cards</span><span>Unique</span><span>Favorites</span><span>Contact</span><span>Score</span></div>
-        ${bracketOrder.map(label=>{
-          const b=bracketMap.get(label);
-          return `<div class="insights-v3-bracket-row">
-            <strong>${label}</strong><span>${b.cards}</span><span>${b.unique}</span><span>${b.favorites}</span><span>${b.contacts}</span><span>${b.score}</span>
-          </div>`;
-        }).join("")}
-      `;
-
-      const soldTimes=cards.map(card=>({card,days:cardTimeToSale(card)})).filter(item=>item.days!=null);
-      const averageSaleDays=soldTimes.length ? soldTimes.reduce((sum,item)=>sum+item.days,0)/soldTimes.length : null;
-      const fastest=soldTimes.slice().sort((a,b)=>a.days-b.days)[0];
-      const slowest=soldTimes.slice().sort((a,b)=>b.days-a.days)[0];
-
-      $("insightsSalesSpeed").innerHTML=`
-        <article><span>Sold listings measured</span><strong>${soldTimes.length}</strong></article>
-        <article><span>Average time to sale</span><strong>${averageSaleDays==null?"—":`${Math.round(averageSaleDays)} days`}</strong></article>
-        <article><span>Fastest sale</span><strong>${fastest?`${Math.round(fastest.days)} days`:"—"}</strong><small>${fastest?escapeHtml(fastest.card.name):""}</small></article>
-        <article><span>Longest sale</span><strong>${slowest?`${Math.round(slowest.days)} days`:"—"}</strong><small>${slowest?escapeHtml(slowest.card.name):""}</small></article>
-      `;
+      loading.hidden=true;
+      renderOverview();
+      renderRecommendations();
+      renderSales();
+      if(activeTab()==="history") renderHistoryTab();
+      if(activeTab()==="health") renderHealthTab();
     }
 
     rangeSel.addEventListener("change",()=>{
@@ -22287,7 +22732,6 @@ function wireShimmer(container){
     });
     statusSel.addEventListener("change",refresh);
     gameSel.addEventListener("change",refresh);
-    sortSel.addEventListener("change",refresh);
     startInput.addEventListener("change",()=>{if(rangeSel.value==="custom")refresh();});
     endInput.addEventListener("change",()=>{if(rangeSel.value==="custom")refresh();});
 
