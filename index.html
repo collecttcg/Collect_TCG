@@ -14042,7 +14042,7 @@ body.light-mode .clean-game-pill.filter-pill-btn.pill-selected{
 .giveaway-winner-drag-handle:active{
   cursor:grabbing;
 }
-.giveaway-winner-card[draggable="true"]{
+.giveaway-winner-card{
   transition:
     transform .14s ease,
     opacity .14s ease,
@@ -14068,6 +14068,16 @@ body.light-mode .clean-game-pill.filter-pill-btn.pill-selected{
     min-width:34px;
     height:30px;
   }
+}
+
+
+/* Drag handle is the actual draggable element. */
+.giveaway-winner-drag-handle[draggable="true"]{
+  -webkit-user-drag:element;
+  user-select:none;
+}
+.giveaway-winner-grid-dragging{
+  cursor:grabbing;
 }
 
 </style>
@@ -22894,15 +22904,12 @@ function wireShimmer(container){
     const cards=()=>[...container.querySelectorAll("[data-giveaway-winner-card]")];
 
     cards().forEach(card=>{
-      card.setAttribute("draggable","true");
+      const handle=card.querySelector("[data-giveaway-drag-handle]");
+      if(!handle) return;
 
-      card.addEventListener("dragstart",event=>{
-        const handleTarget=event.target?.closest?.("[data-giveaway-drag-handle]");
-        if(!handleTarget){
-          event.preventDefault();
-          return;
-        }
+      handle.setAttribute("draggable","true");
 
+      handle.addEventListener("dragstart",event=>{
         draggedCard=card;
         originalOrder=cards()
           .map(item=>String(item.dataset.giveawayWinnerCard||""))
@@ -22913,11 +22920,23 @@ function wireShimmer(container){
 
         try{
           event.dataTransfer.effectAllowed="move";
-          event.dataTransfer.setData("text/plain",String(card.dataset.giveawayWinnerCard||""));
+          event.dataTransfer.setData(
+            "text/plain",
+            String(card.dataset.giveawayWinnerCard||"")
+          );
+
+          // Use the whole card as the drag preview when supported.
+          if(typeof event.dataTransfer.setDragImage==="function"){
+            event.dataTransfer.setDragImage(
+              card,
+              Math.min(36,card.offsetWidth/2),
+              24
+            );
+          }
         }catch{}
       });
 
-      card.addEventListener("dragend",async()=>{
+      handle.addEventListener("dragend",async()=>{
         if(!draggedCard) return;
 
         draggedCard.classList.remove("giveaway-winner-dragging");
@@ -22928,6 +22947,7 @@ function wireShimmer(container){
           .join("|");
 
         const changed=originalOrder && newOrder!==originalOrder;
+
         draggedCard=null;
         originalOrder="";
 
@@ -22950,26 +22970,24 @@ function wireShimmer(container){
       const target=event.target?.closest?.("[data-giveaway-winner-card]");
       if(!target || target===draggedCard) return;
 
-      const rect=target.getBoundingClientRect();
-      const midpointY=rect.top + rect.height/2;
-      const midpointX=rect.left + rect.width/2;
+      const targetRect=target.getBoundingClientRect();
+      const draggedRect=draggedCard.getBoundingClientRect();
 
-      // Works for both one-column mobile and multi-column desktop grids.
-      const sameRow=Math.abs(
-        draggedCard.getBoundingClientRect().top - rect.top
-      ) < Math.min(rect.height,draggedCard.getBoundingClientRect().height)*0.5;
+      const targetCenterX=targetRect.left+targetRect.width/2;
+      const targetCenterY=targetRect.top+targetRect.height/2;
 
-      let insertBefore;
-      if(sameRow){
-        insertBefore=event.clientX < midpointX;
-      }else{
-        insertBefore=event.clientY < midpointY;
+      const rowTolerance=Math.min(targetRect.height,draggedRect.height)*0.45;
+      const sameRow=Math.abs(draggedRect.top-targetRect.top)<rowTolerance;
+
+      const before=sameRow
+        ? event.clientX<targetCenterX
+        : event.clientY<targetCenterY;
+
+      const referenceNode=before ? target : target.nextSibling;
+
+      if(referenceNode!==draggedCard){
+        container.insertBefore(draggedCard,referenceNode);
       }
-
-      container.insertBefore(
-        draggedCard,
-        insertBefore ? target : target.nextSibling
-      );
     });
 
     container.addEventListener("drop",event=>{
@@ -23014,7 +23032,7 @@ function wireShimmer(container){
     `;
 
     const winnerCardHTML=g=>`
-      <article class="giveaway-card giveaway-winner-card" data-giveaway-winner-card="${escapeHtml(g.id)}" draggable="${isOwnerMode() ? "true" : "false"}">
+      <article class="giveaway-card giveaway-winner-card" data-giveaway-winner-card="${escapeHtml(g.id)}">
         ${g.image_url ? `<img src="${escapeHtml(g.image_url)}" alt="${escapeHtml(g.card_name)}" loading="lazy" decoding="async">` : ""}
         <div class="giveaway-body">
           <div class="giveaway-title">${escapeHtml(g.title)}</div>
@@ -23041,6 +23059,7 @@ function wireShimmer(container){
             <div class="giveaway-winner-drag-hint" aria-hidden="true">
               <span class="giveaway-winner-drag-handle"
                     data-giveaway-drag-handle
+                    draggable="true"
                     title="Drag to reorder winners">⋮⋮</span>
               <span>Drag to reorder</span>
             </div>
