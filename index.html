@@ -14752,6 +14752,17 @@ body:not(.owner-mode) .giveaway-grid#pastWinnersGrid .giveaway-winner-name{
   }
 }
 
+
+.review-delete-btn{
+  color:var(--danger) !important;
+  border-color:rgba(248,113,113,.26) !important;
+}
+.review-delete-btn:hover,
+.review-delete-btn:focus-visible{
+  background:rgba(248,113,113,.08) !important;
+  border-color:rgba(248,113,113,.48) !important;
+}
+
 </style>
 </head>
 <body>
@@ -25172,6 +25183,7 @@ function wireShimmer(container){
           </button>
           <button type="button" class="btn-ghost" data-review-action="hide" data-review-id="${escapeHtml(review.id)}">Hide</button>
           <button type="button" class="btn-ghost review-reject-btn" data-review-action="reject" data-review-id="${escapeHtml(review.id)}">Reject</button>
+          <button type="button" class="btn-ghost review-delete-btn" data-review-delete="${escapeHtml(review.id)}">Delete</button>
         </div>
       </article>
     `;
@@ -25330,6 +25342,39 @@ function wireShimmer(container){
     await renderReviewsPage();
   }
 
+  async function deleteReviewSubmission(id){
+    if(!requireOwner("delete reviews")) return;
+
+    const row=ownerReviewSubmissions.find(item=>String(item.id)===String(id));
+    if(!row) return;
+
+    const preview=String(row.review_text||"").trim().slice(0,80);
+    const ok=confirm(
+      `Permanently delete this review from ${row.display_name||"this reviewer"}?\n\n` +
+      `${preview}${String(row.review_text||"").length>80?"…":""}\n\n` +
+      `This cannot be undone.`
+    );
+    if(!ok) return;
+
+    const {data,error}=await supabaseClient.rpc("delete_review",{
+      p_review_id:Number(id)
+    });
+
+    if(error){
+      console.error("Delete review error:",error);
+      showToast("Could not delete review");
+      return;
+    }
+
+    if(data!==true){
+      showToast("Review was not deleted");
+      return;
+    }
+
+    showToast("Review permanently deleted");
+    await renderReviewsPage();
+  }
+
   function bindReviewPageEvents(){
     const form=$("reviewSubmitForm");
     if(form){
@@ -25364,6 +25409,10 @@ function wireShimmer(container){
 
     view.querySelectorAll("[data-review-verified]").forEach(btn=>{
       btn.addEventListener("click",()=>toggleReviewVerified(btn.dataset.reviewVerified));
+    });
+
+    view.querySelectorAll("[data-review-delete]").forEach(btn=>{
+      btn.addEventListener("click",()=>deleteReviewSubmission(btn.dataset.reviewDelete));
     });
   }
 
