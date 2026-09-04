@@ -15730,6 +15730,70 @@ body.showcase-dragging-body{
   }
 }
 
+
+/* =========================================================
+   MULTIPLE GRADED SLABS — MOBILE POP VISIBILITY
+   Ensure slab-by-slab POP/Higher metadata remains visible.
+   ========================================================= */
+@media(max-width:600px){
+  .detail-slab-list{
+    display:block !important;
+    width:100%;
+    overflow:visible !important;
+  }
+
+  .detail-slab-list-head{
+    display:flex !important;
+    width:100%;
+  }
+
+  .detail-slab-row{
+    display:flex !important;
+    width:100%;
+    visibility:visible !important;
+    opacity:1 !important;
+  }
+
+  .detail-slab-meta{
+    display:flex !important;
+    width:100%;
+    visibility:visible !important;
+    opacity:1 !important;
+    flex-wrap:wrap !important;
+    gap:4px 8px !important;
+    font-size:10px !important;
+    line-height:1.35 !important;
+  }
+
+  .detail-slab-meta span{
+    display:inline-flex !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    white-space:normal !important;
+  }
+
+  .detail-slab-number{
+    font-size:9px !important;
+  }
+
+  .detail-slab-row strong{
+    font-size:11px !important;
+  }
+}
+
+
+@media(max-width:600px){
+  .detail-slab-pop{
+    display:inline-flex !important;
+    color:var(--text) !important;
+    font-weight:700 !important;
+  }
+  .detail-slab-cert{
+    display:inline-flex !important;
+    color:var(--text-muted) !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -35736,8 +35800,8 @@ function wireShimmer(container){
                 <strong>${escapeHtml(gradeLabel)}</strong>
               </div>
               <div class="detail-slab-meta">
-                ${popLabel ? `<span>${escapeHtml(popLabel)}</span>` : ""}
-                ${isOwnerMode() && cert ? `<span>Cert ${escapeHtml(cert)}</span>` : ""}
+                ${popLabel ? `<span class="detail-slab-pop">${escapeHtml(popLabel)}</span>` : ""}
+                ${isOwnerMode() && cert ? `<span class="detail-slab-cert">Cert ${escapeHtml(cert)}</span>` : ""}
               </div>
             </div>`;
           }).join("")}
