@@ -15880,9 +15880,9 @@ body.showcase-dragging-body{
     <nav class="mainnav" id="mainnav">
       <a href="#/home" data-route="home"><span class="ic">⌂</span> Home</a>
       <a href="#/inventory" data-route="inventory"><span class="ic">▦</span> <span>Inventory</span><span class="nav-count" id="inventoryNavCount">0</span></a>
+      <a href="#/sold" data-route="sold" class="status-primary-nav"><span class="ic">✓</span> <span>Sold</span><span class="nav-count" id="soldNavCount">0</span></a>
       <a href="#/collection" data-route="collection" class="collection-primary-nav"><span class="ic">◆</span> <span>Collection</span><span class="nav-count collection-nav-count" id="collectionNavCount">0</span></a>
       <a href="#/reserved" data-route="reserved" class="status-primary-nav"><span class="ic">◷</span> <span>Reserved</span><span class="nav-count" id="reservedNavCount">0</span></a>
-      <a href="#/sold" data-route="sold" class="status-primary-nav"><span class="ic">✓</span> <span>Sold</span><span class="nav-count" id="soldNavCount">0</span></a>
       <a href="#/showcase" data-route="showcase"><span class="ic">▶</span> Showcase</a>
       <button type="button" class="mobile-more-toggle" id="mobileMoreToggle" aria-expanded="false">
         <span class="ic">⋯</span> More <span class="mobile-more-caret">⌄</span>
@@ -19673,8 +19673,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       ? "collection"
       : (cardStatus === "reserved" ? "reserved" : (cardStatus === "sold" ? "sold" : "inventory"));
 
+    const cardReturnRoute=routeBase(String(detailsReturnHash||"").replace(/^#\/?/,""));
+    const cardActiveRoute=isCardRoute && cardReturnRoute==="home"
+      ? "home"
+      : cardParentRoute;
+
     document.querySelectorAll("#mainnav a").forEach(a=>{
-      a.classList.toggle("active", isCardRoute ? a.dataset.route === cardParentRoute : a.dataset.route === route);
+      a.classList.toggle("active", isCardRoute ? a.dataset.route === cardActiveRoute : a.dataset.route === route);
     });
     const moreToggle = $("mobileMoreToggle");
     if(moreToggle){
@@ -19699,7 +19704,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         !!detailsPreservedListingHash &&
         canReusePreservedListing(detailsPreservedListingHash);
 
-      if(!reuseExistingListing){
+      const returnRoute=routeBase(String(detailsReturnHash||"").replace(/^#\/?/,""));
+
+      if(returnRoute==="home"){
+        // Card opened from Home: keep Home rendered underneath the modal.
+        // Closing Card Details will therefore reveal Home immediately, with
+        // no Inventory page flash/background.
+        renderHomePage();
+      }else if(!reuseExistingListing){
         renderInventoryPage(cardScope);
       }
 
@@ -22214,6 +22226,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
                 <span class="home-stat-value">${stats.inventory.toLocaleString()}</span>
                 <span class="home-stat-label">Inventory</span>
               </a>
+              <a href="#/sold" class="home-stat-card">
+                <span class="home-stat-value">${stats.sold.toLocaleString()}</span>
+                <span class="home-stat-label">Sold</span>
+              </a>
               <a href="#/collection" class="home-stat-card home-stat-card-collection">
                 <span class="home-stat-value">${stats.collection.toLocaleString()}</span>
                 <span class="home-stat-label">Collection / NFS</span>
@@ -22221,10 +22237,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
               <a href="#/reserved" class="home-stat-card">
                 <span class="home-stat-value">${stats.reserved.toLocaleString()}</span>
                 <span class="home-stat-label">Reserved</span>
-              </a>
-              <a href="#/sold" class="home-stat-card">
-                <span class="home-stat-value">${stats.sold.toLocaleString()}</span>
-                <span class="home-stat-label">Sold</span>
               </a>
               <!-- These three links must use filters understood by restoreListingFiltersFromUrl(). -->
               <a href="#/inventory?quick=graded" class="home-stat-card">
@@ -22392,7 +22404,17 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       btn.addEventListener("click", ()=>{
         const filter=String(btn.dataset.homeFilter||"all");
         if(!["championship","vintage","graded","sealed"].includes(filter)) return;
+
+        try{ sessionStorage.removeItem(LISTING_SCROLL_STATE_KEY); }catch{}
         location.hash=`#/inventory?quick=${encodeURIComponent(filter)}`;
+
+        // After the destination has rendered, force both possible scroll
+        // containers to the very top.
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+          window.scrollTo({top:0,left:0,behavior:"auto"});
+          const shell=document.querySelector(".shell");
+          if(shell) shell.scrollTo({top:0,left:0,behavior:"auto"});
+        }));
       });
     });
   }
@@ -35991,11 +36013,17 @@ function wireShimmer(container){
 
     const detailsCloseButton=$("detailsCloseBtn");
     if(detailsCloseButton){
-      const returningToListing=!!detailsReturnHash && !detailsReturnHash.includes("#/card/");
-      detailsCloseButton.innerHTML=returningToListing
-        ? `<span aria-hidden="true">←</span> Back to results`
+      const returningToPage=!!detailsReturnHash && !detailsReturnHash.includes("#/card/");
+      const returningHome=routeBase(String(detailsReturnHash||"").replace(/^#\/?/,""))==="home";
+      detailsCloseButton.innerHTML=returningToPage
+        ? `<span aria-hidden="true">←</span> ${returningHome ? "Back to home" : "Back to results"}`
         : `<span aria-hidden="true">×</span> Close`;
-      detailsCloseButton.setAttribute("aria-label",returningToListing ? "Back to previous results" : "Close card details");
+      detailsCloseButton.setAttribute(
+        "aria-label",
+        returningToPage
+          ? (returningHome ? "Back to home" : "Back to previous results")
+          : "Close card details"
+      );
     }
 
     detailsMount.innerHTML = `
