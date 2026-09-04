@@ -15649,6 +15649,87 @@ body.showcase-dragging-body{
   }
 }
 
+
+/* =========================================================
+   MULTIPLE GRADED SLABS
+   Labels/details only — existing grading layout dimensions unchanged.
+   ========================================================= */
+.grading-slab-label{
+  grid-column:1 / -1;
+  margin:2px 0 -2px;
+  color:var(--text-muted);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.grading-row + .grading-row{
+  padding-top:10px;
+  border-top:1px solid var(--border);
+}
+
+.detail-slab-list{
+  margin-top:10px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  overflow:hidden;
+  background:var(--surface);
+}
+.detail-slab-list-head,
+.detail-slab-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 12px;
+}
+.detail-slab-list-head{
+  background:var(--surface-2);
+  border-bottom:1px solid var(--border);
+}
+.detail-slab-list-head strong{
+  font-size:11px;
+}
+.detail-slab-list-head span{
+  color:var(--text-muted);
+  font-size:9px;
+}
+.detail-slab-row + .detail-slab-row{
+  border-top:1px solid var(--border);
+}
+.detail-slab-row > div:first-child{
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  min-width:0;
+}
+.detail-slab-row strong{
+  font-size:11px;
+}
+.detail-slab-number{
+  color:var(--text-muted);
+  font-size:9px;
+  white-space:nowrap;
+}
+.detail-slab-meta{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  gap:6px 10px;
+  color:var(--text-muted);
+  font-size:9px;
+}
+@media(max-width:600px){
+  .detail-slab-row{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:5px;
+  }
+  .detail-slab-meta{
+    justify-content:flex-start;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -18668,6 +18749,40 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return `${pop}${higherText}`;
   }
 
+
+  function validGradingEntries(card){
+    return (Array.isArray(card?.grading)?card.grading:[])
+      .filter(g=>g && String(g.company||"").trim());
+  }
+
+  function gradingSummaryLabel(card){
+    const grades=validGradingEntries(card);
+    if(!grades.length) return "";
+
+    const labels=grades.map(g=>
+      `${String(g.company||"").trim().toUpperCase()} ${String(g.grade||"").trim()}`.trim()
+    );
+    const unique=[...new Set(labels)];
+
+    if(grades.length===1) return labels[0];
+
+    if(unique.length===1){
+      return `${unique[0]} ×${grades.length}`;
+    }
+
+    return `${grades.length} graded slabs`;
+  }
+
+  function gradingPopSummaryLabel(card){
+    const grades=validGradingEntries(card);
+    if(grades.length!==1) return "";
+    return gradePopLabel(grades[0]);
+  }
+
+  function slabLabel(index,total){
+    return total>1 ? `Slab ${index+1}` : "Slab";
+  }
+
   const PSA_BULK_SYNC_KEY="collect_tcg_psa_bulk_sync_v2";
   const PSA_BULK_RESULT_KEY="collect_tcg_psa_bulk_result_v1";
   const PSA_POP_DAILY_MS=24*60*60*1000;
@@ -18693,6 +18808,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           cardName:String(card.name||"Card"),
           cardCode:String(card.card_code||""),
           gradeIndex:index,
+          slabNumber:index+1,
+          slabCount:(Array.isArray(card.grading)?card.grading:[]).filter(g=>g&&String(g.company||"").trim()).length,
           cert,
           pop:grade?.pop_count,
           higher:grade?.pop_higher,
@@ -20305,7 +20422,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const avoidStatusCorner=status==="sold" || status==="reserved";
 
     const gradeText=`${company} ${value}`.trim();
-    const popText=gradePopLabel(grade);
+    const allGrades=validGradingEntries(card);
+    const popText=allGrades.length===1 ? gradePopLabel(grade) : "";
+    const slabText=allGrades.length>1 ? `${allGrades.length} SLABS` : (popText || "GRADED");
     return `<button type="button"
                     class="overview-grade-overlay filter-pill-btn ${avoidStatusCorner?"overview-grade-overlay-right":""} ${pillFilterState.grade.size && pillFilterState.grade.has(gradeText)?"pill-selected":""}"
                     data-pill-filter="grade"
@@ -20313,7 +20432,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
                     title="${escapeHtml(popText ? `${gradeText} · ${popText}` : `Filter by ${gradeText}`)}"
                     aria-label="${escapeHtml(`Filter by ${gradeText}`)}">
       <strong>${escapeHtml(gradeText)}</strong>
-      <small>${escapeHtml(popText || "GRADED")}</small>
+      <small>${escapeHtml(slabText)}</small>
     </button>`;
   }
 
@@ -21214,11 +21333,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     "10","9.5","9","8.5","8","7.5","7","6.5","6","5.5","5","4.5","4","3.5","3","2.5","2","1.5","1"
   ];
 
-  function gradingRowHTML(p, grade, index){
+  function gradingRowHTML(p, grade, index, total=1){
     const g = grade || {company:"PSA", grade:"10", cert:"", pop_count:null, pop_higher:null, pop_updated_at:null};
     const hasPop = g.pop_count != null && g.pop_count !== "";
     const updated = g.pop_updated_at ? new Date(g.pop_updated_at).toLocaleString() : "";
     return `<div class="grading-row" data-grade-index="${index}">
+      <div class="grading-slab-label">${escapeHtml(slabLabel(index,total))}</div>
       <div class="field">
         <label>Company</label>
         <select class="${p}GradeCompany">
@@ -21298,7 +21418,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
 
     function refresh(){
-      mount.innerHTML = formState.grading.map((g,i)=>gradingRowHTML(p,g,i)).join("");
+      mount.innerHTML = formState.grading.map((g,i)=>gradingRowHTML(p,g,i,formState.grading.length)).join("");
       mount.querySelectorAll(".grading-row").forEach((row, i)=>{
         row.querySelector("." + p + "GradeCompany").addEventListener("change", e=>{
           formState.grading[i].company=e.target.value;
@@ -22528,8 +22648,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   function compareGradeLabel(card){
-    const grades=Array.isArray(card.grading)?card.grading.filter(g=>g&&g.company):[];
-    if(grades.length) return `${grades[0].company} ${grades[0].grade||""}`.trim();
+    const grades=validGradingEntries(card);
+    if(grades.length) return gradingSummaryLabel(card);
     if(effectiveFormat(card)==="Sealed") return "Sealed";
     return CONDITION_LABEL[card.condition]||card.condition||"—";
   }
@@ -22640,15 +22760,17 @@ function relatedCardHTML(c){
     const color = RARITY_COLOR[c.rarity] || "var(--r-common)";
     const shimmer = SHIMMER_RARITIES.has(c.rarity);
     const format = effectiveFormat(c);
-    const grades = Array.isArray(c.grading) ? c.grading.filter(g=>g && g.company) : [];
+    const grades = validGradingEntries(c);
     const baseGradeText = grades.length
-      ? `${grades[0].company} ${grades[0].grade || ""}`.trim()
+      ? gradingSummaryLabel(c)
       : (format === "Sealed" ? "Sealed" : (rawConditionShortLabel(c.condition) || "—"));
-    const firstGradePop=grades.length ? gradePopLabel(grades[0]) : "";
+    const firstGradePop=gradingPopSummaryLabel(c);
     const gradeText=firstGradePop ? `${baseGradeText} · ${firstGradePop}` : baseGradeText;
 
     const gradeFilterText = grades.length
-      ? baseGradeText
+      ? (grades.length===1
+          ? `${grades[0].company} ${grades[0].grade || ""}`.trim()
+          : baseGradeText)
       : (format === "Sealed"
           ? "Sealed"
           : (rawConditionFilterLabel(c.condition) || gradeText));
@@ -31517,12 +31639,14 @@ function wireShimmer(container){
   }
 
   function missingCertificateEntries(card){
-    return gradingEntries(card).filter(entry=>{
-      if(!isSlabGradingEntry(entry)) return false;
+    return gradingEntries(card)
+      .map((entry,index)=>({entry,index}))
+      .filter(({entry})=>{
+        if(!isSlabGradingEntry(entry)) return false;
 
-      const cert=normalizePsaCertInput(entry.cert || entry.certificate || "");
-      return !cert;
-    });
+        const cert=String(entry.cert || entry.certificate || "").trim();
+        return !cert;
+      });
   }
 
   function cardsMissingCertificates(){
@@ -31575,7 +31699,7 @@ function wireShimmer(container){
                   const code=escapeHtml(card.card_code || card.code || "");
                   const image=getImages(card)[0] || "";
 
-                  const graders=missing.map(entry=>{
+                  const graders=missing.map(({entry,index})=>{
                     const company=escapeHtml(
                       String(entry.company||entry.grader||"Unknown grader").trim() || "Unknown grader"
                     );
@@ -31583,7 +31707,7 @@ function wireShimmer(container){
                       String(entry.grade||entry.value||"").trim()
                     );
 
-                    return `<span class="missing-cert-pill">${company}${grade ? ` ${grade}` : ""}</span>`;
+                    return `<span class="missing-cert-pill">Slab ${index+1} · ${company}${grade ? ` ${grade}` : ""}</span>`;
                   }).join("");
 
                   return `
@@ -31707,7 +31831,7 @@ function wireShimmer(container){
               <article>
                 <div>
                   <strong>${escapeHtml(entry.cardName)}</strong>
-                  <span>${escapeHtml(entry.cardCode||"No code")} · Cert ${escapeHtml(entry.cert)}</span>
+                  <span>${escapeHtml(entry.cardCode||"No code")}${entry.slabCount>1 ? ` · Slab ${entry.slabNumber} of ${entry.slabCount}` : ""} · Cert ${escapeHtml(entry.cert)}</span>
                 </div>
                 <div class="psa-bulk-values">
                   <span>POP <b>${escapeHtml(pop)}</b></span>
@@ -35589,13 +35713,36 @@ function wireShimmer(container){
         </div>`
       : `<div class="detail-empty-image">No uploaded pictures</div>`;
 
-    const detailGrades = Array.isArray(card.grading) ? card.grading.filter(g=>g && g.company) : [];
+    const detailGrades = validGradingEntries(card);
     const hasGrade = detailGrades.length > 0;
     const condition = CONDITION_LABEL[card.condition] || card.condition || "—";
     const detailCondition = hasGrade
-      ? `${detailGrades[0].company} ${detailGrades[0].grade || ""}`.trim()
+      ? gradingSummaryLabel(card)
       : condition;
-    const detailPop = hasGrade ? gradePopDetailLabel(detailGrades[0]) : "";
+    const detailPop = detailGrades.length===1 ? gradePopDetailLabel(detailGrades[0]) : "";
+    const detailSlabBreakdown = detailGrades.length>1
+      ? `<div class="detail-slab-list">
+          <div class="detail-slab-list-head">
+            <strong>Slabs in this listing</strong>
+            <span>${detailGrades.length} graded copies</span>
+          </div>
+          ${detailGrades.map((g,i)=>{
+            const gradeLabel=`${String(g.company||"").trim().toUpperCase()} ${String(g.grade||"").trim()}`.trim();
+            const popLabel=gradePopDetailLabel(g);
+            const cert=String(g.cert||"").trim();
+            return `<div class="detail-slab-row">
+              <div>
+                <span class="detail-slab-number">Slab ${i+1}</span>
+                <strong>${escapeHtml(gradeLabel)}</strong>
+              </div>
+              <div class="detail-slab-meta">
+                ${popLabel ? `<span>${escapeHtml(popLabel)}</span>` : ""}
+                ${isOwnerMode() && cert ? `<span>Cert ${escapeHtml(cert)}</span>` : ""}
+              </div>
+            </div>`;
+          }).join("")}
+        </div>`
+      : "";
     const cost = card.cost == null ? "—" : fmtMoney(card.cost);
     const isSoldListing = normalizeFilterValue(card.availability || "") === "sold";
     const isNfsListing = normalizeFilterValue(card.availability || "") === "collection (nfs)";
@@ -35695,6 +35842,8 @@ function wireShimmer(container){
               <strong>${escapeHtml(card.availability || "Available")}</strong>
             </div>
           </div>
+
+          ${detailSlabBreakdown}
 
           ${!isNfsListing ? `
             <div class="detail-buyer-confidence" aria-label="Buyer information">
