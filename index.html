@@ -18262,13 +18262,24 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function fetchWebsiteVisitSeries(start,end){
-    const {data,error}=await supabaseClient.rpc("get_site_visit_series",{
+    const {data,error}=await supabaseClient.rpc("get_site_visit_series_my_sg",{
       p_start:start.toISOString(),
       p_end:end.toISOString()
     });
 
     if(error){
-      console.warn("Website visit insights unavailable:",error);
+      const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+
+      if(
+        message.includes("get_site_visit_series_my_sg") ||
+        message.includes("function") ||
+        message.includes("schema cache")
+      ){
+        console.warn("MY/SG website visit timezone RPC is not installed yet:",error);
+      }else{
+        console.warn("Website visit insights unavailable:",error);
+      }
+
       return [];
     }
 
@@ -26524,7 +26535,8 @@ function wireShimmer(container){
                   // can never push its number outside the chart.
                   const visualPct=Math.max(value?2:0,pct*0.88);
 
-                  return `<div class="insights-bar-wrap" title="${escapeHtml(String(row.bucket))}: ${value}">
+                  const hoverLabel=String(row.label||row.bucket||"");
+                  return `<div class="insights-bar-wrap" title="${escapeHtml(hoverLabel)}: ${value}">
                     <div class="insights-bar-stack">
                       <div class="insights-bar-value" style="bottom:calc(${visualPct}% + 5px)">${value.toLocaleString()}</div>
                       <div class="insights-bar ${site?"insights-bar-site":""}" style="height:${visualPct}%"></div>
@@ -26897,7 +26909,10 @@ function wireShimmer(container){
         seriesFiltered:filteredSeriesResult.supported,
         seriesUsingHistoricalFallback:false,
         filteredSeriesSupported:filteredSeriesResult.supported,
-        websiteSeries:alignWebsiteVisitSeriesToCardSeries(series,siteSeries),
+        // Website Visits has its own MY/SG (UTC+8) daily buckets.
+        // Do not align it to Qualified View buckets, because that can shift
+        // local 9/4 visits into a 9/3 UTC bucket.
+        websiteSeries:Array.isArray(siteSeries) ? siteSeries : [],
         engagementSupported:engagement.supported,
         saleSnapshotsSupported:saleSnapshots.supported,
         saleSnapshots:saleSnapshots.rows
@@ -35950,6 +35965,37 @@ function wireShimmer(container){
     processingImages: 0
   };
 
+  let editReturnScrollState=null;
+
+  function captureEditReturnScroll(){
+    const shell=document.querySelector(".shell");
+    const useShell=
+      window.matchMedia("(max-width:800px)").matches &&
+      shell &&
+      getComputedStyle(shell).overflowY!=="visible";
+
+    editReturnScrollState={
+      hash:location.hash||"#/inventory",
+      windowY:Math.max(0,Math.round(window.scrollY||0)),
+      shellY:useShell ? Math.max(0,Math.round(shell.scrollTop||0)) : null
+    };
+  }
+
+  function restoreEditReturnScroll(){
+    const state=editReturnScrollState;
+    if(!state) return;
+
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      const shell=document.querySelector(".shell");
+
+      if(state.shellY!=null && shell){
+        shell.scrollTo({top:state.shellY,left:0,behavior:"auto"});
+      }else{
+        window.scrollTo({top:state.windowY,left:0,behavior:"auto"});
+      }
+    }));
+  }
+
   function resetEditSubmitButton(){
     const submitBtn=editForm.querySelector('button[type="submit"]');
     if(!submitBtn) return;
@@ -35960,6 +36006,7 @@ function wireShimmer(container){
 
   async function openEditModal(card){
     if(!requireOwner()) return;
+    captureEditReturnScroll();
     resetEditSubmitButton();
     const [privateMeta,storedImageVariants]=await Promise.all([
       fetchOwnerPrivateMeta(card.id),
@@ -36020,10 +36067,14 @@ function wireShimmer(container){
     wireGradingControls("edit", editFormState);
     overlay.hidden = false;
   }
-  function closeEditModal(){
+  function closeEditModal({restoreScroll=true}={}){
     overlay.hidden=true;
     editForm.reset();
     resetEditSubmitButton();
+
+    if(restoreScroll){
+      restoreEditReturnScroll();
+    }
   }
 
   $("cancelBtn").addEventListener("click", closeEditModal);
@@ -36118,8 +36169,36 @@ function wireShimmer(container){
         showToast("Card updated · images stored in Supabase Storage");
       }
 
-      closeEditModal();
+      // Saving re-renders the listing through router(). Preserve the exact
+      // position first so the card grid does not jump back toward the top.
+      const editScroll=editReturnScrollState;
+      if(editScroll){
+        try{
+          sessionStorage.setItem(LISTING_SCROLL_STATE_KEY,JSON.stringify({
+            hash:location.hash||editScroll.hash||"#/inventory",
+            y:Math.max(0,Number(editScroll.windowY||0))
+          }));
+        }catch{}
+      }
+
+      closeEditModal({restoreScroll:false});
       router();
+
+      // Mobile listings can use the shell as their scroll container, which
+      // LISTING_SCROLL_STATE_KEY does not cover.
+      if(editScroll?.shellY!=null){
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+          const shell=document.querySelector(".shell");
+          if(shell){
+            shell.scrollTo({top:editScroll.shellY,left:0,behavior:"auto"});
+          }
+          editReturnScrollState=null;
+        }));
+      }else{
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+          editReturnScrollState=null;
+        }));
+      }
     }catch(error){
       console.error("Edit save flow error:",error);
       if(preparedImages?.uploadedPaths?.length){
