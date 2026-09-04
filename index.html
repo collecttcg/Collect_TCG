@@ -28090,6 +28090,35 @@ function wireShimmer(container){
     return era ? `【${era.toUpperCase()}】` : "";
   }
 
+
+  function postPopLabel(card){
+    const grades=Array.isArray(card?.grading)
+      ? card.grading.filter(g=>g && String(g.company||"").trim())
+      : [];
+
+    if(!grades.length) return "";
+
+    if(grades.length===1){
+      const pop=grades[0]?.pop_count;
+      if(pop==null || pop==="") return "";
+      const n=Number(pop);
+      if(!Number.isFinite(n)) return "";
+      return `【POP ${Math.round(n).toLocaleString()}】`;
+    }
+
+    const pops=grades
+      .map((g,index)=>{
+        const pop=g?.pop_count;
+        if(pop==null || pop==="") return "";
+        const n=Number(pop);
+        if(!Number.isFinite(n)) return "";
+        return `S${index+1} POP ${Math.round(n).toLocaleString()}`;
+      })
+      .filter(Boolean);
+
+    return pops.length ? `【${pops.join(" · ")}】` : "";
+  }
+
   function fbGameLabel(card){
     const game = String(card?.game || "").trim();
     if(normalizeFilterValue(game) === "one piece card game") return "ONE PIECE";
@@ -28107,7 +28136,7 @@ function wireShimmer(container){
       card.card_code || ""
     ].filter(Boolean);
 
-    return `WTS【${fbFormatLabel(card)}】${postEraLabel(card)} ${parts.join(" ")}`.replace(/\s+/g," ").trim().toUpperCase();
+    return `WTS【${fbFormatLabel(card)}】${postPopLabel(card)}${postEraLabel(card)} ${parts.join(" ")}`.replace(/\s+/g," ").trim().toUpperCase();
   }
 
   function defaultFbHashtags(card){
@@ -29143,7 +29172,7 @@ function wireShimmer(container){
           : rawConditionPostLabel(card));
     const carousellName=[card.name,card.card_code].filter(Boolean).join(" ").trim();
     if(carousellName){
-      lines.push(`【${carousellFormatLabel}】${postEraLabel(card)} ${carousellName}`.replace(/\s+/g," ").trim());
+      lines.push(`【${carousellFormatLabel}】${postPopLabel(card)}${postEraLabel(card)} ${carousellName}`.replace(/\s+/g," ").trim());
     }
     if(card.year) lines.push(`Year: ${card.year}`);
     if(card.series) lines.push(`Series: ${String(card.series).trim()}`);
@@ -29585,7 +29614,7 @@ function wireShimmer(container){
       String(card.card_code || "").toUpperCase()
     ].filter(Boolean);
 
-    return `-【${label}】${postEraLabel(card)} ${nameParts.join(" ").replace(/\s+/g," ").trim()}`.replace(/\s+/g," ").trim();
+    return `-【${label}】${postPopLabel(card)}${postEraLabel(card)} ${nameParts.join(" ").replace(/\s+/g," ").trim()}`.replace(/\s+/g," ").trim();
   }
 
   function sortCardListCards(list){
