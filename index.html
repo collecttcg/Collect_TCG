@@ -16812,12 +16812,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     window.COLLECT_TCG_SUPABASE_URL,
     window.COLLECT_TCG_SUPABASE_KEY
   );
-  function runWhenIdle(callback,timeout=1200){
-    if("requestIdleCallback" in window){
-      return requestIdleCallback(callback,{timeout});
-    }
-    return setTimeout(callback,80);
-  }
 
   let ownerSession = null;
   let ownerVerified = false;
@@ -17078,14 +17072,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }));
   }
 
-  function refreshCurrentListingRoute(){
-    const route=currentRoute();
-    if(isInventoryRoute(route)){
-      renderInventoryPage(route);
-      return true;
-    }
-    return false;
-  }
 
   function isOwnerOnlyRoute(route){
     return OWNER_ONLY_ROUTES.has(routeBase(route));
@@ -19020,55 +19006,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
   }
 
-  function alignWebsiteVisitSeriesToCardSeries(cardSeries, websiteSeries){
-    const cards=Array.isArray(cardSeries) ? cardSeries : [];
-    const visits=Array.isArray(websiteSeries) ? websiteSeries : [];
-
-    // If Website Visits has no rows, keep the graph empty.
-    // Do not borrow date buckets from the Qualified Views timeline.
-    if(!visits.length) return [];
-    if(!cards.length) return visits;
-
-    const parseBucket=value=>{
-      const t=new Date(String(value||"")).getTime();
-      return Number.isFinite(t) ? t : null;
-    };
-
-    const visitRows=visits
-      .map(row=>({
-        ...row,
-        _time:parseBucket(row.bucket),
-        _visits:Number(row.visits||0)
-      }))
-      .filter(row=>row._time!=null)
-      .sort((a,b)=>a._time-b._time);
-
-    return cards.map((row,index)=>{
-      const start=parseBucket(row.bucket);
-      const next=index+1<cards.length ? parseBucket(cards[index+1].bucket) : null;
-
-      if(start!=null){
-        const total=visitRows.reduce((sum,visit)=>{
-          if(visit._time < start) return sum;
-          if(next!=null && visit._time >= next) return sum;
-          return sum+visit._visits;
-        },0);
-
-        return {
-          bucket:row.bucket,
-          label:row.label || row.bucket,
-          visits:total
-        };
-      }
-
-      const fallback=visits[index]||{};
-      return {
-        bucket:row.bucket,
-        label:row.label || row.bucket,
-        visits:Number(fallback.visits||0)
-      };
-    });
-  }
 
   function insightRowKey(row){
     const id=safeCardId(row?.card_id || row?.id || "");
@@ -19438,35 +19375,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     );
   }
 
-  async function refreshPsaPopForCard(cardId, silent=false){
-    try{
-      const { data, error } = await supabaseClient.functions.invoke("refresh-psa-pop", {
-        body: { card_id: cardId }
-      });
-      if(error) throw error;
-
-      if(data && data.card){
-        const refreshed = dbToCard(data.card);
-        const idx = cards.findIndex(c=>c.id === refreshed.id);
-        if(idx > -1) cards[idx] = refreshed;
-
-        const synced = Array.isArray(refreshed.grading) && refreshed.grading.some(g =>
-          String(g.company || "").toUpperCase() === "PSA" && g.pop_count != null
-        );
-
-        if(!silent){
-          showToast(synced ? "PSA POP updated" : "PSA cert saved, but POP was not returned");
-        }
-        return refreshed;
-      }
-
-      if(!silent) showToast(data?.message || "PSA POP was not returned");
-    }catch(e){
-      console.error("PSA POP sync error:", e);
-      if(!silent) showToast("Saved, but PSA POP sync was unavailable");
-    }
-    return null;
-  }
 
   async function handleIncomingPsaPopSync(){
     const rawHash=String(location.hash||"");
@@ -20431,9 +20339,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return canvas.toDataURL("image/jpeg", quality);
   }
 
-  async function renderWatermarkedImage(img, maxDim = 1800, quality = 0.94){
-    return renderCardImage(img,maxDim,quality,true);
-  }
 
 
   async function rotateCardImageSource(source, quarterTurns = 1, quality = 0.94){
@@ -24503,14 +24408,6 @@ function wireShimmer(container){
       });
     }
 
-    function scrollToListingStart(){
-      const target=$("listingPaginationTop") || $("invGrid");
-      if(!target) return;
-      requestAnimationFrame(()=>{
-        try{ target.scrollIntoView({behavior:"smooth",block:"start"}); }
-        catch{ target.scrollIntoView(); }
-      });
-    }
 
     function draw(){
       const drawGeneration=++inventoryDrawGeneration;
@@ -36071,27 +35968,6 @@ function wireShimmer(container){
     ].filter(line=>line!=="").join("\n");
   }
 
-  async function messageSellerOnFacebook(){
-    const card = getDetailsCard();
-    if(!card || (!isOwnerMode() && !isLiveLifecycle(card))) return;
-
-    // Messenger does not reliably support arbitrary prefilled text in a safe
-    // public URL. Open the fixed seller destination and copy the public card
-    // reference so the buyer can paste it. No owner-only data enters the URL.
-    const opened=openSafeExternalUrl(COLLECT_TCG_FACEBOOK_MESSENGER_URL);
-
-    const copied=await copyTextToClipboard(publicContactSellerMessage(card));
-
-    if(copied){
-      showToast(opened
-        ? "Card reference copied — paste it into Facebook Messenger"
-        : "Card reference copied — allow pop-ups to open Facebook Messenger");
-    }else if(!opened){
-      showToast("Allow pop-ups to open Facebook Messenger");
-    }else{
-      showToast("Facebook Messenger opened");
-    }
-  }
 
   function shareCurrentCardWhatsApp(){
     const card = getDetailsCard();
