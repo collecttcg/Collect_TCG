@@ -15844,6 +15844,83 @@ body.showcase-dragging-body{
   box-shadow:0 0 0 3px rgba(248,113,113,.08) !important;
 }
 
+
+
+/* =========================================================
+   MOBILE TOP NAV — COMPACT FIRST FOUR
+   Visible: Home → Inventory → Sold → Collection
+   Everything else goes under More.
+   Desktop navigation remains unchanged.
+   ========================================================= */
+@media(max-width:800px){
+  nav.mainnav{
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:4px !important;
+    align-items:stretch !important;
+    overflow:visible !important;
+  }
+
+  nav.mainnav > a[data-route="home"],
+  nav.mainnav > a[data-route="inventory"],
+  nav.mainnav > a[data-route="sold"],
+  nav.mainnav > a[data-route="collection"]{
+    display:flex !important;
+    min-height:46px !important;
+    padding:9px 10px !important;
+    justify-content:flex-start !important;
+    align-items:center !important;
+    gap:8px !important;
+    border-radius:11px !important;
+    font-size:13px !important;
+  }
+
+  nav.mainnav > a[data-route="home"]{order:1 !important;}
+  nav.mainnav > a[data-route="inventory"]{order:2 !important;}
+  nav.mainnav > a[data-route="sold"]{order:3 !important;}
+  nav.mainnav > a[data-route="collection"]{order:4 !important;}
+
+  /* Hide the remaining primary links from the compact mobile row. */
+  nav.mainnav > a[data-route="reserved"],
+  nav.mainnav > a[data-route="showcase"],
+  nav.mainnav > a[data-route="giveaway"],
+  nav.mainnav > a[data-route="favorites"]{
+    display:none !important;
+  }
+
+  nav.mainnav > .mobile-more-toggle{
+    display:flex !important;
+    order:20 !important;
+    grid-column:1 / -1 !important;
+    width:100% !important;
+  }
+
+  nav.mainnav > .mobile-more-menu{
+    order:21 !important;
+    grid-column:1 / -1 !important;
+    width:100% !important;
+  }
+
+  /* Show the requested secondary routes inside More. */
+  nav.mainnav > .mobile-more-menu > a[data-route="reserved"],
+  nav.mainnav > .mobile-more-menu > a[data-route="showcase"],
+  nav.mainnav > .mobile-more-menu > a[data-route="giveaway"],
+  nav.mainnav > .mobile-more-menu > a[data-route="favorites"]{
+    display:flex !important;
+  }
+}
+
+@media(max-width:360px){
+  nav.mainnav > a[data-route="home"],
+  nav.mainnav > a[data-route="inventory"],
+  nav.mainnav > a[data-route="sold"],
+  nav.mainnav > a[data-route="collection"]{
+    padding:8px 7px !important;
+    gap:5px !important;
+    font-size:12px !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -15884,6 +15961,8 @@ body.showcase-dragging-body{
       <a href="#/collection" data-route="collection" class="collection-primary-nav"><span class="ic">◆</span> <span>Collection</span><span class="nav-count collection-nav-count" id="collectionNavCount">0</span></a>
       <a href="#/reserved" data-route="reserved" class="status-primary-nav"><span class="ic">◷</span> <span>Reserved</span><span class="nav-count" id="reservedNavCount">0</span></a>
       <a href="#/showcase" data-route="showcase"><span class="ic">▶</span> Showcase</a>
+      <a href="#/giveaway" data-route="giveaway"><span class="ic">★</span> Giveaway</a>
+      <a href="#/favorites" data-route="favorites"><span class="ic">♡</span> Favorite</a>
       <button type="button" class="mobile-more-toggle" id="mobileMoreToggle" aria-expanded="false">
         <span class="ic">⋯</span> More <span class="mobile-more-caret">⌄</span>
       </button>
@@ -15905,8 +15984,6 @@ body.showcase-dragging-body{
         <a href="#/export" data-route="export" class="owner-only desktop-more-owner"><span class="ic">⇩</span> Export</a>
         <a href="#/add" data-route="add" class="owner-only desktop-more-owner"><span class="ic">+</span> Add Card</a>
       </div>
-      <a href="#/favorites" data-route="favorites" class="mobile-secondary-nav"><span class="ic">♡</span> Favorites</a>
-      <a href="#/giveaway" data-route="giveaway" class="mobile-secondary-nav"><span class="ic">★</span> Giveaway</a>
       <a href="#/reviews" data-route="reviews" class="reviews-desktop-nav"><span class="ic">☆</span> Reviews</a>
       <a href="#/insights" data-route="insights" class="owner-only"><span class="ic">◔</span> Insights</a>
       <a href="#/fb-tools" data-route="fb-tools" class="owner-only"><span class="ic">ƒ</span> Post Generator Tools</a>
