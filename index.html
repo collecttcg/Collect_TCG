@@ -15461,11 +15461,11 @@ body.showcase-dragging-body{
 
 <div class="modal-overlay" id="resetQualifiedViewsOverlay" hidden>
   <form class="modal insights-reset-modal" id="resetQualifiedViewsForm">
-    <h2>Reset Qualified View Counts</h2>
+    <h2>Reset View Counts</h2>
 
     <div class="insights-reset-warning">
-      This permanently deletes all current card Qualified View history.
-      Inventory, reviews, sales, website visits, favorites, giveaways and showcases will not be affected.
+      This permanently deletes all current card Qualified View history and Website Visit history.
+      Inventory, reviews, sales snapshots, favorites, contact actions, giveaways, showcases and reviews will not be affected.
       This action cannot be undone.
     </div>
 
@@ -25384,13 +25384,13 @@ function wireShimmer(container){
           message.includes("reset_qualified_view_counts") &&
           (message.includes("function") || message.includes("schema cache") || message.includes("pgrst202"))
         ){
-          showToast("Reset RPC is not installed. Run the V2 reset migration in Supabase.");
+          showToast("Reset RPC is not installed. Run the Views + Website Visits reset migration in Supabase.");
         }else if(
           message.includes("owner access required") ||
           message.includes("42501") ||
           message.includes("permission denied")
         ){
-          showToast("Reset permission denied. Confirm Owner Mode login and run the V2 reset migration.");
+          showToast("Reset permission denied. Confirm Owner Mode login and run the reset migration.");
         }else if(message.includes("qualified view table not installed")){
           showToast("Qualified View analytics table is not installed.");
         }else{
@@ -25403,7 +25403,7 @@ function wireShimmer(container){
       qualifiedViewTotalsByCard?.clear?.();
       qualifiedViewTotalsBackendState="unknown";
       await refreshQualifiedViewTotals();
-      showToast("Qualified View counts reset");
+      showToast("View counts and Website Visits reset");
       return true;
     }catch(error){
       console.error("Reset qualified views failed:",error);
