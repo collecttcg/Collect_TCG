@@ -16006,6 +16006,118 @@ body.showcase-dragging-body{
   }
 }
 
+
+/* =========================================================
+   FINAL NAVIGATION ORDER — AUTHORITATIVE
+   This block intentionally overrides all older nav order rules.
+   It changes order/visibility only, not dimensions or spacing.
+   ========================================================= */
+
+/* ---------- PC / desktop ---------- */
+@media(min-width:801px){
+  body .shell .sidebar nav#mainnav > a[data-route="home"]{
+    order:1 !important;
+  }
+  body .shell .sidebar nav#mainnav > a[data-route="inventory"]{
+    order:2 !important;
+  }
+  body .shell .sidebar nav#mainnav > a[data-route="sold"]{
+    order:3 !important;
+  }
+  body .shell .sidebar nav#mainnav > a[data-route="collection"]{
+    order:4 !important;
+  }
+  body .shell .sidebar nav#mainnav > a[data-route="reserved"]{
+    order:5 !important;
+    display:flex !important;
+  }
+  body .shell .sidebar nav#mainnav > a[data-route="showcase"]{
+    order:6 !important;
+    display:flex !important;
+  }
+  body .shell .sidebar nav#mainnav > a[data-route="giveaway"]{
+    order:7 !important;
+    display:flex !important;
+  }
+  body .shell .sidebar nav#mainnav > a[data-route="favorites"]{
+    order:8 !important;
+    display:flex !important;
+  }
+  body .shell .sidebar nav#mainnav > a[data-route="reviews"]{
+    order:9 !important;
+  }
+  body .shell .sidebar nav#mainnav > #mobileMoreToggle{
+    order:10 !important;
+  }
+
+  /* Secondary/owner controls stay after More. */
+  body .shell .sidebar nav#mainnav > a[data-route="insights"],
+  body .shell .sidebar nav#mainnav > a[data-route="fb-tools"],
+  body .shell .sidebar nav#mainnav > a[data-route="quality"],
+  body .shell .sidebar nav#mainnav > a[data-route="inventory-tools"],
+  body .shell .sidebar nav#mainnav > a[data-route="export"],
+  body .shell .sidebar nav#mainnav > a[data-route="add"],
+  body .shell .sidebar nav#mainnav > a[data-route="about"],
+  body .shell .sidebar nav#mainnav > a[data-route="contact"]{
+    order:20 !important;
+  }
+}
+
+/* ---------- Mobile ---------- */
+@media(max-width:800px){
+  /* The original compact layout remains: first 4 + More. */
+  body .shell .sidebar nav#mainnav > a[data-route="home"]{
+    order:1 !important;
+    display:flex !important;
+  }
+  body .shell .sidebar nav#mainnav > a[data-route="inventory"]{
+    order:2 !important;
+    display:flex !important;
+  }
+  body .shell .sidebar nav#mainnav > a[data-route="sold"]{
+    order:3 !important;
+    display:flex !important;
+  }
+  body .shell .sidebar nav#mainnav > a[data-route="collection"]{
+    order:4 !important;
+    display:flex !important;
+  }
+  body .shell .sidebar nav#mainnav > #mobileMoreToggle{
+    order:5 !important;
+    display:flex !important;
+  }
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu{
+    order:6 !important;
+  }
+
+  /* Everything after Collection lives inside More on mobile. */
+  body .shell .sidebar nav#mainnav > a[data-route="reserved"],
+  body .shell .sidebar nav#mainnav > a[data-route="showcase"],
+  body .shell .sidebar nav#mainnav > a[data-route="giveaway"],
+  body .shell .sidebar nav#mainnav > a[data-route="favorites"],
+  body .shell .sidebar nav#mainnav > a[data-route="reviews"],
+  body .shell .sidebar nav#mainnav > a[data-route="insights"],
+  body .shell .sidebar nav#mainnav > a[data-route="fb-tools"],
+  body .shell .sidebar nav#mainnav > a[data-route="quality"],
+  body .shell .sidebar nav#mainnav > a[data-route="inventory-tools"],
+  body .shell .sidebar nav#mainnav > a[data-route="export"],
+  body .shell .sidebar nav#mainnav > a[data-route="add"],
+  body .shell .sidebar nav#mainnav > a[data-route="about"],
+  body .shell .sidebar nav#mainnav > a[data-route="contact"]{
+    display:none !important;
+  }
+
+  /* More menu uses its real DOM order, not any old CSS order values. */
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > a{
+    order:initial !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu:not([hidden]){
+    display:flex !important;
+    flex-direction:column !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -16061,7 +16173,6 @@ body.showcase-dragging-body{
         <a href="#/about" data-route="about"><span class="ic">◎</span> About Us</a>
         <a href="#/contact" data-route="contact"><span class="ic">✉</span> Contact</a>
         <a href="#/recent" data-route="recent"><span class="ic">↻</span> Recently Viewed</a>
-        <a href="#/collection" data-route="collection"><span class="ic">◆</span> Collection / NFS</a>
         <a href="#/insights" data-route="insights" class="owner-only desktop-more-owner"><span class="ic">◔</span> Insights</a>
         <a href="#/fb-tools" data-route="fb-tools" class="owner-only desktop-more-owner"><span class="ic">ƒ</span> Post Generator Tools</a>
         <a href="#/quality" data-route="quality" class="owner-only desktop-more-owner"><span class="ic">✓</span> Data Quality</a>
@@ -16919,6 +17030,21 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function goToRoute(route){
     const next=String(route||"inventory").replace(/^#\/?/,"");
     location.hash=`#/${next}`;
+  }
+
+
+  function goToRouteFromHomeTop(route){
+    try{
+      sessionStorage.removeItem(LISTING_SCROLL_STATE_KEY);
+    }catch{}
+
+    goToRoute(route);
+
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      window.scrollTo({top:0,left:0,behavior:"auto"});
+      const shell=document.querySelector(".shell");
+      if(shell) shell.scrollTo({top:0,left:0,behavior:"auto"});
+    }));
   }
 
   function refreshCurrentListingRoute(){
@@ -22385,32 +22511,32 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             </div>
 
             <div class="home-collection-stats">
-              <a href="#/inventory" class="home-stat-card">
+              <a href="#/inventory" class="home-stat-card" data-home-top-route="inventory">
                 <span class="home-stat-value">${stats.inventory.toLocaleString()}</span>
                 <span class="home-stat-label">Inventory</span>
               </a>
-              <a href="#/sold" class="home-stat-card">
+              <a href="#/sold" class="home-stat-card" data-home-top-route="sold">
                 <span class="home-stat-value">${stats.sold.toLocaleString()}</span>
                 <span class="home-stat-label">Sold</span>
               </a>
-              <a href="#/collection" class="home-stat-card home-stat-card-collection">
+              <a href="#/collection" class="home-stat-card home-stat-card-collection" data-home-top-route="collection">
                 <span class="home-stat-value">${stats.collection.toLocaleString()}</span>
                 <span class="home-stat-label">Collection / NFS</span>
               </a>
-              <a href="#/reserved" class="home-stat-card">
+              <a href="#/reserved" class="home-stat-card" data-home-top-route="reserved">
                 <span class="home-stat-value">${stats.reserved.toLocaleString()}</span>
                 <span class="home-stat-label">Reserved</span>
               </a>
               <!-- These three links must use filters understood by restoreListingFiltersFromUrl(). -->
-              <a href="#/inventory?quick=graded" class="home-stat-card">
+              <a href="#/inventory?quick=graded" class="home-stat-card" data-home-top-route="inventory?quick=graded">
   <span class="home-stat-value">${stats.graded.toLocaleString()}</span>
   <span class="home-stat-label">Graded</span>
 </a>
-              <a href="#/inventory?quick=vintage" class="home-stat-card">
+              <a href="#/inventory?quick=vintage" class="home-stat-card" data-home-top-route="inventory?quick=vintage">
   <span class="home-stat-value">${stats.vintage.toLocaleString()}</span>
   <span class="home-stat-label">Vintage</span>
 </a>
-              <a href="#/inventory?quick=sealed" class="home-stat-card">
+              <a href="#/inventory?quick=sealed" class="home-stat-card" data-home-top-route="inventory?quick=sealed">
   <span class="home-stat-value">${stats.sealed.toLocaleString()}</span>
   <span class="home-stat-label">Sealed</span>
 </a>
@@ -22579,6 +22705,25 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           if(shell) shell.scrollTo({top:0,left:0,behavior:"auto"});
         }));
       });
+
+    view.querySelectorAll("[data-home-top-route]").forEach(link=>{
+      link.addEventListener("click",event=>{
+        const route=String(link.dataset.homeTopRoute||"").trim();
+        if(![
+          "inventory",
+          "sold",
+          "collection",
+          "reserved",
+          "inventory?quick=graded",
+          "inventory?quick=vintage",
+          "inventory?quick=sealed"
+        ].includes(route)) return;
+
+        event.preventDefault();
+        goToRouteFromHomeTop(route);
+      });
+    });
+
     });
   }
 
