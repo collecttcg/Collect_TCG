@@ -16118,6 +16118,84 @@ body.showcase-dragging-body{
   }
 }
 
+
+/* =========================================================
+   INSIGHTS — VISITOR COUNTRIES
+   ========================================================= */
+.insights-country-card{
+  margin-top:12px;
+}
+.insights-country-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.insights-country-row{
+  display:grid;
+  grid-template-columns:minmax(130px,190px) minmax(120px,1fr) auto;
+  gap:10px;
+  align-items:center;
+}
+.insights-country-name{
+  min-width:0;
+  display:flex;
+  align-items:baseline;
+  gap:7px;
+}
+.insights-country-name strong{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:11px;
+}
+.insights-country-name span{
+  color:var(--text-muted);
+  font-size:8px;
+  font-weight:800;
+}
+.insights-country-bar{
+  height:8px;
+  border-radius:999px;
+  overflow:hidden;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+}
+.insights-country-bar i{
+  display:block;
+  height:100%;
+  border-radius:inherit;
+  background:var(--accent-teal);
+}
+.insights-country-value{
+  min-width:74px;
+  display:flex;
+  justify-content:flex-end;
+  align-items:baseline;
+  gap:7px;
+  font-variant-numeric:tabular-nums;
+}
+.insights-country-value strong{
+  font-size:11px;
+}
+.insights-country-value span{
+  color:var(--text-muted);
+  font-size:8px;
+}
+@media(max-width:600px){
+  .insights-country-row{
+    grid-template-columns:minmax(100px,1fr) auto;
+    gap:6px 8px;
+  }
+  .insights-country-bar{
+    grid-column:1 / -1;
+    grid-row:2;
+  }
+  .insights-country-value{
+    min-width:58px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -16812,6 +16890,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     window.COLLECT_TCG_SUPABASE_URL,
     window.COLLECT_TCG_SUPABASE_KEY
   );
+  function runWhenIdle(callback,timeout=1200){
+    if("requestIdleCallback" in window){
+      return requestIdleCallback(callback,{timeout});
+    }
+    return setTimeout(callback,80);
+  }
 
   let ownerSession = null;
   let ownerVerified = false;
@@ -17072,6 +17156,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }));
   }
 
+  function refreshCurrentListingRoute(){
+    const route=currentRoute();
+    if(isInventoryRoute(route)){
+      renderInventoryPage(route);
+      return true;
+    }
+    return false;
+  }
 
   function isOwnerOnlyRoute(route){
     return OWNER_ONLY_ROUTES.has(routeBase(route));
@@ -18901,6 +18993,19 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         return false;
       }
 
+      // Country tracking is deliberately separate from the normal visit counter.
+      // If geolocation fails, Website Visits still works normally.
+      try{
+        const {error:countryError}=await supabaseClient.functions.invoke("record-visitor-country",{
+          body:{visitor_id:visitorId}
+        });
+        if(countryError){
+          console.warn("Visitor country tracking unavailable:",countryError);
+        }
+      }catch(countryError){
+        console.warn("Visitor country tracking unavailable:",countryError);
+      }
+
       sessionStorage.setItem(WEBSITE_VISIT_SESSION_KEY,"1");
       return true;
     }catch(error){
@@ -18932,6 +19037,52 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
 
     return Array.isArray(data) ? data : [];
+  }
+
+
+  async function fetchWebsiteVisitCountries(start,end){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_site_visit_country_totals",{
+        p_start:start.toISOString(),
+        p_end:end.toISOString()
+      });
+
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        const unavailable=
+          message.includes("get_site_visit_country_totals") ||
+          message.includes("function") ||
+          message.includes("schema cache");
+
+        if(!unavailable){
+          console.warn("Visitor country insights unavailable:",error);
+        }
+
+        return {supported:false,rows:[]};
+      }
+
+      return {
+        supported:true,
+        rows:Array.isArray(data)?data:[]
+      };
+    }catch(error){
+      console.warn("Visitor country insights unavailable:",error);
+      return {supported:false,rows:[]};
+    }
+  }
+
+  function visitorCountryName(code){
+    const safe=String(code||"").trim().toUpperCase();
+    if(!safe || safe==="XX") return "Unknown";
+
+    try{
+      if(typeof Intl.DisplayNames==="function"){
+        const names=new Intl.DisplayNames(["en"],{type:"region"});
+        return names.of(safe)||safe;
+      }
+    }catch{}
+
+    return safe;
   }
 
   function dateRangeForPreset(preset){
@@ -19006,6 +19157,55 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
   }
 
+  function alignWebsiteVisitSeriesToCardSeries(cardSeries, websiteSeries){
+    const cards=Array.isArray(cardSeries) ? cardSeries : [];
+    const visits=Array.isArray(websiteSeries) ? websiteSeries : [];
+
+    // If Website Visits has no rows, keep the graph empty.
+    // Do not borrow date buckets from the Qualified Views timeline.
+    if(!visits.length) return [];
+    if(!cards.length) return visits;
+
+    const parseBucket=value=>{
+      const t=new Date(String(value||"")).getTime();
+      return Number.isFinite(t) ? t : null;
+    };
+
+    const visitRows=visits
+      .map(row=>({
+        ...row,
+        _time:parseBucket(row.bucket),
+        _visits:Number(row.visits||0)
+      }))
+      .filter(row=>row._time!=null)
+      .sort((a,b)=>a._time-b._time);
+
+    return cards.map((row,index)=>{
+      const start=parseBucket(row.bucket);
+      const next=index+1<cards.length ? parseBucket(cards[index+1].bucket) : null;
+
+      if(start!=null){
+        const total=visitRows.reduce((sum,visit)=>{
+          if(visit._time < start) return sum;
+          if(next!=null && visit._time >= next) return sum;
+          return sum+visit._visits;
+        },0);
+
+        return {
+          bucket:row.bucket,
+          label:row.label || row.bucket,
+          visits:total
+        };
+      }
+
+      const fallback=visits[index]||{};
+      return {
+        bucket:row.bucket,
+        label:row.label || row.bucket,
+        visits:Number(fallback.visits||0)
+      };
+    });
+  }
 
   function insightRowKey(row){
     const id=safeCardId(row?.card_id || row?.id || "");
@@ -19375,6 +19575,35 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     );
   }
 
+  async function refreshPsaPopForCard(cardId, silent=false){
+    try{
+      const { data, error } = await supabaseClient.functions.invoke("refresh-psa-pop", {
+        body: { card_id: cardId }
+      });
+      if(error) throw error;
+
+      if(data && data.card){
+        const refreshed = dbToCard(data.card);
+        const idx = cards.findIndex(c=>c.id === refreshed.id);
+        if(idx > -1) cards[idx] = refreshed;
+
+        const synced = Array.isArray(refreshed.grading) && refreshed.grading.some(g =>
+          String(g.company || "").toUpperCase() === "PSA" && g.pop_count != null
+        );
+
+        if(!silent){
+          showToast(synced ? "PSA POP updated" : "PSA cert saved, but POP was not returned");
+        }
+        return refreshed;
+      }
+
+      if(!silent) showToast(data?.message || "PSA POP was not returned");
+    }catch(e){
+      console.error("PSA POP sync error:", e);
+      if(!silent) showToast("Saved, but PSA POP sync was unavailable");
+    }
+    return null;
+  }
 
   async function handleIncomingPsaPopSync(){
     const rawHash=String(location.hash||"");
@@ -20339,6 +20568,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return canvas.toDataURL("image/jpeg", quality);
   }
 
+  async function renderWatermarkedImage(img, maxDim = 1800, quality = 0.94){
+    return renderCardImage(img,maxDim,quality,true);
+  }
 
 
   async function rotateCardImageSource(source, quarterTurns = 1, quality = 0.94){
@@ -24408,6 +24640,14 @@ function wireShimmer(container){
       });
     }
 
+    function scrollToListingStart(){
+      const target=$("listingPaginationTop") || $("invGrid");
+      if(!target) return;
+      requestAnimationFrame(()=>{
+        try{ target.scrollIntoView({behavior:"smooth",block:"start"}); }
+        catch{ target.scrollIntoView(); }
+      });
+    }
 
     function draw(){
       const drawGeneration=++inventoryDrawGeneration;
@@ -26911,6 +27151,7 @@ function wireShimmer(container){
 
     let state={
       start:null,end:null,rows:[],visible:[],series:[],websiteSeries:[],
+      visitorCountries:[],visitorCountrySupported:false,
       engagementSupported:false,saleSnapshotsSupported:false,saleSnapshots:[],
       editHistoryRows:[],editHistoryLoaded:false
     };
@@ -27052,6 +27293,47 @@ function wireShimmer(container){
             <div id="insightsWebsiteChart" class="insights-chart insights-time-chart"></div>
           </section>
         </div>
+
+        <section class="insights-v4-card insights-country-card">
+          <div class="insights-v4-card-head table-head">
+            <div>
+              <h3>Visitor Countries</h3>
+              <span>Country-level website traffic. IP addresses are not stored.</span>
+            </div>
+          </div>
+
+          ${
+            !state.visitorCountrySupported
+              ? `<div class="hint">Country tracking is not installed yet. Deploy the visitor-country migration and Edge Function.</div>`
+              : state.visitorCountries.length
+                ? `<div class="insights-country-list">
+                    ${(()=>{
+                      const total=state.visitorCountries.reduce((sum,row)=>sum+Number(row.visits||0),0);
+                      const max=Math.max(1,...state.visitorCountries.map(row=>Number(row.visits||0)));
+
+                      return state.visitorCountries.slice(0,12).map(row=>{
+                        const visits=Math.max(0,Number(row.visits||0));
+                        const pct=total ? Math.round(visits/total*100) : 0;
+                        const width=visits ? Math.max(3,visits/max*100) : 0;
+                        const label=visitorCountryName(row.country_code);
+
+                        return `<div class="insights-country-row">
+                          <div class="insights-country-name">
+                            <strong>${escapeHtml(label)}</strong>
+                            <span>${escapeHtml(String(row.country_code||"").toUpperCase())}</span>
+                          </div>
+                          <div class="insights-country-bar"><i style="width:${width}%"></i></div>
+                          <div class="insights-country-value">
+                            <strong>${visits.toLocaleString()}</strong>
+                            <span>${pct}%</span>
+                          </div>
+                        </div>`;
+                      }).join("");
+                    })()}
+                  </div>`
+                : `<div class="hint">No visitor-country data for this period yet.</div>`
+          }
+        </section>
 
         <div class="insights-v4-intro">
           <div><strong>At a Glance</strong><span>These are the numbers that matter most for the selected period.</span></div>
@@ -27520,10 +27802,11 @@ function wireShimmer(container){
       const selectedStatus=statusSel.value;
       const selectedGame=gameSel.value;
 
-      const [views,series,siteSeries,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
+      const [views,series,siteSeries,countryResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
         fetchInsights(startDate,endDate),
         fetchViewSeries(startDate,endDate),
         fetchWebsiteVisitSeries(startDate,endDate),
+        fetchWebsiteVisitCountries(startDate,endDate),
         previousRange?fetchInsights(previousRange.start,previousRange.end,{silent:true}):Promise.resolve([]),
         fetchCardEngagementInsights(startDate,endDate),
         fetchSaleConversionSnapshots(),
@@ -27581,6 +27864,10 @@ function wireShimmer(container){
         // Do not align it to Qualified View buckets, because that can shift
         // local 9/4 visits into a 9/3 UTC bucket.
         websiteSeries:Array.isArray(siteSeries) ? siteSeries : [],
+        visitorCountries:countryResult.supported && Array.isArray(countryResult.rows)
+          ? countryResult.rows
+          : [],
+        visitorCountrySupported:countryResult.supported,
         engagementSupported:engagement.supported,
         saleSnapshotsSupported:saleSnapshots.supported,
         saleSnapshots:saleSnapshots.rows
@@ -27618,6 +27905,208 @@ function wireShimmer(container){
   const REVIEW_TEXT_MAX=500;
   const REVIEW_NAME_MAX=60;
   const REVIEW_ITEM_MAX=120;
+  const REVIEW_COUNTRIES=Object.freeze([
+    ["AF","Afghanistan"],
+    ["AL","Albania"],
+    ["DZ","Algeria"],
+    ["AD","Andorra"],
+    ["AO","Angola"],
+    ["AG","Antigua and Barbuda"],
+    ["AR","Argentina"],
+    ["AM","Armenia"],
+    ["AU","Australia"],
+    ["AT","Austria"],
+    ["AZ","Azerbaijan"],
+    ["BS","Bahamas"],
+    ["BH","Bahrain"],
+    ["BD","Bangladesh"],
+    ["BB","Barbados"],
+    ["BY","Belarus"],
+    ["BE","Belgium"],
+    ["BZ","Belize"],
+    ["BJ","Benin"],
+    ["BT","Bhutan"],
+    ["BO","Bolivia"],
+    ["BA","Bosnia and Herzegovina"],
+    ["BW","Botswana"],
+    ["BR","Brazil"],
+    ["BN","Brunei"],
+    ["BG","Bulgaria"],
+    ["BF","Burkina Faso"],
+    ["BI","Burundi"],
+    ["CV","Cabo Verde"],
+    ["KH","Cambodia"],
+    ["CM","Cameroon"],
+    ["CA","Canada"],
+    ["CF","Central African Republic"],
+    ["TD","Chad"],
+    ["CL","Chile"],
+    ["CN","China"],
+    ["CO","Colombia"],
+    ["KM","Comoros"],
+    ["CG","Congo"],
+    ["CD","Congo, Democratic Republic of the"],
+    ["CR","Costa Rica"],
+    ["CI","Côte d’Ivoire"],
+    ["HR","Croatia"],
+    ["CU","Cuba"],
+    ["CY","Cyprus"],
+    ["CZ","Czechia"],
+    ["DK","Denmark"],
+    ["DJ","Djibouti"],
+    ["DM","Dominica"],
+    ["DO","Dominican Republic"],
+    ["EC","Ecuador"],
+    ["EG","Egypt"],
+    ["SV","El Salvador"],
+    ["GQ","Equatorial Guinea"],
+    ["ER","Eritrea"],
+    ["EE","Estonia"],
+    ["SZ","Eswatini"],
+    ["ET","Ethiopia"],
+    ["FJ","Fiji"],
+    ["FI","Finland"],
+    ["FR","France"],
+    ["GA","Gabon"],
+    ["GM","Gambia"],
+    ["GE","Georgia"],
+    ["DE","Germany"],
+    ["GH","Ghana"],
+    ["GR","Greece"],
+    ["GD","Grenada"],
+    ["GT","Guatemala"],
+    ["GN","Guinea"],
+    ["GW","Guinea-Bissau"],
+    ["GY","Guyana"],
+    ["HT","Haiti"],
+    ["HN","Honduras"],
+    ["HK","Hong Kong"],
+    ["HU","Hungary"],
+    ["IS","Iceland"],
+    ["IN","India"],
+    ["ID","Indonesia"],
+    ["IR","Iran"],
+    ["IQ","Iraq"],
+    ["IE","Ireland"],
+    ["IL","Israel"],
+    ["IT","Italy"],
+    ["JM","Jamaica"],
+    ["JP","Japan"],
+    ["JO","Jordan"],
+    ["KZ","Kazakhstan"],
+    ["KE","Kenya"],
+    ["KI","Kiribati"],
+    ["KP","North Korea"],
+    ["KR","South Korea"],
+    ["KW","Kuwait"],
+    ["KG","Kyrgyzstan"],
+    ["LA","Laos"],
+    ["LV","Latvia"],
+    ["LB","Lebanon"],
+    ["LS","Lesotho"],
+    ["LR","Liberia"],
+    ["LY","Libya"],
+    ["LI","Liechtenstein"],
+    ["LT","Lithuania"],
+    ["LU","Luxembourg"],
+    ["MO","Macau"],
+    ["MG","Madagascar"],
+    ["MW","Malawi"],
+    ["MY","Malaysia"],
+    ["MV","Maldives"],
+    ["ML","Mali"],
+    ["MT","Malta"],
+    ["MH","Marshall Islands"],
+    ["MR","Mauritania"],
+    ["MU","Mauritius"],
+    ["MX","Mexico"],
+    ["FM","Micronesia"],
+    ["MD","Moldova"],
+    ["MC","Monaco"],
+    ["MN","Mongolia"],
+    ["ME","Montenegro"],
+    ["MA","Morocco"],
+    ["MZ","Mozambique"],
+    ["MM","Myanmar"],
+    ["NA","Namibia"],
+    ["NR","Nauru"],
+    ["NP","Nepal"],
+    ["NL","Netherlands"],
+    ["NZ","New Zealand"],
+    ["NI","Nicaragua"],
+    ["NE","Niger"],
+    ["NG","Nigeria"],
+    ["MK","North Macedonia"],
+    ["NO","Norway"],
+    ["OM","Oman"],
+    ["PK","Pakistan"],
+    ["PW","Palau"],
+    ["PS","Palestine"],
+    ["PA","Panama"],
+    ["PG","Papua New Guinea"],
+    ["PY","Paraguay"],
+    ["PE","Peru"],
+    ["PH","Philippines"],
+    ["PL","Poland"],
+    ["PT","Portugal"],
+    ["QA","Qatar"],
+    ["RO","Romania"],
+    ["RU","Russia"],
+    ["RW","Rwanda"],
+    ["KN","Saint Kitts and Nevis"],
+    ["LC","Saint Lucia"],
+    ["VC","Saint Vincent and the Grenadines"],
+    ["WS","Samoa"],
+    ["SM","San Marino"],
+    ["ST","São Tomé and Príncipe"],
+    ["SA","Saudi Arabia"],
+    ["SN","Senegal"],
+    ["RS","Serbia"],
+    ["SC","Seychelles"],
+    ["SL","Sierra Leone"],
+    ["SG","Singapore"],
+    ["SK","Slovakia"],
+    ["SI","Slovenia"],
+    ["SB","Solomon Islands"],
+    ["SO","Somalia"],
+    ["ZA","South Africa"],
+    ["SS","South Sudan"],
+    ["ES","Spain"],
+    ["LK","Sri Lanka"],
+    ["SD","Sudan"],
+    ["SR","Suriname"],
+    ["SE","Sweden"],
+    ["CH","Switzerland"],
+    ["SY","Syria"],
+    ["TW","Taiwan"],
+    ["TJ","Tajikistan"],
+    ["TZ","Tanzania"],
+    ["TH","Thailand"],
+    ["TL","Timor-Leste"],
+    ["TG","Togo"],
+    ["TO","Tonga"],
+    ["TT","Trinidad and Tobago"],
+    ["TN","Tunisia"],
+    ["TR","Türkiye"],
+    ["TM","Turkmenistan"],
+    ["TV","Tuvalu"],
+    ["UG","Uganda"],
+    ["UA","Ukraine"],
+    ["AE","United Arab Emirates"],
+    ["GB","United Kingdom"],
+    ["US","United States"],
+    ["UY","Uruguay"],
+    ["UZ","Uzbekistan"],
+    ["VU","Vanuatu"],
+    ["VA","Vatican City"],
+    ["VE","Venezuela"],
+    ["VN","Vietnam"],
+    ["YE","Yemen"],
+    ["ZM","Zambia"],
+    ["ZW","Zimbabwe"],
+    ["Other","Other"]
+  ]);
+
   let publicReviews=[];
   let ownerReviewSubmissions=[];
   let reviewBackendState="unknown";
@@ -27629,9 +28118,23 @@ function wireShimmer(container){
 
   function reviewCountryLabel(value){
     const safe=String(value||"").trim();
-    if(safe==="MY") return "Malaysia";
-    if(safe==="SG") return "Singapore";
-    return safe==="Other" ? "Other" : "";
+    const match=REVIEW_COUNTRIES.find(([code])=>code===safe);
+    return match ? match[1] : "";
+  }
+
+  function reviewCountryOptions(){
+    const priority=new Set(["MY","SG","JP","KR","US","GB","AU","CN","HK","TW","TH","ID","PH","VN"]);
+    const primary=REVIEW_COUNTRIES.filter(([code])=>priority.has(code));
+    const rest=REVIEW_COUNTRIES.filter(([code])=>!priority.has(code) && code!=="Other");
+
+    const option=([code,label])=>`<option value="${escapeHtml(code)}">${escapeHtml(label)}</option>`;
+
+    return [
+      ...primary.map(option),
+      `<option disabled>──────────</option>`,
+      ...rest.map(option),
+      `<option value="Other">Other</option>`
+    ].join("");
   }
 
   function reviewDateLabel(value){
@@ -28092,9 +28595,7 @@ function wireShimmer(container){
               <label class="field">
                 <span>Country</span>
                 <select name="country">
-                  <option value="MY">Malaysia</option>
-                  <option value="SG">Singapore</option>
-                  <option value="Other">Other</option>
+                  ${reviewCountryOptions()}
                 </select>
               </label>
             </div>
@@ -35968,6 +36469,27 @@ function wireShimmer(container){
     ].filter(line=>line!=="").join("\n");
   }
 
+  async function messageSellerOnFacebook(){
+    const card = getDetailsCard();
+    if(!card || (!isOwnerMode() && !isLiveLifecycle(card))) return;
+
+    // Messenger does not reliably support arbitrary prefilled text in a safe
+    // public URL. Open the fixed seller destination and copy the public card
+    // reference so the buyer can paste it. No owner-only data enters the URL.
+    const opened=openSafeExternalUrl(COLLECT_TCG_FACEBOOK_MESSENGER_URL);
+
+    const copied=await copyTextToClipboard(publicContactSellerMessage(card));
+
+    if(copied){
+      showToast(opened
+        ? "Card reference copied — paste it into Facebook Messenger"
+        : "Card reference copied — allow pop-ups to open Facebook Messenger");
+    }else if(!opened){
+      showToast("Allow pop-ups to open Facebook Messenger");
+    }else{
+      showToast("Facebook Messenger opened");
+    }
+  }
 
   function shareCurrentCardWhatsApp(){
     const card = getDetailsCard();
