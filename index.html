@@ -15100,6 +15100,45 @@ body.showcase-dragging-body{
   }
 }
 
+
+/* =========================================================
+   CURRENT GIVEAWAY — COMPACT HOW-TO-ENTER PREVIEW
+   ========================================================= */
+.giveaway-how-preview .giveaway-how-text{
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:4;
+  overflow:hidden;
+  white-space:pre-wrap;
+}
+
+.giveaway-how-preview .giveaway-how-text.expanded{
+  display:block;
+  -webkit-line-clamp:unset;
+  overflow:visible;
+}
+
+.giveaway-how-toggle{
+  margin-top:7px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:var(--accent-teal);
+  font:inherit;
+  font-size:9px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.giveaway-how-toggle:hover,
+.giveaway-how-toggle:focus-visible{
+  text-decoration:underline;
+}
+
+.giveaway-how-toggle[hidden]{
+  display:none !important;
+}
+
 </style>
 </head>
 <body>
@@ -24108,9 +24147,12 @@ function wireShimmer(container){
 
       const ok=await persistShowcaseDomOrder(container);
       if(ok){
+        // Stay in rearrange mode after each drop so multiple moves can be
+        // completed without pressing "Rearrange Showcase" again.
+        showToast("Showcase order saved · continue rearranging");
+      }else{
         await loadShowcases();
         renderShowcasePage();
-        showToast("Showcase order saved");
       }
     }
 
@@ -24720,9 +24762,18 @@ function wireShimmer(container){
             ${isGiveawayHidden(g) ? `<span class="giveaway-hidden-badge owner-only">HIDDEN</span>` : ""}
           </div>
 
-          <div class="giveaway-section">
+          <div class="giveaway-section giveaway-how-preview">
             <h4>How to enter</h4>
-            <p>${escapeHtml(g.how_to_enter)}</p>
+            <p class="giveaway-how-text"
+               id="giveawayHowText-${escapeHtml(g.id)}">${escapeHtml(g.how_to_enter)}</p>
+            <button type="button"
+                    class="giveaway-how-toggle"
+                    data-giveaway-how-toggle="${escapeHtml(g.id)}"
+                    aria-expanded="false"
+                    aria-controls="giveawayHowText-${escapeHtml(g.id)}"
+                    hidden>
+              Read more
+            </button>
           </div>
 
           ${g.ends_at ? `<div class="giveaway-section"><h4>Ends</h4><p>${escapeHtml(giveawayDateLabel(g.ends_at))}</p></div>` : ""}
@@ -24829,6 +24880,25 @@ function wireShimmer(container){
     `;
 
     $("addGiveawayBtn")?.addEventListener("click",()=>openGiveawayForm());
+
+    view.querySelectorAll("[data-giveaway-how-toggle]").forEach(btn=>{
+      const id=String(btn.dataset.giveawayHowToggle||"");
+      const textEl=$(`giveawayHowText-${id}`);
+      if(!textEl) return;
+
+      requestAnimationFrame(()=>{
+        const needsToggle=textEl.scrollHeight>textEl.clientHeight+1;
+        btn.hidden=!needsToggle;
+      });
+
+      btn.addEventListener("click",()=>{
+        const expanded=btn.getAttribute("aria-expanded")==="true";
+        const next=!expanded;
+        btn.setAttribute("aria-expanded",String(next));
+        textEl.classList.toggle("expanded",next);
+        btn.textContent=next ? "Show less" : "Read more";
+      });
+    });
 
     setupGiveawayWinnerRearrangeMode();
 
