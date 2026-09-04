@@ -15139,6 +15139,36 @@ body.showcase-dragging-body{
   display:none !important;
 }
 
+
+/* Insights — reset qualified view counts */
+.insights-reset-views-btn{
+  color:var(--danger);
+  border-color:rgba(255,91,91,.34);
+}
+.insights-reset-views-btn:hover,
+.insights-reset-views-btn:focus-visible{
+  border-color:rgba(255,91,91,.64);
+  box-shadow:0 0 0 3px rgba(255,91,91,.08);
+}
+.insights-reset-modal{max-width:520px;}
+.insights-reset-warning{
+  margin:10px 0 14px;
+  padding:12px 13px;
+  border:1px solid rgba(255,91,91,.28);
+  border-radius:10px;
+  background:rgba(255,91,91,.06);
+  color:var(--text-muted);
+  font-size:10px;
+  line-height:1.55;
+}
+.insights-reset-confirm-btn:disabled{
+  opacity:.42;
+  cursor:not-allowed;
+}
+@media(max-width:800px){
+  .insights-v4-page-head .insights-reset-views-btn{width:100%;}
+}
+
 </style>
 </head>
 <body>
@@ -15379,6 +15409,37 @@ body.showcase-dragging-body{
   <button type="button" class="image-lightbox-nav image-lightbox-next" id="imageLightboxNext" aria-label="Next image">›</button>
   <div class="image-lightbox-thumbs" id="imageLightboxThumbs"></div>
   <div class="image-lightbox-hint">Swipe or use the arrows to view more photos</div>
+</div>
+
+<div class="modal-overlay" id="resetQualifiedViewsOverlay" hidden>
+  <form class="modal insights-reset-modal" id="resetQualifiedViewsForm">
+    <h2>Reset Qualified View Counts</h2>
+
+    <div class="insights-reset-warning">
+      This permanently deletes all current card Qualified View history.
+      Inventory, reviews, sales, website visits, favorites, giveaways and showcases will not be affected.
+      This action cannot be undone.
+    </div>
+
+    <div class="field">
+      <label for="resetQualifiedViewsConfirm">Type <b>Reset</b> to continue</label>
+      <input id="resetQualifiedViewsConfirm"
+             type="text"
+             autocomplete="off"
+             spellcheck="false"
+             placeholder="Reset">
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" id="resetQualifiedViewsCancelBtn">Cancel</button>
+      <button type="submit"
+              class="btn-primary insights-reset-confirm-btn"
+              id="resetQualifiedViewsConfirmBtn"
+              disabled>
+        Reset View Counts
+      </button>
+    </div>
+  </form>
 </div>
 
 <div class="modal-overlay" id="giveawayOverlay" hidden>
@@ -25075,6 +25136,48 @@ function wireShimmer(container){
     }
   }
 
+  $("resetQualifiedViewsConfirm")?.addEventListener("input",()=>{
+    const input=$("resetQualifiedViewsConfirm");
+    const confirmBtn=$("resetQualifiedViewsConfirmBtn");
+    if(!input || !confirmBtn) return;
+    confirmBtn.disabled=input.value!=="Reset";
+  });
+
+  $("resetQualifiedViewsCancelBtn")?.addEventListener("click",closeResetQualifiedViewsModal);
+
+  $("resetQualifiedViewsOverlay")?.addEventListener("click",event=>{
+    if(event.target===$("resetQualifiedViewsOverlay")){
+      closeResetQualifiedViewsModal();
+    }
+  });
+
+  $("resetQualifiedViewsForm")?.addEventListener("submit",async event=>{
+    event.preventDefault();
+    if(!requireOwner("reset qualified view counts")) return;
+
+    const input=$("resetQualifiedViewsConfirm");
+    const confirmBtn=$("resetQualifiedViewsConfirmBtn");
+
+    if(!input || !confirmBtn || input.value!=="Reset"){
+      showToast('Type "Reset" exactly to continue');
+      return;
+    }
+
+    confirmBtn.disabled=true;
+    confirmBtn.textContent="Resetting…";
+
+    const ok=await resetQualifiedViewCounts();
+
+    confirmBtn.textContent="Reset View Counts";
+
+    if(ok){
+      closeResetQualifiedViewsModal();
+      await renderInsightsPage();
+    }else{
+      confirmBtn.disabled=input.value!=="Reset";
+    }
+  });
+
   $("giveawayStatus")?.addEventListener("change",syncGiveawayWinnerField);
   syncGiveawayWatermarkControls();
 
@@ -25212,6 +25315,57 @@ function wireShimmer(container){
   });
 
   // ---------------- Insights ----------------
+  async function resetQualifiedViewCounts(){
+    if(!requireOwner("reset qualified view counts")) return false;
+
+    try{
+      const {error}=await supabaseClient.rpc("reset_qualified_view_counts");
+
+      if(error){
+        console.error("Reset qualified views error:",error);
+        const message=String(error.message||"").toLowerCase();
+        if(message.includes("function") || message.includes("schema cache")){
+          showToast("Run the Qualified Views reset RPC migration first");
+        }else{
+          showToast("Could not reset view counts");
+        }
+        return false;
+      }
+
+      qualifiedViewTotalsByCard?.clear?.();
+      qualifiedViewTotalsBackendState="unknown";
+      await refreshQualifiedViewTotals();
+      showToast("Qualified View counts reset");
+      return true;
+    }catch(error){
+      console.error("Reset qualified views failed:",error);
+      showToast("Could not reset view counts");
+      return false;
+    }
+  }
+
+  function openResetQualifiedViewsModal(){
+    if(!requireOwner("reset qualified view counts")) return;
+    const overlay=$("resetQualifiedViewsOverlay");
+    const input=$("resetQualifiedViewsConfirm");
+    const confirmBtn=$("resetQualifiedViewsConfirmBtn");
+    if(!overlay || !input || !confirmBtn) return;
+
+    input.value="";
+    confirmBtn.disabled=true;
+    overlay.hidden=false;
+    requestAnimationFrame(()=>input.focus());
+  }
+
+  function closeResetQualifiedViewsModal(){
+    const overlay=$("resetQualifiedViewsOverlay");
+    const input=$("resetQualifiedViewsConfirm");
+    const confirmBtn=$("resetQualifiedViewsConfirmBtn");
+    if(overlay) overlay.hidden=true;
+    if(input) input.value="";
+    if(confirmBtn) confirmBtn.disabled=true;
+  }
+
   async function renderInsightsPage(){
     if(!isOwnerMode()){ goToRoute("inventory"); return; }
 
@@ -25222,6 +25376,11 @@ function wireShimmer(container){
           <h2>Insights</h2>
           <p>Simple buyer-interest analytics with clear recommendations, listing history and sale conversion data.</p>
         </div>
+        <button type="button"
+                class="btn-ghost insights-reset-views-btn owner-only"
+                id="resetQualifiedViewsBtn">
+          Reset View Counts
+        </button>
       </div>
 
       <nav class="insights-v4-tabs" id="insightsTabs" aria-label="Insights sections">
@@ -25314,7 +25473,9 @@ function wireShimmer(container){
     }
 
     function switchTab(tab){
-      $("insightsTabs")?.querySelectorAll("[data-insights-tab]").forEach(btn=>{
+          $("resetQualifiedViewsBtn")?.addEventListener("click",openResetQualifiedViewsModal);
+
+$("insightsTabs")?.querySelectorAll("[data-insights-tab]").forEach(btn=>{
         btn.classList.toggle("active",btn.dataset.insightsTab===tab);
       });
       view.querySelectorAll("[data-insights-panel]").forEach(panel=>{
