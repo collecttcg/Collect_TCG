@@ -25323,12 +25323,32 @@ function wireShimmer(container){
 
       if(error){
         console.error("Reset qualified views error:",error);
-        const message=String(error.message||"").toLowerCase();
-        if(message.includes("function") || message.includes("schema cache")){
-          showToast("Run the Qualified Views reset RPC migration first");
+
+        const rawMessage=[
+          error.message,
+          error.details,
+          error.hint,
+          error.code
+        ].filter(Boolean).join(" · ");
+        const message=rawMessage.toLowerCase();
+
+        if(
+          message.includes("reset_qualified_view_counts") &&
+          (message.includes("function") || message.includes("schema cache") || message.includes("pgrst202"))
+        ){
+          showToast("Reset RPC is not installed. Run the V2 reset migration in Supabase.");
+        }else if(
+          message.includes("owner access required") ||
+          message.includes("42501") ||
+          message.includes("permission denied")
+        ){
+          showToast("Reset permission denied. Confirm Owner Mode login and run the V2 reset migration.");
+        }else if(message.includes("qualified view table not installed")){
+          showToast("Qualified View analytics table is not installed.");
         }else{
-          showToast("Could not reset view counts");
+          showToast(`Reset failed: ${rawMessage.slice(0,180) || "Unknown Supabase error"}`);
         }
+
         return false;
       }
 
@@ -25339,7 +25359,7 @@ function wireShimmer(container){
       return true;
     }catch(error){
       console.error("Reset qualified views failed:",error);
-      showToast("Could not reset view counts");
+      showToast(`Reset failed: ${String(error?.message||error||"Unknown error").slice(0,180)}`);
       return false;
     }
   }
