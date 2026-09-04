@@ -18987,10 +18987,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       returnHash:"#/inventory-tools?mode=bulk&sub=psa"
     };
 
+    // A new manual refresh always replaces any stale/interrupted queue.
+    clearPsaBulkState();
     writePsaBulkState(state);
     sessionStorage.removeItem(PSA_BULK_RESULT_KEY);
 
-    openPsaPopAutoSync(certs[0],{bulk:true,bulkState:state});
+    const started=openPsaPopAutoSync(certs[0],{bulk:true,bulkState:state});
+    if(!started){
+      clearPsaBulkState();
+      showToast("Unable to start PSA POP refresh");
+    }
   }
 
   function finishPsaBulkSync(state){
@@ -31878,10 +31884,10 @@ function wireShimmer(container){
 
       <section class="panel psa-bulk-panel">
         <div class="psa-bulk-actions">
-          <button type="button" class="btn-primary" id="psaBulkDueBtn" ${due.length?"":"disabled"}>
+          <button type="button" class="btn-primary" id="psaBulkDueBtn" data-psa-bulk-action="due" aria-label="Update due PSA POPs" ${due.length?"":"disabled"}>
             Update Due PSA POPs (${due.length})
           </button>
-          <button type="button" class="btn-ghost" id="psaBulkAllBtn" ${entries.length?"":"disabled"}>
+          <button type="button" class="btn-ghost" id="psaBulkAllBtn" data-psa-bulk-action="all" aria-label="Update all PSA POPs" ${entries.length?"":"disabled"}>
             Update All PSA POPs (${entries.length})
           </button>
         </div>
@@ -31930,16 +31936,56 @@ function wireShimmer(container){
       </section>
     `;
 
-    $("psaBulkDueBtn")?.addEventListener("click",()=>{
-      if(!due.length) return;
-      if(!confirm(`Update ${due.length} PSA POP record${due.length===1?"":"s"} now?\n\nThe browser will visit each PSA cert page automatically in this same tab.`)) return;
-      startBulkPsaPopSync(due,"Daily PSA POP");
-    });
+    const psaBulkPanel=view.querySelector(".psa-bulk-panel");
 
-    $("psaBulkAllBtn")?.addEventListener("click",()=>{
-      if(!entries.length) return;
-      if(!confirm(`Update all ${entries.length} PSA POP record${entries.length===1?"":"s"} now?\n\nThis may take a while because PSA pages are opened one at a time.`)) return;
-      startBulkPsaPopSync(entries,"All PSA POP");
+    psaBulkPanel?.addEventListener("click",event=>{
+      const button=event.target.closest("button");
+      if(!button || button.disabled) return;
+
+      if(button.id==="psaBulkDueBtn"){
+        event.preventDefault();
+
+        if(!due.length){
+          showToast("No PSA POPs are due for refresh");
+          return;
+        }
+
+        const ok=confirm(
+          `Update ${due.length} PSA POP record${due.length===1?"":"s"} now?\n\n` +
+          `The browser will visit each PSA cert page automatically in this same tab.`
+        );
+        if(!ok) return;
+
+        button.disabled=true;
+        showToast(`Starting PSA POP refresh for ${due.length} cert${due.length===1?"":"s"}…`);
+
+        requestAnimationFrame(()=>{
+          startBulkPsaPopSync(due,"Daily PSA POP");
+        });
+        return;
+      }
+
+      if(button.id==="psaBulkAllBtn"){
+        event.preventDefault();
+
+        if(!entries.length){
+          showToast("No PSA certificates found");
+          return;
+        }
+
+        const ok=confirm(
+          `Update all ${entries.length} PSA POP record${entries.length===1?"":"s"} now?\n\n` +
+          `This may take a while because PSA pages are opened one at a time.`
+        );
+        if(!ok) return;
+
+        button.disabled=true;
+        showToast(`Starting PSA POP refresh for all ${entries.length} cert${entries.length===1?"":"s"}…`);
+
+        requestAnimationFrame(()=>{
+          startBulkPsaPopSync(entries,"All PSA POP");
+        });
+      }
     });
   }
 
