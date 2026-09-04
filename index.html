@@ -15628,6 +15628,88 @@ body.showcase-dragging-body{
   font-size:7.5px;
 }
 
+
+/* =========================================================
+   ADD / EDIT CARD — GRADING ROW ALIGNMENT
+   Keep company, grade, certificate and remove action aligned.
+   ========================================================= */
+@media(min-width:801px){
+  .grading-row,
+  .grade-row,
+  [data-grading-row]{
+    align-items:end !important;
+  }
+
+  .grading-row .field,
+  .grade-row .field,
+  [data-grading-row] .field{
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    min-width:0;
+  }
+
+  .grading-row .field > label,
+  .grade-row .field > label,
+  [data-grading-row] .field > label{
+    min-height:42px;
+    display:flex;
+    align-items:flex-end;
+    margin-bottom:8px;
+  }
+
+  .grading-row select,
+  .grading-row input,
+  .grade-row select,
+  .grade-row input,
+  [data-grading-row] select,
+  [data-grading-row] input{
+    height:62px !important;
+    min-height:62px !important;
+  }
+
+  .grading-row .psa-pop-owner-actions,
+  .grade-row .psa-pop-owner-actions,
+  [data-grading-row] .psa-pop-owner-actions{
+    margin-top:8px !important;
+    min-height:24px;
+    display:flex;
+    align-items:center;
+  }
+
+  .grading-row .grading-pop-meta,
+  .grading-row .grade-pop-meta,
+  .grade-row .grading-pop-meta,
+  .grade-row .grade-pop-meta,
+  [data-grading-row] .grading-pop-meta,
+  [data-grading-row] .grade-pop-meta{
+    min-height:50px;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+  }
+
+  .grading-row .grading-remove,
+  .grading-row [data-remove-grading],
+  .grade-row .grading-remove,
+  .grade-row [data-remove-grading],
+  [data-grading-row] .grading-remove,
+  [data-grading-row] [data-remove-grading]{
+    align-self:end !important;
+    height:62px !important;
+    min-height:62px !important;
+    margin-bottom:0 !important;
+  }
+}
+
+/* Make the cert column visually balanced with the select columns. */
+@media(min-width:801px){
+  .grading-row{
+    grid-template-columns:minmax(190px,1fr) minmax(190px,1fr) minmax(260px,1.25fr) 58px !important;
+    column-gap:16px !important;
+  }
+}
+
 </style>
 </head>
 <body>
