@@ -15217,6 +15217,33 @@ body.showcase-dragging-body{
   }
 }
 
+
+/* =========================================================
+   PSA POP — browser-assisted sync
+   ========================================================= */
+.detail-psa-pop{
+  display:block;
+  margin-top:4px;
+  color:var(--accent-teal);
+  font-size:10px;
+  font-weight:800;
+  line-height:1.25;
+}
+.pop-owner-status a{
+  color:var(--accent-teal);
+  text-decoration:none;
+  font-weight:700;
+}
+.pop-owner-status a:hover{text-decoration:underline;}
+.owner-only-field-note{
+  color:var(--text-muted);
+  font-size:9px;
+  font-weight:600;
+  text-transform:none;
+  letter-spacing:0;
+}
+.psa-sync-waiting strong{color:var(--accent-teal);}
+
 </style>
 </head>
 <body>
@@ -18193,6 +18220,38 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   // ---------------- PSA POP sync ----------------
+  function normalizePsaCertInput(value){
+    const raw=String(value||"").trim();
+    if(!raw) return "";
+
+    const urlMatch=raw.match(/psacard\.com\/cert\/(\d+)/i);
+    if(urlMatch?.[1]) return urlMatch[1];
+
+    return /^\d+$/.test(raw) ? raw : raw.replace(/\D+/g,"");
+  }
+
+  function psaCertUrl(value){
+    const cert=normalizePsaCertInput(value);
+    return cert ? `https://www.psacard.com/cert/${encodeURIComponent(cert)}/psa` : "";
+  }
+
+  function gradePopLabel(grade){
+    if(!grade || String(grade.company||"").trim().toUpperCase()!=="PSA") return "";
+    if(grade.pop_count==null || grade.pop_count==="") return "";
+    const pop=Number(grade.pop_count);
+    return Number.isFinite(pop) ? `POP ${pop.toLocaleString()}` : "";
+  }
+
+  function gradePopDetailLabel(grade){
+    const pop=gradePopLabel(grade);
+    if(!pop) return "";
+    const higher=grade?.pop_higher;
+    const higherText=higher!=null && higher!=="" && Number.isFinite(Number(higher))
+      ? ` · ${Number(higher).toLocaleString()} higher`
+      : "";
+    return `${pop}${higherText}`;
+  }
+
   function hasPsaCert(card){
     return Array.isArray(card.grading) && card.grading.some(g =>
       g && String(g.company || "").toUpperCase() === "PSA" && String(g.cert || "").trim()
@@ -18227,6 +18286,115 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(!silent) showToast("Saved, but PSA POP sync was unavailable");
     }
     return null;
+  }
+
+  async function handleIncomingPsaPopSync(){
+    const rawHash=String(location.hash||"");
+    const queryIndex=rawHash.indexOf("?");
+    const params=new URLSearchParams(queryIndex>=0 ? rawHash.slice(queryIndex+1) : "");
+
+    const cert=normalizePsaCertInput(params.get("cert")||"");
+    const popRaw=params.get("pop");
+    const higherRaw=params.get("higher");
+    const source=params.get("source")||"";
+
+    const pop=popRaw!=null && popRaw!=="" ? Number(popRaw) : NaN;
+    const higher=higherRaw!=null && higherRaw!=="" ? Number(higherRaw) : null;
+
+    if(!cert || !Number.isFinite(pop) || pop<0){
+      view.innerHTML=`
+        <div class="empty">
+          <h2>PSA POP Sync</h2>
+          <p>The incoming PSA POP data is incomplete or invalid.</p>
+          <button type="button" class="btn-primary" id="psaSyncBackBtn">Browse Inventory</button>
+        </div>`;
+      $("psaSyncBackBtn")?.addEventListener("click",()=>goToRoute("inventory"));
+      return;
+    }
+
+    if(!isOwnerMode()){
+      view.innerHTML=`
+        <div class="empty psa-sync-waiting">
+          <h2>PSA POP Ready</h2>
+          <p>Cert <strong>${escapeHtml(cert)}</strong> · POP <strong>${escapeHtml(pop.toLocaleString())}</strong>${higher!=null && Number.isFinite(higher) ? ` · ${escapeHtml(higher.toLocaleString())} higher` : ""}</p>
+          <p>Enable <strong>Owner Mode</strong>, then click Apply PSA POP. The data will remain in this page until it is applied.</p>
+          <button type="button" class="btn-primary" id="psaSyncApplyBtn">Apply PSA POP</button>
+        </div>`;
+      $("psaSyncApplyBtn")?.addEventListener("click",handleIncomingPsaPopSync);
+      return;
+    }
+
+    const matches=[];
+    cards.forEach(card=>{
+      (Array.isArray(card.grading)?card.grading:[]).forEach((grade,index)=>{
+        if(
+          String(grade?.company||"").trim().toUpperCase()==="PSA" &&
+          normalizePsaCertInput(grade?.cert||"")===cert
+        ){
+          matches.push({card,grade,index});
+        }
+      });
+    });
+
+    if(matches.length===0){
+      view.innerHTML=`
+        <div class="empty">
+          <h2>No Matching PSA Cert</h2>
+          <p>No card in your inventory has PSA cert <strong>${escapeHtml(cert)}</strong>.</p>
+          <p>Add/save that cert number to the graded card first, then use <strong>Send to Collect TCG</strong> again from PSA.</p>
+          ${source ? `<a class="btn-ghost" href="${escapeHtml(safeHttpUrl(source)||psaCertUrl(cert))}" target="_blank" rel="noopener">Open PSA ↗</a>` : ""}
+          <button type="button" class="btn-primary" id="psaSyncBackBtn">Browse Inventory</button>
+        </div>`;
+      $("psaSyncBackBtn")?.addEventListener("click",()=>goToRoute("inventory"));
+      return;
+    }
+
+    if(matches.length>1){
+      view.innerHTML=`
+        <div class="empty">
+          <h2>Duplicate PSA Cert</h2>
+          <p>More than one card currently uses PSA cert <strong>${escapeHtml(cert)}</strong>. POP was not changed.</p>
+          <p>Correct the duplicate cert number first and retry.</p>
+          <button type="button" class="btn-primary" id="psaSyncBackBtn">Browse Inventory</button>
+        </div>`;
+      $("psaSyncBackBtn")?.addEventListener("click",()=>goToRoute("inventory"));
+      return;
+    }
+
+    const match=matches[0];
+    const nextGrades=(Array.isArray(match.card.grading)?match.card.grading:[]).map((grade,index)=>
+      index===match.index
+        ? {
+            ...grade,
+            cert,
+            pop_count:Math.round(pop),
+            pop_higher:higher!=null && Number.isFinite(higher) && higher>=0 ? Math.round(higher) : null,
+            pop_updated_at:new Date().toISOString()
+          }
+        : grade
+    );
+
+    view.innerHTML=`
+      <div class="empty psa-sync-waiting">
+        <h2>Updating PSA POP…</h2>
+        <p>${escapeHtml(match.card.name)} · Cert ${escapeHtml(cert)}</p>
+      </div>`;
+
+    const saved=await updateCardStorage({...match.card,grading:nextGrades});
+    if(!saved){
+      view.innerHTML=`
+        <div class="empty">
+          <h2>PSA POP Update Failed</h2>
+          <p>The card was found, but Supabase did not accept the update.</p>
+          <button type="button" class="btn-primary" id="psaSyncRetryBtn">Retry</button>
+        </div>`;
+      $("psaSyncRetryBtn")?.addEventListener("click",handleIncomingPsaPopSync);
+      return;
+    }
+
+    replaceCardInMemory(saved);
+    showToast(`PSA POP ${Math.round(pop).toLocaleString()} saved`);
+    goToRoute(`card/${encodeURIComponent(saved.id)}`);
   }
 
   // ---------------- Router ----------------
@@ -18581,6 +18749,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function router(){
     updateStatusNavCounts();
     const route=currentRoute();
+
+    if(routeBase(route)==="psa-sync"){
+      handleIncomingPsaPopSync();
+      return;
+    }
 
     // Central fail-closed route gate. This protects direct URLs/bookmarks as
     // well as clicks from desktop/mobile navigation.
@@ -19486,14 +19659,15 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const avoidStatusCorner=status==="sold" || status==="reserved";
 
     const gradeText=`${company} ${value}`.trim();
+    const popText=gradePopLabel(grade);
     return `<button type="button"
                     class="overview-grade-overlay filter-pill-btn ${avoidStatusCorner?"overview-grade-overlay-right":""} ${pillFilterState.grade.size && pillFilterState.grade.has(gradeText)?"pill-selected":""}"
                     data-pill-filter="grade"
                     data-pill-value="${escapeHtml(gradeText)}"
-                    title="Filter by ${escapeHtml(gradeText)}"
+                    title="${escapeHtml(popText ? `${gradeText} · ${popText}` : `Filter by ${gradeText}`)}"
                     aria-label="${escapeHtml(`Filter by ${gradeText}`)}">
       <strong>${escapeHtml(gradeText)}</strong>
-      <small>GRADED</small>
+      <small>${escapeHtml(popText || "GRADED")}</small>
     </button>`;
   }
 
@@ -20412,14 +20586,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         </select>
       </div>
       <div class="field cert-field">
-        <label>Cert. No. (owner only)</label>
-        <input class="${p}GradeCert" type="text" value="${escapeHtml(g.cert || "")}" placeholder="e.g. 12345678">
+        <label>${g.company === "PSA" ? "PSA Cert No. / URL" : "Cert. No."} <span class="owner-only-field-note">(owner only)</span></label>
+        <input class="${p}GradeCert" type="text" value="${escapeHtml(g.cert || "")}" placeholder="${g.company === "PSA" ? "156757773 or PSA cert URL" : "Certificate number"}">
         <div class="pop-owner-status">
           ${g.company === "PSA"
             ? (hasPop
-                ? `<strong>Auto POP:</strong> ${Number(g.pop_count).toLocaleString()}${g.pop_higher != null ? ` · ${Number(g.pop_higher).toLocaleString()} higher` : ""}${updated ? ` · updated ${escapeHtml(updated)}` : ""}`
-                : `PSA POP will sync automatically after saving when a cert number is present.`)
-            : `Automatic POP currently applies to PSA certs.`}
+                ? `<strong>${escapeHtml(gradePopDetailLabel(g))}</strong>${updated ? ` · updated ${escapeHtml(updated)}` : ""}${g.cert ? ` · <a href="${escapeHtml(psaCertUrl(g.cert))}" target="_blank" rel="noopener">Open PSA ↗</a>` : ""}`
+                : `Save the PSA cert, open its PSA page, then use the Tampermonkey <strong>Send to Collect TCG</strong> button.${g.cert ? ` <a href="${escapeHtml(psaCertUrl(g.cert))}" target="_blank" rel="noopener">Open PSA ↗</a>` : ""}`)
+            : `Automatic browser POP sync currently applies to PSA certs.`}
         </div>
       </div>
       <button type="button" class="grading-remove" title="Remove grading">×</button>
@@ -20483,7 +20657,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           formState.grading[i].grade=e.target.value;
           syncGradedCondition();
         });
-        row.querySelector("." + p + "GradeCert").addEventListener("input", e=>formState.grading[i].cert=e.target.value.trim());
+        const certInput=row.querySelector("." + p + "GradeCert");
+        certInput.addEventListener("input", e=>{
+          formState.grading[i].cert=e.target.value.trim();
+        });
+        certInput.addEventListener("blur", e=>{
+          if(String(formState.grading[i].company||"").toUpperCase()!=="PSA") return;
+          const normalized=normalizePsaCertInput(e.target.value);
+          formState.grading[i].cert=normalized;
+          e.target.value=normalized;
+        });
         row.querySelector(".grading-remove").addEventListener("click", ()=>{
           formState.grading.splice(i,1);
           refresh();
@@ -20971,7 +21154,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       grading: formState.grading.map(g=>({
         company: g.company,
         grade: g.grade,
-        cert: g.cert || "",
+        cert: String(g.company||"").toUpperCase()==="PSA"
+          ? normalizePsaCertInput(g.cert || "")
+          : (g.cert || ""),
         pop_count: g.pop_count == null ? null : Number(g.pop_count),
         pop_higher: g.pop_higher == null ? null : Number(g.pop_higher),
         pop_updated_at: g.pop_updated_at || null
@@ -21788,12 +21973,14 @@ function relatedCardHTML(c){
     const shimmer = SHIMMER_RARITIES.has(c.rarity);
     const format = effectiveFormat(c);
     const grades = Array.isArray(c.grading) ? c.grading.filter(g=>g && g.company) : [];
-    const gradeText = grades.length
+    const baseGradeText = grades.length
       ? `${grades[0].company} ${grades[0].grade || ""}`.trim()
       : (format === "Sealed" ? "Sealed" : (rawConditionShortLabel(c.condition) || "—"));
+    const firstGradePop=grades.length ? gradePopLabel(grades[0]) : "";
+    const gradeText=firstGradePop ? `${baseGradeText} · ${firstGradePop}` : baseGradeText;
 
     const gradeFilterText = grades.length
-      ? gradeText
+      ? baseGradeText
       : (format === "Sealed"
           ? "Sealed"
           : (rawConditionFilterLabel(c.condition) || gradeText));
@@ -33682,9 +33869,8 @@ function wireShimmer(container){
           showToast("Card added · grading certificate was not saved because private grading storage is unavailable");
         }else if(hasPsaCert(data)){
           showToast(privateMetaSaved
-            ? "Card added · images stored in Supabase Storage · syncing PSA POP…"
-            : "Card added · images stored in Supabase Storage · private notes/tags were not saved");
-          await refreshPsaPopForCard(saved.id,false);
+            ? "Card added · use the PSA browser helper to sync POP"
+            : "Card added · private notes/tags were not saved");
         }else{
           showToast(!imageVariantsSaved
             ? "Card added · reversible watermark metadata was not saved"
@@ -34498,6 +34684,7 @@ function wireShimmer(container){
     const detailCondition = hasGrade
       ? `${detailGrades[0].company} ${detailGrades[0].grade || ""}`.trim()
       : condition;
+    const detailPop = hasGrade ? gradePopDetailLabel(detailGrades[0]) : "";
     const cost = card.cost == null ? "—" : fmtMoney(card.cost);
     const isSoldListing = normalizeFilterValue(card.availability || "") === "sold";
     const isNfsListing = normalizeFilterValue(card.availability || "") === "collection (nfs)";
@@ -34590,6 +34777,7 @@ function wireShimmer(container){
             <div class="detail-summary-card">
               <span>Grade / Condition</span>
               <strong>${escapeHtml(detailCondition)}</strong>
+              ${detailPop ? `<small class="detail-psa-pop">${escapeHtml(detailPop)}</small>` : ""}
             </div>
             <div class="detail-summary-card" data-availability="${normalizeFilterValue(card.availability||"Available")}">
               <span>Availability</span>
@@ -35288,8 +35476,7 @@ function wireShimmer(container){
       if(!variantResult.ok && preparedImages.variantRecords?.length){
         showToast("Card updated · reversible watermark metadata was not saved");
       }else if(hasPsaCert(data)){
-        showToast("Card updated · images stored in Supabase Storage · syncing PSA POP…");
-        await refreshPsaPopForCard(id,false);
+        showToast("Card updated · use the PSA browser helper to sync POP");
       }else{
         showToast("Card updated · images stored in Supabase Storage");
       }
