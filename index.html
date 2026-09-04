@@ -25842,7 +25842,12 @@ function wireShimmer(container){
       }
 
       renderClassicTrafficBars("insightsChart",state.series,"views");
-      renderClassicTrafficBars("insightsWebsiteChart",state.websiteSeries,"visits",true);
+      const websiteChartRows=(Array.isArray(state.websiteSeries) &&
+        state.websiteSeries.some(row=>Number(row.visits||0)>0))
+        ? state.websiteSeries
+        : [];
+
+      renderClassicTrafficBars("insightsWebsiteChart",websiteChartRows,"visits",true);
 
       const chartNote=$("insightsQualifiedChartNote");
       if(chartNote){
