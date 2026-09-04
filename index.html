@@ -15169,6 +15169,54 @@ body.showcase-dragging-body{
   .insights-v4-page-head .insights-reset-views-btn{width:100%;}
 }
 
+
+/* =========================================================
+   MOBILE CARD DETAILS PHOTO GALLERY FIX
+   ========================================================= */
+
+/* The full-screen photo viewer must sit above the sticky price / Interested bar. */
+.image-lightbox{
+  z-index:5000 !important;
+}
+.image-lightbox-close,
+.image-lightbox-download,
+.image-lightbox-count,
+.image-lightbox-nav{
+  z-index:5002 !important;
+}
+.image-lightbox-main,
+.image-lightbox-thumbs,
+.image-lightbox-hint{
+  position:relative;
+  z-index:5001;
+}
+
+@media(max-width:800px){
+  /* Keep the photo discovery strip fully visible at the bottom of the lightbox. */
+  .image-lightbox{
+    padding-bottom:calc(14px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .image-lightbox-main{
+    min-height:0;
+    height:calc(100dvh - 150px - env(safe-area-inset-bottom)) !important;
+  }
+
+  .image-lightbox-thumbs{
+    flex:0 0 auto;
+    max-width:calc(100vw - 20px);
+    padding-bottom:5px;
+    scroll-padding-inline:10px;
+  }
+
+  /* Horizontal thumbnail browsing is independent from the main-image swipe. */
+  .detail-thumb-strip{
+    touch-action:pan-x;
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -34800,16 +34848,35 @@ function wireShimmer(container){
       });
 
       let touchStartX = null;
+      let detailSwipeStartedInThumbStrip = false;
+
       slider.addEventListener("touchstart", e=>{
-        touchStartX = e.changedTouches[0].clientX;
+        detailSwipeStartedInThumbStrip=Boolean(e.target.closest?.(".detail-thumb-strip"));
+        touchStartX=detailSwipeStartedInThumbStrip
+          ? null
+          : e.changedTouches[0].clientX;
       }, {passive:true});
+
       slider.addEventListener("touchend", e=>{
-        if(touchStartX == null) return;
-        const dx = e.changedTouches[0].clientX - touchStartX;
-        if(Math.abs(dx) > 40){
-          showSlide(slideIndex + (dx < 0 ? 1 : -1));
+        if(detailSwipeStartedInThumbStrip){
+          detailSwipeStartedInThumbStrip=false;
+          touchStartX=null;
+          return;
         }
-        touchStartX = null;
+
+        if(touchStartX == null) return;
+        const dx=e.changedTouches[0].clientX-touchStartX;
+
+        if(Math.abs(dx)>40){
+          showSlide(slideIndex+(dx<0 ? 1 : -1));
+        }
+
+        touchStartX=null;
+      }, {passive:true});
+
+      slider.addEventListener("touchcancel", ()=>{
+        detailSwipeStartedInThumbStrip=false;
+        touchStartX=null;
       }, {passive:true});
     }
   }
