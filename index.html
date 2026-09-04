@@ -15846,62 +15846,17 @@ body.showcase-dragging-body{
 
 
 
+
 /* =========================================================
-   MOBILE TOP NAV — COMPACT FIRST FOUR
-   Visible: Home → Inventory → Sold → Collection
-   Everything else goes under More.
-   Desktop navigation remains unchanged.
+   NAV VISIBILITY ONLY — PRESERVE ORIGINAL LAYOUT
+   PC uses the original full nav layout.
+   Mobile uses the original first-four + More layout.
    ========================================================= */
 @media(max-width:800px){
-  nav.mainnav{
-    display:grid !important;
-    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-    gap:4px !important;
-    align-items:stretch !important;
-    overflow:visible !important;
-  }
-
-  nav.mainnav > a[data-route="home"],
-  nav.mainnav > a[data-route="inventory"],
-  nav.mainnav > a[data-route="sold"],
-  nav.mainnav > a[data-route="collection"]{
-    display:flex !important;
-    min-height:46px !important;
-    padding:9px 10px !important;
-    justify-content:flex-start !important;
-    align-items:center !important;
-    gap:8px !important;
-    border-radius:11px !important;
-    font-size:13px !important;
-  }
-
-  nav.mainnav > a[data-route="home"]{order:1 !important;}
-  nav.mainnav > a[data-route="inventory"]{order:2 !important;}
-  nav.mainnav > a[data-route="sold"]{order:3 !important;}
-  nav.mainnav > a[data-route="collection"]{order:4 !important;}
-
-  /* Hide the remaining primary links from the compact mobile row. */
-  nav.mainnav > a[data-route="reserved"],
-  nav.mainnav > a[data-route="showcase"],
-  nav.mainnav > a[data-route="giveaway"],
-  nav.mainnav > a[data-route="favorites"]{
+  nav.mainnav > a.desktop-primary-mobile-hidden{
     display:none !important;
   }
 
-  nav.mainnav > .mobile-more-toggle{
-    display:flex !important;
-    order:20 !important;
-    grid-column:1 / -1 !important;
-    width:100% !important;
-  }
-
-  nav.mainnav > .mobile-more-menu{
-    order:21 !important;
-    grid-column:1 / -1 !important;
-    width:100% !important;
-  }
-
-  /* Show the requested secondary routes inside More. */
   nav.mainnav > .mobile-more-menu > a[data-route="reserved"],
   nav.mainnav > .mobile-more-menu > a[data-route="showcase"],
   nav.mainnav > .mobile-more-menu > a[data-route="giveaway"],
@@ -15910,14 +15865,133 @@ body.showcase-dragging-body{
   }
 }
 
-@media(max-width:360px){
-  nav.mainnav > a[data-route="home"],
-  nav.mainnav > a[data-route="inventory"],
-  nav.mainnav > a[data-route="sold"],
+@media(min-width:801px){
+  nav.mainnav > a.desktop-primary-mobile-hidden{
+    display:flex !important;
+  }
+
+  /* Keep mobile-only duplicates out of the desktop layout. */
+  nav.mainnav > .mobile-more-menu > a[data-route="reserved"],
+  nav.mainnav > .mobile-more-menu > a[data-route="showcase"],
+  nav.mainnav > .mobile-more-menu > a[data-route="giveaway"],
+  nav.mainnav > .mobile-more-menu > a[data-route="favorites"]{
+    display:none !important;
+  }
+}
+
+
+/* =========================================================
+   MAIN NAV — FINAL VISUAL ORDER
+   Override older order rules without changing nav dimensions.
+   ========================================================= */
+
+/* ---------- Desktop ---------- */
+@media(min-width:801px){
+  nav.mainnav > a[data-route="home"]{
+    order:1 !important;
+  }
+  nav.mainnav > a[data-route="inventory"]{
+    order:2 !important;
+  }
+  nav.mainnav > a[data-route="sold"]{
+    order:3 !important;
+  }
   nav.mainnav > a[data-route="collection"]{
-    padding:8px 7px !important;
-    gap:5px !important;
-    font-size:12px !important;
+    order:4 !important;
+  }
+  nav.mainnav > a[data-route="reserved"]{
+    order:5 !important;
+  }
+  nav.mainnav > a[data-route="showcase"]{
+    order:6 !important;
+  }
+  nav.mainnav > a[data-route="giveaway"]{
+    order:7 !important;
+  }
+  nav.mainnav > a[data-route="favorites"]{
+    order:8 !important;
+  }
+  nav.mainnav > a[data-route="reviews"]{
+    order:9 !important;
+  }
+
+  nav.mainnav > .mobile-more-toggle{
+    order:10 !important;
+  }
+
+  /* Other owner / secondary desktop tools remain after More. */
+  nav.mainnav > a[data-route="insights"],
+  nav.mainnav > a[data-route="fb-tools"],
+  nav.mainnav > a[data-route="quality"],
+  nav.mainnav > a[data-route="inventory-tools"],
+  nav.mainnav > a[data-route="export"],
+  nav.mainnav > a[data-route="add"],
+  nav.mainnav > a[data-route="about"],
+  nav.mainnav > a[data-route="contact"]{
+    order:20 !important;
+  }
+}
+
+/* ---------- Mobile ---------- */
+@media(max-width:800px){
+  nav.mainnav > a[data-route="home"]{
+    order:1 !important;
+  }
+  nav.mainnav > a[data-route="inventory"]{
+    order:2 !important;
+  }
+  nav.mainnav > a[data-route="sold"]{
+    order:3 !important;
+  }
+  nav.mainnav > a[data-route="collection"]{
+    order:4 !important;
+  }
+
+  nav.mainnav > .mobile-more-toggle{
+    order:5 !important;
+  }
+
+  /* Keep only the first four directly visible on mobile. */
+  nav.mainnav > a[data-route="reserved"],
+  nav.mainnav > a[data-route="showcase"],
+  nav.mainnav > a[data-route="giveaway"],
+  nav.mainnav > a[data-route="favorites"],
+  nav.mainnav > a[data-route="reviews"],
+  nav.mainnav > a[data-route="insights"],
+  nav.mainnav > a[data-route="fb-tools"],
+  nav.mainnav > a[data-route="quality"],
+  nav.mainnav > a[data-route="inventory-tools"],
+  nav.mainnav > a[data-route="export"],
+  nav.mainnav > a[data-route="add"],
+  nav.mainnav > a[data-route="about"],
+  nav.mainnav > a[data-route="contact"]{
+    display:none !important;
+  }
+
+  nav.mainnav > .mobile-more-menu{
+    order:6 !important;
+  }
+
+  /* Requested mobile More order. */
+  nav.mainnav > .mobile-more-menu > a[data-route="reserved"]{
+    order:1 !important;
+  }
+  nav.mainnav > .mobile-more-menu > a[data-route="showcase"]{
+    order:2 !important;
+  }
+  nav.mainnav > .mobile-more-menu > a[data-route="giveaway"]{
+    order:3 !important;
+  }
+  nav.mainnav > .mobile-more-menu > a[data-route="favorites"]{
+    order:4 !important;
+  }
+}
+
+
+@media(max-width:800px){
+  nav.mainnav > .mobile-more-menu:not([hidden]){
+    display:flex !important;
+    flex-direction:column !important;
   }
 }
 
@@ -15959,23 +16033,22 @@ body.showcase-dragging-body{
       <a href="#/inventory" data-route="inventory"><span class="ic">▦</span> <span>Inventory</span><span class="nav-count" id="inventoryNavCount">0</span></a>
       <a href="#/sold" data-route="sold" class="status-primary-nav"><span class="ic">✓</span> <span>Sold</span><span class="nav-count" id="soldNavCount">0</span></a>
       <a href="#/collection" data-route="collection" class="collection-primary-nav"><span class="ic">◆</span> <span>Collection</span><span class="nav-count collection-nav-count" id="collectionNavCount">0</span></a>
-      <a href="#/reserved" data-route="reserved" class="status-primary-nav"><span class="ic">◷</span> <span>Reserved</span><span class="nav-count" id="reservedNavCount">0</span></a>
-      <a href="#/showcase" data-route="showcase"><span class="ic">▶</span> Showcase</a>
-      <a href="#/giveaway" data-route="giveaway"><span class="ic">★</span> Giveaway</a>
-      <a href="#/favorites" data-route="favorites"><span class="ic">♡</span> Favorite</a>
+      <a href="#/reserved" data-route="reserved" class="status-primary-nav desktop-primary-mobile-hidden"><span class="ic">◷</span> <span>Reserved</span><span class="nav-count" id="reservedNavCount">0</span></a>
+      <a href="#/showcase" data-route="showcase" class="desktop-primary-mobile-hidden"><span class="ic">▶</span> Showcase</a>
+      <a href="#/giveaway" data-route="giveaway" class="desktop-primary-mobile-hidden"><span class="ic">★</span> Giveaway</a>
+      <a href="#/favorites" data-route="favorites" class="desktop-primary-mobile-hidden"><span class="ic">♡</span> Favorite</a>
       <button type="button" class="mobile-more-toggle" id="mobileMoreToggle" aria-expanded="false">
         <span class="ic">⋯</span> More <span class="mobile-more-caret">⌄</span>
       </button>
       <div class="mobile-more-menu" id="mobileMoreMenu" hidden>
-        <a href="#/reserved" data-route="reserved"><span class="ic">◌</span> Reserved</a>
-<a href="#/collection" data-route="collection"><span class="ic">◆</span> Collection / NFS</a>
-        <a href="#/favorites" data-route="favorites"><span class="ic">♡</span> Favorites</a>
+        <a href="#/reserved" data-route="reserved"><span class="ic">◷</span> Reserved</a>
+        <a href="#/showcase" data-route="showcase"><span class="ic">▶</span> Showcase</a>
         <a href="#/giveaway" data-route="giveaway"><span class="ic">★</span> Giveaway</a>
+        <a href="#/favorites" data-route="favorites"><span class="ic">♡</span> Favorite</a>
+<a href="#/collection" data-route="collection"><span class="ic">◆</span> Collection / NFS</a>
         <a href="#/reviews" data-route="reviews" class="reviews-more-nav"><span class="ic">☆</span> Reviews</a>
         <a href="#/about" data-route="about"><span class="ic">◎</span> About Us</a>
         <a href="#/contact" data-route="contact"><span class="ic">✉</span> Contact</a>
-
-        <a href="#/showcase" data-route="showcase"><span class="ic">▶</span> Showcase</a>
         <a href="#/recent" data-route="recent"><span class="ic">↻</span> Recently Viewed</a>
         <a href="#/insights" data-route="insights" class="owner-only desktop-more-owner"><span class="ic">◔</span> Insights</a>
         <a href="#/fb-tools" data-route="fb-tools" class="owner-only desktop-more-owner"><span class="ic">ƒ</span> Post Generator Tools</a>
