@@ -22501,7 +22501,7 @@ function wireShimmer(container){
           ${hasPrice ? `<button type="button" class="btn-ghost" data-empty-clear-price>Remove Price Range</button>` : ""}
           ${activeCount ? `<button type="button" class="btn-primary" data-empty-clear-all>Clear All Filters</button>` : ""}
           ${scope!=="collection"
-            ? `<a href="#/collection" class="btn-ghost">Browse Collection / NFS</a>`
+            ? `<a href="#/collection" class="btn-ghost">Browse Inventory / NFS</a>`
             : `<a href="#/inventory" class="btn-ghost">Browse Available Cards</a>`}
         </div>
       </div>
@@ -25472,10 +25472,10 @@ function wireShimmer(container){
       return $("insightsTabs")?.querySelector("button.active")?.dataset.insightsTab||"overview";
     }
 
-    function switchTab(tab){
-          $("resetQualifiedViewsBtn")?.addEventListener("click",openResetQualifiedViewsModal);
+    $("resetQualifiedViewsBtn")?.addEventListener("click",openResetQualifiedViewsModal);
 
-$("insightsTabs")?.querySelectorAll("[data-insights-tab]").forEach(btn=>{
+    function switchTab(tab){
+      $("insightsTabs")?.querySelectorAll("[data-insights-tab]").forEach(btn=>{
         btn.classList.toggle("active",btn.dataset.insightsTab===tab);
       });
       view.querySelectorAll("[data-insights-panel]").forEach(panel=>{
