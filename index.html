@@ -18552,7 +18552,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return id;
   }
 
-  const CARD_VIEW_QUALIFY_MS=5000;
+  const CARD_VIEW_QUALIFY_MS=3000;
   const CARD_VIEW_DEDUPE_MS=30*60*1000;
   const CARD_VIEW_DEDUPE_KEY="collect_tcg_card_view_dedupe_fresh_v1";
   let cardViewQualificationToken=0;
@@ -27279,7 +27279,7 @@ function wireShimmer(container){
             <div class="insights-v4-card-head table-head">
               <div>
                 <h3>Qualified Card Views</h3>
-                <span id="insightsQualifiedChartNote">Cards kept open for at least 5 seconds.</span>
+                <span id="insightsQualifiedChartNote">Cards kept open for at least 3 seconds.</span>
               </div>
             </div>
             <div id="insightsChart" class="insights-chart insights-time-chart"></div>
