@@ -15794,6 +15794,39 @@ body.showcase-dragging-body{
   }
 }
 
+
+/* =========================================================
+   PSA POP — PER-CERT REFRESH BUTTON
+   Replaces the old non-clickable Due/Fresh status label.
+   ========================================================= */
+.psa-bulk-values .psa-row-refresh{
+  appearance:none;
+  border:0;
+  background:transparent;
+  padding:0;
+  margin:0;
+  font:inherit;
+  font-weight:800;
+  cursor:pointer;
+  line-height:1;
+}
+.psa-bulk-values .psa-row-refresh.due{
+  color:#d97706;
+}
+.psa-bulk-values .psa-row-refresh.fresh{
+  color:var(--accent-teal);
+}
+.psa-bulk-values .psa-row-refresh:hover,
+.psa-bulk-values .psa-row-refresh:focus-visible{
+  text-decoration:underline;
+  text-underline-offset:2px;
+}
+.psa-bulk-values .psa-row-refresh:disabled{
+  opacity:.5;
+  cursor:wait;
+  text-decoration:none;
+}
+
 </style>
 </head>
 <body>
@@ -31953,7 +31986,13 @@ function wireShimmer(container){
                 <div class="psa-bulk-values">
                   <span>POP <b>${escapeHtml(pop)}</b></span>
                   <span>Higher <b>${escapeHtml(higher)}</b></span>
-                  <span class="${dueNow?"due":"fresh"}">${dueNow?"Due":"Fresh"}</span>
+                  <button type="button"
+                          class="psa-row-refresh ${dueNow?"due":"fresh"}"
+                          data-psa-row-refresh="${escapeHtml(entry.cert)}"
+                          title="Refresh this PSA certificate now"
+                          aria-label="Refresh PSA POP for cert ${escapeHtml(entry.cert)}">
+                    ${dueNow?"Due":"Fresh"}
+                  </button>
                 </div>
                 <small>Updated: ${escapeHtml(updated)}</small>
               </article>`;
@@ -31970,6 +32009,28 @@ function wireShimmer(container){
     psaBulkPanel?.addEventListener("click",event=>{
       const button=event.target.closest("button");
       if(!button || button.disabled) return;
+
+      if(button.matches("[data-psa-row-refresh]")){
+        event.preventDefault();
+
+        const cert=normalizePsaCertInput(button.dataset.psaRowRefresh||"");
+        if(!cert){
+          showToast("PSA certificate number is missing");
+          return;
+        }
+
+        button.disabled=true;
+        showToast(`Refreshing PSA cert ${cert}…`);
+
+        requestAnimationFrame(()=>{
+          const started=openPsaPopAutoSync(cert);
+          if(!started){
+            button.disabled=false;
+            showToast("Unable to start PSA POP refresh");
+          }
+        });
+        return;
+      }
 
       if(button.id==="psaBulkDueBtn"){
         event.preventDefault();
