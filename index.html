@@ -16220,6 +16220,23 @@ button.clean-game-pill.filter-pill-btn:hover,
   filter:brightness(1.18)!important;
 }
 
+
+
+
+/* =========================================================
+   INSIGHTS OVERVIEW FILTER PILLS — CONSISTENT HOVER BRIGHTNESS
+   Preserve each pill's existing hue; normalize hover intensity only.
+   ========================================================= */
+#insightsOverview .filter-pill-btn:hover,
+#insightsOverview button[class*="pill"]:hover,
+.insights-v4-controls .filter-pill-btn:hover,
+.insights-v4-filters .filter-pill-btn:hover{
+  filter:brightness(1.18) saturate(1.08) !important;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, currentColor 18%, transparent) !important,
+    0 0 16px color-mix(in srgb, currentColor 28%, transparent) !important;
+}
+
 </style>
 </head>
 <body>
