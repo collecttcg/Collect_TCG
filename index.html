@@ -15244,6 +15244,22 @@ body.showcase-dragging-body{
 }
 .psa-sync-waiting strong{color:var(--accent-teal);}
 
+
+.psa-pop-owner-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:8px;
+}
+.psa-pop-owner-actions .psa-pop-refresh-btn{
+  min-height:32px;
+  padding:7px 10px;
+}
+.psa-pop-owner-actions a{
+  font-size:10px;
+}
+
 </style>
 </head>
 <body>
@@ -18252,6 +18268,29 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return `${pop}${higherText}`;
   }
 
+  function openPsaPopAutoSync(cert){
+    const normalized=normalizePsaCertInput(cert);
+    if(!normalized){
+      showToast("Add a PSA cert number first");
+      return;
+    }
+
+    const returnUrl=new URL(location.href);
+    returnUrl.hash="";
+
+    const psaUrl=new URL(psaCertUrl(normalized));
+    psaUrl.searchParams.set("collectSync","1");
+    psaUrl.searchParams.set("collectReturn",returnUrl.toString());
+
+    const popup=window.open(psaUrl.toString(),"_blank");
+    if(!popup){
+      showToast("Allow pop-ups for this site to update PSA POP");
+      return;
+    }
+
+    showToast("Opening PSA to refresh POP…");
+  }
+
   function hasPsaCert(card){
     return Array.isArray(card.grading) && card.grading.some(g =>
       g && String(g.company || "").toUpperCase() === "PSA" && String(g.cert || "").trim()
@@ -18317,7 +18356,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         <div class="empty psa-sync-waiting">
           <h2>PSA POP Ready</h2>
           <p>Cert <strong>${escapeHtml(cert)}</strong> · POP <strong>${escapeHtml(pop.toLocaleString())}</strong>${higher!=null && Number.isFinite(higher) ? ` · ${escapeHtml(higher.toLocaleString())} higher` : ""}</p>
-          <p>Enable <strong>Owner Mode</strong>, then click Apply PSA POP. The data will remain in this page until it is applied.</p>
+          <p>Enable <strong>Owner Mode</strong>, then click Apply PSA POP.</p>
           <button type="button" class="btn-primary" id="psaSyncApplyBtn">Apply PSA POP</button>
         </div>`;
       $("psaSyncApplyBtn")?.addEventListener("click",handleIncomingPsaPopSync);
@@ -20591,9 +20630,19 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         <div class="pop-owner-status">
           ${g.company === "PSA"
             ? (hasPop
-                ? `<strong>${escapeHtml(gradePopDetailLabel(g))}</strong>${updated ? ` · updated ${escapeHtml(updated)}` : ""}${g.cert ? ` · <a href="${escapeHtml(psaCertUrl(g.cert))}" target="_blank" rel="noopener">Open PSA ↗</a>` : ""}`
-                : `Save the PSA cert, open its PSA page, then use the Tampermonkey <strong>Send to Collect TCG</strong> button.${g.cert ? ` <a href="${escapeHtml(psaCertUrl(g.cert))}" target="_blank" rel="noopener">Open PSA ↗</a>` : ""}`)
+                ? `<strong>${escapeHtml(gradePopDetailLabel(g))}</strong>${updated ? ` · updated ${escapeHtml(updated)}` : ""}`
+                : `PSA POP has not been synced yet.`)
             : `Automatic browser POP sync currently applies to PSA certs.`}
+          ${g.company === "PSA" && g.cert
+            ? `<div class="psa-pop-owner-actions">
+                <button type="button"
+                        class="btn-ghost psa-pop-refresh-btn"
+                        data-psa-refresh-cert="${escapeHtml(normalizePsaCertInput(g.cert))}">
+                  Update PSA POP
+                </button>
+                <a href="${escapeHtml(psaCertUrl(g.cert))}" target="_blank" rel="noopener">Open PSA ↗</a>
+              </div>`
+            : ""}
         </div>
       </div>
       <button type="button" class="grading-remove" title="Remove grading">×</button>
@@ -20667,6 +20716,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           formState.grading[i].cert=normalized;
           e.target.value=normalized;
         });
+        row.querySelector("[data-psa-refresh-cert]")?.addEventListener("click", e=>{
+          const cert=e.currentTarget.dataset.psaRefreshCert||"";
+          openPsaPopAutoSync(cert);
+        });
+
         row.querySelector(".grading-remove").addEventListener("click", ()=>{
           formState.grading.splice(i,1);
           refresh();
