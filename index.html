@@ -20845,7 +20845,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             <option value="NM">Near Mint</option><option value="M">Mint</option><option value="LP">Lightly Played</option>
             <option value="MP">Moderately Played</option><option value="HP">Heavily Played</option><option value="DMG">Damaged</option><option value="SEALED">Sealed</option><option value="NA">Not Applicable</option>
           </select>
-          <div class="hint">Automatically set to Not Applicable when grading information is present.</div>
+          <div class="hint">Automatically set to Sealed when Format is Sealed, or Not Applicable when grading information is present.</div>
         </div>
       </div>
       <div class="field-row">
@@ -21439,6 +21439,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const mount = $(p + "GradingRows");
     const addBtn = $(p + "AddGrade");
     const condition = $(p + "Condition");
+    const format = $(p + "Format");
     const year = $(p + "Year");
 
     if(year){
@@ -21469,12 +21470,22 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           String(g.grade??"").trim()
         );
 
+      const isSealed=String(format?.value||"").trim().toLowerCase()==="sealed";
+
       if(hasGrade){
         condition.value="NA";
         condition.disabled=true;
         condition.setAttribute("aria-disabled","true");
         condition.title="Condition is automatically Not Applicable for graded cards.";
+      }else if(isSealed){
+        condition.value="SEALED";
+        condition.disabled=true;
+        condition.setAttribute("aria-disabled","true");
+        condition.title="Condition is automatically set to Sealed when Format is Sealed.";
       }else{
+        if(condition.value==="SEALED"){
+          condition.value="NM";
+        }
         condition.disabled=false;
         condition.removeAttribute("aria-disabled");
         condition.title="";
@@ -21513,6 +21524,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     addBtn.addEventListener("click", ()=>{
       formState.grading.push({company:"PSA", grade:"10", cert:"", pop_count:null, pop_higher:null, pop_updated_at:null});
       refresh();
+    });
+
+    format?.addEventListener("change",()=>{
+      syncGradedCondition();
     });
 
     refresh();
@@ -21972,7 +21987,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         : null,
       format: $(p + "Format").value,
       rarity: "Common",
-      condition: $(p + "Condition").value,
+      condition: String($(p + "Format").value||"").toLowerCase()==="sealed" &&
+                 !(Array.isArray(formState.grading) && formState.grading.some(g=>g&&String(g.company||"").trim()&&String(g.grade??"").trim()))
+        ? "SEALED"
+        : $(p + "Condition").value,
       qty: 1,
       price: $(p + "PriceUSD").value.trim() === "" ? null : Math.max(0, parseFloat($(p + "PriceUSD").value)),
       price_usd: $(p + "PriceUSD").value.trim() === "" ? null : Math.max(0, parseFloat($(p + "PriceUSD").value)),
