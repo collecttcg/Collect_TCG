@@ -17023,6 +17023,37 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return String(route||"").split("?")[0].trim().toLowerCase();
   }
 
+
+  function shouldHighlightMore(route){
+    const base=routeBase(route);
+
+    // Routes that genuinely live under More on both desktop and mobile.
+    const alwaysMore=new Set([
+      "recent",
+      "about",
+      "contact",
+      "by-game",
+      "insights",
+      "fb-tools",
+      "quality",
+      "inventory-tools",
+      "export",
+      "add"
+    ]);
+
+    if(alwaysMore.has(base)) return true;
+
+    // These are direct tabs on PC, but are inside More on mobile.
+    if(
+      window.matchMedia("(max-width:800px)").matches &&
+      ["reserved","showcase","giveaway","favorites"].includes(base)
+    ){
+      return true;
+    }
+
+    return false;
+  }
+
   function isInventoryRoute(route){
     return INVENTORY_ROUTES.has(routeBase(route));
   }
@@ -19686,7 +19717,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(moreToggle){
       moreToggle.classList.toggle(
         "active",
-        ["showcase","favorites","giveaway","recent","about","contact","by-game","insights","fb-tools","quality","inventory-tools","export","add"].includes(safeRoute)
+        shouldHighlightMore(safeRoute)
       );
     }
 
@@ -19972,7 +20003,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     });
     const moreToggle = $("mobileMoreToggle");
     if(moreToggle){
-      moreToggle.classList.toggle("active", ["showcase","favorites","giveaway","recent","about","contact","by-game","insights","fb-tools","quality","inventory-tools","export","add"].includes(route));
+      moreToggle.classList.toggle(
+        "active",
+        shouldHighlightMore(route)
+      );
     }
     const moreMenu = mobileMoreMenuEl;
     if(moreMenu){
@@ -37444,6 +37478,11 @@ function wireShimmer(container){
       // Keep the shared More menu usable on both desktop and mobile.
       // Close only if its toggle is no longer visible after a responsive layout change.
       if(getComputedStyle(toggle).display === "none") closeMenu();
+
+      toggle.classList.toggle(
+        "active",
+        shouldHighlightMore(currentRoute())
+      );
     });
   }
 
