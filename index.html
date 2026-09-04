@@ -15593,6 +15593,41 @@ body.showcase-dragging-body{
   }
 }
 
+
+/* =========================================================
+   INVENTORY TOOLS — MISSING CERT SUMMARY
+   ========================================================= */
+.missing-cert-summary{
+  display:grid;
+  grid-template-columns:minmax(180px,260px);
+  gap:8px;
+  margin-bottom:12px;
+}
+.missing-cert-summary article{
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--surface);
+}
+.missing-cert-summary span,
+.missing-cert-summary small{
+  display:block;
+  color:var(--text-muted);
+}
+.missing-cert-summary span{
+  font-size:8px;
+}
+.missing-cert-summary strong{
+  display:block;
+  margin-top:3px;
+  color:var(--accent-gold);
+  font:700 18px 'JetBrains Mono',monospace;
+}
+.missing-cert-summary small{
+  margin-top:3px;
+  font-size:7.5px;
+}
+
 </style>
 </head>
 <body>
@@ -31479,24 +31514,35 @@ function wireShimmer(container){
   }
 
   function renderBulkMissingCertsPage(){
-    const host=$("inventoryToolsContent");
-    if(!host) return;
+    if(!requireOwner("open missing certificate check")) return;
 
     const rows=cardsMissingCertificates();
 
-    host.innerHTML=`
-      <section class="inventory-tool-panel">
+    view.innerHTML=`
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Inventory Tools · Bulk Editing</div>
+          <h2>Missing Certificates</h2>
+          <p>Find graded or slabbed cards that are missing a certificate number.</p>
+        </div>
+      </div>
+
+      <div class="missing-cert-summary">
+        <article>
+          <span>Missing cert</span>
+          <strong>${rows.length.toLocaleString()}</strong>
+          <small>Graded / slabbed cards</small>
+        </article>
+      </div>
+
+      <section class="panel inventory-tool-panel">
         <div class="inventory-tool-head">
           <div>
-            <h2>Missing Certificate Check</h2>
+            <h3>Certificate Check</h3>
             <p class="muted">
-              Detects slabbed / graded cards that have a grading company or grade saved
-              but no certificate number.
+              A card appears here when a grading company or grade is saved but
+              its certificate number is empty.
             </p>
-          </div>
-          <div class="inventory-stat-card">
-            <div class="inventory-stat-value">${rows.length.toLocaleString()}</div>
-            <div class="inventory-stat-label">Cards missing cert</div>
           </div>
         </div>
 
@@ -31504,24 +31550,28 @@ function wireShimmer(container){
           rows.length
             ? `<div class="inventory-tool-list missing-cert-list">
                 ${rows.map(({card,missing})=>{
-                  const title=escapeHtml(card.name || card.title || card.code || "Untitled card");
-                  const code=escapeHtml(card.code || "");
-                  const image=Array.isArray(card.images) && card.images[0]
-                    ? escapeHtml(card.images[0])
-                    : "";
+                  const title=escapeHtml(card.name || card.title || card.card_code || "Untitled card");
+                  const code=escapeHtml(card.card_code || card.code || "");
+                  const image=getImages(card)[0] || "";
 
                   const graders=missing.map(entry=>{
-                    const company=escapeHtml(String(entry.company||entry.grader||"Unknown grader").trim() || "Unknown grader");
-                    const grade=escapeHtml(String(entry.grade||entry.value||"").trim());
+                    const company=escapeHtml(
+                      String(entry.company||entry.grader||"Unknown grader").trim() || "Unknown grader"
+                    );
+                    const grade=escapeHtml(
+                      String(entry.grade||entry.value||"").trim()
+                    );
+
                     return `<span class="missing-cert-pill">${company}${grade ? ` ${grade}` : ""}</span>`;
                   }).join("");
 
                   return `
-                    <article class="missing-cert-row" data-card-id="${escapeHtml(String(card.id))}">
+                    <article class="missing-cert-row"
+                             data-card-id="${escapeHtml(String(card.id))}">
                       <div class="missing-cert-thumb">
                         ${
                           image
-                            ? `<img src="${image}" alt="${title}">`
+                            ? `<img src="${escapeHtml(image)}" alt="${title}">`
                             : `<div class="missing-cert-no-image">No image</div>`
                         }
                       </div>
@@ -31543,22 +31593,23 @@ function wireShimmer(container){
                   `;
                 }).join("")}
               </div>`
-            : `<div class="inventory-empty-state">
-                <strong>No missing certificates found.</strong>
+            : `<div class="empty compact inventory-empty-state">
+                <p><strong>No missing certificates found.</strong></p>
                 <p>All graded/slabbed cards currently have certificate numbers saved.</p>
               </div>`
         }
       </section>
     `;
 
-    host.querySelectorAll("[data-missing-cert-edit]").forEach(btn=>{
+    view.querySelectorAll("[data-missing-cert-edit]").forEach(btn=>{
       btn.addEventListener("click",()=>{
-        const id=btn.dataset.missingCertEdit;
-        const card=getCardById ? getCardById(id) : cards.find(c=>String(c.id)===String(id));
+        const id=String(btn.dataset.missingCertEdit||"");
+        const card=cards.find(c=>String(c.id)===id);
         if(card) openEditModal(card);
       });
     });
   }
+
 
   function renderBulkPsaPopPage(){
     if(!requireOwner("open PSA POP bulk updater")) return;
@@ -31674,7 +31725,7 @@ function wireShimmer(container){
     if(submode==="metadata") renderBulkMetadataPage(true);
     else if(submode==="status") renderBulkStatusPage();
     else if(submode==="psa") renderBulkPsaPopPage();
-      else if(submode==="missing-certs") renderBulkMissingCertsPage();
+    else if(submode==="missing-certs") renderBulkMissingCertsPage();
     else if(submode==="health") renderSupabaseHealthPage();
     else if(submode==="backup") renderInventoryExportPage();
     else if(submode==="recent") renderRecentlyEditedOwnerPage(true);
