@@ -15751,7 +15751,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   let editHistorySupported = false;
   let giveaways = [];
   let showcases = [];
-  let activeShowcaseCategory = "Collection Showcase";
+  let activeShowcaseCategory = "All";
   let insightsCache = null;
   const $ = (id) => document.getElementById(id);
   const view = $("view");
@@ -23997,7 +23997,7 @@ function wireShimmer(container){
 
   function showcasesForActiveCategory(){
     return showcases
-      .filter(v=>showcaseDisplayCategory(v)===activeShowcaseCategory)
+      .filter(v=>activeShowcaseCategory==="All" || showcaseDisplayCategory(v)===activeShowcaseCategory)
       .sort((a,b)=>{
         const ao=Number.isFinite(Number(a.sort_order)) ? Number(a.sort_order) : Number.MAX_SAFE_INTEGER;
         const bo=Number.isFinite(Number(b.sort_order)) ? Number(b.sort_order) : Number.MAX_SAFE_INTEGER;
@@ -24020,7 +24020,8 @@ function wireShimmer(container){
       if(!item) continue;
 
       const payload={sort_order:index};
-      if(showcaseDisplayCategory(item)==="Collection Showcase" &&
+      if(activeShowcaseCategory!=="All" &&
+         showcaseDisplayCategory(item)==="Collection Showcase" &&
          item.category!=="Collection Showcase"){
         payload.category="Collection Showcase";
       }
@@ -24201,9 +24202,9 @@ function wireShimmer(container){
   }
 
   function renderShowcasePage(){
-    const categories = ["PSA Returns","Collection Showcase"];
+    const categories = ["All","PSA Returns","Collection Showcase"];
     if(!categories.includes(activeShowcaseCategory)){
-      activeShowcaseCategory="Collection Showcase";
+      activeShowcaseCategory="All";
     }
     const filteredShowcases=showcasesForActiveCategory();
 
@@ -24315,7 +24316,9 @@ function wireShimmer(container){
     $("showcaseFormTitle").textContent = v ? "Edit Showcase Video" : "Add Showcase Video";
     $("showcaseId").value = v ? v.id : "";
     $("showcaseTitle").value = v ? v.title : "";
-    $("showcaseCategory").value = v ? showcaseDisplayCategory(v) : activeShowcaseCategory;
+    $("showcaseCategory").value = v
+      ? showcaseDisplayCategory(v)
+      : (activeShowcaseCategory==="PSA Returns" ? "PSA Returns" : "Collection Showcase");
     $("showcaseSeries").value = v ? v.series : "";
     $("showcaseVideoUrl").value = v ? v.video_url : "";
     $("showcaseThumbnail").value = v ? v.thumbnail_url : "";
@@ -24324,7 +24327,9 @@ function wireShimmer(container){
     $("showcaseDescription").value = v ? v.description : "";
     $("showcaseSortOrder").value = v
       ? v.sort_order
-      : showcases.filter(x=>showcaseDisplayCategory(x)===activeShowcaseCategory).length;
+      : showcases.filter(x=>showcaseDisplayCategory(x)===(
+          activeShowcaseCategory==="PSA Returns" ? "PSA Returns" : "Collection Showcase"
+        )).length;
     $("showcaseFeatured").checked = v ? !!v.featured : false;
     showcaseOverlay.hidden = false;
   }
