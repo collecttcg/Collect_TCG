@@ -18066,6 +18066,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const cards=Array.isArray(cardSeries) ? cardSeries : [];
     const visits=Array.isArray(websiteSeries) ? websiteSeries : [];
 
+    // If Website Visits has no rows, keep the graph empty.
+    // Do not borrow date buckets from the Qualified Views timeline.
+    if(!visits.length) return [];
     if(!cards.length) return visits;
 
     const parseBucket=value=>{
