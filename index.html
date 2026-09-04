@@ -15048,6 +15048,58 @@ body:not(.owner-mode) .giveaway-grid#pastWinnersGrid .giveaway-winner-name{
   background:var(--surface-2) !important;
 }
 
+
+/* Showcase owner drag-and-drop order */
+.showcase-page-owner-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.showcase-rearrange-mode .showcase-card{
+  cursor:grab;
+  user-select:none;
+  touch-action:none;
+  outline:1px dashed rgba(227,179,65,.38);
+  outline-offset:-3px;
+}
+.showcase-rearrange-mode .showcase-card:hover{
+  border-color:rgba(227,179,65,.58);
+  box-shadow:0 10px 28px rgba(0,0,0,.18);
+}
+.showcase-rearrange-mode .showcase-card:active{cursor:grabbing;}
+.showcase-rearrange-mode .showcase-card button,
+.showcase-rearrange-mode .showcase-card a{
+  pointer-events:none;
+}
+.showcase-pointer-dragging{
+  opacity:.96;
+  cursor:grabbing !important;
+  box-shadow:0 18px 42px rgba(0,0,0,.34) !important;
+  transform:rotate(.35deg) scale(1.01);
+}
+.showcase-reorder-placeholder{
+  min-width:0;
+  border:1px dashed rgba(227,179,65,.68);
+  border-radius:14px;
+  background:rgba(227,179,65,.055);
+  box-shadow:inset 0 0 0 1px rgba(227,179,65,.05);
+}
+body.showcase-rearranging-body,
+body.showcase-dragging-body{
+  user-select:none;
+}
+@media(max-width:800px){
+  .showcase-page-owner-actions{
+    width:100%;
+    justify-content:stretch;
+  }
+  .showcase-page-owner-actions button{
+    flex:1 1 auto;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -15394,9 +15446,6 @@ body:not(.owner-mode) .giveaway-grid#pastWinnersGrid .giveaway-winner-name{
         <select id="showcaseCategory">
           <option value="PSA Returns">PSA Returns</option>
           <option value="Collection Showcase" selected>Collection Showcase</option>
-          <option value="Championship & Trophy">Championship &amp; Trophy</option>
-          <option value="New Arrivals">New Arrivals</option>
-          <option value="Special Features">Special Features</option>
         </select>
       </div>
       <div class="field">
@@ -15425,7 +15474,7 @@ body:not(.owner-mode) .giveaway-grid#pastWinnersGrid .giveaway-winner-name{
     </div>
 
     <div class="field-row">
-      <div class="field">
+      <div class="field" hidden>
         <label for="showcaseSortOrder">Display order</label>
         <input id="showcaseSortOrder" type="number" step="1" value="0">
       </div>
@@ -15702,7 +15751,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   let editHistorySupported = false;
   let giveaways = [];
   let showcases = [];
-  let activeShowcaseCategory = "All";
+  let activeShowcaseCategory = "Collection Showcase";
   let insightsCache = null;
   const $ = (id) => document.getElementById(id);
   const view = $("view");
@@ -17277,7 +17326,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const {data,error}=await supabaseClient
       .from("showcases")
       .select(SHOWCASE_PUBLIC_COLUMNS)
-      .order("featured",{ascending:false})
       .order("sort_order",{ascending:true})
       .order("created_at",{ascending:false});
 
@@ -23940,11 +23988,224 @@ function wireShimmer(container){
     $("videoPlayerMount").innerHTML = "";
   }
 
+
+  function showcaseDisplayCategory(v){
+    return (v?.category || "Collection Showcase")==="PSA Returns"
+      ? "PSA Returns"
+      : "Collection Showcase";
+  }
+
+  function showcasesForActiveCategory(){
+    return showcases
+      .filter(v=>showcaseDisplayCategory(v)===activeShowcaseCategory)
+      .sort((a,b)=>{
+        const ao=Number.isFinite(Number(a.sort_order)) ? Number(a.sort_order) : Number.MAX_SAFE_INTEGER;
+        const bo=Number.isFinite(Number(b.sort_order)) ? Number(b.sort_order) : Number.MAX_SAFE_INTEGER;
+        if(ao!==bo) return ao-bo;
+        return new Date(b.created_at||0)-new Date(a.created_at||0);
+      });
+  }
+
+  async function persistShowcaseDomOrder(container){
+    if(!requireOwner("reorder showcase")) return false;
+    if(!container) return false;
+
+    const ids=[...container.querySelectorAll("[data-showcase-card]")]
+      .map(card=>String(card.dataset.showcaseCard||""))
+      .filter(Boolean);
+
+    for(let index=0;index<ids.length;index++){
+      const id=ids[index];
+      const item=showcases.find(v=>String(v.id)===id);
+      if(!item) continue;
+
+      const payload={sort_order:index};
+      if(showcaseDisplayCategory(item)==="Collection Showcase" &&
+         item.category!=="Collection Showcase"){
+        payload.category="Collection Showcase";
+      }
+
+      if(Number(item.sort_order)===index && !payload.category) continue;
+
+      const {error}=await saveShowcase(payload,item.id);
+      if(error){
+        console.error("Showcase reorder error:",error);
+        showToast("Could not save Showcase order");
+        return false;
+      }
+
+      item.sort_order=index;
+      if(payload.category) item.category=payload.category;
+    }
+
+    return true;
+  }
+
+  function setupShowcaseRearrangeMode(){
+    const toggleBtn=$("toggleShowcaseRearrangeBtn");
+    const container=$("showcaseGrid");
+    if(!toggleBtn || !container || !isOwnerMode()) return;
+
+    let mode=false;
+    let dragged=null;
+    let placeholder=null;
+    let pointerId=null;
+    let offsetX=0;
+    let offsetY=0;
+
+    const cards=()=>[...container.querySelectorAll("[data-showcase-card]")];
+
+    const setMode=next=>{
+      mode=Boolean(next);
+      container.classList.toggle("showcase-rearrange-mode",mode);
+      toggleBtn.classList.toggle("active",mode);
+      toggleBtn.setAttribute("aria-pressed",String(mode));
+      toggleBtn.textContent=mode ? "Done Rearranging" : "Rearrange Showcase";
+      document.body.classList.toggle("showcase-rearranging-body",mode);
+      if(mode) showToast("Drag Showcase cards to rearrange them");
+    };
+
+    function nearestCard(x,y){
+      let best=null;
+      let distance=Infinity;
+      cards().forEach(card=>{
+        if(card===dragged) return;
+        const rect=card.getBoundingClientRect();
+        const cx=rect.left+rect.width/2;
+        const cy=rect.top+rect.height/2;
+        const d=Math.hypot(x-cx,y-cy);
+        if(d<distance){
+          distance=d;
+          best={card,rect,cx,cy};
+        }
+      });
+      return best;
+    }
+
+    function clearDraggedStyles(){
+      if(!dragged) return;
+      dragged.classList.remove("showcase-pointer-dragging");
+      dragged.style.position="";
+      dragged.style.left="";
+      dragged.style.top="";
+      dragged.style.width="";
+      dragged.style.height="";
+      dragged.style.zIndex="";
+      dragged.style.pointerEvents="";
+    }
+
+    async function finishDrag(){
+      if(!dragged || !placeholder) return;
+
+      placeholder.replaceWith(dragged);
+      clearDraggedStyles();
+
+      dragged=null;
+      placeholder=null;
+      pointerId=null;
+      document.body.classList.remove("showcase-dragging-body");
+
+      const ok=await persistShowcaseDomOrder(container);
+      if(ok){
+        await loadShowcases();
+        renderShowcasePage();
+        showToast("Showcase order saved");
+      }
+    }
+
+    function cancelDrag(){
+      if(dragged && placeholder){
+        placeholder.replaceWith(dragged);
+      }
+      clearDraggedStyles();
+      placeholder?.remove();
+      dragged=null;
+      placeholder=null;
+      pointerId=null;
+      document.body.classList.remove("showcase-dragging-body");
+    }
+
+    container.addEventListener("pointerdown",event=>{
+      if(!mode) return;
+      if(event.button!==undefined && event.button!==0) return;
+      if(event.target.closest("button,a")) return;
+
+      const card=event.target.closest("[data-showcase-card]");
+      if(!card) return;
+
+      event.preventDefault();
+
+      const rect=card.getBoundingClientRect();
+      dragged=card;
+      pointerId=event.pointerId;
+      offsetX=event.clientX-rect.left;
+      offsetY=event.clientY-rect.top;
+
+      placeholder=document.createElement("div");
+      placeholder.className="showcase-reorder-placeholder";
+      placeholder.style.width=`${rect.width}px`;
+      placeholder.style.height=`${rect.height}px`;
+
+      card.replaceWith(placeholder);
+      document.body.appendChild(card);
+
+      card.classList.add("showcase-pointer-dragging");
+      card.style.position="fixed";
+      card.style.left=`${rect.left}px`;
+      card.style.top=`${rect.top}px`;
+      card.style.width=`${rect.width}px`;
+      card.style.height=`${rect.height}px`;
+      card.style.zIndex="99999";
+      card.style.pointerEvents="none";
+      document.body.classList.add("showcase-dragging-body");
+
+      try{ container.setPointerCapture(event.pointerId); }catch(_){}
+    });
+
+    container.addEventListener("pointermove",event=>{
+      if(!dragged || event.pointerId!==pointerId) return;
+      event.preventDefault();
+
+      dragged.style.left=`${event.clientX-offsetX}px`;
+      dragged.style.top=`${event.clientY-offsetY}px`;
+
+      const nearest=nearestCard(event.clientX,event.clientY);
+      if(!nearest || !placeholder) return;
+
+      const {card,cx,cy}=nearest;
+      const horizontalBias=Math.abs(event.clientX-cx)>Math.abs(event.clientY-cy);
+      const before=horizontalBias ? event.clientX<cx : event.clientY<cy;
+      const ref=before ? card : card.nextSibling;
+
+      if(ref!==placeholder){
+        container.insertBefore(placeholder,ref);
+      }
+    });
+
+    container.addEventListener("pointerup",event=>{
+      if(!dragged || event.pointerId!==pointerId) return;
+      event.preventDefault();
+      finishDrag();
+    });
+
+    container.addEventListener("pointercancel",event=>{
+      if(!dragged || event.pointerId!==pointerId) return;
+      cancelDrag();
+      renderShowcasePage();
+    });
+
+    toggleBtn.addEventListener("click",()=>{
+      if(dragged) return;
+      setMode(!mode);
+    });
+  }
+
   function renderShowcasePage(){
-    const categories = ["All","PSA Returns","Collection Showcase","Championship & Trophy","New Arrivals","Special Features"];
-    const filteredShowcases = activeShowcaseCategory === "All"
-      ? showcases
-      : showcases.filter(v => (v.category || "Collection Showcase") === activeShowcaseCategory);
+    const categories = ["PSA Returns","Collection Showcase"];
+    if(!categories.includes(activeShowcaseCategory)){
+      activeShowcaseCategory="Collection Showcase";
+    }
+    const filteredShowcases=showcasesForActiveCategory();
 
     view.innerHTML = `
       <div class="page-head">
@@ -23953,7 +24214,10 @@ function wireShimmer(container){
           <h2>Collection Showcase</h2>
           <p>Short videos featuring cards and collectibles from our collection, hosted on YouTube.</p>
         </div>
-        <button type="button" class="btn-primary owner-only" id="addShowcaseBtn">+ Add Video</button>
+        <div class="showcase-page-owner-actions owner-only">
+          <button type="button" class="btn-ghost" id="toggleShowcaseRearrangeBtn" aria-pressed="false">Rearrange Showcase</button>
+          <button type="button" class="btn-primary" id="addShowcaseBtn">+ Add Video</button>
+        </div>
       </div>
 
       <div class="showcase-category-bar" id="showcaseCategoryBar">
@@ -23971,11 +24235,11 @@ function wireShimmer(container){
     if(!filteredShowcases.length){
       mount.innerHTML = `<div class="empty-state">${EMPTY_ICON}<h2>No showcase videos</h2><p>There are no videos in this category yet.</p></div>`;
     }else{
-      mount.innerHTML = `<div class="showcase-grid">${
+      mount.innerHTML = `<div class="showcase-grid" id="showcaseGrid">${
         filteredShowcases.map(v=>{
           const thumb = showcaseThumbnail(v);
-          const category = v.category || "Collection Showcase";
-          return `<article class="showcase-card">
+          const category = showcaseDisplayCategory(v);
+          return `<article class="showcase-card" data-showcase-card="${escapeHtml(v.id)}">
             <div class="showcase-media" data-showcase-watch="${v.id}">
               ${v.featured ? `<span class="showcase-featured">Featured</span>` : ""}
               ${thumb
@@ -24010,6 +24274,8 @@ function wireShimmer(container){
 
     const addBtn = $("addShowcaseBtn");
     if(addBtn) addBtn.addEventListener("click", ()=>openShowcaseForm());
+
+    setupShowcaseRearrangeMode();
 
     mount.querySelectorAll("[data-showcase-watch]").forEach(el=>{
       el.addEventListener("click", e=>{
@@ -24049,14 +24315,16 @@ function wireShimmer(container){
     $("showcaseFormTitle").textContent = v ? "Edit Showcase Video" : "Add Showcase Video";
     $("showcaseId").value = v ? v.id : "";
     $("showcaseTitle").value = v ? v.title : "";
-    $("showcaseCategory").value = v ? (v.category || "Collection Showcase") : "Collection Showcase";
+    $("showcaseCategory").value = v ? showcaseDisplayCategory(v) : activeShowcaseCategory;
     $("showcaseSeries").value = v ? v.series : "";
     $("showcaseVideoUrl").value = v ? v.video_url : "";
     $("showcaseThumbnail").value = v ? v.thumbnail_url : "";
     $("showcaseThumbnailFile").value = "";
     renderShowcaseThumbnailPreview(v ? v.thumbnail_url : "");
     $("showcaseDescription").value = v ? v.description : "";
-    $("showcaseSortOrder").value = v ? v.sort_order : 0;
+    $("showcaseSortOrder").value = v
+      ? v.sort_order
+      : showcases.filter(x=>showcaseDisplayCategory(x)===activeShowcaseCategory).length;
     $("showcaseFeatured").checked = v ? !!v.featured : false;
     showcaseOverlay.hidden = false;
   }
