@@ -15361,6 +15361,19 @@ body.showcase-dragging-body{
   .psa-bulk-stats{grid-template-columns:repeat(2,minmax(0,1fr));}
 }
 
+
+/* =========================================================
+   CARD DETAILS — BACK TO RESULTS HOVER
+   Keep the close/back action visually separate from teal actions.
+   ========================================================= */
+.modal.card-details-modal .details-primary-actions #detailsCloseBtn:hover,
+.modal.card-details-modal .details-primary-actions #detailsCloseBtn:focus-visible{
+  border-color:#f87171 !important;
+  background:rgba(248,113,113,.15) !important;
+  color:#fff !important;
+  box-shadow:0 0 0 3px rgba(248,113,113,.08) !important;
+}
+
 </style>
 </head>
 <body>
@@ -35739,7 +35752,24 @@ function wireShimmer(container){
     if(!requireOwner()) return;
     const card = getDetailsCard();
     if(card){
+      const editReturnHash=
+        safeListingBrowseHash(detailsReturnHash) ||
+        "#/inventory";
+
       closeDetailsModal(false);
+
+      // Editing is a modal state, not a card-details route. Remove the stale
+      // #/card/<id> URL so refreshing while/after editing returns to results
+      // instead of unexpectedly reopening the previously edited card.
+      try{
+        history.replaceState(history.state,"",editReturnHash);
+        setNavigationActiveRoute(listingRouteFromHash(editReturnHash)||"inventory");
+        updateSidebarFooter();
+      }catch{
+        // Hash navigation fallback only if History API replacement fails.
+        if(location.hash!==editReturnHash) location.hash=editReturnHash;
+      }
+
       openEditModal(card);
     }
   });
@@ -35906,8 +35936,10 @@ function wireShimmer(container){
         v.watermarked_url
       ]).filter(Boolean);
 
-      const idx=cards.findIndex(c=>c.id===id);
-      if(idx>-1) cards[idx]=saved;
+      // Keep the in-memory card lookup in sync immediately after save.
+      // Directly assigning cards[idx] left cardLookupMap pointing at the old
+      // card object, so reopening Edit could show the previous cert until reload.
+      replaceCardInMemory(saved);
       invalidateOwnerReservedAgeCache();
 
       // Do not delete the inactive original/watermarked counterpart. Both
