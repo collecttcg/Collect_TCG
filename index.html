@@ -15827,6 +15827,23 @@ body.showcase-dragging-body{
   text-decoration:none;
 }
 
+
+/* =========================================================
+   CARD DETAILS — FINAL BACK TO RESULTS HOVER OVERRIDE
+   Keep this after all global/teal hover rules.
+   ========================================================= */
+#detailsCloseBtn:hover,
+#detailsCloseBtn:focus-visible,
+.modal.card-details-modal #detailsCloseBtn:hover,
+.modal.card-details-modal #detailsCloseBtn:focus-visible,
+.modal.card-details-modal .details-primary-actions #detailsCloseBtn:hover,
+.modal.card-details-modal .details-primary-actions #detailsCloseBtn:focus-visible{
+  border-color:#f87171 !important;
+  background:rgba(248,113,113,.15) !important;
+  color:#fff !important;
+  box-shadow:0 0 0 3px rgba(248,113,113,.08) !important;
+}
+
 </style>
 </head>
 <body>
@@ -31967,7 +31984,7 @@ function wireShimmer(container){
         ` : ""}
 
         <div class="psa-bulk-list">
-          ${entries.length ? entries.map(entry=>{
+          ${entries.length ? entries.map((entry,index)=>{
             const dueNow=psaPopEntryIsDue(entry);
             const updated=entry.updatedAt ? new Date(entry.updatedAt).toLocaleString() : "Never";
             const pop=entry.pop!=null && entry.pop!=="" && Number.isFinite(Number(entry.pop))
@@ -31989,6 +32006,7 @@ function wireShimmer(container){
                   <button type="button"
                           class="psa-row-refresh ${dueNow?"due":"fresh"}"
                           data-psa-row-refresh="${escapeHtml(entry.cert)}"
+                          data-psa-row-index="${index}"
                           title="Refresh this PSA certificate now"
                           aria-label="Refresh PSA POP for cert ${escapeHtml(entry.cert)}">
                     ${dueNow?"Due":"Fresh"}
@@ -32014,20 +32032,21 @@ function wireShimmer(container){
         event.preventDefault();
 
         const cert=normalizePsaCertInput(button.dataset.psaRowRefresh||"");
-        if(!cert){
-          showToast("PSA certificate number is missing");
+        const rowIndex=Number(button.dataset.psaRowIndex);
+        const entry=Number.isInteger(rowIndex) ? entries[rowIndex] : null;
+
+        if(!cert || !entry || normalizePsaCertInput(entry.cert)!==cert){
+          showToast("Unable to identify this PSA certificate");
           return;
         }
 
         button.disabled=true;
         showToast(`Refreshing PSA cert ${cert}…`);
 
+        // Use exactly the same queue + return path as bulk refresh,
+        // with a queue containing only this one slab.
         requestAnimationFrame(()=>{
-          const started=openPsaPopAutoSync(cert);
-          if(!started){
-            button.disabled=false;
-            showToast("Unable to start PSA POP refresh");
-          }
+          startBulkPsaPopSync([entry],"Single PSA POP");
         });
         return;
       }
