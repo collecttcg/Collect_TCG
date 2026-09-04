@@ -15252,10 +15252,6 @@ body.showcase-dragging-body{
   flex-wrap:wrap;
   margin-top:8px;
 }
-.psa-pop-owner-actions .psa-pop-refresh-btn{
-  min-height:32px;
-  padding:7px 10px;
-}
 .psa-pop-owner-actions a{
   font-size:10px;
 }
@@ -20943,15 +20939,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           ${g.company === "PSA"
             ? (hasPop
                 ? `<strong>${escapeHtml(gradePopDetailLabel(g))}</strong>${updated ? ` · updated ${escapeHtml(updated)}` : ""}`
-                : `PSA POP has not been synced yet.`)
-            : `Automatic browser POP sync currently applies to PSA certs.`}
+                : `PSA POP has not been synced yet. Use <strong>Inventory Tools → Bulk Edit → PSA POP</strong> to update it.`)
+            : `POP updates are managed from Inventory Tools → Bulk Edit → PSA POP.`}
           ${g.company === "PSA" && g.cert
             ? `<div class="psa-pop-owner-actions">
-                <button type="button"
-                        class="btn-ghost psa-pop-refresh-btn"
-                        data-psa-refresh-cert="${escapeHtml(normalizePsaCertInput(g.cert))}">
-                  Update PSA POP
-                </button>
                 <a href="${escapeHtml(psaCertUrl(g.cert))}" target="_blank" rel="noopener">Open PSA ↗</a>
               </div>`
             : ""}
@@ -21028,11 +21019,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           formState.grading[i].cert=normalized;
           e.target.value=normalized;
         });
-        row.querySelector("[data-psa-refresh-cert]")?.addEventListener("click", e=>{
-          const cert=e.currentTarget.dataset.psaRefreshCert||"";
-          openPsaPopAutoSync(cert);
-        });
-
         row.querySelector(".grading-remove").addEventListener("click", ()=>{
           formState.grading.splice(i,1);
           refresh();
