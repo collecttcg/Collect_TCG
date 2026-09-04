@@ -15260,6 +15260,111 @@ body.showcase-dragging-body{
   font-size:10px;
 }
 
+
+/* =========================================================
+   PSA POP — same-tab bulk daily updater
+   ========================================================= */
+.psa-bulk-result{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin:0 0 14px;
+  padding:11px 13px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--surface);
+}
+.psa-bulk-result.ok{border-color:rgba(30,180,130,.35);}
+.psa-bulk-result.warn{border-color:rgba(230,160,50,.42);}
+.psa-bulk-stats{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-bottom:14px;
+}
+.psa-bulk-stats article{
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--surface);
+}
+.psa-bulk-stats span,
+.psa-bulk-stats small{
+  display:block;
+  color:var(--text-muted);
+  font-size:9px;
+}
+.psa-bulk-stats strong{
+  display:block;
+  margin:4px 0 2px;
+  font-size:20px;
+}
+.psa-bulk-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.psa-bulk-note,
+.psa-bulk-progress{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  padding:11px 12px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  margin-bottom:12px;
+}
+.psa-bulk-note span,
+.psa-bulk-progress span{
+  color:var(--text-muted);
+  font-size:10px;
+  line-height:1.5;
+}
+.psa-bulk-list{
+  display:grid;
+  gap:8px;
+}
+.psa-bulk-list article{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:5px 12px;
+  align-items:center;
+  padding:10px 11px;
+  border:1px solid var(--border);
+  border-radius:10px;
+}
+.psa-bulk-list article > div:first-child strong,
+.psa-bulk-list article > div:first-child span{
+  display:block;
+}
+.psa-bulk-list article > div:first-child span,
+.psa-bulk-list article > small{
+  color:var(--text-muted);
+  font-size:9px;
+}
+.psa-bulk-list article > small{
+  grid-column:1/-1;
+}
+.psa-bulk-values{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  font-size:9px;
+}
+.psa-bulk-values .due{
+  color:#d97706;
+  font-weight:800;
+}
+.psa-bulk-values .fresh{
+  color:var(--accent-teal);
+  font-weight:800;
+}
+@media(max-width:900px){
+  .psa-bulk-stats{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+
 </style>
 </head>
 <body>
@@ -18268,11 +18373,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return `${pop}${higherText}`;
   }
 
-  function openPsaPopAutoSync(cert){
+  function openPsaPopAutoSync(cert,{bulk=false}={}){
     const normalized=normalizePsaCertInput(cert);
     if(!normalized){
       showToast("Add a PSA cert number first");
-      return;
+      return false;
     }
 
     const returnUrl=new URL(location.href);
@@ -18281,14 +18386,170 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const psaUrl=new URL(psaCertUrl(normalized));
     psaUrl.searchParams.set("collectSync","1");
     psaUrl.searchParams.set("collectReturn",returnUrl.toString());
+    if(bulk) psaUrl.searchParams.set("collectBulk","1");
 
-    const popup=window.open(psaUrl.toString(),"_blank");
-    if(!popup){
-      showToast("Allow pop-ups for this site to update PSA POP");
+    showToast(bulk ? "Updating PSA POPs…" : "Opening PSA to refresh POP…");
+
+    // Same-tab navigation keeps the workflow seamless:
+    // Collect TCG -> PSA -> Collect TCG.
+    location.href=psaUrl.toString();
+    return true;
+  }
+
+  const PSA_BULK_SYNC_KEY="collect_tcg_psa_bulk_sync_v1";
+  const PSA_BULK_RESULT_KEY="collect_tcg_psa_bulk_result_v1";
+  const PSA_POP_DAILY_MS=24*60*60*1000;
+
+  function psaPopEntries(){
+    const rows=[];
+    const seen=new Set();
+
+    cards.forEach(card=>{
+      (Array.isArray(card.grading)?card.grading:[]).forEach((grade,index)=>{
+        if(String(grade?.company||"").trim().toUpperCase()!=="PSA") return;
+
+        const cert=normalizePsaCertInput(grade?.cert||"");
+        if(!cert || seen.has(cert)) return;
+
+        seen.add(cert);
+
+        const updatedAt=String(grade?.pop_updated_at||"");
+        const updatedMs=updatedAt ? new Date(updatedAt).getTime() : NaN;
+
+        rows.push({
+          cardId:String(card.id||""),
+          cardName:String(card.name||"Card"),
+          cardCode:String(card.card_code||""),
+          gradeIndex:index,
+          cert,
+          pop:grade?.pop_count,
+          higher:grade?.pop_higher,
+          updatedAt,
+          updatedMs:Number.isFinite(updatedMs)?updatedMs:null
+        });
+      });
+    });
+
+    return rows.sort((a,b)=>
+      a.cardName.localeCompare(b.cardName) ||
+      a.cert.localeCompare(b.cert)
+    );
+  }
+
+  function psaPopEntryIsDue(entry,now=Date.now()){
+    if(entry?.pop==null || entry?.pop==="") return true;
+    if(!Number.isFinite(Number(entry?.updatedMs))) return true;
+    return now-Number(entry.updatedMs)>=PSA_POP_DAILY_MS;
+  }
+
+  function readPsaBulkState(){
+    try{
+      const parsed=JSON.parse(sessionStorage.getItem(PSA_BULK_SYNC_KEY)||"null");
+      if(!parsed || !Array.isArray(parsed.certs)) return null;
+      return parsed;
+    }catch{
+      return null;
+    }
+  }
+
+  function writePsaBulkState(state){
+    sessionStorage.setItem(PSA_BULK_SYNC_KEY,JSON.stringify(state));
+  }
+
+  function clearPsaBulkState(){
+    sessionStorage.removeItem(PSA_BULK_SYNC_KEY);
+  }
+
+  function startBulkPsaPopSync(entries,label="PSA POP"){
+    if(!requireOwner("bulk update PSA POP")) return;
+
+    const certs=[...new Set(
+      (Array.isArray(entries)?entries:[])
+        .map(entry=>normalizePsaCertInput(entry?.cert||""))
+        .filter(Boolean)
+    )];
+
+    if(!certs.length){
+      showToast("No PSA certs need updating");
       return;
     }
 
-    showToast("Opening PSA to refresh POP…");
+    const state={
+      certs,
+      index:0,
+      completed:0,
+      failed:[],
+      label,
+      startedAt:new Date().toISOString(),
+      returnHash:"#/inventory-tools?mode=bulk&sub=psa"
+    };
+
+    writePsaBulkState(state);
+    sessionStorage.removeItem(PSA_BULK_RESULT_KEY);
+
+    openPsaPopAutoSync(certs[0],{bulk:true});
+  }
+
+  function finishPsaBulkSync(state){
+    const result={
+      total:state.certs.length,
+      completed:Number(state.completed||0),
+      failed:Array.isArray(state.failed)?state.failed:[],
+      label:state.label||"PSA POP",
+      finishedAt:new Date().toISOString()
+    };
+
+    sessionStorage.setItem(PSA_BULK_RESULT_KEY,JSON.stringify(result));
+    clearPsaBulkState();
+
+    showToast(
+      result.failed.length
+        ? `PSA POP bulk update finished · ${result.completed} updated · ${result.failed.length} failed`
+        : `PSA POP bulk update finished · ${result.completed} updated`
+    );
+
+    location.hash=state.returnHash||"#/inventory-tools?mode=bulk&sub=psa";
+  }
+
+  function continuePsaBulkSync(cert,{ok=true,reason=""}={}){
+    const state=readPsaBulkState();
+    if(!state) return false;
+
+    const currentCert=normalizePsaCertInput(state.certs[state.index]||"");
+    const incomingCert=normalizePsaCertInput(cert||"");
+
+    if(currentCert && incomingCert && currentCert!==incomingCert){
+      return false;
+    }
+
+    if(ok){
+      state.completed=Number(state.completed||0)+1;
+    }else{
+      state.failed=Array.isArray(state.failed)?state.failed:[];
+      state.failed.push({
+        cert:incomingCert||currentCert||"",
+        reason:String(reason||"Update failed").slice(0,160)
+      });
+    }
+
+    state.index=Number(state.index||0)+1;
+    writePsaBulkState(state);
+
+    if(state.index>=state.certs.length){
+      finishPsaBulkSync(state);
+      return true;
+    }
+
+    const nextCert=state.certs[state.index];
+    view.innerHTML=`
+      <div class="empty psa-sync-waiting">
+        <h2>Bulk PSA POP Update</h2>
+        <p>${escapeHtml(String(state.index))} / ${escapeHtml(String(state.certs.length))} completed.</p>
+        <p>Opening the next PSA certificate…</p>
+      </div>`;
+
+    setTimeout(()=>openPsaPopAutoSync(nextCert,{bulk:true}),250);
+    return true;
   }
 
   function hasPsaCert(card){
@@ -18336,11 +18597,27 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const popRaw=params.get("pop");
     const higherRaw=params.get("higher");
     const source=params.get("source")||"";
+    const incomingError=String(params.get("error")||"").trim();
 
     const pop=popRaw!=null && popRaw!=="" ? Number(popRaw) : NaN;
     const higher=higherRaw!=null && higherRaw!=="" ? Number(higherRaw) : null;
 
+    if(incomingError){
+      if(continuePsaBulkSync(cert,{ok:false,reason:incomingError})) return;
+
+      view.innerHTML=`
+        <div class="empty">
+          <h2>PSA POP Update Failed</h2>
+          <p>${escapeHtml(incomingError)}</p>
+          <button type="button" class="btn-primary" id="psaSyncBackBtn">Browse Inventory</button>
+        </div>`;
+      $("psaSyncBackBtn")?.addEventListener("click",()=>goToRoute("inventory"));
+      return;
+    }
+
     if(!cert || !Number.isFinite(pop) || pop<0){
+      if(continuePsaBulkSync(cert,{ok:false,reason:"PSA POP data was incomplete"})) return;
+
       view.innerHTML=`
         <div class="empty">
           <h2>PSA POP Sync</h2>
@@ -18376,6 +18653,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     });
 
     if(matches.length===0){
+      if(continuePsaBulkSync(cert,{ok:false,reason:"No matching PSA cert in inventory"})) return;
       view.innerHTML=`
         <div class="empty">
           <h2>No Matching PSA Cert</h2>
@@ -18389,6 +18667,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
 
     if(matches.length>1){
+      if(continuePsaBulkSync(cert,{ok:false,reason:"Duplicate PSA cert in inventory"})) return;
       view.innerHTML=`
         <div class="empty">
           <h2>Duplicate PSA Cert</h2>
@@ -18421,6 +18700,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     const saved=await updateCardStorage({...match.card,grading:nextGrades});
     if(!saved){
+      if(continuePsaBulkSync(cert,{ok:false,reason:"Supabase card update failed"})) return;
       view.innerHTML=`
         <div class="empty">
           <h2>PSA POP Update Failed</h2>
@@ -18433,6 +18713,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     replaceCardInMemory(saved);
     showToast(`PSA POP ${Math.round(pop).toLocaleString()} saved`);
+
+    if(continuePsaBulkSync(cert,{ok:true})) return;
+
     goToRoute(`card/${encodeURIComponent(saved.id)}`);
   }
 
@@ -29999,7 +30282,7 @@ function wireShimmer(container){
   function currentInventoryToolSubmode(mode){
     const requested=String(currentHashParams().get("sub")||"");
     const allowed={
-      bulk:["prices","metadata","status"],
+      bulk:["prices","metadata","status","psa"],
       activity:["recent","history"],
       quality:["audit","images","duplicates","reprocess"],
       lifecycle:["lifecycle"],
@@ -30023,7 +30306,7 @@ function wireShimmer(container){
     ];
 
     const subtabs={
-      bulk:[["prices","Bulk Prices"],["metadata","Bulk Metadata"],["status","Bulk Status"]],
+      bulk:[["prices","Bulk Prices"],["metadata","Bulk Metadata"],["status","Bulk Status"],["psa","PSA POP"]],
       activity:[["recent","Recently Edited"],["history","Edit History"]],
       quality:[["audit","Catalogue Audit"],["images","Image Health"],["duplicates","Duplicates"],["reprocess","Reprocess Images"]],
       lifecycle:[["lifecycle","Drafts & Archive"]],
@@ -30882,6 +31165,111 @@ function wireShimmer(container){
     renderPicker();
   }
 
+  function renderBulkPsaPopPage(){
+    if(!requireOwner("open PSA POP bulk updater")) return;
+
+    const entries=psaPopEntries();
+    const due=entries.filter(psaPopEntryIsDue);
+    const withPop=entries.filter(entry=>entry.pop!=null && entry.pop!=="");
+    const never=entries.filter(entry=>entry.pop==null || entry.pop==="");
+
+    let previousResult=null;
+    try{
+      previousResult=JSON.parse(sessionStorage.getItem(PSA_BULK_RESULT_KEY)||"null");
+    }catch{}
+
+    const activeState=readPsaBulkState();
+
+    view.innerHTML=`
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Inventory Tools · Bulk Editing</div>
+          <h2>PSA POP Updates</h2>
+          <p>Refresh PSA Population and Pop Higher from the public PSA cert pages using your Tampermonkey browser helper.</p>
+        </div>
+      </div>
+
+      ${previousResult ? `
+        <div class="psa-bulk-result ${previousResult.failed?.length?"warn":"ok"}">
+          <strong>Last bulk update finished</strong>
+          <span>${Number(previousResult.completed||0).toLocaleString()} updated${previousResult.failed?.length ? ` · ${previousResult.failed.length} failed` : ""}</span>
+        </div>
+      ` : ""}
+
+      <div class="psa-bulk-stats">
+        <article><span>PSA certs</span><strong>${entries.length.toLocaleString()}</strong><small>Unique PSA certificates</small></article>
+        <article><span>Due today</span><strong>${due.length.toLocaleString()}</strong><small>Never synced or 24h+ old</small></article>
+        <article><span>With POP</span><strong>${withPop.length.toLocaleString()}</strong><small>Current saved population</small></article>
+        <article><span>Never synced</span><strong>${never.length.toLocaleString()}</strong><small>No POP saved yet</small></article>
+      </div>
+
+      <section class="panel psa-bulk-panel">
+        <div class="psa-bulk-actions">
+          <button type="button" class="btn-primary" id="psaBulkDueBtn" ${due.length?"":"disabled"}>
+            Update Due PSA POPs (${due.length})
+          </button>
+          <button type="button" class="btn-ghost" id="psaBulkAllBtn" ${entries.length?"":"disabled"}>
+            Update All PSA POPs (${entries.length})
+          </button>
+        </div>
+
+        <div class="psa-bulk-note">
+          <strong>Daily workflow</strong>
+          <span><b>Update Due PSA POPs</b> refreshes only certs that have never been synced or were last synced at least 24 hours ago. PSA pages open one-by-one in this same tab and automatically return here when finished.</span>
+        </div>
+
+        ${activeState ? `
+          <div class="psa-bulk-progress">
+            <strong>Bulk update in progress</strong>
+            <span>${Math.min(Number(activeState.index||0),activeState.certs.length)} / ${activeState.certs.length}</span>
+          </div>
+        ` : ""}
+
+        <div class="psa-bulk-list">
+          ${entries.length ? entries.map(entry=>{
+            const dueNow=psaPopEntryIsDue(entry);
+            const updated=entry.updatedAt ? new Date(entry.updatedAt).toLocaleString() : "Never";
+            const pop=entry.pop!=null && entry.pop!=="" && Number.isFinite(Number(entry.pop))
+              ? Number(entry.pop).toLocaleString()
+              : "—";
+            const higher=entry.higher!=null && entry.higher!=="" && Number.isFinite(Number(entry.higher))
+              ? Number(entry.higher).toLocaleString()
+              : "—";
+
+            return `
+              <article>
+                <div>
+                  <strong>${escapeHtml(entry.cardName)}</strong>
+                  <span>${escapeHtml(entry.cardCode||"No code")} · Cert ${escapeHtml(entry.cert)}</span>
+                </div>
+                <div class="psa-bulk-values">
+                  <span>POP <b>${escapeHtml(pop)}</b></span>
+                  <span>Higher <b>${escapeHtml(higher)}</b></span>
+                  <span class="${dueNow?"due":"fresh"}">${dueNow?"Due":"Fresh"}</span>
+                </div>
+                <small>Updated: ${escapeHtml(updated)}</small>
+              </article>`;
+          }).join("") : `
+            <div class="empty compact">
+              <p>No PSA graded cards with certificate numbers were found.</p>
+            </div>`}
+        </div>
+      </section>
+    `;
+
+    $("psaBulkDueBtn")?.addEventListener("click",()=>{
+      if(!due.length) return;
+      if(!confirm(`Update ${due.length} PSA POP record${due.length===1?"":"s"} now?\n\nThe browser will visit each PSA cert page automatically in this same tab.`)) return;
+      startBulkPsaPopSync(due,"Daily PSA POP");
+    });
+
+    $("psaBulkAllBtn")?.addEventListener("click",()=>{
+      if(!entries.length) return;
+      if(!confirm(`Update all ${entries.length} PSA POP record${entries.length===1?"":"s"} now?\n\nThis may take a while because PSA pages are opened one at a time.`)) return;
+      startBulkPsaPopSync(entries,"All PSA POP");
+    });
+  }
+
   function renderInventoryToolsPage(){
     if(!requireOwner("open inventory tools")) return;
 
@@ -30890,6 +31278,7 @@ function wireShimmer(container){
 
     if(submode==="metadata") renderBulkMetadataPage(true);
     else if(submode==="status") renderBulkStatusPage();
+    else if(submode==="psa") renderBulkPsaPopPage();
     else if(submode==="health") renderSupabaseHealthPage();
     else if(submode==="backup") renderInventoryExportPage();
     else if(submode==="recent") renderRecentlyEditedOwnerPage(true);
