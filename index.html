@@ -22338,6 +22338,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       const label=btn.querySelector("span");
       if(label) label.textContent=active ? "Selected" : "Compare";
     });
+
+    // Keep the visual card highlight synchronized with the real compare state.
+    // Previously clearing/cancelling Compare emptied compareSelectedIds but left
+    // stale .compare-selected classes on already-rendered card tiles.
+    document.querySelectorAll(".grid .card[data-card-id]").forEach(cardEl=>{
+      const active=isCompareSelected(cardEl.dataset.cardId);
+      cardEl.classList.toggle("compare-selected",active);
+    });
   }
 
   function toggleCompareCard(id){
@@ -22374,6 +22382,15 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return prices.length
       ? prices.map(p=>formatCurrencyValue(p.currency,p.value)).join(" · ")
       : "Please inquire";
+  }
+
+  function closeCompareModal({clearSelection=true}={}){
+    $("compareOverlay").hidden=true;
+
+    if(clearSelection){
+      compareSelectedIds.clear();
+      updateCompareTray();
+    }
   }
 
   function renderCompareModal(){
@@ -22431,7 +22448,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         updateCompareTray();
         const remaining=compareSelectedCards();
         if(remaining.length<2){
-          $("compareOverlay").hidden=true;
+          closeCompareModal({clearSelection:true});
         }else{
           renderCompareModal();
         }
@@ -35817,13 +35834,15 @@ function wireShimmer(container){
   $("detailsWhatsAppBtn").addEventListener("click",shareCurrentCardWhatsApp);
   $("compareOpenBtn").addEventListener("click",renderCompareModal);
   $("compareClearBtn").addEventListener("click",()=>{
-    compareSelectedIds.clear();
-    updateCompareTray();
-    $("compareOverlay").hidden=true;
+    closeCompareModal({clearSelection:true});
   });
-  $("compareCloseBtn").addEventListener("click",()=>{$("compareOverlay").hidden=true;});
+  $("compareCloseBtn").addEventListener("click",()=>{
+    closeCompareModal({clearSelection:true});
+  });
   $("compareOverlay").addEventListener("click",e=>{
-    if(e.target===$("compareOverlay")) $("compareOverlay").hidden=true;
+    if(e.target===$("compareOverlay")){
+      closeCompareModal({clearSelection:true});
+    }
   });
 
   $("detailsSharePreviewBtn").addEventListener("click",async()=>{
