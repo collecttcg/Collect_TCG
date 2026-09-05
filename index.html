@@ -18731,53 +18731,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return id;
   }
 
-  const CARD_VIEW_QUALIFY_MS=3000;
-  const CARD_VIEW_DEDUPE_MS=30*60*1000;
-  const CARD_VIEW_DEDUPE_KEY="collect_tcg_card_view_dedupe_fresh_v1";
+  const CARD_VIEW_QUALIFY_MS=2000;
   let cardViewQualificationToken=0;
-  const cardViewFallbackTimestamps=new Map();
 
   function cancelPendingCardViewQualification(){
     cardViewQualificationToken+=1;
-  }
-
-  function readCardViewDedupeMap(){
-    try{
-      const parsed=JSON.parse(localStorage.getItem(CARD_VIEW_DEDUPE_KEY)||"{}");
-      return parsed && typeof parsed==="object" && !Array.isArray(parsed) ? parsed : {};
-    }catch{
-      return {};
-    }
-  }
-
-  function recentlyRecordedQualifiedCardView(cardId,now=Date.now()){
-    const id=String(cardId||"");
-    if(!id) return false;
-
-    const stored=readCardViewDedupeMap();
-    const ts=Number(stored[id]||0) || Number(cardViewFallbackTimestamps.get(id)||0);
-    return Number.isFinite(ts) && ts>0 && (now-ts)<CARD_VIEW_DEDUPE_MS;
-  }
-
-  function markQualifiedCardViewRecorded(cardId,now=Date.now()){
-    const id=String(cardId||"");
-    if(!id) return;
-
-    cardViewFallbackTimestamps.set(id,now);
-
-    try{
-      const stored=readCardViewDedupeMap();
-      stored[id]=now;
-
-      // Keep storage bounded. The newest 250 card timestamps are plenty for
-      // the 30-minute anti-duplicate window.
-      const compact=Object.entries(stored)
-        .filter(([,ts])=>Number.isFinite(Number(ts)) && now-Number(ts)<7*24*60*60*1000)
-        .sort((a,b)=>Number(b[1])-Number(a[1]))
-        .slice(0,250);
-
-      localStorage.setItem(CARD_VIEW_DEDUPE_KEY,JSON.stringify(Object.fromEntries(compact)));
-    }catch{}
   }
 
   async function sendQualifiedCardViewEvent(card,token){
@@ -18794,9 +18752,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(detailsOverlay?.hidden) return false;
       if(String(detailsCardId||"")!==cardId) return false;
       if(document.visibilityState && document.visibilityState!=="visible") return false;
-
-      const now=Date.now();
-      if(recentlyRecordedQualifiedCardView(cardId,now)) return false;
 
       const visitorId=getVisitorId();
       const {error}=await supabaseClient.functions.invoke("record-card-view",{
@@ -18821,7 +18776,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         });
       }catch{}
 
-      markQualifiedCardViewRecorded(cardId,now);
       return true;
     }catch(error){
       console.error("Record qualified view event error:",error);
@@ -18830,9 +18784,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   function recordCardViewEvent(card){
-    // The existing analytics backend continues to store one card-view event,
-    // but the frontend now submits only meaningful buyer views:
-    // 5+ seconds open, owner excluded, and one event per card/browser/30 min.
+    // The existing analytics backend continues to store card-view events,
+    // but the frontend submits only meaningful buyer views:
+    // 2+ seconds open and Owner Mode excluded. No frontend repeat-view cooldown.
     cancelPendingCardViewQualification();
     if(isOwnerMode()) return false;
 
@@ -27777,7 +27731,7 @@ function wireShimmer(container){
             <div class="insights-v4-card-head table-head">
               <div>
                 <h3>Qualified Card Views</h3>
-                <span id="insightsQualifiedChartNote">Cards kept open for at least 3 seconds.</span>
+                <span id="insightsQualifiedChartNote">Cards kept open for at least 2 seconds.</span>
               </div>
             </div>
             <div id="insightsChart" class="insights-chart insights-time-chart"></div>
@@ -27842,7 +27796,7 @@ function wireShimmer(container){
 
         <div class="insights-v4-kpis">
           <article><span>Website Visits</span><strong>${websiteVisits.toLocaleString()}</strong><small>Site sessions</small></article>
-          <article><span>Qualified Views</span><strong>${qualifiedViews.toLocaleString()}</strong><small>Card open 3+ seconds</small></article>
+          <article><span>Qualified Views</span><strong>${qualifiedViews.toLocaleString()}</strong><small>Card open 2+ seconds</small></article>
           <article><span>Favorites</span><strong>${favorites.toLocaleString()}</strong><small>Saved by visitors</small></article>
           <article><span>Contact Actions</span><strong>${contacts.toLocaleString()}</strong><small>Strong buying intent</small></article>
           <article><span>Contact Rate</span><strong>${Math.round(contactRate*100)}%</strong><small>Contact ÷ unique views</small></article>
@@ -28022,7 +27976,7 @@ function wireShimmer(container){
             : `No qualified views yet for ${parts.join(" · ")}`;
         }else{
           chartNote.textContent=state.series.length
-            ? "Fresh qualified views · 3+ seconds"
+            ? "Fresh qualified views · 2+ seconds"
             : "No qualified views recorded since the analytics reset";
         }
       }
@@ -28223,7 +28177,7 @@ function wireShimmer(container){
         {
           label:"Qualified card views",
           ok:state.rows!==null,
-          note:"5-second qualification + 30-minute card/browser dedupe"
+          note:"2-second qualification · no frontend repeat-view cooldown"
         },
         {
           label:"Website visits",
