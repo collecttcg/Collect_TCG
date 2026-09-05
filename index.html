@@ -16296,6 +16296,64 @@ body.showcase-dragging-body{
   overflow-wrap:anywhere;
 }
 
+
+/* Giveaway Winner Post Generator — image preview/download */
+.winner-post-images{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+  gap:9px;
+  margin:0 0 12px;
+}
+.winner-post-image-card{
+  min-width:0;
+  padding:7px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--surface-2);
+}
+.winner-post-image-frame{
+  width:100%;
+  aspect-ratio:4/5;
+  overflow:hidden;
+  border-radius:7px;
+  background:var(--bg);
+}
+.winner-post-image-frame img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain;
+}
+.winner-post-image-copy{
+  min-width:0;
+  padding-top:6px;
+}
+.winner-post-image-copy strong,
+.winner-post-image-copy small{
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.winner-post-image-copy strong{
+  color:var(--text);
+  font-size:10px;
+}
+.winner-post-image-copy small{
+  margin-top:2px;
+  color:var(--text-muted);
+  font-size:8.5px;
+}
+.winner-post-no-images{
+  grid-column:1/-1;
+  padding:12px;
+  border:1px dashed var(--border);
+  border-radius:9px;
+  color:var(--text-muted);
+  font-size:9.5px;
+  text-align:center;
+}
+
 </style>
 </head>
 <body>
@@ -30032,9 +30090,12 @@ function wireShimmer(container){
             </div>
           </div>
 
+          <div class="winner-post-images" id="winnerPostImages"></div>
+
           <textarea id="winnerPostOutput" class="fb-post-output" readonly></textarea>
 
           <div class="fb-post-bottom-actions">
+            <button type="button" class="btn-ghost" id="winnerPostDownloadImagesBtn" disabled>Download Images</button>
             <a class="btn-ghost" href="#/giveaway">Open Past Winners</a>
           </div>
         </section>
@@ -30046,9 +30107,47 @@ function wireShimmer(container){
     const count=$("winnerPostSelectionCount");
     const output=$("winnerPostOutput");
     const copyBtn=$("winnerPostCopyBtn");
+    const imagesWrap=$("winnerPostImages");
+    const downloadImagesBtn=$("winnerPostDownloadImagesBtn");
 
     function selectedRows(){
       return pastWinners.filter(g=>selectedIds.has(String(g.id)));
+    }
+
+    function winnerImageUrl(row){
+      return safeHttpUrl(row?.image_url||row?.winner_image_url||row?.card_image_url||"");
+    }
+
+    function selectedWinnerImages(){
+      const seen=new Set();
+      return selectedRows()
+        .map(row=>({row,url:winnerImageUrl(row)}))
+        .filter(item=>{
+          if(!item.url || seen.has(item.url)) return false;
+          seen.add(item.url);
+          return true;
+        });
+    }
+
+    function renderWinnerImages(){
+      const items=selectedWinnerImages();
+      downloadImagesBtn.disabled=!items.length;
+
+      imagesWrap.innerHTML=items.length
+        ? items.map((item,index)=>`
+            <div class="winner-post-image-card">
+              <div class="winner-post-image-frame">
+                <img src="${escapeHtml(item.url)}"
+                     alt="${escapeHtml(item.row?.title||item.row?.card_name||`Giveaway image ${index+1}`)}"
+                     loading="lazy">
+              </div>
+              <div class="winner-post-image-copy">
+                <strong>${escapeHtml(item.row?.title||"Giveaway")}</strong>
+                <small>${escapeHtml(item.row?.card_name||"Giveaway Prize")}</small>
+              </div>
+            </div>
+          `).join("")
+        : `<div class="winner-post-no-images">Select a Past Winner to preview the giveaway image.</div>`;
     }
 
     function renderOutput(){
@@ -30056,6 +30155,7 @@ function wireShimmer(container){
       output.value=buildGiveawayWinnerAnnouncementPost(rows);
       copyBtn.disabled=!rows.length;
       count.textContent=`${rows.length} selected · ${pastWinners.length} Past Winner${pastWinners.length===1?"":"s"} available`;
+      renderWinnerImages();
     }
 
     function matchesSearch(g){
@@ -30120,6 +30220,75 @@ function wireShimmer(container){
 
     copyBtn.addEventListener("click",()=>{
       copyPlainText(output.value,"Winner announcement copied");
+    });
+
+    downloadImagesBtn.addEventListener("click",async()=>{
+      if(!requireOwner("download giveaway winner images")) return;
+
+      const items=selectedWinnerImages();
+      if(!items.length){
+        showToast("No giveaway images available");
+        return;
+      }
+
+      const old=downloadImagesBtn.textContent;
+      downloadImagesBtn.disabled=true;
+
+      try{
+        if(items.length===1){
+          downloadImagesBtn.textContent="Downloading…";
+          await downloadImageSource(
+            items[0].url,
+            items[0].row?.title||items[0].row?.card_name||"giveaway-winner",
+            1
+          );
+          showToast("Giveaway image downloaded");
+        }else{
+          const ZipCtor=await ensureJsZip();
+          const zip=new ZipCtor();
+          let added=0;
+          const failed=[];
+
+          for(let i=0;i<items.length;i++){
+            downloadImagesBtn.textContent=`Preparing ${i+1}/${items.length}`;
+            try{
+              const blob=await imageSourceToBlob(items[i].url);
+              const ext=imageExtensionFromBlob(blob);
+              const base=safeDownloadName(
+                items[i].row?.title||items[i].row?.card_name||`giveaway-${i+1}`
+              );
+              zip.file(`${String(i+1).padStart(2,"0")} - ${base}.${ext}`,blob);
+              added++;
+            }catch(err){
+              failed.push(i+1);
+              console.warn("Could not add giveaway winner image to ZIP:",err);
+            }
+          }
+
+          if(!added){
+            showToast("No giveaway images could be downloaded");
+            return;
+          }
+
+          const blob=await zip.generateAsync({type:"blob",compression:"DEFLATE",compressionOptions:{level:6}});
+          const href=URL.createObjectURL(blob);
+          const a=document.createElement("a");
+          a.href=href;
+          a.download=`Collect-TCG-Giveaway-Winners-${new Date().toISOString().slice(0,10)}.zip`;
+          a.rel="noopener";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(()=>URL.revokeObjectURL(href),1000);
+
+          showToast(failed.length
+            ? `${added} image${added===1?"":"s"} downloaded · ${failed.length} skipped`
+            : `${added} giveaway images downloaded`);
+        }
+      }finally{
+        downloadImagesBtn.textContent=old;
+        downloadImagesBtn.disabled=!selectedWinnerImages().length;
+      }
     });
 
     renderList();
