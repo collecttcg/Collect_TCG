@@ -16354,6 +16354,155 @@ body.showcase-dragging-body{
   text-align:center;
 }
 
+
+/* =========================================================
+   INVENTORY FILTERS — LARGE / HIGH-RES DESKTOP RESPONSIVENESS
+   Normal laptop/mobile sizing is unchanged. On very wide CSS
+   viewports (including browser zoom that exposes >1750 CSS px),
+   filter controls scale up instead of becoming visually tiny.
+   ========================================================= */
+@media (min-width:1750px){
+  .filter-drawer-shell .filter-row{
+    gap:clamp(8px,.52vw,12px) !important;
+  }
+
+  .filter-drawer-shell .filter-row > .inventory-search-wrap{
+    flex:1 1 clamp(280px,21vw,430px) !important;
+    min-width:clamp(260px,18vw,360px) !important;
+  }
+
+  .inventory-search-wrap > input,
+  .filter-drawer-shell .overview-select-btn,
+  .filter-drawer-shell .price-range-filter{
+    min-height:clamp(38px,2.45vw,49px) !important;
+  }
+
+  .inventory-search-wrap > input{
+    padding:clamp(9px,.62vw,12px) clamp(10px,.72vw,14px) !important;
+    font-size:clamp(12px,.72vw,14px) !important;
+    border-radius:clamp(8px,.52vw,10px) !important;
+  }
+
+  .filter-drawer-shell .filter-row > .overview-select{
+    min-width:clamp(175px,11.2vw,225px) !important;
+  }
+
+  .filter-drawer-shell .overview-select-btn{
+    padding:
+      clamp(9px,.60vw,12px)
+      clamp(11px,.72vw,15px) !important;
+    gap:clamp(12px,.72vw,15px) !important;
+    font-size:clamp(12px,.72vw,14px) !important;
+    border-radius:clamp(8px,.52vw,10px) !important;
+  }
+
+  .filter-drawer-shell .overview-select-btn i{
+    width:clamp(8px,.50vw,10px) !important;
+    height:clamp(8px,.50vw,10px) !important;
+  }
+
+  .filter-drawer-shell .overview-select-menu{
+    font-size:clamp(11px,.68vw,13px) !important;
+  }
+
+  .filter-drawer-shell .overview-select-menu button{
+    min-height:clamp(34px,2.15vw,43px) !important;
+    padding:
+      clamp(7px,.50vw,10px)
+      clamp(9px,.62vw,13px) !important;
+    font-size:clamp(10px,.66vw,13px) !important;
+  }
+
+  .filter-drawer-shell .price-range-filter{
+    gap:clamp(5px,.38vw,8px) !important;
+    padding:
+      clamp(4px,.32vw,7px)
+      clamp(7px,.50vw,10px) !important;
+    border-radius:clamp(8px,.52vw,10px) !important;
+  }
+
+  .filter-drawer-shell .price-range-label{
+    font-size:clamp(7.5px,.48vw,9.5px) !important;
+  }
+
+  .filter-drawer-shell .price-range-filter input{
+    width:clamp(82px,5.4vw,108px) !important;
+    min-height:clamp(28px,1.85vw,37px) !important;
+    padding:
+      clamp(6px,.40vw,8px)
+      clamp(7px,.46vw,9px) !important;
+    font-size:clamp(11px,.68vw,13px) !important;
+  }
+
+  .grade-shortcuts{
+    gap:clamp(5px,.34vw,7px) !important;
+    margin-bottom:clamp(11px,.70vw,14px) !important;
+  }
+
+  .grade-shortcuts-label{
+    font-size:clamp(7.5px,.48vw,9.5px) !important;
+  }
+
+  .grade-shortcuts button{
+    padding:
+      clamp(5px,.34vw,7px)
+      clamp(8px,.52vw,11px) !important;
+    font-size:clamp(7.5px,.48vw,9.5px) !important;
+  }
+
+  .listing-filter-tools .quick-filters{
+    gap:clamp(7px,.45vw,10px) !important;
+  }
+
+  .listing-filter-tools .quick-filter{
+    min-height:clamp(32px,2.10vw,42px) !important;
+    padding:
+      clamp(7px,.48vw,10px)
+      clamp(11px,.72vw,15px) !important;
+    font-size:clamp(10px,.64vw,12.5px) !important;
+  }
+
+  .listing-filter-tools .inventory-result-count,
+  .listing-filter-tools .inventory-recent-link,
+  .listing-filter-tools .copy-filter-link-btn,
+  .listing-filter-tools .desktop-compact-view-toggle{
+    font-size:clamp(10px,.64vw,12.5px) !important;
+  }
+
+  .listing-filter-tools .currency-preference-control,
+  .listing-filter-tools .listing-per-page-control,
+  .listing-filter-tools .copy-filter-link-btn,
+  .listing-filter-tools .desktop-compact-view-toggle{
+    min-height:clamp(34px,2.20vw,44px) !important;
+  }
+
+  .listing-filter-tools .currency-preference-control select,
+  .listing-filter-tools .listing-per-page-control select{
+    font-size:clamp(10px,.64vw,12.5px) !important;
+  }
+
+  .filter-drawer-head strong{
+    font-size:clamp(9px,.56vw,11px) !important;
+  }
+
+  .filter-drawer-head span,
+  .clear-all-filters-btn{
+    font-size:clamp(7.5px,.48vw,9.5px) !important;
+  }
+}
+
+/* Extra-wide / zoomed-out desktop: cap at a comfortable larger size. */
+@media (min-width:2200px){
+  .filter-drawer-shell .filter-row > .inventory-search-wrap{
+    flex-basis:460px !important;
+    min-width:390px !important;
+  }
+
+  .filter-drawer-shell .filter-row > .overview-select{
+    min-width:235px !important;
+  }
+}
+
 </style>
 </head>
 <body>
