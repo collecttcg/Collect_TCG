@@ -16244,6 +16244,58 @@ body.showcase-dragging-body{
   filter:brightness(1.06) saturate(1.02)!important;
 }
 
+
+/* Specific Past Winner link target */
+.giveaway-winner-card.giveaway-linked-winner{
+  outline:2px solid rgba(227,179,65,.82);
+  outline-offset:3px;
+  box-shadow:0 0 0 5px rgba(227,179,65,.10),0 0 24px rgba(227,179,65,.18);
+}
+
+/* Giveaway Winner Post Generator */
+.fb-card-list-selection-list{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  max-height:620px;
+  overflow:auto;
+}
+.fb-card-list-select-row{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  gap:10px;
+  align-items:start;
+  padding:10px 11px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--surface-2);
+  cursor:pointer;
+}
+.fb-card-list-select-row:hover{
+  border-color:rgba(78,210,199,.42);
+}
+.fb-card-list-select-row input{
+  margin-top:3px;
+}
+.fb-card-list-select-copy{
+  min-width:0;
+}
+.fb-card-list-select-copy strong,
+.fb-card-list-select-copy small{
+  display:block;
+}
+.fb-card-list-select-copy strong{
+  color:var(--text);
+  font-size:12px;
+}
+.fb-card-list-select-copy small{
+  margin-top:3px;
+  color:var(--text-muted);
+  font-size:9.5px;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+
 </style>
 </head>
 <body>
@@ -26714,7 +26766,9 @@ function wireShimmer(container){
     `;
 
     const winnerCardHTML=g=>`
-      <article class="giveaway-card giveaway-winner-card" data-giveaway-winner-card="${escapeHtml(g.id)}">
+      <article class="giveaway-card giveaway-winner-card"
+               id="giveaway-winner-${escapeHtml(g.id)}"
+               data-giveaway-winner-card="${escapeHtml(g.id)}">
         ${g.image_url ? `<img src="${escapeHtml(g.image_url)}" alt="${escapeHtml(g.card_name)}" loading="lazy" decoding="async">` : ""}
         <div class="giveaway-body">
           <div class="giveaway-winner-summary">
@@ -26817,6 +26871,17 @@ function wireShimmer(container){
     });
 
     setupGiveawayWinnerRearrangeMode();
+
+    const linkedWinnerId=String(currentHashParams().get("winner")||"").trim();
+    if(linkedWinnerId){
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        const target=document.getElementById(`giveaway-winner-${linkedWinnerId}`);
+        if(!target) return;
+        target.scrollIntoView({behavior:"smooth",block:"center"});
+        target.classList.add("giveaway-linked-winner");
+        setTimeout(()=>target.classList.remove("giveaway-linked-winner"),2600);
+      }));
+    }
 
     view.querySelectorAll("[data-giveaway-edit]").forEach(btn=>{
       btn.addEventListener("click",()=>{
@@ -29237,7 +29302,7 @@ function wireShimmer(container){
 
   function currentFacebookToolMode(){
     const mode=currentHashParams().get("mode");
-    return ["single","list","giveaway","carousell"].includes(mode) ? mode : "single";
+    return ["single","list","giveaway","winner","carousell"].includes(mode) ? mode : "single";
   }
 
   function facebookToolsHeaderHTML(mode){
@@ -29245,6 +29310,7 @@ function wireShimmer(container){
       single:"Create a ready-to-post Facebook listing for one card.",
       list:"Create a complete Facebook sales list from your available inventory.",
       giveaway:"Create a reusable Facebook giveaway post from your giveaway template.",
+      winner:"Create a winner-announcement post from your saved Past Winners.",
       carousell:"Create a ready-to-copy Carousell listing description from your card inventory."
     };
 
@@ -29290,6 +29356,17 @@ function wireShimmer(container){
           </span>
         </a>
 
+        <a href="#/fb-tools?mode=winner"
+           class="fb-tools-switch ${mode==="winner" ? "active" : ""}"
+           role="tab"
+           aria-selected="${mode==="winner" ? "true" : "false"}">
+          <span class="fb-tools-switch-icon">🏆</span>
+          <span>
+            <strong>Giveaway Winners</strong>
+            <small>Select from Past Winners · matched prizes · Facebook links</small>
+          </span>
+        </a>
+
         <a href="#/fb-tools?mode=carousell"
            class="fb-tools-switch ${mode==="carousell" ? "active" : ""}"
            role="tab"
@@ -29313,6 +29390,8 @@ function wireShimmer(container){
       renderFbCardListGeneratorPage();
     }else if(mode==="giveaway"){
       renderFbGiveawayPostGeneratorPage();
+    }else if(mode==="winner"){
+      renderGiveawayWinnerPostGeneratorPage();
     }else if(mode==="carousell"){
       renderCarousellPostGeneratorPage();
     }else{
@@ -29845,6 +29924,205 @@ function wireShimmer(container){
     }catch{
       return "";
     }
+  }
+
+  function getGiveawayShareUrl(giveawayId){
+    const base=`${location.origin}${location.pathname}`;
+    const id=String(giveawayId||"").trim();
+    return id
+      ? `${base}#/giveaway?winner=${encodeURIComponent(id)}`
+      : `${base}#/giveaway`;
+  }
+
+  function buildGiveawayWinnerAnnouncementPost(selectedWinners){
+    const rows=(Array.isArray(selectedWinners)?selectedWinners:[])
+      .filter(isPastGiveawayWinner);
+
+    if(!rows.length) return "";
+
+    const giveawayLink=rows.length===1
+      ? getGiveawayShareUrl(rows[0].id)
+      : getGiveawayShareUrl();
+
+    const plural=rows.length>1;
+    const lines=[
+      `🎁 Giveaway: ${giveawayLink}`,
+      "",
+      `🎉 GIVEAWAY WINNER${plural?"S":""} ANNOUNCEMENT 🎉`,
+      "",
+      "The results are in!",
+      "",
+      "Congratulations to:",
+      ""
+    ];
+
+    rows.forEach((winner,index)=>{
+      const name=String(winner.winner_name||"Winner").trim()||"Winner";
+      const profile=safePublicProfileUrl(winner.winner_profile_url);
+      const prize=String(winner.card_name||winner.title||"Giveaway Prize").trim()||"Giveaway Prize";
+      const number=rows.length>1 ? `${index+1}. ` : "";
+
+      lines.push(
+        `🏆 ${number}${name}${profile ? ` — ${profile}` : ""}`,
+        `🎁 Prize: ${prize}`
+      );
+
+      if(index<rows.length-1) lines.push("");
+    });
+
+    lines.push(
+      "",
+      "Thank you very much to everyone who joined our giveaway and supported Collect TCG MY & SG.",
+      "",
+      "We appreciate every follow, like, share, and comment. There will be more giveaways in the future, so keep an eye out for the next one 👀",
+      "",
+      `Congratulations once again to ${plural?"all our winners":"our winner"}! 🎊`,
+      "",
+      "— Collect TCG MY & SG"
+    );
+
+    return compactGeneratedPostSpacing(lines.join("\n"));
+  }
+
+  function renderGiveawayWinnerPostGeneratorPage(){
+    if(!requireOwner("open giveaway winner post generator")) return;
+
+    const pastWinners=sortedPastGiveawayWinners();
+    const selectedIds=new Set();
+
+    view.innerHTML=`
+      <div class="page-head fb-post-page-head">
+        <div>
+          <div class="eyebrow">Owner Tool</div>
+          <h2>Giveaway Winner Post Generator</h2>
+          <p>Select saved Past Winners. Each selected winner is automatically matched with the prize and Facebook profile saved on that giveaway.</p>
+        </div>
+      </div>
+
+      <div class="fb-card-list-layout">
+        <section class="panel fb-card-list-builder">
+          <div class="fb-post-section-title">
+            <div>
+              <div class="eyebrow">1 · Past Winners</div>
+              <h3>Select Winners</h3>
+            </div>
+            <div class="fb-post-copy-actions">
+              <button type="button" class="btn-ghost" id="winnerPostSelectAllBtn">Select All</button>
+              <button type="button" class="btn-ghost" id="winnerPostClearBtn">Clear</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="winnerPostSearch">Find a past winner</label>
+            <input id="winnerPostSearch" type="search" maxlength="120" placeholder="Winner, giveaway or prize…">
+          </div>
+
+          <div class="hint" id="winnerPostSelectionCount" style="margin-bottom:10px;"></div>
+          <div class="fb-card-list-selection-list" id="winnerPostSelectionList"></div>
+        </section>
+
+        <section class="panel fb-post-output-panel">
+          <div class="fb-post-section-title">
+            <div>
+              <div class="eyebrow">2 · Preview & Copy</div>
+              <h3>Winner Announcement</h3>
+            </div>
+            <div class="fb-post-copy-actions">
+              <button type="button" class="btn-primary" id="winnerPostCopyBtn" disabled>Copy Post</button>
+            </div>
+          </div>
+
+          <textarea id="winnerPostOutput" class="fb-post-output" readonly></textarea>
+
+          <div class="fb-post-bottom-actions">
+            <a class="btn-ghost" href="#/giveaway">Open Past Winners</a>
+          </div>
+        </section>
+      </div>
+    `;
+
+    const list=$("winnerPostSelectionList");
+    const search=$("winnerPostSearch");
+    const count=$("winnerPostSelectionCount");
+    const output=$("winnerPostOutput");
+    const copyBtn=$("winnerPostCopyBtn");
+
+    function selectedRows(){
+      return pastWinners.filter(g=>selectedIds.has(String(g.id)));
+    }
+
+    function renderOutput(){
+      const rows=selectedRows();
+      output.value=buildGiveawayWinnerAnnouncementPost(rows);
+      copyBtn.disabled=!rows.length;
+      count.textContent=`${rows.length} selected · ${pastWinners.length} Past Winner${pastWinners.length===1?"":"s"} available`;
+    }
+
+    function matchesSearch(g){
+      const q=normalizeFilterValue(search.value);
+      if(!q) return true;
+      const hay=[
+        g.winner_name,
+        g.title,
+        g.card_name,
+        g.winner_profile_url,
+        giveawayWinnerDateLabel(g.winner_announced_at)
+      ].map(v=>normalizeFilterValue(v)).join(" ");
+      return hay.includes(q);
+    }
+
+    function renderList(){
+      const visible=pastWinners.filter(matchesSearch);
+
+      list.innerHTML=visible.length
+        ? visible.map(g=>{
+            const id=String(g.id);
+            const checked=selectedIds.has(id);
+            const profile=safePublicProfileUrl(g.winner_profile_url);
+            return `
+              <label class="fb-card-list-select-row">
+                <input type="checkbox"
+                       data-winner-post-id="${escapeHtml(id)}"
+                       ${checked?"checked":""}>
+                <span class="fb-card-list-select-copy">
+                  <strong>${escapeHtml(g.winner_name||"Winner")}</strong>
+                  <small>${escapeHtml(g.title||"Giveaway")} · Prize: ${escapeHtml(g.card_name||"Giveaway Prize")}</small>
+                  ${profile ? `<small>${escapeHtml(profile)}</small>` : `<small>No Facebook profile link saved</small>`}
+                </span>
+              </label>
+            `;
+          }).join("")
+        : `<div class="empty">No Past Winners match this search.</div>`;
+
+      list.querySelectorAll("[data-winner-post-id]").forEach(input=>{
+        input.addEventListener("change",()=>{
+          const id=String(input.dataset.winnerPostId||"");
+          if(input.checked) selectedIds.add(id);
+          else selectedIds.delete(id);
+          renderOutput();
+        });
+      });
+
+      renderOutput();
+    }
+
+    search.addEventListener("input",renderList);
+
+    $("winnerPostSelectAllBtn")?.addEventListener("click",()=>{
+      pastWinners.forEach(g=>selectedIds.add(String(g.id)));
+      renderList();
+    });
+
+    $("winnerPostClearBtn")?.addEventListener("click",()=>{
+      selectedIds.clear();
+      renderList();
+    });
+
+    copyBtn.addEventListener("click",()=>{
+      copyPlainText(output.value,"Winner announcement copied");
+    });
+
+    renderList();
   }
 
   function buildFbGiveawayPost(values){
