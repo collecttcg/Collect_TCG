@@ -29202,6 +29202,14 @@ function wireShimmer(container){
         return aSold - bSold || String(a.name || "").localeCompare(String(b.name || ""));
       });
 
+    const fbSingleGameOptions=[...new Set(
+      selectableCards.map(card=>String(card.game||"").trim()).filter(Boolean)
+    )].sort((a,b)=>a.localeCompare(b));
+
+    const fbSingleStatusOptions=[...new Set(
+      selectableCards.map(card=>String(card.availability||"Available").trim()).filter(Boolean)
+    )].sort((a,b)=>a.localeCompare(b));
+
     view.innerHTML = `
       <div class="page-head fb-post-page-head">
         <div>
@@ -29220,16 +29228,45 @@ function wireShimmer(container){
             </div>
           </div>
 
+          <div class="fb-card-list-selection-toolbar">
+            <div class="field fb-card-list-search-field">
+              <label for="fbPostCardSearch">Search cards</label>
+              <input id="fbPostCardSearch" type="search" maxlength="100" placeholder="Name, code, series, year…">
+            </div>
+
+            <div class="fb-card-list-filter-row">
+              <div class="field">
+                <label for="fbPostGameFilter">Game</label>
+                <select id="fbPostGameFilter">
+                  <option value="">All games</option>
+                  ${fbSingleGameOptions.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+                </select>
+              </div>
+              <div class="field">
+                <label for="fbPostStatusFilter">Status</label>
+                <select id="fbPostStatusFilter">
+                  <option value="">All statuses</option>
+                  ${fbSingleStatusOptions.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+                </select>
+              </div>
+              <div class="field">
+                <label for="fbPostTypeFilter">Type</label>
+                <select id="fbPostTypeFilter">
+                  <option value="">All types</option>
+                  <option value="graded">Graded</option>
+                  <option value="raw">Raw</option>
+                  <option value="sealed">Sealed</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           <div class="field">
             <label for="fbPostCardSelect">Card</label>
             <select id="fbPostCardSelect">
               <option value="">Select a card…</option>
-              ${selectableCards.map(card=>`
-                <option value="${escapeHtml(card.id)}">
-                  ${escapeHtml(`${card.card_code ? card.card_code + " · " : ""}${card.name} · ${card.availability || "Available"}`)}
-                </option>
-              `).join("")}
             </select>
+            <div class="hint" id="fbPostFilterCount"></div>
           </div>
 
           <div id="fbPostSelectedCard" class="fb-post-selected-card" hidden></div>
@@ -29283,6 +29320,11 @@ function wireShimmer(container){
     `;
 
     const select = $("fbPostCardSelect");
+    const searchInput = $("fbPostCardSearch");
+    const gameFilter = $("fbPostGameFilter");
+    const statusFilter = $("fbPostStatusFilter");
+    const typeFilter = $("fbPostTypeFilter");
+    const filterCount = $("fbPostFilterCount");
     const titleInput = $("fbPostTitle");
     const shopInput = $("fbPostCarousellShop");
     const instagramInput = $("fbPostInstagram");
@@ -29296,6 +29338,52 @@ function wireShimmer(container){
     const openCardBtn = $("fbOpenCardBtn");
 
     let selectedCard = null;
+
+    function fbSingleMatchesFilters(card){
+      const q=normalizeFilterValue(searchInput.value);
+      const game=normalizeFilterValue(gameFilter.value);
+      const status=normalizeFilterValue(statusFilter.value);
+      const type=normalizeFilterValue(typeFilter.value);
+
+      if(game && normalizeFilterValue(card.game)!==game) return false;
+      if(status && normalizeFilterValue(card.availability||"Available")!==status) return false;
+      if(type && cardListFormat(card)!==type) return false;
+
+      if(q){
+        const hay=[
+          card.name,
+          card.card_code,
+          card.series,
+          card.year,
+          card.game,
+          card.era,
+          card.language,
+          card.availability
+        ].map(v=>normalizeFilterValue(v)).join(" ");
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    }
+
+    function renderFbSingleCardOptions(){
+      const visible=selectableCards.filter(fbSingleMatchesFilters);
+      const selectedId=String(select.value||selectedCard?.id||"");
+
+      select.innerHTML=[
+        `<option value="">Select a card…</option>`,
+        ...visible.map(card=>`
+          <option value="${escapeHtml(card.id)}">
+            ${escapeHtml(`${card.card_code ? card.card_code + " · " : ""}${card.name} · ${card.availability || "Available"}`)}
+          </option>
+        `)
+      ].join("");
+
+      if(selectedId && visible.some(card=>String(card.id)===selectedId)){
+        select.value=selectedId;
+      }
+
+      filterCount.textContent=`${visible.length} of ${selectableCards.length} cards shown`;
+    }
 
     function currentValues(){
       return {
@@ -29387,6 +29475,13 @@ function wireShimmer(container){
     }
 
     select.addEventListener("change", ()=>selectCard(select.value));
+
+    [searchInput,gameFilter,statusFilter,typeFilter].forEach(input=>{
+      input.addEventListener("input",renderFbSingleCardOptions);
+      input.addEventListener("change",renderFbSingleCardOptions);
+    });
+
+    renderFbSingleCardOptions();
 
     openCardBtn.addEventListener("click",()=>{
       if(!selectedCard || openCardBtn.disabled) return;
@@ -30077,77 +30172,42 @@ function wireShimmer(container){
     const lines = [
       "NO TRADE, ONLY SELL",
       "",
-      "[FB PAGE]",
-      "",
-      "Facebook.com/61590041416102/",
-      "",
-      "[INSTA ID]",
-      "",
-      "collector.tcg_my.sg",
-      "",
       "[Product Details]",
-      "",
       details,
       "",
       "[Caution]",
-      "",
       "There may be initial scratches or manufacturing defects.",
-      "",
       "Please purchase for play/use purposes only.",
-      "",
       "As these items are stored by an amateur, please refrain from purchasing if you are overly sensitive about condition.",
-      "",
       "Please do not leave reviews based on the contents/condition alone.",
-      "",
       "Thank you for viewing.",
       "",
       "[Important Notes]",
-      "",
-      "- For both buyer and seller protections, only COD",
-      "",
-      "- Price may subject to change from listing to match the market.",
-      "",
-      "- No trades. Listing are for sales only.",
-      "",
+      "- For both buyer and seller protection, COD only.",
+      "- Price may be subject to change to match the market.",
+      "- No trades. Listings are for sale only.",
       "- Please carefully review the photos before purchasing.",
-      "",
       "- Feel free to ask if you would like additional photos.",
-      "",
       "- Even PSA 10 cards may contain scratches, dents, holo chipping, whitening, print lines, etc.",
-      "",
       "- The case itself may have scratches, dirt, embedded dust, or other damage. If you are concerned about such issues, please refrain from purchasing.",
       "",
       "[COD Rules]",
-      "",
-      "1. COD only in public places within Kuala Lumpur & Singapore. ONLY on weekends.",
-      "",
-      "2. Final price must be agreed upon before the meetup, no changes will be accepted during the transaction.",
-      "",
+      "1. COD only in public places within Kuala Lumpur & Singapore. Weekends only.",
+      "2. Final price must be agreed upon before the meetup. No changes will be accepted during the transaction.",
       "3. If a buyer fails to show up after confirming the deal, future transactions with that party will not be accepted.",
-      "",
-      "4. Please be punctual. A grace period of up to 15 minutes will be given, after that, the meetup may be cancelled.",
-      "",
+      "4. Please be punctual. A grace period of up to 15 minutes will be given; after that, the meetup may be cancelled.",
       "5. Items will only be reserved upon confirmation from the buyer.",
-      "",
       "6. Buyer is allowed to inspect the item during the meetup before making payment.",
-      "",
       "7. Payment must be made during the meetup via instant bank transfer.",
-      "",
-      "8. For both buyer and seller protection, a photo of the item together with the bank transfer receipt/payment proof will be taken upon completion of the transaction to avoid any future disputes.",
+      "8. For both buyer and seller protection, a photo of the item together with the bank transfer receipt/payment proof will be taken upon completion of the transaction to avoid future disputes.",
       "",
       "Thank you for your interest.",
-      "",
       "Please make an offer so that we may consider it.",
       "",
       "Basic negotiation rules we follow:",
-      "",
       "1. No lowball offers. Please check the market value beforehand. We recommend using SNKRDUNK and 130 Point for listing and actual sold listings.",
-      "",
       "2. Please be respectful during negotiations.",
-      "",
-      "3. In good faith, we do not require deposits or advance payments for reservations. However, any backout after confirmation will result in being blacklisted from future dealings.",
-      "",
-      ...collectSocialPostLines()
+      "3. In good faith, we do not require deposits or advance payments for reservations. However, any backout after confirmation will result in being blacklisted from future dealings."
     ];
 
     return compactGeneratedPostSpacing(lines.join("\n"));
@@ -30161,6 +30221,14 @@ function wireShimmer(container){
       .filter(card=>cardLifecycle(card)!=="archived")
       .slice()
       .sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
+
+    const carousellGameOptions=[...new Set(
+      selectableCards.map(card=>String(card.game||"").trim()).filter(Boolean)
+    )].sort((a,b)=>a.localeCompare(b));
+
+    const carousellStatusOptions=[...new Set(
+      selectableCards.map(card=>String(card.availability||"Available").trim()).filter(Boolean)
+    )].sort((a,b)=>a.localeCompare(b));
 
     view.innerHTML=`
       <div class="page-head fb-post-page-head">
@@ -30180,17 +30248,45 @@ function wireShimmer(container){
             </div>
           </div>
 
+          <div class="fb-card-list-selection-toolbar">
+            <div class="field fb-card-list-search-field">
+              <label for="carousellPostCardSearch">Search cards</label>
+              <input id="carousellPostCardSearch" type="search" maxlength="100" placeholder="Name, code, series, year…">
+            </div>
+
+            <div class="fb-card-list-filter-row">
+              <div class="field">
+                <label for="carousellPostGameFilter">Game</label>
+                <select id="carousellPostGameFilter">
+                  <option value="">All games</option>
+                  ${carousellGameOptions.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+                </select>
+              </div>
+              <div class="field">
+                <label for="carousellPostStatusFilter">Status</label>
+                <select id="carousellPostStatusFilter">
+                  <option value="">All statuses</option>
+                  ${carousellStatusOptions.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+                </select>
+              </div>
+              <div class="field">
+                <label for="carousellPostTypeFilter">Type</label>
+                <select id="carousellPostTypeFilter">
+                  <option value="">All types</option>
+                  <option value="graded">Graded</option>
+                  <option value="raw">Raw</option>
+                  <option value="sealed">Sealed</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           <div class="field">
             <label for="carousellPostCardSelect">Card <span class="field-optional">(optional)</span></label>
             <select id="carousellPostCardSelect">
               <option value="">Manual product details</option>
-              ${selectableCards.map(card=>`
-                <option value="${escapeHtml(card.id)}">
-                  ${escapeHtml(`${card.card_code ? card.card_code+" · " : ""}${card.name}${card.year ? " · "+card.year : ""}`)}
-                </option>
-              `).join("")}
             </select>
-            <div class="hint">Selecting a card fills Product Details from your inventory. You can still edit the text before copying.</div>
+            <div class="hint" id="carousellPostFilterCount">Selecting a card fills Product Details from your inventory. You can still edit the text before copying.</div>
           </div>
 
           <div id="carousellPostSelectedCard" class="fb-post-selected-card" hidden></div>
@@ -30201,10 +30297,6 @@ function wireShimmer(container){
             <div class="hint">This is the only product-specific section. The caution, COD and negotiation rules remain fixed in the template.</div>
           </div>
 
-          <div class="carousell-template-links">
-            <div><strong>Facebook</strong><span>Facebook.com/61590041416102/</span></div>
-            <div><strong>Instagram</strong><span>collector.tcg_my.sg</span></div>
-          </div>
         </section>
 
         <section class="panel fb-post-output-panel">
@@ -30230,6 +30322,11 @@ function wireShimmer(container){
     `;
 
     const select=$("carousellPostCardSelect");
+    const searchInput=$("carousellPostCardSearch");
+    const gameFilter=$("carousellPostGameFilter");
+    const statusFilter=$("carousellPostStatusFilter");
+    const typeFilter=$("carousellPostTypeFilter");
+    const filterCount=$("carousellPostFilterCount");
     const detailsInput=$("carousellProductDetails");
     const selectedMount=$("carousellPostSelectedCard");
     const output=$("carousellPostOutput");
@@ -30239,6 +30336,52 @@ function wireShimmer(container){
     const openCardBtn=$("carousellOpenCardBtn");
 
     let selectedCard=null;
+
+    function carousellMatchesFilters(card){
+      const q=normalizeFilterValue(searchInput.value);
+      const game=normalizeFilterValue(gameFilter.value);
+      const status=normalizeFilterValue(statusFilter.value);
+      const type=normalizeFilterValue(typeFilter.value);
+
+      if(game && normalizeFilterValue(card.game)!==game) return false;
+      if(status && normalizeFilterValue(card.availability||"Available")!==status) return false;
+      if(type && cardListFormat(card)!==type) return false;
+
+      if(q){
+        const hay=[
+          card.name,
+          card.card_code,
+          card.series,
+          card.year,
+          card.game,
+          card.era,
+          card.language,
+          card.availability
+        ].map(v=>normalizeFilterValue(v)).join(" ");
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    }
+
+    function renderCarousellCardOptions(){
+      const visible=selectableCards.filter(carousellMatchesFilters);
+      const selectedId=String(select.value||selectedCard?.id||"");
+
+      select.innerHTML=[
+        `<option value="">Manual product details</option>`,
+        ...visible.map(card=>`
+          <option value="${escapeHtml(card.id)}">
+            ${escapeHtml(`${card.card_code ? card.card_code+" · " : ""}${card.name}${card.year ? " · "+card.year : ""}`)}
+          </option>
+        `)
+      ].join("");
+
+      if(selectedId && visible.some(card=>String(card.id)===selectedId)){
+        select.value=selectedId;
+      }
+
+      filterCount.textContent=`${visible.length} of ${selectableCards.length} cards shown · selecting a card fills Product Details automatically.`;
+    }
 
     function renderSelected(){
       if(!selectedCard){
@@ -30280,6 +30423,13 @@ function wireShimmer(container){
       renderSelected();
       regenerate();
     });
+
+    [searchInput,gameFilter,statusFilter,typeFilter].forEach(input=>{
+      input.addEventListener("input",renderCarousellCardOptions);
+      input.addEventListener("change",renderCarousellCardOptions);
+    });
+
+    renderCarousellCardOptions();
 
     openCardBtn.addEventListener("click",()=>{
       if(!selectedCard || openCardBtn.disabled) return;
