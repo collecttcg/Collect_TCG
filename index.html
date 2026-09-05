@@ -33338,6 +33338,158 @@ function wireShimmer(container){
     }
   }
 
+
+  async function reapplyCardWatermarkVariants(card,onProgress){
+    if(!card || !requireOwner("reapply card watermark")) return {ok:false,error:"Owner login required"};
+    if(!cardImageVariantsSupported) return {ok:false,error:"Run the reversible watermark migration first"};
+
+    await ensureCardImagesLoaded(card);
+    const currentImages=getImages(card).slice();
+    if(!currentImages.length) return {ok:true,changed:false,count:0};
+
+    const storedVariants=await fetchOwnerCardImageVariants(card.id);
+    const prepared=[];
+    const newlyUploadedPaths=[];
+    const oldWatermarkedPaths=[];
+
+    try{
+      for(let i=0;i<currentImages.length;i++){
+        if(typeof onProgress==="function") onProgress(i,currentImages.length);
+
+        const current=currentImages[i];
+        let variant=storedVariants.find(v=>
+          v.original_url===current || v.watermarked_url===current
+        );
+
+        if(!variant){
+          // If this image has never used the reversible system, treat the
+          // current stored file as its clean/original source.
+          variant={
+            image_key:newCardImageVariantKey(),
+            original_url:current,
+            watermarked_url:"",
+            active_variant:"original"
+          };
+        }else{
+          variant={...variant};
+        }
+
+        const original=safeHttpUrl(variant.original_url)||variant.original_url;
+        if(!original) throw new Error(`Original image unavailable for image ${i+1}`);
+
+        const previousWatermarked=safeHttpUrl(variant.watermarked_url)||"";
+        const processed=await applyWatermarkToCardImageSource(original,1800,0.94);
+        const stored=await uploadPendingCardImage(processed,i);
+
+        newlyUploadedPaths.push(stored.path);
+        if(previousWatermarked){
+          const oldPath=cardStoragePathFromUrl(previousWatermarked);
+          if(oldPath) oldWatermarkedPaths.push(oldPath);
+        }
+
+        variant.watermarked_url=stored.url;
+        prepared.push(variant);
+
+        if(typeof onProgress==="function") onProgress(i+1,currentImages.length);
+      }
+
+      const publicImages=prepared.map((variant,index)=>
+        variant.active_variant==="watermarked"
+          ? variant.watermarked_url
+          : (variant.original_url || currentImages[index])
+      );
+
+      if(publicImages.some(v=>!safeHttpUrl(v))){
+        throw new Error("One or more image URLs are invalid");
+      }
+
+      const variantResult=await saveOwnerCardImageVariants(card.id,prepared);
+      if(!variantResult.ok){
+        throw new Error("Could not save refreshed watermark metadata");
+      }
+
+      const saved=await saveMigratedCardImageUrls(card.id,publicImages);
+      if(!saved){
+        await removeCardStoragePaths(newlyUploadedPaths);
+        return {ok:false,error:"Database update failed"};
+      }
+
+      card.images=Array.isArray(saved.images)?saved.images.slice():publicImages.slice();
+      card.image=card.images[0]||null;
+      card.thumbnail_url=card.image||"";
+      card._images_loaded=true;
+      if(saved.updated_at) card.updated_at=saved.updated_at;
+
+      // The metadata and public URLs now point to the new watermarked files,
+      // so stale watermarked Storage objects can be removed safely.
+      const keepPaths=new Set(
+        prepared.flatMap(v=>[v.original_url,v.watermarked_url])
+          .map(cardStoragePathFromUrl)
+          .filter(Boolean)
+      );
+      const stalePaths=[...new Set(oldWatermarkedPaths)].filter(path=>!keepPaths.has(path));
+      if(stalePaths.length) await removeCardStoragePaths(stalePaths);
+
+      return {ok:true,changed:true,count:prepared.length};
+    }catch(error){
+      if(newlyUploadedPaths.length){
+        await removeCardStoragePaths(newlyUploadedPaths);
+      }
+      console.error("Reapply watermark failed:",card?.id,error);
+      return {ok:false,error:String(error?.message||"Watermark refresh failed")};
+    }
+  }
+
+  async function reapplyAllCardsWatermarkVariants(onProgress){
+    if(!requireOwner("reapply all card watermarks")){
+      return {ok:false,done:0,failed:0,skipped:0,total:0};
+    }
+    if(!cardImageVariantsSupported){
+      showToast("Run the reversible watermark migration first");
+      return {ok:false,done:0,failed:0,skipped:0,total:0};
+    }
+
+    const eligible=cards.filter(card=>getImages(card).length);
+    let done=0;
+    let failed=0;
+    let skipped=0;
+
+    for(let i=0;i<eligible.length;i++){
+      const card=eligible[i];
+
+      if(typeof onProgress==="function"){
+        onProgress({
+          cardIndex:i,
+          cardTotal:eligible.length,
+          imageIndex:0,
+          imageTotal:getImages(card).length,
+          card
+        });
+      }
+
+      const result=await reapplyCardWatermarkVariants(card,(imageIndex,imageTotal)=>{
+        if(typeof onProgress==="function"){
+          onProgress({
+            cardIndex:i,
+            cardTotal:eligible.length,
+            imageIndex,
+            imageTotal,
+            card
+          });
+        }
+      });
+
+      if(result.ok){
+        if(result.count) done++;
+        else skipped++;
+      }else{
+        failed++;
+      }
+    }
+
+    return {ok:failed===0,done,failed,skipped,total:eligible.length};
+  }
+
   async function switchAllCardsWatermarkVariant(target,onProgress){
     if(!requireOwner("change all card watermarks")){
       return {ok:false,done:0,failed:0,skipped:0};
@@ -33444,10 +33596,11 @@ function wireShimmer(container){
         <div class="bulk-watermark-copy">
           <div class="eyebrow">Reversible watermark</div>
           <h3>All card photos</h3>
-          <p>Switch every card with photos to the watermarked version or back to its saved original version. Both versions are preserved so you can switch again later.</p>
+          <p>Switch every card with photos between its saved original and watermarked version. Use <strong>Reapply current watermark</strong> after changing the watermark design to regenerate existing watermarked copies from the clean originals without re-uploading images.</p>
         </div>
         <div class="bulk-watermark-actions">
           <button type="button" class="btn-primary" id="watermarkAllCardsBtn">Watermark all cards</button>
+          <button type="button" class="btn-ghost" id="reapplyAllWatermarksBtn">Reapply current watermark</button>
           <button type="button" class="btn-ghost" id="originalAllCardsBtn">Use originals for all cards</button>
         </div>
         <div class="bulk-watermark-progress" id="bulkWatermarkProgress">Ready</div>
@@ -33481,9 +33634,11 @@ function wireShimmer(container){
       if(!confirm(confirmText)) return;
 
       const watermarkBtn=$("watermarkAllCardsBtn");
+      const reapplyBtn=$("reapplyAllWatermarksBtn");
       const originalBtn=$("originalAllCardsBtn");
       const progress=$("bulkWatermarkProgress");
       watermarkBtn.disabled=true;
+      if(reapplyBtn) reapplyBtn.disabled=true;
       originalBtn.disabled=true;
 
       try{
@@ -33508,11 +33663,67 @@ function wireShimmer(container){
         await loadCards();
       }finally{
         watermarkBtn.disabled=false;
+        if(reapplyBtn) reapplyBtn.disabled=false;
+        originalBtn.disabled=false;
+      }
+    }
+
+    async function runBulkWatermarkReapply(){
+      if(!requireOwner("reapply all card watermarks")) return;
+      if(!cardImageVariantsSupported){
+        showToast("Run the reversible watermark migration first");
+        return;
+      }
+
+      const eligibleCount=cards.filter(card=>getImages(card).length).length;
+      if(!eligibleCount){
+        showToast("No cards with images found");
+        return;
+      }
+
+      const ok=confirm(
+        `Reapply the current logo + website watermark to ${eligibleCount} card listing${eligibleCount===1?"":"s"}?\n\n`+
+        `This regenerates each watermarked copy from its saved original image. You do not need to re-upload the pictures. Clean originals are not modified.`
+      );
+      if(!ok) return;
+
+      const watermarkBtn=$("watermarkAllCardsBtn");
+      const reapplyBtn=$("reapplyAllWatermarksBtn");
+      const originalBtn=$("originalAllCardsBtn");
+      const progress=$("bulkWatermarkProgress");
+
+      watermarkBtn.disabled=true;
+      reapplyBtn.disabled=true;
+      originalBtn.disabled=true;
+
+      try{
+        const result=await reapplyAllCardsWatermarkVariants(state=>{
+          if(!progress) return;
+          const cardName=String(state.card?.name||"Card").slice(0,80);
+          progress.textContent=
+            `${state.cardIndex+1}/${state.cardTotal} · ${cardName}`+
+            (state.imageTotal ? ` · image ${state.imageIndex}/${state.imageTotal}` : "");
+        });
+
+        if(progress){
+          progress.textContent=
+            `Finished · ${result.done} refreshed · ${result.skipped} skipped · ${result.failed} failed`;
+        }
+
+        showToast(result.failed
+          ? `${result.done} refreshed · ${result.failed} failed`
+          : `${result.done} card${result.done===1?"":"s"} refreshed with the current watermark`);
+
+        await loadCards();
+      }finally{
+        watermarkBtn.disabled=false;
+        reapplyBtn.disabled=false;
         originalBtn.disabled=false;
       }
     }
 
     $("watermarkAllCardsBtn")?.addEventListener("click",()=>runBulkWatermarkSwitch("watermarked"));
+    $("reapplyAllWatermarksBtn")?.addEventListener("click",runBulkWatermarkReapply);
     $("originalAllCardsBtn")?.addEventListener("click",()=>runBulkWatermarkSwitch("original"));
 
     const sync=()=>{
