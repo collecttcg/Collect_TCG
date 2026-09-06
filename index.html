@@ -18162,27 +18162,31 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   async function receiveOwnerPostGeneratorHandoff(){
     const nonce=currentOwnerPostHandoffNonce();
-    if(!nonce || !window.opener) return false;
+    if(!nonce) return false;
+
+    const channelName=`collect-tcg-owner-post-${nonce}`;
 
     return await new Promise(resolve=>{
       let settled=false;
+      let channel=null;
+
       const finish=value=>{
         if(settled) return;
         settled=true;
         clearTimeout(timer);
-        window.removeEventListener("message",onMessage);
+        try{ channel?.close(); }catch{}
+        window.removeEventListener("message",onWindowMessage);
         resolve(value);
       };
 
-      const onMessage=async event=>{
-        if(event.origin!==location.origin) return;
-        const payload=event.data;
+      const acceptSession=async payload=>{
         if(!payload || payload.type!==OWNER_POST_HANDOFF_MESSAGE) return;
         if(payload.nonce!==nonce || payload.action!=="session") return;
 
         try{
           const accessToken=String(payload.access_token||"");
           const refreshToken=String(payload.refresh_token||"");
+
           if(!accessToken || !refreshToken){
             finish(false);
             return;
@@ -18199,8 +18203,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             return;
           }
 
-          // Establish the site's own owner state immediately. The owner-only
-          // router guard reads these globals, not just Supabase auth storage.
           ownerSession=data.session;
           ownerVerified=await verifyOwnerSession(ownerSession);
 
@@ -18215,7 +18217,15 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           removeOwnerPostHandoffParam();
 
           try{
-            window.opener.postMessage({
+            channel?.postMessage({
+              type:OWNER_POST_HANDOFF_MESSAGE,
+              nonce,
+              action:"ack"
+            });
+          }catch{}
+
+          try{
+            window.opener?.postMessage({
               type:OWNER_POST_HANDOFF_MESSAGE,
               nonce,
               action:"ack"
@@ -18230,20 +18240,51 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         }
       };
 
-      window.addEventListener("message",onMessage);
+      const onWindowMessage=event=>{
+        if(event.origin!==location.origin) return;
+        acceptSession(event.data);
+      };
 
+      window.addEventListener("message",onWindowMessage);
+
+      if("BroadcastChannel" in window){
+        try{
+          channel=new BroadcastChannel(channelName);
+          channel.addEventListener("message",event=>{
+            acceptSession(event.data);
+          });
+
+          // Ask repeatedly for a short period in case the opener has not yet
+          // attached its BroadcastChannel listener.
+          const request=()=>{
+            try{
+              channel?.postMessage({
+                type:OWNER_POST_HANDOFF_MESSAGE,
+                nonce,
+                action:"request"
+              });
+            }catch{}
+          };
+
+          request();
+          setTimeout(request,120);
+          setTimeout(request,300);
+          setTimeout(request,650);
+        }catch(error){
+          console.warn("BroadcastChannel owner handoff unavailable:",error);
+        }
+      }
+
+      // Fallback for browsers that preserve window.opener.
       try{
-        window.opener.postMessage({
+        window.opener?.postMessage({
           type:OWNER_POST_HANDOFF_MESSAGE,
           nonce,
           action:"request"
         },location.origin);
-      }catch{
-        finish(false);
-        return;
-      }
+      }catch{}
 
-      const timer=setTimeout(()=>finish(false),5000);
+      const timer=setTimeout(()=>finish(false),6000);
     });
   }
 
@@ -25570,6 +25611,7 @@ function wireShimmer(container){
           // Card Overview only: keep the current listing open and launch the
           // Single Card Post Generator in a separate browser tab/window.
           const handoffNonce=ownerPostHandoffNonce();
+          const channelName=`collect-tcg-owner-post-${handoffNonce}`;
           const postUrl=
             `${location.origin}${location.pathname}`+
             `#/fb-tools?mode=single&card=${encodeURIComponent(card.id)}`+
@@ -25582,44 +25624,77 @@ function wireShimmer(container){
           }
 
           let opened=null;
-          const onHandoffMessage=event=>{
-            if(event.origin!==location.origin) return;
-            if(opened && event.source!==opened) return;
+          let channel=null;
+          let closed=false;
 
-            const payload=event.data;
+          const closeHandoff=()=>{
+            if(closed) return;
+            closed=true;
+            window.removeEventListener("message",onWindowMessage);
+            try{ channel?.close(); }catch{}
+          };
+
+          const sendSession=target=>{
+            const payload={
+              type:OWNER_POST_HANDOFF_MESSAGE,
+              nonce:handoffNonce,
+              action:"session",
+              access_token:activeSession.access_token,
+              refresh_token:activeSession.refresh_token
+            };
+
+            try{
+              if(target==="channel") channel?.postMessage(payload);
+              else target?.postMessage(payload,location.origin);
+            }catch(error){
+              console.warn("Could not hand off Owner session to Post Generator:",error);
+            }
+          };
+
+          const handlePayload=(payload,source=null)=>{
             if(!payload || payload.type!==OWNER_POST_HANDOFF_MESSAGE) return;
             if(payload.nonce!==handoffNonce) return;
 
             if(payload.action==="request"){
-              try{
-                event.source?.postMessage({
-                  type:OWNER_POST_HANDOFF_MESSAGE,
-                  nonce:handoffNonce,
-                  action:"session",
-                  access_token:activeSession.access_token,
-                  refresh_token:activeSession.refresh_token
-                },location.origin);
-              }catch(error){
-                console.warn("Could not hand off Owner session to Post Generator:",error);
-              }
+              sendSession(source || "channel");
               return;
             }
 
             if(payload.action==="ack"){
-              window.removeEventListener("message",onHandoffMessage);
+              closeHandoff();
             }
           };
 
-          window.addEventListener("message",onHandoffMessage);
-          setTimeout(()=>{
-            window.removeEventListener("message",onHandoffMessage);
-          },8000);
+          const onWindowMessage=event=>{
+            if(event.origin!==location.origin) return;
+            if(opened && event.source!==opened) return;
+            handlePayload(event.data,event.source);
+          };
 
-          opened=window.open(postUrl,"_blank");
-          if(!opened){
-            window.removeEventListener("message",onHandoffMessage);
-            showToast("Allow pop-ups to open the Post Generator in a new tab");
+          window.addEventListener("message",onWindowMessage);
+
+          if("BroadcastChannel" in window){
+            try{
+              channel=new BroadcastChannel(channelName);
+              channel.addEventListener("message",event=>{
+                handlePayload(event.data,null);
+              });
+            }catch(error){
+              console.warn("BroadcastChannel Post Generator handoff unavailable:",error);
+            }
           }
+
+          // Open only after the cross-tab responder is listening.
+          opened=window.open(postUrl,"_blank");
+
+          if(!opened){
+            closeHandoff();
+            showToast("Allow pop-ups to open the Post Generator in a new tab");
+            return;
+          }
+
+          // Keep the handoff channel alive only briefly.
+          setTimeout(closeHandoff,8000);
         }else if(action==="availability"){
           if(!requireOwner("change card availability")) return;
           const status=String(btn.dataset.status||"");
@@ -41388,13 +41463,17 @@ function wireShimmer(container){
     // the already-authenticated Supabase session from the same-origin opener.
     // Access/refresh tokens are passed only through same-origin postMessage and
     // are never placed in the URL.
+    const ownerPostHandoffRequested=
+      currentRoute()==="fb-tools" && !!currentOwnerPostHandoffNonce();
+
     let ownerPostHandoffSucceeded=false;
-    if(currentRoute()==="fb-tools" && currentOwnerPostHandoffNonce()){
+    if(ownerPostHandoffRequested){
       ownerPostHandoffSucceeded=await receiveOwnerPostGeneratorHandoff();
     }
 
-    // Successful Post Generator handoff has already verified and populated
-    // ownerSession/ownerVerified. Normal tabs use the standard refresh path.
+    // Successful handoff already populated ownerSession/ownerVerified.
+    // If the cross-tab handoff could not run, fall back to the normal Supabase
+    // persisted-session lookup while preserving the fb-tools hash.
     if(!ownerPostHandoffSucceeded){
       await refreshOwnerSession();
     }
