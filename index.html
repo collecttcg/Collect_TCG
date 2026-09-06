@@ -20231,6 +20231,57 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return `#/card/${encodeURIComponent(cardId)}`;
   }
 
+  let insightsDetailsReturnState=null;
+
+  function captureInsightsDetailsReturnState(){
+    const shell=document.querySelector(".shell");
+    insightsDetailsReturnState={
+      hash:String(location.hash||"#/insights").slice(0,1500),
+      windowY:Math.max(0,Math.round(window.scrollY||0)),
+      shellY:shell ? Math.max(0,Math.round(shell.scrollTop||0)) : 0
+    };
+  }
+
+  function restoreInsightsDetailsReturnState(){
+    const state=insightsDetailsReturnState;
+    insightsDetailsReturnState=null;
+    if(!state) return;
+
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      const shell=document.querySelector(".shell");
+
+      if(shell){
+        shell.scrollTo({
+          top:state.shellY,
+          left:0,
+          behavior:"auto"
+        });
+      }
+
+      window.scrollTo({
+        top:state.windowY,
+        left:0,
+        behavior:"auto"
+      });
+    }));
+  }
+
+  function openInsightsCardDetails(cardId){
+    const id=safeCardId(cardId);
+    if(!id || currentRoute()!=="insights") return;
+
+    const card=getCardById(id);
+    if(!card || (!isOwnerMode() && !isLiveLifecycle(card))) return;
+
+    // Insights is intentionally kept rendered underneath Card Details.
+    // Do not change location.hash to #/card/... for this entry point.
+    detailsReturnHash=location.hash||"#/insights";
+    detailsPreservedListingHash="";
+    clearFilteredResultsBrowseContext();
+    captureInsightsDetailsReturnState();
+    openDetailsModal(card);
+  }
+
   function openCardRoute(cardId){
     const id=safeCardId(cardId);
     if(!id) return;
@@ -28220,8 +28271,7 @@ function wireShimmer(container){
         btn.addEventListener("click",()=>{
           const cardId=String(btn.dataset.insightsOpenCard||"").trim();
           if(!cardId) return;
-          const card=getCardById(cardId);
-          if(card) openCardRoute(card.id);
+          openInsightsCardDetails(cardId);
         });
       });
     }
@@ -38142,14 +38192,16 @@ function wireShimmer(container){
     const detailsCloseButton=$("detailsCloseBtn");
     if(detailsCloseButton){
       const returningToPage=!!detailsReturnHash && !detailsReturnHash.includes("#/card/");
-      const returningHome=routeBase(String(detailsReturnHash||"").replace(/^#\/?/,""))==="home";
+      const returnRoute=routeBase(String(detailsReturnHash||"").replace(/^#\/?/,""));
+      const returningHome=returnRoute==="home";
+      const returningInsights=returnRoute==="insights" && !!insightsDetailsReturnState;
       detailsCloseButton.innerHTML=returningToPage
-        ? `<span aria-hidden="true">←</span> ${returningHome ? "Back to home" : "Back to results"}`
+        ? `<span aria-hidden="true">←</span> ${returningHome ? "Back to home" : (returningInsights ? "Back to insights" : "Back to results")}`
         : `<span aria-hidden="true">×</span> Close`;
       detailsCloseButton.setAttribute(
         "aria-label",
         returningToPage
-          ? (returningHome ? "Back to home" : "Back to previous results")
+          ? (returningHome ? "Back to home" : (returningInsights ? "Back to insights" : "Back to previous results"))
           : "Close card details"
       );
     }
@@ -38531,6 +38583,11 @@ function wireShimmer(container){
   }
 
   function closeDetailsModal(navigateBack = true){
+    const returningToInsightsInPlace=
+      !!insightsDetailsReturnState &&
+      currentRoute()==="insights" &&
+      !String(location.hash||"").includes("#/card/");
+
     cancelPendingCardViewQualification();
     closeDetailsMoreMenu();
 
@@ -38557,6 +38614,11 @@ function wireShimmer(container){
         try{ focusTarget.focus({preventScroll:true}); }
         catch{ focusTarget.focus(); }
       });
+    }
+
+    if(returningToInsightsInPlace){
+      restoreInsightsDetailsReturnState();
+      return;
     }
 
     if(navigateBack && currentRoute().startsWith("card/")){
