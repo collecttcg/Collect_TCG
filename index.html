@@ -16555,6 +16555,42 @@ body.showcase-dragging-body{
   border-radius:6px;
 }
 
+
+/* Insights — Top Card Performance row-count control */
+.insights-top-card-head{
+  gap:12px;
+  align-items:center;
+}
+.insights-top-card-limit{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex:0 0 auto;
+  color:var(--text-muted);
+  font-size:9px;
+  font-weight:800;
+}
+.insights-top-card-limit select{
+  min-width:72px;
+  min-height:32px;
+  padding:5px 26px 5px 9px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--surface-2);
+  color:var(--text);
+  font:inherit;
+  cursor:pointer;
+}
+@media(max-width:600px){
+  .insights-top-card-head{
+    align-items:flex-start;
+  }
+  .insights-top-card-limit{
+    width:100%;
+    justify-content:flex-end;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -27861,6 +27897,7 @@ function wireShimmer(container){
       engagementSupported:false,saleSnapshotsSupported:false,saleSnapshots:[],
       editHistoryRows:[],editHistoryLoaded:false
     };
+    let topCardPerformanceLimit="15";
 
     function activeTab(){
       return $("insightsTabs")?.querySelector("button.active")?.dataset.insightsTab||"overview";
@@ -28091,13 +28128,24 @@ function wireShimmer(container){
         </div>
 
         <section class="insights-v4-card">
-          <div class="insights-v4-card-head table-head">
+          <div class="insights-v4-card-head table-head insights-top-card-head">
             <div><h3>Top Card Performance</h3><span>Interest Score weighs stronger buyer actions more heavily than views.</span></div>
+            <label class="insights-top-card-limit">
+              <span>Show</span>
+              <select id="insightsTopCardLimit" aria-label="Number of Top Card Performance rows">
+                ${["15","30","50","all"].map(value=>`<option value="${value}" ${topCardPerformanceLimit===value?"selected":""}>${value==="all"?"All":value}</option>`).join("")}
+              </select>
+            </label>
           </div>
           <div class="insights-table-wrap">
             <table class="insights-table insights-v4-table">
               <thead><tr><th>#</th><th>Card</th><th>Status</th><th>Unique</th><th>Fav</th><th>Contact</th><th>Score</th><th>Trend</th></tr></thead>
-              <tbody>${rows.slice().sort((a,b)=>b._interestScore-a._interestScore).slice(0,15).map((row,i)=>`
+              <tbody>${(()=>{
+                const ranked=rows.slice().sort((a,b)=>b._interestScore-a._interestScore);
+                const shown=topCardPerformanceLimit==="all"
+                  ? ranked
+                  : ranked.slice(0,Math.max(1,Number(topCardPerformanceLimit)||15));
+                return shown.map((row,i)=>`
                 <tr>
                   <td>${i+1}</td>
                   <td class="insights-card-name">
@@ -28138,7 +28186,8 @@ function wireShimmer(container){
                   <td>${Number(row.unique_views||0)}</td><td>${Number(row.favorite_adds||0)}</td>
                   <td>${row._contactActions}</td><td><strong class="insights-v3-score">${row._interestScore}</strong></td>
                   <td><span class="trend-tag ${row._trend.className}">${escapeHtml(row._trend.label)}</span></td>
-                </tr>`).join("") || `<tr><td colspan="8" class="hint">No activity for this period.</td></tr>`}
+                </tr>`).join("") || `<tr><td colspan="8" class="hint">No activity for this period.</td></tr>`;
+              })()}
               </tbody>
             </table>
           </div>
@@ -28284,6 +28333,12 @@ function wireShimmer(container){
           if(!cardId) return;
           openInsightsCardDetails(cardId);
         });
+      });
+
+      $("insightsTopCardLimit")?.addEventListener("change",e=>{
+        const value=String(e.target.value||"15").toLowerCase();
+        topCardPerformanceLimit=["15","30","50","all"].includes(value)?value:"15";
+        renderOverview();
       });
     }
 
