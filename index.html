@@ -18199,6 +18199,19 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             return;
           }
 
+          // Establish the site's own owner state immediately. The owner-only
+          // router guard reads these globals, not just Supabase auth storage.
+          ownerSession=data.session;
+          ownerVerified=await verifyOwnerSession(ownerSession);
+
+          if(!ownerVerified){
+            console.warn("Owner Post Generator handoff session was not verified.");
+            ownerSession=null;
+            finish(false);
+            return;
+          }
+
+          applyOwnerMode();
           removeOwnerPostHandoffParam();
 
           try{
@@ -41375,14 +41388,16 @@ function wireShimmer(container){
     // the already-authenticated Supabase session from the same-origin opener.
     // Access/refresh tokens are passed only through same-origin postMessage and
     // are never placed in the URL.
+    let ownerPostHandoffSucceeded=false;
     if(currentRoute()==="fb-tools" && currentOwnerPostHandoffNonce()){
-      await receiveOwnerPostGeneratorHandoff();
+      ownerPostHandoffSucceeded=await receiveOwnerPostGeneratorHandoff();
     }
 
-    // Authentication is checked first only to decide whether this session may
-    // request owner-only card data. Public catalogue loading itself does not
-    // depend on owner-only tables or owner RPCs.
-    await refreshOwnerSession();
+    // Successful Post Generator handoff has already verified and populated
+    // ownerSession/ownerVerified. Normal tabs use the standard refresh path.
+    if(!ownerPostHandoffSucceeded){
+      await refreshOwnerSession();
+    }
 
     // Restore/check persistent personal-device exclusion before any analytics
     // event can be recorded, then consume any supplied exclusion link/QR.
@@ -41406,6 +41421,14 @@ function wireShimmer(container){
     if(!cardsLoaded){
       renderCatalogueLoadError();
       updateSidebarFooter();
+      return;
+    }
+
+    // If this was a secure Post Generator handoff, owner mode must still be
+    // established here before the first owner-only route render.
+    if(ownerPostHandoffSucceeded && !isOwnerMode()){
+      console.warn("Owner Post Generator handoff lost owner state before routing.");
+      showToast("Could not open Post Generator as owner");
       return;
     }
 
