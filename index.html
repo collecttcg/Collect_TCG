@@ -17096,6 +17096,30 @@ body.showcase-dragging-body{
 .insights-search-row>small{color:var(--text-muted);font-size:7.5px;text-align:right}
 @media(max-width:700px){.insights-search-grid{grid-template-columns:1fr}.insights-search-summary{grid-template-columns:1fr}.insights-search-row{grid-template-columns:20px minmax(0,1fr)}.insights-search-row>small{grid-column:2;text-align:left}}
 
+
+/* Insights — Returning Visitors + Browsing Depth */
+.insights-returning-card{margin-top:12px}
+.insights-return-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:15px}
+.insights-return-summary article{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2)}
+.insights-return-summary span,.insights-return-summary small{display:block;color:var(--text-muted);font-size:8px}
+.insights-return-summary strong{display:block;margin:3px 0;color:var(--text);font-size:17px}
+.insights-return-grid{display:grid;grid-template-columns:minmax(220px,.75fr) minmax(0,1.25fr);gap:18px}
+.insights-return-split{display:flex;flex-direction:column;gap:8px}
+.insights-return-split article{display:grid;grid-template-columns:74px 44px minmax(0,1fr);gap:8px;align-items:center}
+.insights-return-split span{color:var(--text-muted);font-size:9px;font-weight:800}
+.insights-return-split strong{color:var(--text);font-size:10px;text-align:right}
+.insights-return-split i,.insights-depth-row i{display:block;height:9px;overflow:hidden;border:1px solid var(--border);border-radius:999px;background:var(--surface-2)}
+.insights-return-split i b{display:block;height:100%;border-radius:inherit;background:var(--accent-teal)}
+.insights-return-split article+article i b{background:var(--accent-gold)}
+.insights-depth-list{display:flex;flex-direction:column;gap:7px}
+.insights-depth-row{display:grid;grid-template-columns:64px minmax(0,1fr) 36px 38px;gap:8px;align-items:center}
+.insights-depth-row>span{color:var(--text-muted);font-size:8px;font-weight:800}
+.insights-depth-row i b{display:block;height:100%;border-radius:inherit;background:var(--accent-teal)}
+.insights-depth-row>strong{color:var(--text);font-size:9px;text-align:right}
+.insights-depth-row>small{color:var(--text-muted);font-size:7.5px;text-align:right}
+@media(max-width:800px){.insights-return-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.insights-return-grid{grid-template-columns:1fr}}
+@media(max-width:520px){.insights-return-summary{grid-template-columns:1fr}.insights-depth-row{grid-template-columns:58px minmax(0,1fr) 30px 34px;gap:6px}}
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -19760,6 +19784,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         });
       }catch{}
 
+      // A successfully recorded Qualified View contributes one step to
+      // this anonymous session's browsing depth.
+      incrementAnalyticsSessionQualifiedView().catch(()=>{});
       return true;
     }catch(error){
       console.error("Record qualified view event error:",error);
@@ -20093,6 +20120,63 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   window.collectCurrentDetailsCardId=()=>safeCardId(detailsCardId||"");
 
   const WEBSITE_VISIT_SESSION_KEY="collect_tcg_website_visit_recorded_fresh_v1";
+  const ANALYTICS_SESSION_ID_KEY="collect_tcg_analytics_session_id_v1";
+
+  function getAnalyticsSessionId(){
+    try{
+      let id=sessionStorage.getItem(ANALYTICS_SESSION_ID_KEY);
+      if(id) return id;
+      id=crypto?.randomUUID?.() ||
+        `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+      sessionStorage.setItem(ANALYTICS_SESSION_ID_KEY,id);
+      return id;
+    }catch{
+      return "";
+    }
+  }
+
+  async function recordAnalyticsSession(){
+    if(isOwnerMode() || isAnalyticsExcludedDevice()) return false;
+    const sessionId=getAnalyticsSessionId();
+    const visitorId=getVisitorId();
+    if(!sessionId || !visitorId) return false;
+
+    try{
+      const {error}=await supabaseClient.rpc("record_site_analytics_session",{
+        p_session_id:sessionId,
+        p_visitor_id:visitorId
+      });
+      if(error){
+        console.warn("Session analytics unavailable:",error);
+        return false;
+      }
+      return true;
+    }catch(error){
+      console.warn("Session analytics unavailable:",error);
+      return false;
+    }
+  }
+
+  async function incrementAnalyticsSessionQualifiedView(){
+    if(isOwnerMode() || isAnalyticsExcludedDevice()) return false;
+    const sessionId=getAnalyticsSessionId();
+    if(!sessionId) return false;
+
+    try{
+      const {error}=await supabaseClient.rpc("increment_site_session_qualified_view",{
+        p_session_id:sessionId
+      });
+      if(error){
+        console.warn("Browsing-depth analytics unavailable:",error);
+        return false;
+      }
+      return true;
+    }catch(error){
+      console.warn("Browsing-depth analytics unavailable:",error);
+      return false;
+    }
+  }
+
 
   let inventorySearchAnalyticsTimer=null;
   let lastRecordedInventorySearch="";
@@ -20408,6 +20492,31 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }catch(error){
       console.warn("Search insights unavailable:",error);
       return {supported:false,rows:[]};
+    }
+  }
+
+  async function fetchReturningVisitorInsights(start,end){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_returning_visitor_insights",{
+        p_start:start.toISOString(),
+        p_end:end.toISOString()
+      });
+
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        const unavailable=
+          message.includes("get_returning_visitor_insights") ||
+          message.includes("function") ||
+          message.includes("schema cache");
+        if(!unavailable) console.warn("Returning visitor insights unavailable:",error);
+        return {supported:false,row:null};
+      }
+
+      const row=Array.isArray(data)?data[0]:data;
+      return {supported:true,row:row||null};
+    }catch(error){
+      console.warn("Returning visitor insights unavailable:",error);
+      return {supported:false,row:null};
     }
   }
 
@@ -28965,6 +29074,7 @@ function wireShimmer(container){
       visitorDevices:[],visitorDeviceSupported:false,
       visitorSources:[],visitorSourceSupported:false,
       searchInsights:[],searchInsightsSupported:false,
+      returningVisitorInsights:null,returningVisitorSupported:false,
       engagementSupported:false,saleSnapshotsSupported:false,saleSnapshots:[],
       editHistoryRows:[],editHistoryLoaded:false
     };
@@ -29230,6 +29340,59 @@ function wireShimmer(container){
         </div>`;
     }
 
+    function renderReturningVisitorInsights(row){
+      if(!row) return `<div class="hint">No session analytics for this period yet.</div>`;
+
+      const total=Math.max(0,Number(row.total_sessions||0));
+      const newSessions=Math.max(0,Number(row.new_sessions||0));
+      const returning=Math.max(0,Number(row.returning_sessions||0));
+      const unique=Math.max(0,Number(row.unique_visitors||0));
+      const avgViews=Math.max(0,Number(row.avg_qualified_views||0));
+      const returnRate=total ? returning/total*100 : 0;
+
+      const depthRows=[
+        {label:"0 cards",value:Number(row.depth_0||0)},
+        {label:"1 card",value:Number(row.depth_1||0)},
+        {label:"2–4 cards",value:Number(row.depth_2_4||0)},
+        {label:"5–9 cards",value:Number(row.depth_5_9||0)},
+        {label:"10+ cards",value:Number(row.depth_10_plus||0)}
+      ];
+      const maxDepth=Math.max(1,...depthRows.map(item=>item.value));
+
+      return `<div class="insights-return-summary">
+          <article><span>Tracked sessions</span><strong>${total.toLocaleString()}</strong></article>
+          <article><span>Unique visitors</span><strong>${unique.toLocaleString()}</strong></article>
+          <article><span>Returning sessions</span><strong>${returning.toLocaleString()}</strong><small>${returnRate.toFixed(returnRate>=10?0:1)}% return rate</small></article>
+          <article><span>Avg qualified views / session</span><strong>${avgViews.toFixed(avgViews>=10?1:2)}</strong></article>
+        </div>
+
+        <div class="insights-return-grid">
+          <div>
+            <div class="insights-access-subhead"><strong>New vs Returning</strong><span>Anonymous browser sessions</span></div>
+            <div class="insights-return-split">
+              <article><span>New</span><strong>${newSessions.toLocaleString()}</strong><i><b style="width:${total?newSessions/total*100:0}%"></b></i></article>
+              <article><span>Returning</span><strong>${returning.toLocaleString()}</strong><i><b style="width:${total?returning/total*100:0}%"></b></i></article>
+            </div>
+          </div>
+
+          <div>
+            <div class="insights-access-subhead"><strong>Browsing Depth</strong><span>Qualified card views per session</span></div>
+            <div class="insights-depth-list">
+              ${depthRows.map(item=>{
+                const pct=total?item.value/total*100:0;
+                const width=item.value?Math.max(3,item.value/maxDepth*100):0;
+                return `<div class="insights-depth-row">
+                  <span>${escapeHtml(item.label)}</span>
+                  <i><b style="width:${width}%"></b></i>
+                  <strong>${item.value.toLocaleString()}</strong>
+                  <small>${pct.toFixed(pct>=10?0:1)}%</small>
+                </div>`;
+              }).join("")}
+            </div>
+          </div>
+        </div>`;
+    }
+
     function renderOverview(){
       const rows=state.visible;
       const websiteVisits=state.websiteSeries.reduce((s,r)=>s+Number(r.visits||0),0);
@@ -29387,6 +29550,18 @@ function wireShimmer(container){
           ${!state.searchInsightsSupported
             ? `<div class="hint">Search analytics is not installed yet. Run <code>insights-search-demand-migration.sql</code> in Supabase.</div>`
             : renderSearchDemandInsights(state.searchInsights)}
+        </section>
+
+        <section class="insights-v4-card insights-returning-card">
+          <div class="insights-v4-card-head table-head">
+            <div>
+              <h3>Returning Visitors & Browsing Depth</h3>
+              <span>Anonymous session quality based on the existing visitor ID and 2+ second Qualified Views.</span>
+            </div>
+          </div>
+          ${!state.returningVisitorSupported
+            ? `<div class="hint">Session analytics is not installed yet. Run <code>insights-returning-visitors-browsing-depth-migration.sql</code> in Supabase.</div>`
+            : renderReturningVisitorInsights(state.returningVisitorInsights)}
         </section>
 
         <div class="insights-v4-intro">
@@ -30023,7 +30198,7 @@ function wireShimmer(container){
       const selectedStatus=statusSel.value;
       const selectedGame=gameSel.value;
 
-      const [views,series,siteSeries,countryResult,accessTimeResult,deviceResult,sourceResult,searchResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
+      const [views,series,siteSeries,countryResult,accessTimeResult,deviceResult,sourceResult,searchResult,returningResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
         fetchInsights(startDate,endDate),
         fetchViewSeries(startDate,endDate),
         fetchWebsiteVisitSeries(startDate,endDate),
@@ -30032,6 +30207,7 @@ function wireShimmer(container){
         fetchWebsiteVisitDevices(startDate,endDate),
         fetchWebsiteVisitSources(startDate,endDate),
         fetchInventorySearchInsights(startDate,endDate),
+        fetchReturningVisitorInsights(startDate,endDate),
         previousRange?fetchInsights(previousRange.start,previousRange.end,{silent:true}):Promise.resolve([]),
         fetchCardEngagementInsights(startDate,endDate),
         fetchSaleConversionSnapshots(),
@@ -30110,6 +30286,8 @@ function wireShimmer(container){
         visitorSourceSupported:sourceResult.supported,
         searchInsights:searchResult.supported && Array.isArray(searchResult.rows) ? searchResult.rows : [],
         searchInsightsSupported:searchResult.supported,
+        returningVisitorInsights:returningResult.supported ? returningResult.row : null,
+        returningVisitorSupported:returningResult.supported,
         engagementSupported:engagement.supported,
         saleSnapshotsSupported:saleSnapshots.supported,
         saleSnapshots:saleSnapshots.rows
@@ -41052,9 +41230,12 @@ function wireShimmer(container){
     await consumeAnalyticsExclusionLinkIfPresent();
     await consumeAnalyticsExclusionQrIfPresent();
 
-    // Record a single website visit per browser tab/session for normal
-    // non-owner, non-excluded visitors.
-    if(!isOwnerMode() && !isAnalyticsExcludedDevice()) recordWebsiteVisit();
+    // Record an anonymous session before the normal Website Visit so
+    // later Qualified Views can contribute to Browsing Depth.
+    if(!isOwnerMode() && !isAnalyticsExcludedDevice()){
+      await recordAnalyticsSession();
+      recordWebsiteVisit();
+    }
 
     const [cardsLoaded]=await Promise.all([
       loadCards(),
