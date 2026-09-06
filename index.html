@@ -19379,8 +19379,25 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   // ---------------- Analytics / view events ----------------
   const VISITOR_ID_KEY = "collect-tcg-visitor-id";
   const ANALYTICS_EXCLUDED_DEVICE_KEY="collect_tcg_analytics_excluded_device_v1";
+  const ANALYTICS_EXCLUDED_DEVICE_COOKIE="collect_tcg_analytics_excluded_v1";
+  const ANALYTICS_EXCLUSION_COOKIE_MAX_AGE=60*60*24*365*10;
 
-  function isAnalyticsExcludedDevice(){
+  function analyticsExclusionCookieValue(){
+    try{
+      const prefix=`${ANALYTICS_EXCLUDED_DEVICE_COOKIE}=`;
+      const parts=String(document.cookie||"").split(";");
+
+      for(const part of parts){
+        const item=part.trim();
+        if(item.startsWith(prefix)){
+          return decodeURIComponent(item.slice(prefix.length));
+        }
+      }
+    }catch{}
+    return "";
+  }
+
+  function hasAnalyticsExclusionLocalStorage(){
     try{
       return localStorage.getItem(ANALYTICS_EXCLUDED_DEVICE_KEY)==="1";
     }catch{
@@ -19388,14 +19405,45 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
   }
 
+  function hasAnalyticsExclusionCookie(){
+    return analyticsExclusionCookieValue()==="1";
+  }
+
+  function isAnalyticsExcludedDevice(){
+    // Either persistent mechanism is enough. This makes the exclusion much
+    // more resilient to browser/PWA storage-context quirks and normal restarts.
+    return hasAnalyticsExclusionLocalStorage() || hasAnalyticsExclusionCookie();
+  }
+
   function setAnalyticsExcludedDevice(excluded){
+    let localSaved=false;
+    let cookieSaved=false;
+
     try{
-      if(excluded) localStorage.setItem(ANALYTICS_EXCLUDED_DEVICE_KEY,"1");
-      else localStorage.removeItem(ANALYTICS_EXCLUDED_DEVICE_KEY);
-      return true;
-    }catch{
-      return false;
-    }
+      if(excluded){
+        localStorage.setItem(ANALYTICS_EXCLUDED_DEVICE_KEY,"1");
+        localSaved=localStorage.getItem(ANALYTICS_EXCLUDED_DEVICE_KEY)==="1";
+      }else{
+        localStorage.removeItem(ANALYTICS_EXCLUDED_DEVICE_KEY);
+        localSaved=localStorage.getItem(ANALYTICS_EXCLUDED_DEVICE_KEY)!=="1";
+      }
+    }catch{}
+
+    try{
+      if(excluded){
+        document.cookie=
+          `${ANALYTICS_EXCLUDED_DEVICE_COOKIE}=1; Max-Age=${ANALYTICS_EXCLUSION_COOKIE_MAX_AGE}; Path=/; SameSite=Lax; Secure`;
+        cookieSaved=analyticsExclusionCookieValue()==="1";
+      }else{
+        document.cookie=
+          `${ANALYTICS_EXCLUDED_DEVICE_COOKIE}=; Max-Age=0; Path=/; SameSite=Lax; Secure`;
+        cookieSaved=analyticsExclusionCookieValue()!=="1";
+      }
+    }catch{}
+
+    return excluded
+      ? (localSaved || cookieSaved)
+      : (localSaved && cookieSaved);
   }
 
   function analyticsExclusionTokenFromUrl(){
@@ -19500,7 +19548,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     if(ok){
       try{ sessionStorage.removeItem(WEBSITE_VISIT_SESSION_KEY); }catch{}
-      return true;
+      return isAnalyticsExcludedDevice();
     }
 
     return isAnalyticsExcludedDevice();
@@ -19997,6 +20045,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         console.warn("Website visit tracking unavailable:",error);
         return false;
       }
+
+      if(isAnalyticsExcludedDevice()) return false;
 
       // Country tracking is deliberately separate from the normal visit counter.
       // If geolocation fails, Website Visits still works normally.
@@ -23938,7 +23988,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         <div class="analytics-pairing-status ${excluded?"is-excluded":""}" id="analyticsPairingStatus">
           <strong>${excluded?"Excluded from Insights":"Currently included in Insights"}</strong>
           <span>${excluded
-            ?"This browser/PWA will not record Website Visits, Qualified Views, Country, Device or engagement analytics."
+            ? `This browser/PWA will not record Website Visits, Qualified Views, Country, Device or engagement analytics. Persistent storage: ${hasAnalyticsExclusionLocalStorage()?"Local ✓":"Local —"} · ${hasAnalyticsExclusionCookie()?"Cookie ✓":"Cookie —"}`
             :"Scan the Owner Mode QR code, or enter the 24-hour pairing code manually below."}</span>
         </div>
 
@@ -40690,8 +40740,9 @@ function wireShimmer(container){
     // depend on owner-only tables or owner RPCs.
     await refreshOwnerSession();
 
-    // Consume a one-time personal-device exclusion link before any analytics
-    // event can be recorded. This grants no Owner Mode permissions.
+    // Restore/check persistent personal-device exclusion before any analytics
+    // event can be recorded, then consume any supplied exclusion link/QR.
+    // This grants no Owner Mode permissions.
     await consumeAnalyticsExclusionLinkIfPresent();
     await consumeAnalyticsExclusionQrIfPresent();
 
