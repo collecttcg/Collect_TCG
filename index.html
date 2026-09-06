@@ -25455,7 +25455,16 @@ function wireShimmer(container){
           openCloneOptions(card);
         }else if(action==="fb-post"){
           if(!requireOwner("generate Facebook post")) return;
-          location.hash=`#/fb-tools?mode=single&card=${encodeURIComponent(card.id)}`;
+
+          // Card Overview only: keep the current listing open and launch the
+          // Single Card Post Generator in a separate browser tab/window.
+          const postUrl=
+            `${location.origin}${location.pathname}`+
+            `#/fb-tools?mode=single&card=${encodeURIComponent(card.id)}`;
+          const opened=window.open(postUrl,"_blank","noopener");
+          if(!opened){
+            showToast("Allow pop-ups to open the Post Generator in a new tab");
+          }
         }else if(action==="availability"){
           if(!requireOwner("change card availability")) return;
           const status=String(btn.dataset.status||"");
