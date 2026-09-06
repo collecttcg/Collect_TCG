@@ -16502,6 +16502,59 @@ body.showcase-dragging-body{
   }
 }
 
+
+/* Insights — grade / condition identifier for same-name cards */
+.insights-card-name strong{
+  display:block;
+}
+.insights-card-grade-condition{
+  display:block;
+  width:max-content;
+  max-width:100%;
+  margin-top:4px;
+  padding:2px 6px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:var(--surface-2);
+  color:var(--text-muted);
+  font-size:8px;
+  font-weight:800;
+  line-height:1.25;
+  white-space:normal;
+}
+
+
+/* Insights — clickable Top Card Performance card names */
+.insights-card-link{
+  appearance:none;
+  display:block;
+  width:100%;
+  margin:0;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:inherit;
+  text-align:left;
+  font:inherit;
+  cursor:pointer;
+}
+.insights-card-link strong{
+  transition:color .15s ease,text-decoration-color .15s ease;
+  text-decoration:underline;
+  text-decoration-color:transparent;
+  text-underline-offset:2px;
+}
+.insights-card-link:hover strong,
+.insights-card-link:focus-visible strong{
+  color:var(--accent-teal);
+  text-decoration-color:currentColor;
+}
+.insights-card-link:focus-visible{
+  outline:2px solid rgba(78,210,199,.45);
+  outline-offset:3px;
+  border-radius:6px;
+}
+
 </style>
 </head>
 <body>
@@ -27995,7 +28048,41 @@ function wireShimmer(container){
               <thead><tr><th>#</th><th>Card</th><th>Status</th><th>Unique</th><th>Fav</th><th>Contact</th><th>Score</th><th>Trend</th></tr></thead>
               <tbody>${rows.slice().sort((a,b)=>b._interestScore-a._interestScore).slice(0,15).map((row,i)=>`
                 <tr>
-                  <td>${i+1}</td><td class="insights-card-name">${escapeHtml(row.name||row._card?.name||"")}</td>
+                  <td>${i+1}</td>
+                  <td class="insights-card-name">
+                    <button type="button"
+                            class="insights-card-link"
+                            data-insights-open-card="${escapeHtml(row._card?.id||row.card_id||"")}"
+                            aria-label="${escapeHtml(`Open details for ${row.name||row._card?.name||"card"}`)}">
+                      <strong>${escapeHtml(row.name||row._card?.name||"")}</strong>
+                    ${(()=>{
+                      const card=row._card||{};
+                      const details=[];
+                      const format=normalizeFilterValue(card.format);
+                      const condition=String(card.condition||"").trim();
+                      const grades=getCardGradeEntries(card);
+
+                      if(format==="sealed"){
+                        details.push("Sealed");
+                      }else if(grades.length){
+                        const labels=[...new Set(grades.map(entry=>{
+                          const company=String(entry?.company||"").trim().toUpperCase();
+                          const grade=String(entry?.grade||"").trim();
+                          return [company,grade].filter(Boolean).join(" ");
+                        }).filter(Boolean))];
+                        if(labels.length) details.push(labels.join(" · "));
+                      }else if(condition){
+                        details.push(condition);
+                      }else if(format){
+                        details.push(format.charAt(0).toUpperCase()+format.slice(1));
+                      }
+
+                      return details.length
+                        ? `<small class="insights-card-grade-condition">${escapeHtml(details.join(" · "))}</small>`
+                        : "";
+                    })()}
+                    </button>
+                  </td>
                   <td><span class="insights-status-tag">${escapeHtml(row._status)}</span></td>
                   <td>${Number(row.unique_views||0)}</td><td>${Number(row.favorite_adds||0)}</td>
                   <td>${row._contactActions}</td><td><strong class="insights-v3-score">${row._interestScore}</strong></td>
@@ -28128,6 +28215,15 @@ function wireShimmer(container){
             : "No qualified views recorded since the analytics reset";
         }
       }
+
+      $("insightsOverview")?.querySelectorAll("[data-insights-open-card]").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          const cardId=String(btn.dataset.insightsOpenCard||"").trim();
+          if(!cardId) return;
+          const card=getCardById(cardId);
+          if(card) openCardRoute(card.id);
+        });
+      });
     }
 
     function renderRecommendations(){
