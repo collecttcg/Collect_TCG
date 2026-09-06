@@ -17081,6 +17081,21 @@ body.showcase-dragging-body{
   }
 }
 
+
+/* Insights — Search & Demand */
+.insights-search-demand-card{margin-top:12px}
+.insights-search-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:14px}
+.insights-search-summary article{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2)}
+.insights-search-summary span{display:block;color:var(--text-muted);font-size:8px}
+.insights-search-summary strong{display:block;margin-top:3px;color:var(--text);font-size:17px}
+.insights-search-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.insights-search-table{display:flex;flex-direction:column;gap:5px}
+.insights-search-row{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 8px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2)}
+.insights-search-row>span{color:var(--text-muted);font-size:8px;font-weight:900;text-align:center}
+.insights-search-row>strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-size:9px}
+.insights-search-row>small{color:var(--text-muted);font-size:7.5px;text-align:right}
+@media(max-width:700px){.insights-search-grid{grid-template-columns:1fr}.insights-search-summary{grid-template-columns:1fr}.insights-search-row{grid-template-columns:20px minmax(0,1fr)}.insights-search-row>small{grid-column:2;text-align:left}}
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -20079,6 +20094,43 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   const WEBSITE_VISIT_SESSION_KEY="collect_tcg_website_visit_recorded_fresh_v1";
 
+  let inventorySearchAnalyticsTimer=null;
+  let lastRecordedInventorySearch="";
+
+  function normalizedInventorySearchTerm(value){
+    return String(value||"").trim().replace(/\s+/g," ").slice(0,100);
+  }
+
+  function scheduleInventorySearchAnalytics(){
+    clearTimeout(inventorySearchAnalyticsTimer);
+    inventorySearchAnalyticsTimer=setTimeout(async()=>{
+      if(isOwnerMode() || isAnalyticsExcludedDevice()) return;
+
+      const term=normalizedInventorySearchTerm($("search")?.value);
+      if(term.length<2) return;
+
+      const key=term.toLowerCase();
+      if(key===lastRecordedInventorySearch) return;
+
+      // getFiltered() reflects the same filters/results currently visible.
+      const resultCount=typeof getFiltered==="function" ? getFiltered().length : 0;
+      const visitorId=getVisitorId();
+      if(!visitorId) return;
+
+      try{
+        const {error}=await supabaseClient.rpc("record_inventory_search",{
+          p_visitor_id:visitorId,
+          p_search_term:term,
+          p_result_count:resultCount
+        });
+        if(!error) lastRecordedInventorySearch=key;
+        else console.warn("Search analytics unavailable:",error);
+      }catch(error){
+        console.warn("Search analytics unavailable:",error);
+      }
+    },900);
+  }
+
   function currentVisitorTrafficSource(){
     const ref=String(document.referrer||"").trim().toLowerCase();
 
@@ -20342,6 +20394,19 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       };
     }catch(error){
       console.warn("Visitor traffic-source insights unavailable:",error);
+      return {supported:false,rows:[]};
+    }
+  }
+
+  async function fetchInventorySearchInsights(start,end){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_inventory_search_insights",{
+        p_start:start.toISOString(),p_end:end.toISOString()
+      });
+      if(error) return {supported:false,rows:[]};
+      return {supported:true,rows:Array.isArray(data)?data:[]};
+    }catch(error){
+      console.warn("Search insights unavailable:",error);
       return {supported:false,rows:[]};
     }
   }
@@ -26450,6 +26515,7 @@ function wireShimmer(container){
     $("search").addEventListener("input",()=>{
       renderSearchSuggestions();
       syncMobileSearchFromMain();
+      scheduleInventorySearchAnalytics();
     });
     $("search").addEventListener("keydown",e=>{
       if(e.key==="Enter"){
@@ -28898,6 +28964,7 @@ function wireShimmer(container){
       visitorHours:[],visitorWeekdays:[],visitorAccessTimeSupported:false,
       visitorDevices:[],visitorDeviceSupported:false,
       visitorSources:[],visitorSourceSupported:false,
+      searchInsights:[],searchInsightsSupported:false,
       engagementSupported:false,saleSnapshotsSupported:false,saleSnapshots:[],
       editHistoryRows:[],editHistoryLoaded:false
     };
@@ -29131,6 +29198,38 @@ function wireShimmer(container){
       </div>`;
     }
 
+    function renderSearchDemandInsights(rows){
+      const safe=Array.isArray(rows)?rows:[];
+      if(!safe.length) return `<div class="hint">No inventory searches for this period yet.</div>`;
+
+      const top=safe.slice().sort((a,b)=>Number(b.searches||0)-Number(a.searches||0)).slice(0,10);
+      const zero=safe.filter(r=>Number(r.zero_result_searches||0)>0)
+        .sort((a,b)=>Number(b.zero_result_searches||0)-Number(a.zero_result_searches||0)).slice(0,10);
+      const total=safe.reduce((n,r)=>n+Number(r.searches||0),0);
+      const uniqueTerms=safe.length;
+      const zeroTotal=safe.reduce((n,r)=>n+Number(r.zero_result_searches||0),0);
+
+      const table=(list,zeroMode=false)=>`<div class="insights-search-table">
+        ${list.map((r,i)=>`<div class="insights-search-row">
+          <span>${i+1}</span>
+          <strong>${escapeHtml(r.search_term||"")}</strong>
+          <small>${zeroMode
+            ? `${Number(r.zero_result_searches||0).toLocaleString()} zero-result`
+            : `${Number(r.searches||0).toLocaleString()} searches · ${Number(r.unique_searchers||0).toLocaleString()} visitors`}</small>
+        </div>`).join("") || `<div class="hint">${zeroMode?"No zero-result searches.":"No searches yet."}</div>`}
+      </div>`;
+
+      return `<div class="insights-search-summary">
+          <article><span>Searches</span><strong>${total.toLocaleString()}</strong></article>
+          <article><span>Unique terms</span><strong>${uniqueTerms.toLocaleString()}</strong></article>
+          <article><span>Zero-result searches</span><strong>${zeroTotal.toLocaleString()}</strong></article>
+        </div>
+        <div class="insights-search-grid">
+          <div><div class="insights-access-subhead"><strong>Top Searches</strong><span>What visitors look for</span></div>${table(top)}</div>
+          <div><div class="insights-access-subhead"><strong>Unmet Demand</strong><span>Searches returning no cards</span></div>${table(zero,true)}</div>
+        </div>`;
+    }
+
     function renderOverview(){
       const rows=state.visible;
       const websiteVisits=state.websiteSeries.reduce((s,r)=>s+Number(r.visits||0),0);
@@ -29279,6 +29378,15 @@ function wireShimmer(container){
               ? `<div class="hint">Traffic-source analytics is not installed yet. Run <code>insights-traffic-sources-migration.sql</code> in Supabase.</div>`
               : renderVisitorTrafficSources(state.visitorSources)
           }
+        </section>
+
+        <section class="insights-v4-card insights-search-demand-card">
+          <div class="insights-v4-card-head table-head">
+            <div><h3>Search & Demand</h3><span>What visitors search for in your inventory, including searches that return no cards.</span></div>
+          </div>
+          ${!state.searchInsightsSupported
+            ? `<div class="hint">Search analytics is not installed yet. Run <code>insights-search-demand-migration.sql</code> in Supabase.</div>`
+            : renderSearchDemandInsights(state.searchInsights)}
         </section>
 
         <div class="insights-v4-intro">
@@ -29915,7 +30023,7 @@ function wireShimmer(container){
       const selectedStatus=statusSel.value;
       const selectedGame=gameSel.value;
 
-      const [views,series,siteSeries,countryResult,accessTimeResult,deviceResult,sourceResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
+      const [views,series,siteSeries,countryResult,accessTimeResult,deviceResult,sourceResult,searchResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
         fetchInsights(startDate,endDate),
         fetchViewSeries(startDate,endDate),
         fetchWebsiteVisitSeries(startDate,endDate),
@@ -29923,6 +30031,7 @@ function wireShimmer(container){
         fetchWebsiteVisitAccessTime(startDate,endDate),
         fetchWebsiteVisitDevices(startDate,endDate),
         fetchWebsiteVisitSources(startDate,endDate),
+        fetchInventorySearchInsights(startDate,endDate),
         previousRange?fetchInsights(previousRange.start,previousRange.end,{silent:true}):Promise.resolve([]),
         fetchCardEngagementInsights(startDate,endDate),
         fetchSaleConversionSnapshots(),
@@ -29999,6 +30108,8 @@ function wireShimmer(container){
           ? sourceResult.rows
           : [],
         visitorSourceSupported:sourceResult.supported,
+        searchInsights:searchResult.supported && Array.isArray(searchResult.rows) ? searchResult.rows : [],
+        searchInsightsSupported:searchResult.supported,
         engagementSupported:engagement.supported,
         saleSnapshotsSupported:saleSnapshots.supported,
         saleSnapshots:saleSnapshots.rows
