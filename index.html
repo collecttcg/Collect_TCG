@@ -16591,6 +16591,151 @@ body.showcase-dragging-body{
   }
 }
 
+
+/* Insights — Visitor Access Time */
+.insights-access-time-card{
+  margin-top:12px;
+}
+.insights-access-summary{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+  margin-bottom:12px;
+}
+.insights-access-summary article{
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--surface-2);
+}
+.insights-access-summary span,
+.insights-access-summary small{
+  display:block;
+  color:var(--text-muted);
+  font-size:8.5px;
+}
+.insights-access-summary strong{
+  display:block;
+  margin:3px 0;
+  color:var(--text);
+  font-size:17px;
+}
+.insights-access-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.7fr) minmax(220px,.8fr);
+  gap:16px;
+}
+.insights-access-subhead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:8px;
+}
+.insights-access-subhead strong{
+  color:var(--text);
+  font-size:10px;
+}
+.insights-access-subhead span{
+  color:var(--text-muted);
+  font-size:8px;
+}
+.insights-hour-grid{
+  display:grid;
+  grid-template-columns:repeat(24,minmax(0,1fr));
+  gap:3px;
+  height:145px;
+  align-items:end;
+}
+.insights-hour-cell{
+  display:grid;
+  grid-template-rows:minmax(0,1fr) 14px;
+  gap:4px;
+  min-width:0;
+  height:100%;
+}
+.insights-hour-bar{
+  position:relative;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  min-height:0;
+  border-bottom:1px solid var(--border);
+}
+.insights-hour-bar i{
+  display:block;
+  width:min(76%,14px);
+  min-height:0;
+  border-radius:4px 4px 1px 1px;
+  background:var(--accent-teal);
+  opacity:.86;
+}
+.insights-hour-bar b{
+  position:absolute;
+  top:2px;
+  left:50%;
+  transform:translateX(-50%);
+  color:var(--text-muted);
+  font-size:7px;
+  font-weight:800;
+}
+.insights-hour-cell span{
+  color:var(--text-muted);
+  font-size:6.5px;
+  text-align:center;
+  white-space:nowrap;
+}
+.insights-weekday-list{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+.insights-weekday-row{
+  display:grid;
+  grid-template-columns:30px minmax(0,1fr) 34px;
+  gap:8px;
+  align-items:center;
+}
+.insights-weekday-row > span{
+  color:var(--text-muted);
+  font-size:8px;
+  font-weight:800;
+}
+.insights-weekday-row > i{
+  display:block;
+  height:8px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:var(--surface-2);
+}
+.insights-weekday-row > i b{
+  display:block;
+  height:100%;
+  border-radius:inherit;
+  background:var(--accent-gold);
+}
+.insights-weekday-row > strong{
+  color:var(--text);
+  font-size:9px;
+  text-align:right;
+}
+@media(max-width:800px){
+  .insights-access-grid{
+    grid-template-columns:1fr;
+  }
+}
+@media(max-width:600px){
+  .insights-access-summary{
+    grid-template-columns:1fr;
+  }
+  .insights-hour-grid{
+    overflow-x:auto;
+    grid-template-columns:repeat(24,minmax(22px,1fr));
+    padding-bottom:4px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -19440,6 +19585,44 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }catch(error){
       console.warn("Visitor country insights unavailable:",error);
       return {supported:false,rows:[]};
+    }
+  }
+
+
+  async function fetchWebsiteVisitAccessTime(start,end){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_site_visit_access_time_my_sg",{
+        p_start:start.toISOString(),
+        p_end:end.toISOString()
+      });
+
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        const unavailable=
+          message.includes("get_site_visit_access_time_my_sg") ||
+          message.includes("function") ||
+          message.includes("schema cache");
+
+        if(!unavailable){
+          console.warn("Visitor access-time insights unavailable:",error);
+        }
+
+        return {supported:false,hours:[],weekdays:[]};
+      }
+
+      const rows=Array.isArray(data)?data:[];
+      return {
+        supported:true,
+        hours:rows
+          .filter(row=>row.bucket_type==="hour")
+          .sort((a,b)=>Number(a.bucket_no)-Number(b.bucket_no)),
+        weekdays:rows
+          .filter(row=>row.bucket_type==="weekday")
+          .sort((a,b)=>Number(a.bucket_no)-Number(b.bucket_no))
+      };
+    }catch(error){
+      console.warn("Visitor access-time insights unavailable:",error);
+      return {supported:false,hours:[],weekdays:[]};
     }
   }
 
@@ -27894,6 +28077,7 @@ function wireShimmer(container){
     let state={
       start:null,end:null,rows:[],visible:[],series:[],websiteSeries:[],
       visitorCountries:[],visitorCountrySupported:false,
+      visitorHours:[],visitorWeekdays:[],visitorAccessTimeSupported:false,
       engagementSupported:false,saleSnapshotsSupported:false,saleSnapshots:[],
       editHistoryRows:[],editHistoryLoaded:false
     };
@@ -28000,6 +28184,58 @@ function wireShimmer(container){
       if(games.includes(selected)) gameSel.value=selected;
     }
 
+    function busiestVisitorHour(rows){
+      const ranked=(Array.isArray(rows)?rows:[])
+        .slice()
+        .sort((a,b)=>Number(b.visits||0)-Number(a.visits||0));
+      return ranked[0]||null;
+    }
+
+    function busiestVisitorWeekday(rows){
+      const ranked=(Array.isArray(rows)?rows:[])
+        .slice()
+        .sort((a,b)=>Number(b.visits||0)-Number(a.visits||0));
+      return ranked[0]||null;
+    }
+
+    function renderVisitorHourBars(rows){
+      const safe=Array.isArray(rows)?rows:[];
+      if(!safe.length) return `<div class="hint">No hourly visit data for this period yet.</div>`;
+
+      const max=Math.max(1,...safe.map(row=>Number(row.visits||0)));
+      return `<div class="insights-hour-grid">
+        ${safe.map(row=>{
+          const visits=Math.max(0,Number(row.visits||0));
+          const height=visits?Math.max(4,visits/max*100):0;
+          const hour=Number(row.bucket_no||0);
+          const compactLabel=hour%3===0 ? String(row.bucket_label||"") : "";
+          return `<div class="insights-hour-cell" title="${escapeHtml(`${row.bucket_label||""} · ${visits} visit${visits===1?"":"s"}`)}">
+            <div class="insights-hour-bar"><i style="height:${height}%"></i><b>${visits||""}</b></div>
+            <span>${escapeHtml(compactLabel)}</span>
+          </div>`;
+        }).join("")}
+      </div>`;
+    }
+
+    function renderVisitorWeekdayBars(rows){
+      const safe=Array.isArray(rows)?rows:[];
+      if(!safe.length) return `<div class="hint">No weekday visit data for this period yet.</div>`;
+
+      const max=Math.max(1,...safe.map(row=>Number(row.visits||0)));
+      return `<div class="insights-weekday-list">
+        ${safe.map(row=>{
+          const visits=Math.max(0,Number(row.visits||0));
+          const width=visits?Math.max(3,visits/max*100):0;
+          const short=String(row.bucket_label||"").slice(0,3);
+          return `<div class="insights-weekday-row">
+            <span>${escapeHtml(short)}</span>
+            <i><b style="width:${width}%"></b></i>
+            <strong>${visits.toLocaleString()}</strong>
+          </div>`;
+        }).join("")}
+      </div>`;
+    }
+
     function renderOverview(){
       const rows=state.visible;
       const websiteVisits=state.websiteSeries.reduce((s,r)=>s+Number(r.visits||0),0);
@@ -28075,6 +28311,48 @@ function wireShimmer(container){
                     })()}
                   </div>`
                 : `<div class="hint">No visitor-country data for this period yet.</div>`
+          }
+        </section>
+
+        <section class="insights-v4-card insights-access-time-card">
+          <div class="insights-v4-card-head table-head">
+            <div>
+              <h3>Visitor Access Time</h3>
+              <span>Website visits by local Malaysia/Singapore time (GMT+8).</span>
+            </div>
+          </div>
+
+          ${
+            !state.visitorAccessTimeSupported
+              ? `<div class="hint">Access-time analytics is not installed yet. Run <code>insights-access-time-migration.sql</code> in Supabase.</div>`
+              : (state.visitorHours.some(row=>Number(row.visits||0)>0) || state.visitorWeekdays.some(row=>Number(row.visits||0)>0))
+                ? `${(()=>{
+                    const peakHour=busiestVisitorHour(state.visitorHours);
+                    const peakDay=busiestVisitorWeekday(state.visitorWeekdays);
+                    return `<div class="insights-access-summary">
+                      <article>
+                        <span>Busiest hour</span>
+                        <strong>${escapeHtml(peakHour?.bucket_label||"—")}</strong>
+                        <small>${Number(peakHour?.visits||0).toLocaleString()} visits</small>
+                      </article>
+                      <article>
+                        <span>Busiest day</span>
+                        <strong>${escapeHtml(peakDay?.bucket_label||"—")}</strong>
+                        <small>${Number(peakDay?.visits||0).toLocaleString()} visits</small>
+                      </article>
+                    </div>
+                    <div class="insights-access-grid">
+                      <div>
+                        <div class="insights-access-subhead"><strong>By hour</strong><span>00:00–23:00</span></div>
+                        ${renderVisitorHourBars(state.visitorHours)}
+                      </div>
+                      <div>
+                        <div class="insights-access-subhead"><strong>By day</strong><span>Sunday–Saturday</span></div>
+                        ${renderVisitorWeekdayBars(state.visitorWeekdays)}
+                      </div>
+                    </div>`;
+                  })()}`
+                : `<div class="hint">No website visits for this period yet.</div>`
           }
         </section>
 
@@ -28616,11 +28894,12 @@ function wireShimmer(container){
       const selectedStatus=statusSel.value;
       const selectedGame=gameSel.value;
 
-      const [views,series,siteSeries,countryResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
+      const [views,series,siteSeries,countryResult,accessTimeResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
         fetchInsights(startDate,endDate),
         fetchViewSeries(startDate,endDate),
         fetchWebsiteVisitSeries(startDate,endDate),
         fetchWebsiteVisitCountries(startDate,endDate),
+        fetchWebsiteVisitAccessTime(startDate,endDate),
         previousRange?fetchInsights(previousRange.start,previousRange.end,{silent:true}):Promise.resolve([]),
         fetchCardEngagementInsights(startDate,endDate),
         fetchSaleConversionSnapshots(),
@@ -28682,6 +28961,13 @@ function wireShimmer(container){
           ? countryResult.rows
           : [],
         visitorCountrySupported:countryResult.supported,
+        visitorHours:accessTimeResult.supported && Array.isArray(accessTimeResult.hours)
+          ? accessTimeResult.hours
+          : [],
+        visitorWeekdays:accessTimeResult.supported && Array.isArray(accessTimeResult.weekdays)
+          ? accessTimeResult.weekdays
+          : [],
+        visitorAccessTimeSupported:accessTimeResult.supported,
         engagementSupported:engagement.supported,
         saleSnapshotsSupported:saleSnapshots.supported,
         saleSnapshots:saleSnapshots.rows
