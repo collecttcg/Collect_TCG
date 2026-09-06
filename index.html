@@ -25608,93 +25608,15 @@ function wireShimmer(container){
         }else if(action==="fb-post"){
           if(!requireOwner("generate Facebook post")) return;
 
-          // Card Overview only: keep the current listing open and launch the
-          // Single Card Post Generator in a separate browser tab/window.
-          const handoffNonce=ownerPostHandoffNonce();
-          const channelName=`collect-tcg-owner-post-${handoffNonce}`;
-          const postUrl=
-            `${location.origin}${location.pathname}`+
-            `#/fb-tools?mode=single&card=${encodeURIComponent(card.id)}`+
-            `&handoff=${encodeURIComponent(handoffNonce)}`;
+          // Stay in the same tab. Save the exact current listing URL + scroll
+          // position first, then navigate to the Single Card Post Generator.
+          // Browser Back will return to this exact listing state and restore
+          // the previous scroll position.
+          const returnHash=location.hash||"#/inventory";
+          rememberReturnScroll(returnHash);
 
-          const activeSession=ownerSession;
-          if(!activeSession?.access_token || !activeSession?.refresh_token){
-            showToast("Owner session unavailable. Please log in again.");
-            return;
-          }
-
-          let opened=null;
-          let channel=null;
-          let closed=false;
-
-          const closeHandoff=()=>{
-            if(closed) return;
-            closed=true;
-            window.removeEventListener("message",onWindowMessage);
-            try{ channel?.close(); }catch{}
-          };
-
-          const sendSession=target=>{
-            const payload={
-              type:OWNER_POST_HANDOFF_MESSAGE,
-              nonce:handoffNonce,
-              action:"session",
-              access_token:activeSession.access_token,
-              refresh_token:activeSession.refresh_token
-            };
-
-            try{
-              if(target==="channel") channel?.postMessage(payload);
-              else target?.postMessage(payload,location.origin);
-            }catch(error){
-              console.warn("Could not hand off Owner session to Post Generator:",error);
-            }
-          };
-
-          const handlePayload=(payload,source=null)=>{
-            if(!payload || payload.type!==OWNER_POST_HANDOFF_MESSAGE) return;
-            if(payload.nonce!==handoffNonce) return;
-
-            if(payload.action==="request"){
-              sendSession(source || "channel");
-              return;
-            }
-
-            if(payload.action==="ack"){
-              closeHandoff();
-            }
-          };
-
-          const onWindowMessage=event=>{
-            if(event.origin!==location.origin) return;
-            if(opened && event.source!==opened) return;
-            handlePayload(event.data,event.source);
-          };
-
-          window.addEventListener("message",onWindowMessage);
-
-          if("BroadcastChannel" in window){
-            try{
-              channel=new BroadcastChannel(channelName);
-              channel.addEventListener("message",event=>{
-                handlePayload(event.data,null);
-              });
-            }catch(error){
-              console.warn("BroadcastChannel Post Generator handoff unavailable:",error);
-            }
-          }
-
-          // Open only after the cross-tab responder is listening.
-          opened=window.open(postUrl,"_blank");
-
-          if(!opened){
-            closeHandoff();
-            showToast("Allow pop-ups to open the Post Generator in a new tab");
-            return;
-          }
-
-          // Keep the handoff channel alive only briefly.
-          setTimeout(closeHandoff,8000);
+          location.hash=
+            `#/fb-tools?mode=single&card=${encodeURIComponent(card.id)}`;
         }else if(action==="availability"){
           if(!requireOwner("change card availability")) return;
           const status=String(btn.dataset.status||"");
