@@ -16851,7 +16851,168 @@ body.showcase-dragging-body{
   }
 }
 
+
+/* Analytics exclusion pairing */
+.analytics-pairing-panel{
+  max-width:720px;
+}
+.analytics-pairing-status{
+  padding:12px 13px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--surface-2);
+}
+.analytics-pairing-status.is-excluded{
+  border-color:rgba(78,210,199,.42);
+  background:rgba(78,210,199,.07);
+}
+.analytics-pairing-status strong,
+.analytics-pairing-status span{
+  display:block;
+}
+.analytics-pairing-status strong{
+  color:var(--text);
+  font-size:12px;
+}
+.analytics-pairing-status span{
+  margin-top:4px;
+  color:var(--text-muted);
+  font-size:9px;
+  line-height:1.5;
+}
+.analytics-pairing-form{
+  margin-top:14px;
+}
+.analytics-pairing-form input{
+  text-transform:uppercase;
+  letter-spacing:.16em;
+  font-weight:900;
+}
+.analytics-pairing-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+.analytics-pairing-code-output{
+  display:grid;
+  grid-template-columns:auto minmax(140px,1fr) auto;
+  gap:8px 12px;
+  align-items:center;
+  margin-top:12px;
+  padding:12px;
+  border:1px solid rgba(227,179,65,.34);
+  border-radius:10px;
+  background:rgba(227,179,65,.055);
+}
+.analytics-pairing-code-output[hidden]{
+  display:none !important;
+}
+.analytics-pairing-code-output > span{
+  color:var(--text-muted);
+  font-size:8px;
+  font-weight:900;
+}
+.analytics-pairing-code-output > strong{
+  color:var(--accent-gold);
+  font-family:monospace;
+  font-size:22px;
+  letter-spacing:.12em;
+}
+.analytics-pairing-code-output > small{
+  grid-column:2;
+  color:var(--text-muted);
+  font-size:8px;
+}
+.analytics-pairing-code-output > button{
+  grid-column:3;
+  grid-row:1 / span 2;
+}
+@media(max-width:600px){
+  .analytics-pairing-code-output{
+    grid-template-columns:1fr;
+  }
+  .analytics-pairing-code-output > small,
+  .analytics-pairing-code-output > button{
+    grid-column:1;
+    grid-row:auto;
+  }
+}
+
+
+/* Analytics exclusion QR */
+.analytics-pairing-code-output.analytics-pairing-qr-output{
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:center;
+  gap:16px;
+}
+.analytics-qr-wrap{
+  padding:10px;
+  border:1px solid rgba(227,179,65,.34);
+  border-radius:12px;
+  background:#fff;
+}
+.analytics-qr-canvas{
+  width:220px;
+  min-height:220px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.analytics-qr-canvas img,
+.analytics-qr-canvas canvas{
+  display:block;
+  width:220px !important;
+  height:220px !important;
+  max-width:100%;
+}
+.analytics-qr-copy{
+  min-width:0;
+}
+.analytics-qr-copy > span,
+.analytics-qr-copy > strong,
+.analytics-qr-copy > small{
+  display:block;
+}
+.analytics-qr-copy > span{
+  color:var(--text-muted);
+  font-size:8px;
+  font-weight:900;
+}
+.analytics-qr-copy > strong{
+  margin-top:5px;
+  color:var(--accent-gold);
+  font-family:monospace;
+  font-size:21px;
+  letter-spacing:.11em;
+  overflow-wrap:anywhere;
+}
+.analytics-qr-copy > small{
+  margin-top:7px;
+  color:var(--text-muted);
+  font-size:8.5px;
+  line-height:1.45;
+}
+.analytics-qr-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:10px;
+}
+@media(max-width:700px){
+  .analytics-pairing-code-output.analytics-pairing-qr-output{
+    grid-template-columns:1fr;
+  }
+  .analytics-qr-wrap{
+    width:max-content;
+    max-width:100%;
+    margin:0 auto;
+  }
+}
+
 </style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -19294,6 +19455,100 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return parts.join(".");
   }
 
+  function newAnalyticsExclusionPairingCode(){
+    const alphabet="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const bytes=new Uint8Array(10);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes,b=>alphabet[b%alphabet.length]).join("");
+  }
+
+  function analyticsExclusionPairingUrl(code){
+    const clean=String(code||"").trim().toUpperCase();
+    if(!clean) return "";
+    return `${location.origin}${location.pathname}#/analytics-exclude?code=${encodeURIComponent(clean)}`;
+  }
+
+  function analyticsPairingCodeFromUrl(){
+    try{
+      if(currentRoute()!=="analytics-exclude") return "";
+      return String(currentHashParams().get("code")||"").trim().toUpperCase();
+    }catch{
+      return "";
+    }
+  }
+
+  function removeAnalyticsPairingCodeFromUrl(){
+    try{
+      if(currentRoute()!=="analytics-exclude") return;
+      const params=currentHashParams();
+      params.delete("code");
+      const query=params.toString();
+      history.replaceState(
+        null,
+        "",
+        `${location.pathname}${location.search}#/analytics-exclude${query?`?${query}`:""}`
+      );
+    }catch{}
+  }
+
+  async function consumeAnalyticsExclusionQrIfPresent(){
+    const code=analyticsPairingCodeFromUrl();
+    if(!code) return isAnalyticsExcludedDevice();
+
+    const ok=await consumeAnalyticsExclusionPairingCode(code);
+    removeAnalyticsPairingCodeFromUrl();
+
+    if(ok){
+      try{ sessionStorage.removeItem(WEBSITE_VISIT_SESSION_KEY); }catch{}
+      return true;
+    }
+
+    return isAnalyticsExcludedDevice();
+  }
+
+  async function createAnalyticsExclusionPairingCode(){
+    if(!requireOwner("generate analytics exclusion pairing code")) return "";
+
+    const code=newAnalyticsExclusionPairingCode();
+
+    try{
+      const {data,error}=await supabaseClient.rpc("create_analytics_exclusion_code",{
+        p_code:code
+      });
+
+      if(error || data!==true){
+        console.warn("Could not generate analytics exclusion pairing code:",error);
+        return "";
+      }
+
+      return code;
+    }catch(error){
+      console.warn("Could not generate analytics exclusion pairing code:",error);
+      return "";
+    }
+  }
+
+  async function consumeAnalyticsExclusionPairingCode(code){
+    const clean=String(code||"").trim().toUpperCase();
+    if(!clean) return false;
+
+    try{
+      const {data,error}=await supabaseClient.rpc("consume_analytics_exclusion_code",{
+        p_code:clean
+      });
+
+      if(error || data!==true){
+        if(error) console.warn("Analytics exclusion pairing failed:",error);
+        return false;
+      }
+
+      return setAnalyticsExcludedDevice(true);
+    }catch(error){
+      console.warn("Analytics exclusion pairing failed:",error);
+      return false;
+    }
+  }
+
   async function createAnalyticsExclusionLink(){
     if(!requireOwner("generate analytics exclusion link")) return "";
 
@@ -21067,6 +21322,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         showToast("Card not found");
       }
     }
+    else if(route === "analytics-exclude") renderAnalyticsExclusionPairingPage();
     else if(route === "home") renderHomePage();
     else if(route === "inventory"){
       if(!reusePreservedListingOnReturn) renderInventoryPage("inventory");
@@ -23666,6 +23922,103 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   // ---------------- Home ----------------
+  function renderAnalyticsExclusionPairingPage(){
+    const excluded=isAnalyticsExcludedDevice();
+
+    view.innerHTML=`
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Analytics Privacy</div>
+          <h2>Exclude This Browser From Insights</h2>
+          <p>This does not enable Owner Mode. It only prevents this browser/PWA from contributing analytics.</p>
+        </div>
+      </div>
+
+      <section class="panel analytics-pairing-panel">
+        <div class="analytics-pairing-status ${excluded?"is-excluded":""}" id="analyticsPairingStatus">
+          <strong>${excluded?"Excluded from Insights":"Currently included in Insights"}</strong>
+          <span>${excluded
+            ?"This browser/PWA will not record Website Visits, Qualified Views, Country, Device or engagement analytics."
+            :"Scan the Owner Mode QR code, or enter the 24-hour pairing code manually below."}</span>
+        </div>
+
+        <div class="analytics-pairing-form">
+          <div class="field">
+            <label for="analyticsPairingCode">24-hour pairing code</label>
+            <input id="analyticsPairingCode"
+                   type="text"
+                   maxlength="12"
+                   autocomplete="off"
+                   autocapitalize="characters"
+                   spellcheck="false"
+                   placeholder="Example: 7KQ9M4PX2R">
+          </div>
+
+          <div class="analytics-pairing-actions">
+            <button type="button" class="btn-primary" id="analyticsPairingApplyBtn" ${excluded?"disabled":""}>
+              ${excluded?"Already Excluded":"Exclude This Browser"}
+            </button>
+            ${excluded
+              ? `<button type="button" class="btn-ghost" id="analyticsPairingRemoveBtn">Remove Exclusion</button>`
+              : ""}
+            <a class="btn-ghost" href="#/home">Back to Website</a>
+          </div>
+        </div>
+
+        <div class="analytics-exclusion-note">
+          <strong>Important</strong>
+          <span>If you use both Safari/Chrome and an installed website app/PWA, they can have separate browser storage. Pair each context you personally use once.</span>
+        </div>
+      </section>
+    `;
+
+    const codeInput=$("analyticsPairingCode");
+    const applyBtn=$("analyticsPairingApplyBtn");
+
+    codeInput?.addEventListener("input",()=>{
+      codeInput.value=String(codeInput.value||"")
+        .toUpperCase()
+        .replace(/[^A-Z2-9]/g,"")
+        .slice(0,12);
+    });
+
+    applyBtn?.addEventListener("click",async()=>{
+      const code=String(codeInput?.value||"").trim().toUpperCase();
+      if(!code){
+        showToast("Enter the pairing code");
+        return;
+      }
+
+      const original=applyBtn.textContent;
+      applyBtn.disabled=true;
+      applyBtn.textContent="Pairing…";
+
+      const ok=await consumeAnalyticsExclusionPairingCode(code);
+
+      if(!ok){
+        applyBtn.disabled=false;
+        applyBtn.textContent=original;
+        showToast("Invalid or expired pairing code");
+        return;
+      }
+
+      // Remove any session flag created before exclusion was enabled.
+      // Future sessions remain excluded through localStorage.
+      try{ sessionStorage.removeItem(WEBSITE_VISIT_SESSION_KEY); }catch{}
+
+      showToast("This browser is now excluded from Insights");
+      renderAnalyticsExclusionPairingPage();
+    });
+
+    $("analyticsPairingRemoveBtn")?.addEventListener("click",()=>{
+      if(!confirm("Remove the analytics exclusion from this browser?")) return;
+      setAnalyticsExcludedDevice(false);
+      try{ sessionStorage.removeItem(WEBSITE_VISIT_SESSION_KEY); }catch{}
+      showToast("Analytics exclusion removed");
+      renderAnalyticsExclusionPairingPage();
+    });
+  }
+
   function renderHomePage(){
     const recent = cards
       .filter(c=>cardMatchesListingScope(c, "inventory"))
@@ -29206,36 +29559,49 @@ function wireShimmer(container){
         <section class="insights-v4-card analytics-device-exclusion-card">
           <div class="insights-v4-card-head table-head">
             <div>
-              <h3>Exclude My Mobile Browser</h3>
-              <span>Browse the public mobile site without adding your own activity to Insights.</span>
+              <h3>Exclude My Mobile Browser / App</h3>
+              <span>Pair the exact browser or installed website app you personally use.</span>
             </div>
           </div>
 
           <p class="hint">
-            Generate a one-time private link on this owner-authenticated desktop.
-            Open that link once on your phone. It does <strong>not</strong> enable Owner Mode.
+            Generate a reusable 24-hour QR code on this owner-authenticated desktop and scan it with your phone.
+            The browser or installed web app that actually opens the scanned link will exclude itself automatically.
           </p>
 
           <div class="analytics-exclusion-actions">
-            <button type="button" class="btn-primary" id="generateAnalyticsExclusionLinkBtn">Generate private mobile link</button>
+            <button type="button" class="btn-primary" id="generateAnalyticsExclusionCodeBtn">Generate 24-Hour QR</button>
           </div>
 
-          <div class="analytics-exclusion-link-wrap" id="analyticsExclusionLinkWrap" hidden>
-            <input id="analyticsExclusionLink" type="text" readonly aria-label="Private analytics exclusion link">
-            <button type="button" class="btn-ghost" id="copyAnalyticsExclusionLinkBtn">Copy Link</button>
+          <div class="analytics-pairing-code-output analytics-pairing-qr-output" id="analyticsPairingCodeOutput" hidden>
+            <div class="analytics-qr-wrap">
+              <div class="analytics-qr-canvas" id="analyticsExclusionQr" aria-label="Analytics exclusion QR code"></div>
+            </div>
+            <div class="analytics-qr-copy">
+              <span>24-HOUR REUSABLE CODE</span>
+              <strong id="analyticsGeneratedPairingCode">—</strong>
+              <small>Scan with your phone. The browser/app that opens the link will be excluded from Insights.</small>
+              <div class="analytics-qr-actions">
+                <button type="button" class="btn-ghost" id="copyAnalyticsPairingCodeBtn">Copy Code</button>
+                <button type="button" class="btn-ghost" id="copyAnalyticsExclusionUrlBtn">Copy QR Link</button>
+              </div>
+            </div>
           </div>
 
           <div class="analytics-exclusion-note">
-            <strong>How long does it last?</strong>
-            <span>The generated link expires after 15 minutes and works once. After your phone opens it successfully, that browser stays excluded indefinitely until its site data/local storage is cleared.</span>
+            <strong>How long does the exclusion last?</strong>
+            <span>The same pairing code can be reused across your browsers/PWAs for 24 hours. After a browser/PWA is paired successfully, its exclusion stays indefinitely. Pair it again only if you clear its site data or reinstall/reset that app.</span>
           </div>
         </section>
       `;
 
-      const exclusionGenerateBtn=$("generateAnalyticsExclusionLinkBtn");
-      const exclusionWrap=$("analyticsExclusionLinkWrap");
-      const exclusionInput=$("analyticsExclusionLink");
-      const exclusionCopyBtn=$("copyAnalyticsExclusionLinkBtn");
+      const exclusionGenerateBtn=$("generateAnalyticsExclusionCodeBtn");
+      const exclusionOutput=$("analyticsPairingCodeOutput");
+      const exclusionCode=$("analyticsGeneratedPairingCode");
+      const exclusionQr=$("analyticsExclusionQr");
+      const exclusionCopyBtn=$("copyAnalyticsPairingCodeBtn");
+      const exclusionUrlCopyBtn=$("copyAnalyticsExclusionUrlBtn");
+      let currentExclusionQrUrl="";
 
       exclusionGenerateBtn?.addEventListener("click",async()=>{
         const original=exclusionGenerateBtn.textContent;
@@ -29243,27 +29609,48 @@ function wireShimmer(container){
         exclusionGenerateBtn.textContent="Generating…";
 
         try{
-          const link=await createAnalyticsExclusionLink();
-          if(!link){
-            showToast("Run the analytics device-exclusion migration first");
+          const code=await createAnalyticsExclusionPairingCode();
+          if(!code){
+            showToast("Run the pairing-code migration first");
             return;
           }
 
-          exclusionInput.value=link;
-          exclusionWrap.hidden=false;
-          exclusionInput.focus({preventScroll:true});
-          exclusionInput.select();
-          showToast("Private mobile exclusion link created");
+          currentExclusionQrUrl=analyticsExclusionPairingUrl(code);
+          exclusionCode.textContent=code;
+          exclusionOutput.hidden=false;
+
+          if(exclusionQr){
+            exclusionQr.innerHTML="";
+            if(typeof QRCode==="function"){
+              new QRCode(exclusionQr,{
+                text:currentExclusionQrUrl,
+                width:220,
+                height:220,
+                colorDark:"#111111",
+                colorLight:"#ffffff",
+                correctLevel:QRCode.CorrectLevel.M
+              });
+            }else{
+              exclusionQr.innerHTML=`<div class="hint">QR library could not load. Use Copy QR Link instead.</div>`;
+            }
+          }
+
+          showToast("24-hour exclusion QR created");
         }finally{
           exclusionGenerateBtn.disabled=false;
           exclusionGenerateBtn.textContent=original;
         }
       });
 
-      exclusionCopyBtn?.addEventListener("click",async()=>{
-        const link=String(exclusionInput?.value||"").trim();
-        if(!link) return;
-        copyPlainText(link,"Private mobile link copied");
+      exclusionCopyBtn?.addEventListener("click",()=>{
+        const code=String(exclusionCode?.textContent||"").trim();
+        if(!code || code==="—") return;
+        copyPlainText(code,"Pairing code copied");
+      });
+
+      exclusionUrlCopyBtn?.addEventListener("click",()=>{
+        if(!currentExclusionQrUrl) return;
+        copyPlainText(currentExclusionQrUrl,"QR exclusion link copied");
       });
     }
 
@@ -40306,6 +40693,7 @@ function wireShimmer(container){
     // Consume a one-time personal-device exclusion link before any analytics
     // event can be recorded. This grants no Owner Mode permissions.
     await consumeAnalyticsExclusionLinkIfPresent();
+    await consumeAnalyticsExclusionQrIfPresent();
 
     // Record a single website visit per browser tab/session for normal
     // non-owner, non-excluded visitors.
