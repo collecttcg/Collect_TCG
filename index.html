@@ -25461,8 +25461,17 @@ function wireShimmer(container){
           const postUrl=
             `${location.origin}${location.pathname}`+
             `#/fb-tools?mode=single&card=${encodeURIComponent(card.id)}`;
-          const opened=window.open(postUrl,"_blank","noopener");
-          if(!opened){
+
+          // Do not use the "noopener" feature at creation time here.
+          // A normal same-origin window.open allows the browser to clone the
+          // current tab's sessionStorage into the new tab, which is important
+          // for preserving the authenticated Owner Mode startup context.
+          // Detach opener immediately afterwards so the new tab cannot control
+          // the originating page.
+          const opened=window.open(postUrl,"_blank");
+          if(opened){
+            try{ opened.opener=null; }catch{}
+          }else{
             showToast("Allow pop-ups to open the Post Generator in a new tab");
           }
         }else if(action==="availability"){
