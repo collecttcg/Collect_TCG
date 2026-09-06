@@ -17010,6 +17010,77 @@ body.showcase-dragging-body{
   }
 }
 
+
+/* Insights — Traffic Sources */
+.insights-source-card{
+  margin-top:12px;
+}
+.insights-source-list{
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+}
+.insights-source-row{
+  display:grid;
+  grid-template-columns:24px minmax(110px,150px) minmax(0,1fr) 48px;
+  gap:9px;
+  align-items:center;
+}
+.insights-source-rank{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:22px;
+  height:22px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  color:var(--text-muted);
+  background:var(--surface-2);
+  font-size:8px;
+  font-weight:900;
+}
+.insights-source-copy{
+  min-width:0;
+}
+.insights-source-copy strong,
+.insights-source-copy span{
+  display:block;
+}
+.insights-source-copy strong{
+  color:var(--text);
+  font-size:10px;
+}
+.insights-source-copy span{
+  margin-top:2px;
+  color:var(--text-muted);
+  font-size:8px;
+}
+.insights-source-bar{
+  height:10px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:var(--surface-2);
+}
+.insights-source-bar i{
+  display:block;
+  height:100%;
+  min-width:2px;
+  border-radius:inherit;
+  background:var(--accent-gold);
+}
+.insights-source-pct{
+  color:var(--text);
+  font-size:10px;
+  text-align:right;
+}
+@media(max-width:600px){
+  .insights-source-row{
+    grid-template-columns:22px minmax(90px,110px) minmax(0,1fr) 42px;
+    gap:6px;
+  }
+}
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -20008,6 +20079,25 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   const WEBSITE_VISIT_SESSION_KEY="collect_tcg_website_visit_recorded_fresh_v1";
 
+  function currentVisitorTrafficSource(){
+    const ref=String(document.referrer||"").trim().toLowerCase();
+
+    if(!ref) return "Direct";
+
+    try{
+      const host=new URL(ref).hostname.toLowerCase();
+
+      if(host===location.hostname) return "Direct";
+      if(host.includes("facebook.com") || host.includes("fb.com") || host.includes("l.facebook.com")) return "Facebook";
+      if(host.includes("instagram.com") || host.includes("l.instagram.com")) return "Instagram";
+      if(host.includes("google.")) return "Google";
+      if(host.includes("carousell.")) return "Carousell";
+      return "Other";
+    }catch{
+      return "Other";
+    }
+  }
+
   function currentVisitorDeviceType(){
     const ua=String(navigator.userAgent||"");
     const platform=String(navigator.platform||"");
@@ -20073,6 +20163,20 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         }
       }catch(deviceError){
         console.warn("Visitor device tracking unavailable:",deviceError);
+      }
+
+      // Traffic-source tracking stores only a broad category, never the full referrer URL.
+      if(isAnalyticsExcludedDevice()) return false;
+      try{
+        const {error:sourceError}=await supabaseClient.rpc("record_site_visit_source",{
+          p_visitor_id:visitorId,
+          p_source_type:currentVisitorTrafficSource()
+        });
+        if(sourceError){
+          console.warn("Visitor traffic-source tracking unavailable:",sourceError);
+        }
+      }catch(sourceError){
+        console.warn("Visitor traffic-source tracking unavailable:",sourceError);
       }
 
       sessionStorage.setItem(WEBSITE_VISIT_SESSION_KEY,"1");
@@ -20206,6 +20310,38 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       };
     }catch(error){
       console.warn("Visitor device insights unavailable:",error);
+      return {supported:false,rows:[]};
+    }
+  }
+
+
+  async function fetchWebsiteVisitSources(start,end){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_site_visit_source_totals",{
+        p_start:start.toISOString(),
+        p_end:end.toISOString()
+      });
+
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        const unavailable=
+          message.includes("get_site_visit_source_totals") ||
+          message.includes("function") ||
+          message.includes("schema cache");
+
+        if(!unavailable){
+          console.warn("Visitor traffic-source insights unavailable:",error);
+        }
+
+        return {supported:false,rows:[]};
+      }
+
+      return {
+        supported:true,
+        rows:Array.isArray(data)?data:[]
+      };
+    }catch(error){
+      console.warn("Visitor traffic-source insights unavailable:",error);
       return {supported:false,rows:[]};
     }
   }
@@ -28761,6 +28897,7 @@ function wireShimmer(container){
       visitorCountries:[],visitorCountrySupported:false,
       visitorHours:[],visitorWeekdays:[],visitorAccessTimeSupported:false,
       visitorDevices:[],visitorDeviceSupported:false,
+      visitorSources:[],visitorSourceSupported:false,
       engagementSupported:false,saleSnapshotsSupported:false,saleSnapshots:[],
       editHistoryRows:[],editHistoryLoaded:false
     };
@@ -28956,6 +29093,44 @@ function wireShimmer(container){
       </div>`;
     }
 
+    function renderVisitorTrafficSources(rows){
+      const safe=(Array.isArray(rows)?rows:[])
+        .map(row=>({
+          source_type:String(row.source_type||"Other"),
+          visits:Math.max(0,Number(row.visits||0))
+        }))
+        .filter(row=>row.visits>0);
+
+      if(!safe.length){
+        return `<div class="hint">No traffic-source data for this period yet.</div>`;
+      }
+
+      const preferred=["Facebook","Instagram","Google","Carousell","Direct","Other"];
+      safe.sort((a,b)=>{
+        if(b.visits!==a.visits) return b.visits-a.visits;
+        const ai=preferred.indexOf(a.source_type);
+        const bi=preferred.indexOf(b.source_type);
+        return (ai<0?99:ai)-(bi<0?99:bi);
+      });
+
+      const total=safe.reduce((sum,row)=>sum+row.visits,0)||1;
+
+      return `<div class="insights-source-list">
+        ${safe.map((row,index)=>{
+          const pct=row.visits/total*100;
+          return `<div class="insights-source-row">
+            <span class="insights-source-rank">${index+1}</span>
+            <div class="insights-source-copy">
+              <strong>${escapeHtml(row.source_type)}</strong>
+              <span>${row.visits.toLocaleString()} visit${row.visits===1?"":"s"}</span>
+            </div>
+            <div class="insights-source-bar"><i style="width:${pct}%"></i></div>
+            <strong class="insights-source-pct">${pct.toFixed(pct>=10?0:1)}%</strong>
+          </div>`;
+        }).join("")}
+      </div>`;
+    }
+
     function renderOverview(){
       const rows=state.visible;
       const websiteVisits=state.websiteSeries.reduce((s,r)=>s+Number(r.visits||0),0);
@@ -29088,6 +29263,21 @@ function wireShimmer(container){
             !state.visitorDeviceSupported
               ? `<div class="hint">Device analytics is not installed yet. Run <code>insights-device-breakdown-migration.sql</code> in Supabase.</div>`
               : renderVisitorDeviceBreakdown(state.visitorDevices)
+          }
+        </section>
+
+        <section class="insights-v4-card insights-source-card">
+          <div class="insights-v4-card-head table-head">
+            <div>
+              <h3>Traffic Sources</h3>
+              <span>Broad referrer categories only. Full incoming URLs are not stored.</span>
+            </div>
+          </div>
+
+          ${
+            !state.visitorSourceSupported
+              ? `<div class="hint">Traffic-source analytics is not installed yet. Run <code>insights-traffic-sources-migration.sql</code> in Supabase.</div>`
+              : renderVisitorTrafficSources(state.visitorSources)
           }
         </section>
 
@@ -29725,13 +29915,14 @@ function wireShimmer(container){
       const selectedStatus=statusSel.value;
       const selectedGame=gameSel.value;
 
-      const [views,series,siteSeries,countryResult,accessTimeResult,deviceResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
+      const [views,series,siteSeries,countryResult,accessTimeResult,deviceResult,sourceResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
         fetchInsights(startDate,endDate),
         fetchViewSeries(startDate,endDate),
         fetchWebsiteVisitSeries(startDate,endDate),
         fetchWebsiteVisitCountries(startDate,endDate),
         fetchWebsiteVisitAccessTime(startDate,endDate),
         fetchWebsiteVisitDevices(startDate,endDate),
+        fetchWebsiteVisitSources(startDate,endDate),
         previousRange?fetchInsights(previousRange.start,previousRange.end,{silent:true}):Promise.resolve([]),
         fetchCardEngagementInsights(startDate,endDate),
         fetchSaleConversionSnapshots(),
@@ -29804,6 +29995,10 @@ function wireShimmer(container){
           ? deviceResult.rows
           : [],
         visitorDeviceSupported:deviceResult.supported,
+        visitorSources:sourceResult.supported && Array.isArray(sourceResult.rows)
+          ? sourceResult.rows
+          : [],
+        visitorSourceSupported:sourceResult.supported,
         engagementSupported:engagement.supported,
         saleSnapshotsSupported:saleSnapshots.supported,
         saleSnapshots:saleSnapshots.rows
