@@ -28060,7 +28060,7 @@ function wireShimmer(container){
                       const details=[];
                       const format=normalizeFilterValue(card.format);
                       const condition=String(card.condition||"").trim();
-                      const grades=getCardGradeEntries(card);
+                      const grades=validGradingEntries(card);
 
                       if(format==="sealed"){
                         details.push("Sealed");
@@ -33285,14 +33285,14 @@ function wireShimmer(container){
       <section class="panel supabase-health-panel">
         <div class="supabase-health-grid">
           <div><strong id="healthDbUsed">—</strong><span>Database used</span></div>
-          <div><strong id="healthDbLeft">—</strong><span>Database left · 500 MB</span></div>
+          <div><strong id="healthDbLeft">—</strong><span>Database left</span></div>
           <div><strong id="healthStorageUsed">—</strong><span>File Storage used</span></div>
-          <div><strong id="healthStorageLeft">—</strong><span>File Storage left · 1 GB</span></div>
+          <div><strong id="healthStorageLeft">—</strong><span>File Storage left</span></div>
           <div><strong id="healthHistoryRows">—</strong><span>Edit history rows · max 100</span></div>
         </div>
         <button class="btn-primary" type="button" id="healthRefreshBtn">Refresh Supabase Usage</button>
         <div id="healthCapacityWarning" class="capacity-warning" hidden></div>
-        <div class="hint" style="margin-top:10px">Database and file usage are read through the owner-only <code>get_owner_capacity_usage()</code> RPC. Remaining values use the 500 MB database and 1 GB file Storage Free-plan reference limits.</div>
+        <div class="hint" style="margin-top:10px">Database and file usage are read through the owner-only <code>get_owner_capacity_usage()</code> RPC. Remaining values are calculated from the live usage returned by <code>get_owner_capacity_usage()</code>. Reference capacities used for the calculation: 500 MB database and 1 GB File Storage.</div>
       </section>`;
 
     const refresh=async()=>{
@@ -33317,6 +33317,11 @@ function wireShimmer(container){
           $("healthDbLeft").textContent=formatApproxBytes(dbLeft);
           $("healthStorageUsed").textContent=formatApproxBytes(usage.storageBytes);
           $("healthStorageLeft").textContent=formatApproxBytes(storageLeft);
+
+          $("healthDbUsed").title=capacitySummaryText("Database",usage.databaseBytes,SUPABASE_FREE_DATABASE_LIMIT_BYTES);
+          $("healthDbLeft").title=capacitySummaryText("Database",usage.databaseBytes,SUPABASE_FREE_DATABASE_LIMIT_BYTES);
+          $("healthStorageUsed").title=capacitySummaryText("File Storage",usage.storageBytes,SUPABASE_FREE_STORAGE_LIMIT_BYTES);
+          $("healthStorageLeft").title=capacitySummaryText("File Storage",usage.storageBytes,SUPABASE_FREE_STORAGE_LIMIT_BYTES);
 
           const dbPct=capacityPercent(usage.databaseBytes,SUPABASE_FREE_DATABASE_LIMIT_BYTES);
           const storagePct=capacityPercent(usage.storageBytes,SUPABASE_FREE_STORAGE_LIMIT_BYTES);
