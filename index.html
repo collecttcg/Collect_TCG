@@ -18136,6 +18136,104 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     applyOwnerMode();
   }
 
+  const OWNER_POST_HANDOFF_MESSAGE="collect-tcg-owner-post-handoff-v1";
+
+  function ownerPostHandoffNonce(){
+    return crypto?.randomUUID?.() ||
+      `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+  }
+
+  function currentOwnerPostHandoffNonce(){
+    if(currentRoute()!=="fb-tools") return "";
+    return String(currentHashParams().get("handoff")||"").trim();
+  }
+
+  function removeOwnerPostHandoffParam(){
+    if(currentRoute()!=="fb-tools") return;
+    const params=currentHashParams();
+    params.delete("handoff");
+    const query=params.toString();
+    history.replaceState(
+      null,
+      "",
+      `${location.pathname}${location.search}#/fb-tools${query?`?${query}`:""}`
+    );
+  }
+
+  async function receiveOwnerPostGeneratorHandoff(){
+    const nonce=currentOwnerPostHandoffNonce();
+    if(!nonce || !window.opener) return false;
+
+    return await new Promise(resolve=>{
+      let settled=false;
+      const finish=value=>{
+        if(settled) return;
+        settled=true;
+        clearTimeout(timer);
+        window.removeEventListener("message",onMessage);
+        resolve(value);
+      };
+
+      const onMessage=async event=>{
+        if(event.origin!==location.origin) return;
+        const payload=event.data;
+        if(!payload || payload.type!==OWNER_POST_HANDOFF_MESSAGE) return;
+        if(payload.nonce!==nonce || payload.action!=="session") return;
+
+        try{
+          const accessToken=String(payload.access_token||"");
+          const refreshToken=String(payload.refresh_token||"");
+          if(!accessToken || !refreshToken){
+            finish(false);
+            return;
+          }
+
+          const {data,error}=await supabaseClient.auth.setSession({
+            access_token:accessToken,
+            refresh_token:refreshToken
+          });
+
+          if(error || !data?.session){
+            console.warn("Owner Post Generator handoff failed:",error);
+            finish(false);
+            return;
+          }
+
+          removeOwnerPostHandoffParam();
+
+          try{
+            window.opener.postMessage({
+              type:OWNER_POST_HANDOFF_MESSAGE,
+              nonce,
+              action:"ack"
+            },location.origin);
+          }catch{}
+
+          try{ window.opener=null; }catch{}
+          finish(true);
+        }catch(error){
+          console.warn("Owner Post Generator handoff failed:",error);
+          finish(false);
+        }
+      };
+
+      window.addEventListener("message",onMessage);
+
+      try{
+        window.opener.postMessage({
+          type:OWNER_POST_HANDOFF_MESSAGE,
+          nonce,
+          action:"request"
+        },location.origin);
+      }catch{
+        finish(false);
+        return;
+      }
+
+      const timer=setTimeout(()=>finish(false),5000);
+    });
+  }
+
   function showToast(msg){
     toastEl.textContent = msg;
     toastEl.hidden = false;
@@ -25458,20 +25556,55 @@ function wireShimmer(container){
 
           // Card Overview only: keep the current listing open and launch the
           // Single Card Post Generator in a separate browser tab/window.
+          const handoffNonce=ownerPostHandoffNonce();
           const postUrl=
             `${location.origin}${location.pathname}`+
-            `#/fb-tools?mode=single&card=${encodeURIComponent(card.id)}`;
+            `#/fb-tools?mode=single&card=${encodeURIComponent(card.id)}`+
+            `&handoff=${encodeURIComponent(handoffNonce)}`;
 
-          // Do not use the "noopener" feature at creation time here.
-          // A normal same-origin window.open allows the browser to clone the
-          // current tab's sessionStorage into the new tab, which is important
-          // for preserving the authenticated Owner Mode startup context.
-          // Detach opener immediately afterwards so the new tab cannot control
-          // the originating page.
-          const opened=window.open(postUrl,"_blank");
-          if(opened){
-            try{ opened.opener=null; }catch{}
-          }else{
+          const activeSession=ownerSession;
+          if(!activeSession?.access_token || !activeSession?.refresh_token){
+            showToast("Owner session unavailable. Please log in again.");
+            return;
+          }
+
+          let opened=null;
+          const onHandoffMessage=event=>{
+            if(event.origin!==location.origin) return;
+            if(opened && event.source!==opened) return;
+
+            const payload=event.data;
+            if(!payload || payload.type!==OWNER_POST_HANDOFF_MESSAGE) return;
+            if(payload.nonce!==handoffNonce) return;
+
+            if(payload.action==="request"){
+              try{
+                event.source?.postMessage({
+                  type:OWNER_POST_HANDOFF_MESSAGE,
+                  nonce:handoffNonce,
+                  action:"session",
+                  access_token:activeSession.access_token,
+                  refresh_token:activeSession.refresh_token
+                },location.origin);
+              }catch(error){
+                console.warn("Could not hand off Owner session to Post Generator:",error);
+              }
+              return;
+            }
+
+            if(payload.action==="ack"){
+              window.removeEventListener("message",onHandoffMessage);
+            }
+          };
+
+          window.addEventListener("message",onHandoffMessage);
+          setTimeout(()=>{
+            window.removeEventListener("message",onHandoffMessage);
+          },8000);
+
+          opened=window.open(postUrl,"_blank");
+          if(!opened){
+            window.removeEventListener("message",onHandoffMessage);
             showToast("Allow pop-ups to open the Post Generator in a new tab");
           }
         }else if(action==="availability"){
@@ -41236,6 +41369,15 @@ function wireShimmer(container){
 
   async function startApp(){
     renderAppLoadingState();
+
+    // A Card Overview → Post Generator new-tab launch carries only a random
+    // handoff nonce in the URL. Before owner-route gating runs, securely obtain
+    // the already-authenticated Supabase session from the same-origin opener.
+    // Access/refresh tokens are passed only through same-origin postMessage and
+    // are never placed in the URL.
+    if(currentRoute()==="fb-tools" && currentOwnerPostHandoffNonce()){
+      await receiveOwnerPostGeneratorHandoff();
+    }
 
     // Authentication is checked first only to decide whether this session may
     // request owner-only card data. Public catalogue loading itself does not
