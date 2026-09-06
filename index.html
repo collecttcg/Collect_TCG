@@ -28149,8 +28149,7 @@ function wireShimmer(container){
       function insightsAxisConfig(rawMax){
         const value=Math.max(0,Math.ceil(Number(rawMax||0)));
 
-        // Small integer counts need integer ticks only. Using fractional
-        // quarters and then Math.round() caused labels such as 2,2,1,1,0.
+        // Small integer counts need integer ticks only.
         if(value<=5){
           const axisMax=Math.max(1,value);
           const ticks=[];
@@ -28163,12 +28162,24 @@ function wireShimmer(container){
           return {axisMax,ticks};
         }
 
-        const magnitude=Math.pow(10,Math.floor(Math.log10(value)));
-        const normalized=value/magnitude;
+        // Use a tighter "nice" scale so the tallest bar makes better use
+        // of the chart height. Aim for roughly 10–18% headroom instead of
+        // jumping from values like 51 straight to an axis max of 100.
+        const target=value*1.14;
+        const magnitude=Math.pow(10,Math.floor(Math.log10(target)));
+        const normalized=target/magnitude;
+
         let nice;
         if(normalized<=1) nice=1;
+        else if(normalized<=1.2) nice=1.2;
+        else if(normalized<=1.5) nice=1.5;
         else if(normalized<=2) nice=2;
+        else if(normalized<=2.5) nice=2.5;
+        else if(normalized<=3) nice=3;
+        else if(normalized<=4) nice=4;
         else if(normalized<=5) nice=5;
+        else if(normalized<=6) nice=6;
+        else if(normalized<=8) nice=8;
         else nice=10;
 
         const axisMax=Math.max(1,nice*magnitude);
@@ -28220,10 +28231,10 @@ function wireShimmer(container){
                   const value=Math.max(0,Number(row[key]||0));
                   const pct=axisMax ? value/axisMax*100 : 0;
 
-                  // The drawable bar area is 88% of the plot height. The top
-                  // 12% is permanently reserved for value labels, so a max bar
-                  // can never push its number outside the chart.
-                  const visualPct=Math.max(value?2:0,pct*0.88);
+                  // Keep only a small amount of headroom for value labels.
+                  // The tighter y-axis above already prevents bars from touching
+                  // the chart ceiling.
+                  const visualPct=Math.max(value?2:0,pct*0.95);
 
                   const hoverLabel=String(row.label||row.bucket||"");
                   return `<div class="insights-bar-wrap" title="${escapeHtml(hoverLabel)}: ${value}">
