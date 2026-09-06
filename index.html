@@ -16794,6 +16794,63 @@ body.showcase-dragging-body{
   }
 }
 
+
+/* Insights — personal mobile analytics exclusion */
+.analytics-device-exclusion-card{
+  margin-top:12px;
+}
+.analytics-exclusion-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:11px;
+}
+.analytics-exclusion-link-wrap{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+  margin-top:10px;
+}
+.analytics-exclusion-link-wrap[hidden]{
+  display:none !important;
+}
+.analytics-exclusion-link-wrap input{
+  min-width:0;
+  width:100%;
+  padding:9px 10px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--bg);
+  color:var(--text);
+  font-size:10px;
+}
+.analytics-exclusion-note{
+  margin-top:11px;
+  padding:10px 11px;
+  border:1px solid rgba(227,179,65,.22);
+  border-radius:9px;
+  background:rgba(227,179,65,.045);
+}
+.analytics-exclusion-note strong,
+.analytics-exclusion-note span{
+  display:block;
+}
+.analytics-exclusion-note strong{
+  color:var(--accent-gold);
+  font-size:9px;
+}
+.analytics-exclusion-note span{
+  margin-top:3px;
+  color:var(--text-muted);
+  font-size:8.5px;
+  line-height:1.45;
+}
+@media(max-width:600px){
+  .analytics-exclusion-link-wrap{
+    grid-template-columns:1fr;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -19160,6 +19217,103 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   // ---------------- Analytics / view events ----------------
   const VISITOR_ID_KEY = "collect-tcg-visitor-id";
+  const ANALYTICS_EXCLUDED_DEVICE_KEY="collect_tcg_analytics_excluded_device_v1";
+
+  function isAnalyticsExcludedDevice(){
+    try{
+      return localStorage.getItem(ANALYTICS_EXCLUDED_DEVICE_KEY)==="1";
+    }catch{
+      return false;
+    }
+  }
+
+  function setAnalyticsExcludedDevice(excluded){
+    try{
+      if(excluded) localStorage.setItem(ANALYTICS_EXCLUDED_DEVICE_KEY,"1");
+      else localStorage.removeItem(ANALYTICS_EXCLUDED_DEVICE_KEY);
+      return true;
+    }catch{
+      return false;
+    }
+  }
+
+  function analyticsExclusionTokenFromUrl(){
+    try{
+      const hash=String(location.hash||"");
+      const query=hash.includes("?") ? hash.slice(hash.indexOf("?")+1) : "";
+      return String(new URLSearchParams(query).get("analytics_exclude")||"").trim();
+    }catch{
+      return "";
+    }
+  }
+
+  function removeAnalyticsExclusionTokenFromUrl(){
+    try{
+      const hash=String(location.hash||"#/home");
+      const [route,query=""]=hash.split("?");
+      const params=new URLSearchParams(query);
+      params.delete("analytics_exclude");
+      const nextQuery=params.toString();
+      history.replaceState(null,"",`${location.pathname}${location.search}${route}${nextQuery?`?${nextQuery}`:""}`);
+    }catch{}
+  }
+
+  async function consumeAnalyticsExclusionLinkIfPresent(){
+    const token=analyticsExclusionTokenFromUrl();
+    if(!token) return isAnalyticsExcludedDevice();
+
+    try{
+      const {data,error}=await supabaseClient.rpc("consume_analytics_exclusion_token",{
+        p_token:token
+      });
+
+      if(error || data!==true){
+        console.warn("Analytics exclusion link could not be validated:",error||"invalid token");
+        removeAnalyticsExclusionTokenFromUrl();
+        return isAnalyticsExcludedDevice();
+      }
+
+      setAnalyticsExcludedDevice(true);
+      removeAnalyticsExclusionTokenFromUrl();
+      return true;
+    }catch(error){
+      console.warn("Analytics exclusion link could not be validated:",error);
+      removeAnalyticsExclusionTokenFromUrl();
+      return isAnalyticsExcludedDevice();
+    }
+  }
+
+  function newAnalyticsExclusionToken(){
+    const parts=[];
+    for(let i=0;i<4;i++){
+      parts.push(
+        crypto?.randomUUID?.() ||
+        `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${i}`
+      );
+    }
+    return parts.join(".");
+  }
+
+  async function createAnalyticsExclusionLink(){
+    if(!requireOwner("generate analytics exclusion link")) return "";
+
+    const token=newAnalyticsExclusionToken();
+    try{
+      const {data,error}=await supabaseClient.rpc("create_analytics_exclusion_token",{
+        p_token:token
+      });
+
+      if(error || data!==true){
+        console.warn("Could not generate analytics exclusion link:",error);
+        return "";
+      }
+
+      return `${location.origin}${location.pathname}#/home?analytics_exclude=${encodeURIComponent(token)}`;
+    }catch(error){
+      console.warn("Could not generate analytics exclusion link:",error);
+      return "";
+    }
+  }
 
   function getVisitorId(){
     let id = localStorage.getItem(VISITOR_ID_KEY);
@@ -19183,8 +19337,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       const cardId=safeCardId(card?.id);
       if(!cardId) return false;
 
-      // Owner/testing activity must never inflate buyer-facing analytics.
-      if(isOwnerMode()) return false;
+      // Owner/testing activity and explicitly excluded personal browsers
+      // must never inflate buyer-facing analytics.
+      if(isOwnerMode() || isAnalyticsExcludedDevice()) return false;
 
       // A qualified view requires the same card to still be open, visible and
       // in the foreground after the engagement delay.
@@ -19228,7 +19383,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     // but the frontend submits only meaningful buyer views:
     // 2+ seconds open and Owner Mode excluded. No frontend repeat-view cooldown.
     cancelPendingCardViewQualification();
-    if(isOwnerMode()) return false;
+    if(isOwnerMode() || isAnalyticsExcludedDevice()) return false;
 
     const token=cardViewQualificationToken;
     window.setTimeout(()=>{
@@ -19286,7 +19441,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   async function recordCardEngagement(cardId,eventType,platform=""){
     try{
-      if(isOwnerMode()) return false;
+      if(isOwnerMode() || isAnalyticsExcludedDevice()) return false;
 
       const id=safeCardId(cardId);
       const type=String(eventType||"").trim().toLowerCase();
@@ -19570,8 +19725,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function recordWebsiteVisit(){
-    // Owner activity should not inflate buyer-facing traffic analytics.
-    if(isOwnerMode()) return false;
+    // Owner activity and explicitly excluded personal browsers should not
+    // inflate buyer-facing traffic analytics.
+    if(isOwnerMode() || isAnalyticsExcludedDevice()) return false;
 
     try{
       if(sessionStorage.getItem(WEBSITE_VISIT_SESSION_KEY)==="1") return true;
@@ -29046,7 +29202,69 @@ function wireShimmer(container){
           <p><strong>Recommendations</strong> are signals for review, not automatic market valuations. They use activity on your own site and do not know external market prices.</p>
           <p><strong>Old analytics</strong> collected before the qualified-view update may contain more repeated opens than new data.</p>
         </section>
+
+        <section class="insights-v4-card analytics-device-exclusion-card">
+          <div class="insights-v4-card-head table-head">
+            <div>
+              <h3>Exclude My Mobile Browser</h3>
+              <span>Browse the public mobile site without adding your own activity to Insights.</span>
+            </div>
+          </div>
+
+          <p class="hint">
+            Generate a one-time private link on this owner-authenticated desktop.
+            Open that link once on your phone. It does <strong>not</strong> enable Owner Mode.
+          </p>
+
+          <div class="analytics-exclusion-actions">
+            <button type="button" class="btn-primary" id="generateAnalyticsExclusionLinkBtn">Generate private mobile link</button>
+          </div>
+
+          <div class="analytics-exclusion-link-wrap" id="analyticsExclusionLinkWrap" hidden>
+            <input id="analyticsExclusionLink" type="text" readonly aria-label="Private analytics exclusion link">
+            <button type="button" class="btn-ghost" id="copyAnalyticsExclusionLinkBtn">Copy Link</button>
+          </div>
+
+          <div class="analytics-exclusion-note">
+            <strong>How long does it last?</strong>
+            <span>The generated link expires after 15 minutes and works once. After your phone opens it successfully, that browser stays excluded indefinitely until its site data/local storage is cleared.</span>
+          </div>
+        </section>
       `;
+
+      const exclusionGenerateBtn=$("generateAnalyticsExclusionLinkBtn");
+      const exclusionWrap=$("analyticsExclusionLinkWrap");
+      const exclusionInput=$("analyticsExclusionLink");
+      const exclusionCopyBtn=$("copyAnalyticsExclusionLinkBtn");
+
+      exclusionGenerateBtn?.addEventListener("click",async()=>{
+        const original=exclusionGenerateBtn.textContent;
+        exclusionGenerateBtn.disabled=true;
+        exclusionGenerateBtn.textContent="Generating…";
+
+        try{
+          const link=await createAnalyticsExclusionLink();
+          if(!link){
+            showToast("Run the analytics device-exclusion migration first");
+            return;
+          }
+
+          exclusionInput.value=link;
+          exclusionWrap.hidden=false;
+          exclusionInput.focus({preventScroll:true});
+          exclusionInput.select();
+          showToast("Private mobile exclusion link created");
+        }finally{
+          exclusionGenerateBtn.disabled=false;
+          exclusionGenerateBtn.textContent=original;
+        }
+      });
+
+      exclusionCopyBtn?.addEventListener("click",async()=>{
+        const link=String(exclusionInput?.value||"").trim();
+        if(!link) return;
+        copyPlainText(link,"Private mobile link copied");
+      });
     }
 
     async function refresh(){
@@ -40085,9 +40303,13 @@ function wireShimmer(container){
     // depend on owner-only tables or owner RPCs.
     await refreshOwnerSession();
 
-    // Record a single website visit per browser tab/session for non-owner users.
-    // The database function stores only a one-way hash of the local visitor ID.
-    if(!isOwnerMode()) recordWebsiteVisit();
+    // Consume a one-time personal-device exclusion link before any analytics
+    // event can be recorded. This grants no Owner Mode permissions.
+    await consumeAnalyticsExclusionLinkIfPresent();
+
+    // Record a single website visit per browser tab/session for normal
+    // non-owner, non-excluded visitors.
+    if(!isOwnerMode() && !isAnalyticsExcludedDevice()) recordWebsiteVisit();
 
     const [cardsLoaded]=await Promise.all([
       loadCards(),
