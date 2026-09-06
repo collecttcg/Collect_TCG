@@ -16736,6 +16736,64 @@ body.showcase-dragging-body{
   }
 }
 
+
+/* Insights — Device Breakdown */
+.insights-device-card{
+  margin-top:12px;
+}
+.insights-device-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.insights-device-row{
+  display:grid;
+  grid-template-columns:minmax(100px,150px) minmax(0,1fr) 48px;
+  gap:10px;
+  align-items:center;
+}
+.insights-device-copy{
+  min-width:0;
+}
+.insights-device-copy strong,
+.insights-device-copy span{
+  display:block;
+}
+.insights-device-copy strong{
+  color:var(--text);
+  font-size:10px;
+}
+.insights-device-copy span{
+  margin-top:2px;
+  color:var(--text-muted);
+  font-size:8px;
+}
+.insights-device-bar{
+  height:10px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:var(--surface-2);
+}
+.insights-device-bar i{
+  display:block;
+  height:100%;
+  min-width:2px;
+  border-radius:inherit;
+  background:var(--accent-teal);
+}
+.insights-device-pct{
+  color:var(--text);
+  font-size:10px;
+  text-align:right;
+}
+@media(max-width:600px){
+  .insights-device-row{
+    grid-template-columns:minmax(90px,120px) minmax(0,1fr) 42px;
+    gap:7px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -19492,6 +19550,25 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   const WEBSITE_VISIT_SESSION_KEY="collect_tcg_website_visit_recorded_fresh_v1";
 
+  function currentVisitorDeviceType(){
+    const ua=String(navigator.userAgent||"");
+    const platform=String(navigator.platform||"");
+    const touchPoints=Number(navigator.maxTouchPoints||0);
+
+    // Modern iPadOS often reports itself as Macintosh.
+    if(/iPad|Tablet|PlayBook|Silk/i.test(ua) || (platform==="MacIntel" && touchPoints>1)){
+      return "Tablet";
+    }
+
+    if(
+      /Mobi|Android|iPhone|iPod|Windows Phone|IEMobile|Opera Mini/i.test(ua)
+    ){
+      return "Mobile";
+    }
+
+    return "Desktop";
+  }
+
   async function recordWebsiteVisit(){
     // Owner activity should not inflate buyer-facing traffic analytics.
     if(isOwnerMode()) return false;
@@ -19521,6 +19598,20 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         }
       }catch(countryError){
         console.warn("Visitor country tracking unavailable:",countryError);
+      }
+
+      // Device tracking stores only a broad category, never the full User-Agent.
+      // Failure here must not affect the normal Website Visit counter.
+      try{
+        const {error:deviceError}=await supabaseClient.rpc("record_site_visit_device",{
+          p_visitor_id:visitorId,
+          p_device_type:currentVisitorDeviceType()
+        });
+        if(deviceError){
+          console.warn("Visitor device tracking unavailable:",deviceError);
+        }
+      }catch(deviceError){
+        console.warn("Visitor device tracking unavailable:",deviceError);
       }
 
       sessionStorage.setItem(WEBSITE_VISIT_SESSION_KEY,"1");
@@ -19623,6 +19714,38 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }catch(error){
       console.warn("Visitor access-time insights unavailable:",error);
       return {supported:false,hours:[],weekdays:[]};
+    }
+  }
+
+
+  async function fetchWebsiteVisitDevices(start,end){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_site_visit_device_totals",{
+        p_start:start.toISOString(),
+        p_end:end.toISOString()
+      });
+
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        const unavailable=
+          message.includes("get_site_visit_device_totals") ||
+          message.includes("function") ||
+          message.includes("schema cache");
+
+        if(!unavailable){
+          console.warn("Visitor device insights unavailable:",error);
+        }
+
+        return {supported:false,rows:[]};
+      }
+
+      return {
+        supported:true,
+        rows:Array.isArray(data)?data:[]
+      };
+    }catch(error){
+      console.warn("Visitor device insights unavailable:",error);
+      return {supported:false,rows:[]};
     }
   }
 
@@ -28078,6 +28201,7 @@ function wireShimmer(container){
       start:null,end:null,rows:[],visible:[],series:[],websiteSeries:[],
       visitorCountries:[],visitorCountrySupported:false,
       visitorHours:[],visitorWeekdays:[],visitorAccessTimeSupported:false,
+      visitorDevices:[],visitorDeviceSupported:false,
       engagementSupported:false,saleSnapshotsSupported:false,saleSnapshots:[],
       editHistoryRows:[],editHistoryLoaded:false
     };
@@ -28236,6 +28360,43 @@ function wireShimmer(container){
       </div>`;
     }
 
+    function renderVisitorDeviceBreakdown(rows){
+      const safe=(Array.isArray(rows)?rows:[])
+        .map(row=>({
+          device_type:String(row.device_type||"Other"),
+          visits:Math.max(0,Number(row.visits||0))
+        }))
+        .filter(row=>row.visits>0);
+
+      if(!safe.length){
+        return `<div class="hint">No device data for this period yet.</div>`;
+      }
+
+      const preferred=["Mobile","Desktop","Tablet","Other"];
+      safe.sort((a,b)=>{
+        const ai=preferred.indexOf(a.device_type);
+        const bi=preferred.indexOf(b.device_type);
+        if(ai!==bi) return (ai<0?99:ai)-(bi<0?99:bi);
+        return b.visits-a.visits;
+      });
+
+      const total=safe.reduce((sum,row)=>sum+row.visits,0)||1;
+
+      return `<div class="insights-device-list">
+        ${safe.map(row=>{
+          const pct=row.visits/total*100;
+          return `<div class="insights-device-row">
+            <div class="insights-device-copy">
+              <strong>${escapeHtml(row.device_type)}</strong>
+              <span>${row.visits.toLocaleString()} visit${row.visits===1?"":"s"}</span>
+            </div>
+            <div class="insights-device-bar"><i style="width:${pct}%"></i></div>
+            <strong class="insights-device-pct">${pct.toFixed(pct>=10?0:1)}%</strong>
+          </div>`;
+        }).join("")}
+      </div>`;
+    }
+
     function renderOverview(){
       const rows=state.visible;
       const websiteVisits=state.websiteSeries.reduce((s,r)=>s+Number(r.visits||0),0);
@@ -28353,6 +28514,21 @@ function wireShimmer(container){
                     </div>`;
                   })()}`
                 : `<div class="hint">No website visits for this period yet.</div>`
+          }
+        </section>
+
+        <section class="insights-v4-card insights-device-card">
+          <div class="insights-v4-card-head table-head">
+            <div>
+              <h3>Device Breakdown</h3>
+              <span>Broad device category only. Full browser User-Agent strings are not stored.</span>
+            </div>
+          </div>
+
+          ${
+            !state.visitorDeviceSupported
+              ? `<div class="hint">Device analytics is not installed yet. Run <code>insights-device-breakdown-migration.sql</code> in Supabase.</div>`
+              : renderVisitorDeviceBreakdown(state.visitorDevices)
           }
         </section>
 
@@ -28894,12 +29070,13 @@ function wireShimmer(container){
       const selectedStatus=statusSel.value;
       const selectedGame=gameSel.value;
 
-      const [views,series,siteSeries,countryResult,accessTimeResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
+      const [views,series,siteSeries,countryResult,accessTimeResult,deviceResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
         fetchInsights(startDate,endDate),
         fetchViewSeries(startDate,endDate),
         fetchWebsiteVisitSeries(startDate,endDate),
         fetchWebsiteVisitCountries(startDate,endDate),
         fetchWebsiteVisitAccessTime(startDate,endDate),
+        fetchWebsiteVisitDevices(startDate,endDate),
         previousRange?fetchInsights(previousRange.start,previousRange.end,{silent:true}):Promise.resolve([]),
         fetchCardEngagementInsights(startDate,endDate),
         fetchSaleConversionSnapshots(),
@@ -28968,6 +29145,10 @@ function wireShimmer(container){
           ? accessTimeResult.weekdays
           : [],
         visitorAccessTimeSupported:accessTimeResult.supported,
+        visitorDevices:deviceResult.supported && Array.isArray(deviceResult.rows)
+          ? deviceResult.rows
+          : [],
+        visitorDeviceSupported:deviceResult.supported,
         engagementSupported:engagement.supported,
         saleSnapshotsSupported:saleSnapshots.supported,
         saleSnapshots:saleSnapshots.rows
