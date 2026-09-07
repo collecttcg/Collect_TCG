@@ -17222,6 +17222,10 @@ body.showcase-dragging-body{
 .image-preview-watermark-actions{flex-wrap:wrap}
 .image-preview-watermark-btn{white-space:nowrap}
 
+
+/* Post Generator — NFS single-card mode */
+.fb-tools-switch[href*="mode=nfs"] .fb-tools-switch-icon{font-size:15px}
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -32245,6 +32249,35 @@ function wireShimmer(container){
     return compactGeneratedPostSpacing(lines.join("\n"));
   }
 
+  function buildFbNfsPostText(card,values){
+    if(!card) return "";
+
+    const divider="━━━━━━━━━━━━━━━━━━━━━━━━";
+    const title=String(values.title||defaultFbPostTitle(card)).trim();
+    const collectionUrl=`${location.origin}${location.pathname}${location.search}#/collection`;
+    const hashtags=String(values.hashtags||defaultFbHashtags(card)).trim();
+
+    const lines=[
+      title,
+      "",
+      "🚫 NOT FOR SALE — PERSONAL COLLECTION",
+      "",
+      "🌐 VISIT OUR WEBSITE TO SEE MORE FROM OUR COLLECTION:",
+      collectionUrl,
+      "",
+      divider,
+      "",
+      ...collectSocialPostLines(),
+      "",
+      divider,
+      "",
+      "HASHTAG :",
+      hashtags
+    ];
+
+    return compactGeneratedPostSpacing(lines.join("\n"));
+  }
+
   async function copyTextToClipboard(text){
     const value=String(text||"");
     if(!value) return false;
@@ -32278,12 +32311,13 @@ function wireShimmer(container){
 
   function currentFacebookToolMode(){
     const mode=currentHashParams().get("mode");
-    return ["single","list","giveaway","winner","carousell"].includes(mode) ? mode : "single";
+    return ["single","nfs","list","giveaway","winner","carousell"].includes(mode) ? mode : "single";
   }
 
   function facebookToolsHeaderHTML(mode){
     const descriptions={
       single:"Create a ready-to-post Facebook listing for one card.",
+      nfs:"Create a showcase post for one Not For Sale card from your personal collection.",
       list:"Create a complete Facebook sales list from your available inventory.",
       giveaway:"Create a reusable Facebook giveaway post from your giveaway template.",
       winner:"Create a winner-announcement post from your saved Past Winners.",
@@ -32307,6 +32341,17 @@ function wireShimmer(container){
           <span>
             <strong>Single Card Post</strong>
             <small>Choose one card · copy post · download all images as ZIP (Sold listings get a SOLD marker automatically)</small>
+          </span>
+        </a>
+
+        <a href="#/fb-tools?mode=nfs"
+           class="fb-tools-switch ${mode==="nfs" ? "active" : ""}"
+           role="tab"
+           aria-selected="${mode==="nfs" ? "true" : "false"}">
+          <span class="fb-tools-switch-icon">◇</span>
+          <span>
+            <strong>Single Card NFS Post</strong>
+            <small>Choose one Collection (NFS) card · showcase it · invite visitors to see more of the collection</small>
           </span>
         </a>
 
@@ -32364,6 +32409,8 @@ function wireShimmer(container){
 
     if(mode==="list"){
       renderFbCardListGeneratorPage();
+    }else if(mode==="nfs"){
+      renderFbPostGeneratorPage(true);
     }else if(mode==="giveaway"){
       renderFbGiveawayPostGeneratorPage();
     }else if(mode==="winner"){
@@ -32382,12 +32429,13 @@ function wireShimmer(container){
     }
   }
 
-  function renderFbPostGeneratorPage(){
+  function renderFbPostGeneratorPage(nfsMode=false){
     if(!requireOwner("open FB post generator")) return;
 
     const prefs = getFbPostPrefs();
     const perCardMeta = getFbCardMeta();
     const selectableCards = cards
+      .filter(card=>!nfsMode || canonicalAvailability(card.availability)==="Collection (NFS)")
       .slice()
       .sort((a,b)=>{
         const aSold = normalizeFilterValue(a.availability) === "sold" ? 1 : 0;
@@ -32407,8 +32455,10 @@ function wireShimmer(container){
       <div class="page-head fb-post-page-head">
         <div>
           <div class="eyebrow">Owner Tool</div>
-          <h2>Facebook Post Generator</h2>
-          <p>Select a card and copy a ready-to-post Facebook sales template.</p>
+          <h2>${nfsMode ? "Facebook NFS Post Generator" : "Facebook Post Generator"}</h2>
+          <p>${nfsMode
+            ? "Select a Collection (NFS) card and create a showcase post with no sales or pricing language."
+            : "Select a card and copy a ready-to-post Facebook sales template."}</p>
         </div>
       </div>
 
@@ -32437,9 +32487,10 @@ function wireShimmer(container){
               </div>
               <div class="field">
                 <label for="fbPostStatusFilter">Status</label>
-                <select id="fbPostStatusFilter">
-                  <option value="">All statuses</option>
-                  ${fbSingleStatusOptions.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}
+                <select id="fbPostStatusFilter" ${nfsMode ? "disabled" : ""}>
+                  ${nfsMode
+                    ? `<option value="Collection (NFS)">Collection (NFS)</option>`
+                    : `<option value="">All statuses</option>${fbSingleStatusOptions.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("")}`}
                 </select>
               </div>
               <div class="field">
@@ -32575,7 +32626,9 @@ function wireShimmer(container){
         select.value=selectedId;
       }
 
-      filterCount.textContent=`${visible.length} of ${selectableCards.length} cards shown`;
+      filterCount.textContent=nfsMode
+        ? `${visible.length} Collection (NFS) card${visible.length===1?"":"s"} shown`
+        : `${visible.length} of ${selectableCards.length} cards shown`;
     }
 
     function currentValues(){
@@ -32611,7 +32664,9 @@ function wireShimmer(container){
       }
 
       const values = currentValues();
-      output.value = buildFbPostText(selectedCard, values);
+      output.value = nfsMode
+        ? buildFbNfsPostText(selectedCard,values)
+        : buildFbPostText(selectedCard,values);
       copyTitleBtn.disabled = !titleInput.value.trim();
       copyPostBtn.disabled = !output.value.trim();
       prepareBtn.disabled = !output.value.trim();
@@ -32655,8 +32710,11 @@ function wireShimmer(container){
       }
 
       const meta = perCardMeta[selectedCard.id] || {};
-      titleInput.value = String(meta.title || defaultFbPostTitle(selectedCard)).slice(0,300);
-
+      const normalDefaultTitle=defaultFbPostTitle(selectedCard);
+      const nfsDefaultTitle=`COLLECTION SHOWCASE【NFS】${String(selectedCard.name||"").toUpperCase()}${selectedCard.card_code ? ` · ${String(selectedCard.card_code).toUpperCase()}` : ""}`;
+      titleInput.value = String(
+        meta.title || (nfsMode ? nfsDefaultTitle : normalDefaultTitle)
+      ).slice(0,300);
 
       hashtagsInput.value = prefs.hashtags === FB_POST_DEFAULTS.hashtags
         ? defaultFbHashtags(selectedCard)
@@ -32705,7 +32763,7 @@ function wireShimmer(container){
     });
 
     copyPostBtn.addEventListener("click", ()=>{
-      copyPlainText(output.value, "Facebook post copied");
+      copyPlainText(output.value, nfsMode ? "NFS showcase post copied" : "Facebook post copied");
     });
 
     prepareBtn.addEventListener("click", async ()=>{
@@ -32723,7 +32781,10 @@ function wireShimmer(container){
       prepareBtn.textContent="Preparing…";
 
       try{
-        const copied=await copyPlainText(output.value,"Facebook post copied");
+        const copied=await copyPlainText(
+          output.value,
+          nfsMode ? "NFS showcase post copied" : "Facebook post copied"
+        );
         if(!copied) throw new Error("Could not copy Facebook post");
 
         const images=getImages(selectedCard);
