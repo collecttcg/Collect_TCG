@@ -30060,8 +30060,52 @@ function wireShimmer(container){
     return publicUrl;
   }
 
-  async function uploadGiveawayImage(file){
-    return uploadOwnerImage(file, "giveaway-images", "Giveaway image");
+  async function uploadGiveawayImage(file,source="",photoNumber=1){
+    if(!file) return null;
+
+    const mime=normalizedImageMime(file.type);
+
+    // Preserve animated GIFs exactly as uploaded.
+    if(mime==="image/gif"){
+      return uploadOwnerImage(file,"giveaway-images",`Giveaway photo ${photoNumber}`);
+    }
+
+    // Phone photos can be several MB even when visually small. Normalize
+    // JPG/PNG/WEBP into the same web-sized JPEG pipeline used by card images
+    // before sending them to the 5 MB giveaway bucket. This also avoids
+    // browser/storage differences between the first and later photos.
+    try{
+      const localSource=source || URL.createObjectURL(file);
+      const revoke=!source;
+      try{
+        const {img}=await loadImageElementFromSource(localSource);
+        let processed=await renderCardImage(img,1800,0.92,false);
+        let blob=dataUrlToBlob(processed);
+
+        // Extremely detailed images can still exceed the bucket limit. Retry
+        // once at a smaller size/quality rather than failing the whole giveaway.
+        if(blob.size>GENERIC_OWNER_IMAGE_MAX_BYTES){
+          processed=await renderCardImage(img,1400,0.86,false);
+          blob=dataUrlToBlob(processed);
+        }
+
+        if(blob.size>GENERIC_OWNER_IMAGE_MAX_BYTES){
+          throw new Error("Processed giveaway photo is still larger than 5 MB");
+        }
+
+        return await uploadOwnerProcessedImage(
+          processed,
+          "giveaway-images",
+          `Giveaway photo ${photoNumber}`
+        );
+      }finally{
+        if(revoke){ try{ URL.revokeObjectURL(localSource); }catch{} }
+      }
+    }catch(error){
+      console.error(`Giveaway photo ${photoNumber} normalization/upload error:`,error);
+      showToast(error?.message || `Could not upload giveaway photo ${photoNumber}`);
+      return null;
+    }
   }
 
   async function uploadOwnerProcessedImage(dataUrl,bucket,errorLabel){
@@ -30110,7 +30154,10 @@ function wireShimmer(container){
 
     if(uploadError){
       console.error(`${errorLabel} processed upload error:`, uploadError);
-      showToast(`Could not upload ${errorLabel.toLowerCase()}`);
+      const storageMessage=String(uploadError?.message||"").trim();
+      showToast(storageMessage
+        ? `Could not upload ${errorLabel.toLowerCase()}: ${storageMessage.slice(0,120)}`
+        : `Could not upload ${errorLabel.toLowerCase()}`);
       return null;
     }
 
@@ -32318,8 +32365,14 @@ function wireShimmer(container){
     }
 
     $("giveawayImageFile").value="";
-    giveawaySelectedPhotoIndex=Math.max(0,giveawayPhotoItems.length-accepted.length);
-    loadGiveawayEditorItem(giveawaySelectedPhotoIndex);
+
+    // IMPORTANT: do not change giveawaySelectedPhotoIndex before loading the
+    // new item. loadGiveawayEditorItem() first commits the CURRENT editor
+    // state. Changing the index early caused that old/blank state to overwrite
+    // the newly-added photo, which made its preview disappear and disabled the
+    // watermark / PSA privacy controls.
+    const firstNewPhotoIndex=Math.max(0,giveawayPhotoItems.length-accepted.length);
+    loadGiveawayEditorItem(firstNewPhotoIndex);
   });
 
   $("giveawayImagePreview")?.addEventListener("click",event=>{
@@ -32423,7 +32476,7 @@ function wireShimmer(container){
             );
           }else{
             showToast(`Uploading giveaway photo ${index+1}/${giveawayPhotoItems.length}…`);
-            finalUrl=await uploadGiveawayImage(item.file);
+            finalUrl=await uploadGiveawayImage(item.file,item.cleanSource,index+1);
           }
         }else if(hasProcessed){
           showToast(`Uploading processed giveaway photo ${index+1}/${giveawayPhotoItems.length}…`);
