@@ -17792,6 +17792,79 @@ body.light-mode #invGrid.collection-game-grouped .collection-game-group-header{
     var(--surface-1);
 }
 
+
+/* =========================================================
+   COLLECTION (NFS) — OWNER CUSTOM ORDER
+   Collection-only owner controls.
+   ========================================================= */
+.collection-rearrange-btn{
+  min-height:38px;
+  white-space:nowrap;
+}
+.collection-rearrange-btn.active{
+  border-color:rgba(227,179,65,.72);
+  background:rgba(227,179,65,.12);
+  color:var(--accent-gold);
+}
+
+#invGrid.collection-game-grouped .collection-game-group-header.rearranging{
+  cursor:default;
+  opacity:.82;
+}
+
+#invGrid.collection-game-grouped .collection-rearrange-card{
+  position:relative;
+  cursor:grab;
+  user-select:none;
+  outline:1px dashed rgba(227,179,65,.40);
+  outline-offset:-3px;
+}
+
+#invGrid.collection-game-grouped .collection-rearrange-card:active{
+  cursor:grabbing;
+}
+
+#invGrid.collection-game-grouped .collection-drag-handle{
+  position:absolute;
+  z-index:12;
+  top:7px;
+  left:7px;
+  min-width:34px;
+  height:26px;
+  padding:0 7px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(227,179,65,.58);
+  border-radius:8px;
+  background:rgba(10,11,14,.88);
+  color:var(--accent-gold);
+  font-family:'JetBrains Mono',monospace;
+  font-size:14px;
+  letter-spacing:-2px;
+  pointer-events:none;
+  box-shadow:0 5px 14px rgba(0,0,0,.28);
+}
+
+#invGrid.collection-game-grouped .collection-rearrange-card button,
+#invGrid.collection-game-grouped .collection-rearrange-card a{
+  pointer-events:none !important;
+}
+
+#invGrid.collection-game-grouped .collection-dragging{
+  opacity:.55;
+  transform:scale(.985);
+}
+
+#invGrid.collection-game-grouped .collection-drag-over{
+  outline:2px solid rgba(227,179,65,.85);
+  outline-offset:-2px;
+}
+
+@media(max-width:800px){
+  .collection-rearrange-btn{display:none !important}
+}
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -18530,6 +18603,83 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
 
   let cards = [];
+  const collectionCardOrderById=new Map();
+  let collectionCardOrderSupported="unknown";
+
+  async function loadCollectionCardOrder(){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_collection_card_order");
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(
+          message.includes("get_collection_card_order") ||
+          message.includes("function") ||
+          message.includes("schema cache")
+        ) collectionCardOrderSupported=false;
+        collectionCardOrderById.clear();
+        return false;
+      }
+
+      collectionCardOrderById.clear();
+      (Array.isArray(data)?data:[]).forEach(row=>{
+        const id=safeCardId(row?.card_id||"");
+        const order=Number(row?.sort_order);
+        if(id && Number.isFinite(order)) collectionCardOrderById.set(id,order);
+      });
+      collectionCardOrderSupported=true;
+      return true;
+    }catch(error){
+      console.warn("Collection custom order unavailable:",error);
+      collectionCardOrderSupported=false;
+      collectionCardOrderById.clear();
+      return false;
+    }
+  }
+
+  function collectionCustomOrderValue(card){
+    const id=safeCardId(card?.id||"");
+    const value=id ? collectionCardOrderById.get(id) : null;
+    return Number.isFinite(value) ? value : Number.MAX_SAFE_INTEGER;
+  }
+
+  async function saveCollectionCardOrder(cardIds){
+    if(!requireOwner("save Collection card order")) return false;
+
+    const ids=(cardIds||[]).map(id=>safeCardId(id)).filter(Boolean);
+    if(!ids.length){
+      showToast("No Collection cards to reorder");
+      return false;
+    }
+
+    try{
+      const {data,error}=await supabaseClient.rpc("set_collection_card_order",{p_card_ids:ids});
+      if(error){
+        console.error("Collection order save error:",error);
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(
+          message.includes("set_collection_card_order") ||
+          message.includes("function") ||
+          message.includes("schema cache")
+        ){
+          collectionCardOrderSupported=false;
+          showToast("Run the Collection Custom Order SQL migration first");
+        }else{
+          showToast("Could not save Collection card order");
+        }
+        return false;
+      }
+
+      collectionCardOrderById.clear();
+      ids.forEach((id,index)=>collectionCardOrderById.set(id,index+1));
+      collectionCardOrderSupported=true;
+      return Number(data||0)>=0;
+    }catch(error){
+      console.error("Collection order save failed:",error);
+      showToast("Could not save Collection card order");
+      return false;
+    }
+  }
+
   let soldAtSupported = false;
   let lifecycleSupported = false;
   let ownerPrivateSupported = false;
@@ -19541,6 +19691,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
 
     cards=(data||[]).map(dbToCard);
+
+    // Collection custom order is stored separately so the existing Cards
+    // schema and secure owner-card RPC do not need to change.
+    await loadCollectionCardOrder();
 
     // The eye counter shown to Owner Mode is now sourced from the fresh
     // qualified-view analytics table, not the legacy cards.view_count field.
@@ -22858,7 +23012,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(route!=="collection") params.set("pc",getPriceCurrencyPreference());
 
     const sort = safeUrlFilterText($("sortBy")?.value, 24);
-    const defaultSort = route === "sold" ? "recent-sold" : "name";
+    const defaultSort = route === "sold"
+      ? "recent-sold"
+      : (route === "collection" ? "custom" : "name");
     if(sort && sort !== defaultSort) params.set("sort", sort);
 
     if(activeQuickFilter && activeQuickFilter !== "all"){
@@ -26372,7 +26528,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const seriesF = ($("filterSeries") && $("filterSeries").value) || "";
     const priceMin = safePriceFilterValue($("filterPriceMin")?.value);
     const priceMax = safePriceFilterValue($("filterPriceMax")?.value);
-    const sortBy = ($("sortBy") && $("sortBy").value) || (listingAvailabilityScope === "sold" ? "recent-sold" : "name");
+    const sortBy = ($("sortBy") && $("sortBy").value) || (
+      listingAvailabilityScope === "sold"
+        ? "recent-sold"
+        : (listingAvailabilityScope==="collection" ? "custom" : "name")
+    );
 
     let list = cards.filter(c=>{
       if(!cardMatchesListingScope(c)) return false;
@@ -26452,6 +26612,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     list.sort((a,b)=>{
       switch(sortBy){
+        case "custom": {
+          if(listingAvailabilityScope!=="collection") return a.name.localeCompare(b.name);
+          const ao=collectionCustomOrderValue(a);
+          const bo=collectionCustomOrderValue(b);
+          return ao-bo || a.name.localeCompare(b.name);
+        }
         case "recent-sold": {
           const at = Date.parse(a.sold_at || a.updated_at || a.created_at || "") || 0;
           const bt = Date.parse(b.sold_at || b.updated_at || b.created_at || "") || 0;
@@ -27177,6 +27343,15 @@ function wireShimmer(container){
             ${compact?"▦ Grid View":"☷ Compact View"}
           </button>
 
+          ${isCollection && isOwnerMode() ? `
+            <button type="button"
+                    class="btn-ghost collection-rearrange-btn"
+                    id="collectionRearrangeBtn"
+                    title="Drag Collection cards into your preferred default order">
+              ⇅ Rearrange Cards
+            </button>
+          ` : ""}
+
           <button type="button" class="copy-filter-link-btn" id="copyFilterLinkBtn" title="Copy a link to these filters">
             <span class="copy-filter-link-desktop">Copy Filtered Link</span>
             <span class="copy-filter-link-mobile">Copy Filter Link</span>
@@ -27426,6 +27601,7 @@ function wireShimmer(container){
   function inventorySortOptions(scope){
     return [
       ...(scope==="sold" ? [{value:"recent-sold",label:"Sort: Recently Sold"}] : []),
+      ...(scope==="collection" ? [{value:"custom",label:"Custom Order"}] : []),
       {value:"name",label:"Name: A → Z"},
       {value:"name-desc",label:"Name: Z → A"},
       {value:"newest",label:"Newest Added"},
@@ -27675,16 +27851,19 @@ function wireShimmer(container){
         listingAvailabilityScope==="sold"
           ? ["recent-sold","name","name-desc","newest","oldest","year-new","year-old","grade-high","grade-low","price-low","price-high"]
           : (listingAvailabilityScope==="collection"
-              ? ["name","name-desc","newest","oldest","year-new","year-old","grade-high","grade-low"]
+              ? ["custom","name","name-desc","newest","oldest","year-new","year-old","grade-high","grade-low"]
               : ["name","name-desc","newest","oldest","year-new","year-old","grade-high","grade-low","price-low","price-high"])
       );
       const defaultSort = listingAvailabilityScope === "sold"
         ? "recent-sold"
-        : (listingAvailabilityScope === "inventory" ? "newest" : "name");
+        : (listingAvailabilityScope === "inventory"
+            ? "newest"
+            : (listingAvailabilityScope==="collection" ? "custom" : "name"));
       const sort = safeUrlFilterText(params.get("sort"), 24);
       $("sortBy").value = allowedSort.has(sort) ? sort : defaultSort;
       const sortLabel = {
         "recent-sold":"Sort: Recently Sold",
+        custom:"Custom Order",
         name:"Name: A → Z",
         "name-desc":"Name: Z → A",
         newest:"Newest Added",
@@ -27752,6 +27931,7 @@ function wireShimmer(container){
       const value=String($("sortBy")?.value||"");
       const labels={
         "recent-sold":"Recent",
+        custom:"Custom",
         name:"Name A–Z",
         "name-desc":"Name Z–A",
         newest:"Newest",
@@ -27856,6 +28036,8 @@ function wireShimmer(container){
     // This lives inside renderInventoryPage so Inventory/Sold/Reserved
     // and every other page remain completely unaffected.
     const collectionCollapsedGames=new Set();
+    let collectionRearrangeMode=false;
+    let collectionRearrangeDirty=false;
 
     function collectionGameLabel(card){
       const raw=String(card?.game||"").trim();
@@ -27894,22 +28076,30 @@ function wireShimmer(container){
 
           html=html.replace(
             '<div class="card ',
-            `<div class="card collection-game-card `
+            `<div class="card collection-game-card ${collectionRearrangeMode ? "collection-rearrange-card " : ""}`
           );
 
           html=html.replace(
             ' data-shimmer=',
-            ` data-collection-game-key="${escapeHtml(group.key)}"${collapsed ? " hidden" : ""} data-shimmer=`
+            ` data-collection-game-key="${escapeHtml(group.key)}"${collapsed ? " hidden" : ""}${collectionRearrangeMode ? ' draggable="true"' : ""} data-shimmer=`
           );
+
+          if(collectionRearrangeMode){
+            html=html.replace(
+              /(<div class="card collection-game-card[^>]*>)/,
+              `$1<span class="collection-drag-handle" aria-hidden="true">⋮⋮</span>`
+            );
+          }
 
           return html;
         }).join("");
 
         return `
           <button type="button"
-                  class="collection-game-group-header ${collapsed ? "collapsed" : ""}"
+                  class="collection-game-group-header ${collapsed ? "collapsed" : ""} ${collectionRearrangeMode ? "rearranging" : ""}"
                   data-collection-game-toggle="${escapeHtml(group.key)}"
-                  aria-expanded="${collapsed ? "false" : "true"}">
+                  aria-expanded="${collapsed ? "false" : "true"}"
+                  ${collectionRearrangeMode ? "disabled" : ""}>
             <span class="collection-game-group-main">
               <span class="collection-game-chevron" aria-hidden="true">⌄</span>
               <strong>${escapeHtml(group.label)}</strong>
@@ -28142,8 +28332,173 @@ function wireShimmer(container){
       }
     }
 
+    function collectionRearrangeCardIdsFromDom(){
+      return Array.from(
+        $("invGrid")?.querySelectorAll(".collection-game-card[data-card-id]") || []
+      ).map(card=>safeCardId(card.dataset.cardId||"")).filter(Boolean);
+    }
+
+    function collectionHasActiveFiltersForRearrange(){
+      if(String($("search")?.value||"").trim()) return true;
+      if(activeQuickFilter && activeQuickFilter!=="all") return true;
+      if(["filterGame","filterGrade","filterLanguage","filterEra","filterSeries"]
+        .some(id=>String($(id)?.value||"").trim())) return true;
+      return Object.values(pillFilterState).some(set=>set?.size);
+    }
+
+    function syncCollectionRearrangeButton(){
+      const button=$("collectionRearrangeBtn");
+      if(!button) return;
+
+      if(collectionRearrangeMode){
+        button.textContent="✓ Save Order";
+        button.classList.add("active");
+        button.title=collectionRearrangeDirty
+          ? "Save this new Collection card order"
+          : "Save Collection card order";
+      }else{
+        button.textContent="⇅ Rearrange Cards";
+        button.classList.remove("active");
+        button.title="Drag Collection cards into your preferred default order";
+      }
+    }
+
+    function enterCollectionRearrangeMode(){
+      if(!requireOwner("rearrange Collection cards")) return;
+      if(listingAvailabilityScope!=="collection") return;
+
+      if(collectionCardOrderSupported===false){
+        showToast("Run the Collection Custom Order SQL migration first");
+        return;
+      }
+
+      if(collectionHasActiveFiltersForRearrange()){
+        showToast("Clear Collection filters before rearranging");
+        return;
+      }
+
+      if($("sortBy")?.value!=="custom"){
+        $("sortBy").value="custom";
+        const label=$("sortByBtn")?.querySelector("span");
+        if(label) label.textContent="Custom Order";
+      }
+
+      collectionCollapsedGames.clear();
+      collectionRearrangeMode=true;
+      collectionRearrangeDirty=false;
+      draw();
+      syncCollectionRearrangeButton();
+      document.body.classList.add("collection-rearrange-mode");
+      showToast("Drag cards within each game, then Save Order");
+    }
+
+    async function finishCollectionRearrangeMode(save){
+      if(!collectionRearrangeMode) return;
+
+      if(!save){
+        collectionRearrangeMode=false;
+        collectionRearrangeDirty=false;
+        document.body.classList.remove("collection-rearrange-mode");
+        draw();
+        syncCollectionRearrangeButton();
+        showToast("Rearrange cancelled");
+        return;
+      }
+
+      const ids=collectionRearrangeCardIdsFromDom();
+      const button=$("collectionRearrangeBtn");
+      if(button){
+        button.disabled=true;
+        button.textContent="Saving…";
+      }
+
+      const ok=await saveCollectionCardOrder(ids);
+
+      if(button) button.disabled=false;
+      if(!ok){
+        syncCollectionRearrangeButton();
+        return;
+      }
+
+      collectionRearrangeMode=false;
+      collectionRearrangeDirty=false;
+      document.body.classList.remove("collection-rearrange-mode");
+      if($("sortBy")) $("sortBy").value="custom";
+      draw();
+      syncCollectionRearrangeButton();
+      updateListingUrlFromControls();
+      showToast("Collection order saved");
+    }
+
+    $("collectionRearrangeBtn")?.addEventListener("click",async()=>{
+      if(collectionRearrangeMode) await finishCollectionRearrangeMode(true);
+      else enterCollectionRearrangeMode();
+    });
+
+    let collectionDraggedCard=null;
+
+    $("invGrid")?.addEventListener("dragstart",event=>{
+      if(!collectionRearrangeMode || listingAvailabilityScope!=="collection") return;
+      const card=event.target.closest(".collection-game-card[data-card-id]");
+      if(!card) return;
+
+      collectionDraggedCard=card;
+      card.classList.add("collection-dragging");
+      try{
+        event.dataTransfer.effectAllowed="move";
+        event.dataTransfer.setData("text/plain",String(card.dataset.cardId||""));
+      }catch{}
+    },{signal:inventorySignal});
+
+    $("invGrid")?.addEventListener("dragend",()=>{
+      collectionDraggedCard?.classList.remove("collection-dragging");
+      collectionDraggedCard=null;
+      $("invGrid")?.querySelectorAll(".collection-drag-over")
+        .forEach(el=>el.classList.remove("collection-drag-over"));
+    },{signal:inventorySignal});
+
+    $("invGrid")?.addEventListener("dragover",event=>{
+      if(!collectionRearrangeMode || !collectionDraggedCard) return;
+
+      const target=event.target.closest(".collection-game-card[data-card-id]");
+      if(!target || target===collectionDraggedCard) return;
+
+      if(
+        String(target.dataset.collectionGameKey||"") !==
+        String(collectionDraggedCard.dataset.collectionGameKey||"")
+      ) return;
+
+      event.preventDefault();
+      try{event.dataTransfer.dropEffect="move";}catch{}
+
+      $("invGrid")?.querySelectorAll(".collection-drag-over")
+        .forEach(el=>el.classList.remove("collection-drag-over"));
+      target.classList.add("collection-drag-over");
+
+      const rect=target.getBoundingClientRect();
+      const before=event.clientY < rect.top+rect.height/2;
+      const parent=target.parentNode;
+      if(before) parent.insertBefore(collectionDraggedCard,target);
+      else parent.insertBefore(collectionDraggedCard,target.nextSibling);
+
+      collectionRearrangeDirty=true;
+      syncCollectionRearrangeButton();
+    },{signal:inventorySignal});
+
+    document.addEventListener("keydown",event=>{
+      if(!collectionRearrangeMode || event.key!=="Escape") return;
+      event.preventDefault();
+      finishCollectionRearrangeMode(false);
+    },{signal:inventorySignal});
+
     $("invGrid")?.addEventListener("click",event=>{
       if(listingAvailabilityScope!=="collection") return;
+
+      if(collectionRearrangeMode){
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
 
       const header=event.target.closest("[data-collection-game-toggle]");
       if(!header) return;
@@ -28566,12 +28921,16 @@ function wireShimmer(container){
 
       const defaultSort=listingAvailabilityScope==="sold"
         ? "recent-sold"
-        : (listingAvailabilityScope==="inventory" ? "newest" : "name");
+        : (listingAvailabilityScope==="inventory"
+            ? "newest"
+            : (listingAvailabilityScope==="collection" ? "custom" : "name"));
       $("sortBy").value=defaultSort;
       $("sortByBtn").querySelector("span").textContent=
         defaultSort==="recent-sold"
           ? "Sort: Recently Sold"
-          : (defaultSort==="newest" ? "Newest Added" : "Name: A → Z");
+          : (defaultSort==="newest"
+              ? "Newest Added"
+              : (defaultSort==="custom" ? "Custom Order" : "Name: A → Z"));
 
       activeQuickFilter="all";
       Object.values(pillFilterState).forEach(set=>set.clear());
@@ -28591,10 +28950,12 @@ function wireShimmer(container){
       if(!el) return;
 
       el.addEventListener("input", ()=>{
+        if(collectionRearrangeMode && listingAvailabilityScope==="collection") return;
         updateListingUrlFromControls();
         draw();
       });
       el.addEventListener("change", ()=>{
+        if(collectionRearrangeMode && listingAvailabilityScope==="collection") return;
         updateListingUrlFromControls();
         draw();
       });
@@ -28602,6 +28963,7 @@ function wireShimmer(container){
 
     $("quickFilters").querySelectorAll(".quick-filter").forEach(btn=>{
       btn.addEventListener("click", ()=>{
+        if(collectionRearrangeMode && listingAvailabilityScope==="collection") return;
         activeQuickFilter = btn.dataset.quick;
         syncQuickFilterUI();
         updateListingUrlFromControls();
