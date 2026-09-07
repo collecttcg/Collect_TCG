@@ -141,6 +141,7 @@
   .detail-header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:18px;}
   .detail-title{min-width:0;}
   .detail-title h2{font-size:28px;margin-bottom:4px;}
+  #giveawayDetailsTitle{text-transform:capitalize;}
   .detail-meta{color:var(--text-muted);font-size:12.5px;}
   .detail-layout{display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,1fr);gap:18px;}
   .detail-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;align-content:start;}
@@ -359,7 +360,7 @@
   .giveaway-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
   .giveaway-card img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--surface-2);}
   .giveaway-body{padding:14px;}
-  .giveaway-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;}
+  .giveaway-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;text-transform:capitalize;}
   .giveaway-meta{color:var(--text-muted);font-size:11px;margin-top:3px;}
   .giveaway-status{display:inline-block;margin-top:8px;padding:3px 7px;border-radius:999px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border:1px solid var(--accent-teal);color:var(--accent-teal);}
   .giveaway-status.closed{border-color:var(--text-muted);color:var(--text-muted);}
@@ -32249,7 +32250,7 @@ function wireShimmer(container){
       <div class="detail-header">
         <div class="detail-title">
           <div class="eyebrow">Giveaway details</div>
-          <h2 id="giveawayDetailsTitle">${escapeHtml(g.title||"Giveaway").toUpperCase()}</h2>
+          <h2 id="giveawayDetailsTitle">${escapeHtml(g.title||"Giveaway")}</h2>
           <div class="detail-meta">${escapeHtml(g.card_name||"Collect TCG prize")}</div>
         </div>
       </div>
