@@ -141,7 +141,7 @@
   .detail-header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:18px;}
   .detail-title{min-width:0;}
   .detail-title h2{font-size:28px;margin-bottom:4px;}
-  #giveawayDetailsTitle{text-transform:capitalize;}
+  #giveawayDetailsTitle{text-transform:none;}
   .detail-meta{color:var(--text-muted);font-size:12.5px;}
   .detail-layout{display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,1fr);gap:18px;}
   .detail-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;align-content:start;}
@@ -360,7 +360,7 @@
   .giveaway-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
   .giveaway-card img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--surface-2);}
   .giveaway-body{padding:14px;}
-  .giveaway-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;text-transform:capitalize;}
+  .giveaway-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;text-transform:none;}
   .giveaway-meta{color:var(--text-muted);font-size:11px;margin-top:3px;}
   .giveaway-status{display:inline-block;margin-top:8px;padding:3px 7px;border-radius:999px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border:1px solid var(--accent-teal);color:var(--accent-teal);}
   .giveaway-status.closed{border-color:var(--text-muted);color:var(--text-muted);}
@@ -27461,6 +27461,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       .replace(/\b([a-z])/g, m=>m.toUpperCase());
   }
 
+  function giveawayDisplayTitle(value){
+    const titled=titleCaseWords(value || "Giveaway");
+    return titled
+      .replace(/\bPsa\b/g,"PSA")
+      .replace(/\bTcg\b/g,"TCG")
+      .replace(/\bMy\b/g,"MY")
+      .replace(/\bSg\b/g,"SG")
+      .replace(/\bJp\b/g,"JP")
+      .replace(/\bEn\b/g,"EN")
+      .replace(/\bOp\b/g,"OP");
+  }
+
   function normalizeStoredLabel(value){
     return titleCaseWords(value);
   }
@@ -32250,7 +32262,7 @@ function wireShimmer(container){
       <div class="detail-header">
         <div class="detail-title">
           <div class="eyebrow">Giveaway details</div>
-          <h2 id="giveawayDetailsTitle">${escapeHtml(g.title||"Giveaway")}</h2>
+          <h2 id="giveawayDetailsTitle">${escapeHtml(giveawayDisplayTitle(g.title))}</h2>
           <div class="detail-meta">${escapeHtml(g.card_name||"Collect TCG prize")}</div>
         </div>
       </div>
@@ -32299,10 +32311,10 @@ function wireShimmer(container){
     const pastWinners=sortedPastGiveawayWinners().filter(g=>giveawayVisibleToCurrentViewer(g));
 
     const currentCardHTML=g=>`
-      <article class="giveaway-card" data-giveaway-open="${escapeHtml(g.id)}" tabindex="0" role="button" aria-label="Open ${escapeHtml(g.title)} giveaway details">
+      <article class="giveaway-card" data-giveaway-open="${escapeHtml(g.id)}" tabindex="0" role="button" aria-label="Open ${escapeHtml(giveawayDisplayTitle(g.title))} giveaway details">
         ${giveawayGalleryHTML(g)}
         <div class="giveaway-body">
-          <div class="giveaway-title">${escapeHtml(g.title)}</div>
+          <div class="giveaway-title">${escapeHtml(giveawayDisplayTitle(g.title))}</div>
           <div class="giveaway-meta">${escapeHtml(g.card_name)}</div>
           <div class="giveaway-status-row">
             <span class="giveaway-status ${normalizeFilterValue(g.status)==="closed" ? "closed" : ""}">
@@ -32451,12 +32463,12 @@ function wireShimmer(container){
     const winnerCardHTML=g=>`
       <article class="giveaway-card giveaway-winner-card"
                id="giveaway-winner-${escapeHtml(g.id)}"
-               data-giveaway-open="${escapeHtml(g.id)}" tabindex="0" role="button" aria-label="Open ${escapeHtml(g.title)} giveaway details"
+               data-giveaway-open="${escapeHtml(g.id)}" tabindex="0" role="button" aria-label="Open ${escapeHtml(giveawayDisplayTitle(g.title))} giveaway details"
                data-giveaway-winner-card="${escapeHtml(g.id)}">
         ${giveawayGalleryHTML(g)}
         <div class="giveaway-body">
           <div class="giveaway-winner-summary">
-            <div class="giveaway-title">${escapeHtml(g.title)}</div>
+            <div class="giveaway-title">${escapeHtml(giveawayDisplayTitle(g.title))}</div>
             <div class="giveaway-meta">${escapeHtml(g.card_name)}</div>
             <span class="giveaway-status closed">Gave Away</span>
           </div>
@@ -36900,7 +36912,7 @@ function wireShimmer(container){
                        ${checked?"checked":""}>
                 <span class="fb-card-list-select-copy">
                   <strong>${escapeHtml(g.winner_name||"Winner")}</strong>
-                  <small>${escapeHtml(g.title||"Giveaway")} · Prize: ${escapeHtml(g.card_name||"Giveaway Prize")}</small>
+                  <small>${escapeHtml(giveawayDisplayTitle(g.title))} · Prize: ${escapeHtml(g.card_name||"Giveaway Prize")}</small>
                   ${profile ? `<small>${escapeHtml(profile)}</small>` : `<small>No Facebook profile link saved</small>`}
                 </span>
               </label>
@@ -37139,7 +37151,7 @@ function wireShimmer(container){
               <option value="">Manual template</option>
               ${giveawayRows.map(g=>`
                 <option value="${escapeHtml(g.id)}">
-                  ${escapeHtml([g.title,g.card_name].filter(Boolean).join(" · ")||"Giveaway")}
+                  ${escapeHtml([giveawayDisplayTitle(g.title),g.card_name].filter(Boolean).join(" · ")||"Giveaway")}
                 </option>
               `).join("")}
             </select>
