@@ -17200,6 +17200,23 @@ body.showcase-dragging-body{
   cursor:not-allowed;
 }
 
+
+/* Inventory overview — match standard PSA upload framing (1140 × 1905) */
+@media(min-width:801px){
+  #invGrid.grid:not(.compact-list) .card > .thumb-wrap,
+  #invGrid.grid:not(.compact-list) .card > .thumb-placeholder{
+    aspect-ratio:1140 / 1905;
+  }
+
+  #invGrid.grid:not(.compact-list) .card > .thumb-wrap .thumb{
+    width:100% !important;
+    height:100% !important;
+    aspect-ratio:1140 / 1905;
+    object-fit:cover;
+    object-position:center;
+  }
+}
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
