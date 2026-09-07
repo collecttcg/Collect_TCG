@@ -17921,11 +17921,10 @@ body.showcase-dragging-body{
     </div>
 
     <div class="field giveaway-how-to-enter-field">
-      <label for="giveawayHowToEnter">How to enter</label>
+      <label for="giveawayHowToEnter">How to enter <span class="field-optional">(optional)</span></label>
       <textarea id="giveawayHowToEnter"
                 rows="8"
-                required
-                placeholder="Example: Follow our Instagram, like the post, and tag 2 friends..."></textarea>
+                placeholder="Optional extra instructions, eligibility notes, or anything not covered by the required/bonus actions above..."></textarea>
     </div>
 
     <div class="field">
@@ -29930,19 +29929,21 @@ function wireShimmer(container){
             </div>
           ` : ""}
 
-          <div class="giveaway-section giveaway-how-preview">
-            <h4>${giveawayGrowthFieldsSupported===true ? "Additional entry instructions" : "How to enter"}</h4>
-            <p class="giveaway-how-text"
-               id="giveawayHowText-${escapeHtml(g.id)}">${escapeHtml(g.how_to_enter)}</p>
-            <button type="button"
-                    class="giveaway-how-toggle"
-                    data-giveaway-how-toggle="${escapeHtml(g.id)}"
-                    aria-expanded="false"
-                    aria-controls="giveawayHowText-${escapeHtml(g.id)}"
-                    hidden>
-              Read more
-            </button>
-          </div>
+          ${String(g.how_to_enter||"").trim() ? `
+            <div class="giveaway-section giveaway-how-preview">
+              <h4>${giveawayGrowthFieldsSupported===true ? "Additional entry instructions" : "How to enter"}</h4>
+              <p class="giveaway-how-text"
+                 id="giveawayHowText-${escapeHtml(g.id)}">${escapeHtml(g.how_to_enter)}</p>
+              <button type="button"
+                      class="giveaway-how-toggle"
+                      data-giveaway-how-toggle="${escapeHtml(g.id)}"
+                      aria-expanded="false"
+                      aria-controls="giveawayHowText-${escapeHtml(g.id)}"
+                      hidden>
+                Read more
+              </button>
+            </div>
+          ` : ""}
 
           ${g.ends_at ? `<div class="giveaway-section"><h4>Ends</h4><p>${escapeHtml(giveawayDateLabel(g.ends_at))}</p></div>` : ""}
           ${g.details ? `<div class="giveaway-section"><h4>Details</h4><p>${escapeHtml(g.details)}</p></div>` : ""}
