@@ -17865,6 +17865,46 @@ body.light-mode #invGrid.collection-game-grouped .collection-game-group-header{
   .collection-rearrange-btn{display:none !important}
 }
 
+
+/* Collection rearrange — draggable Game categories */
+#invGrid.collection-game-grouped .collection-game-group-header.rearranging{
+  cursor:grab;
+  opacity:1;
+  border-style:dashed;
+}
+
+#invGrid.collection-game-grouped .collection-game-group-header.rearranging:active{
+  cursor:grabbing;
+}
+
+#invGrid.collection-game-grouped .collection-game-drag-handle{
+  width:27px;
+  height:24px;
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(227,179,65,.52);
+  border-radius:7px;
+  color:var(--accent-gold);
+  background:rgba(227,179,65,.08);
+  font-size:14px;
+  line-height:1;
+}
+
+#invGrid.collection-game-grouped .collection-game-dragging{
+  opacity:.58;
+}
+
+#invGrid.collection-game-grouped .collection-game-drag-over{
+  border-color:rgba(227,179,65,.90);
+  box-shadow:0 0 0 2px rgba(227,179,65,.16);
+}
+
+body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game-chevron{
+  opacity:.45;
+}
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -18604,7 +18644,91 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   let cards = [];
   const collectionCardOrderById=new Map();
+  const collectionGameOrderByKey=new Map();
   let collectionCardOrderSupported="unknown";
+  let collectionGameOrderSupported="unknown";
+
+  async function loadCollectionGameOrder(){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_collection_game_order");
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(
+          message.includes("get_collection_game_order") ||
+          message.includes("function") ||
+          message.includes("schema cache")
+        ) collectionGameOrderSupported=false;
+        collectionGameOrderByKey.clear();
+        return false;
+      }
+
+      collectionGameOrderByKey.clear();
+      (Array.isArray(data)?data:[]).forEach(row=>{
+        const key=normalizeFilterValue(row?.game_key||"") || "__other__";
+        const order=Number(row?.sort_order);
+        if(key && Number.isFinite(order)) collectionGameOrderByKey.set(key,order);
+      });
+      collectionGameOrderSupported=true;
+      return true;
+    }catch(error){
+      console.warn("Collection game order unavailable:",error);
+      collectionGameOrderSupported=false;
+      collectionGameOrderByKey.clear();
+      return false;
+    }
+  }
+
+  function collectionCustomGameOrderValue(gameKey){
+    const key=normalizeFilterValue(gameKey||"") || "__other__";
+    const value=collectionGameOrderByKey.get(key);
+    return Number.isFinite(value) ? value : Number.MAX_SAFE_INTEGER;
+  }
+
+  async function saveCollectionGameOrder(groups){
+    if(!requireOwner("save Collection game order")) return false;
+
+    const clean=(groups||[]).map(group=>({
+      key:normalizeFilterValue(group?.key||"") || "__other__",
+      label:String(group?.label||"").trim() || "Other"
+    })).filter(group=>group.key);
+
+    if(!clean.length){
+      showToast("No Collection game categories to save");
+      return false;
+    }
+
+    try{
+      const {data,error}=await supabaseClient.rpc("set_collection_game_order",{
+        p_game_keys:clean.map(group=>group.key),
+        p_game_labels:clean.map(group=>group.label)
+      });
+
+      if(error){
+        console.error("Collection game-order save error:",error);
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(
+          message.includes("set_collection_game_order") ||
+          message.includes("function") ||
+          message.includes("schema cache")
+        ){
+          collectionGameOrderSupported=false;
+          showToast("Run the Collection Game Order SQL migration first");
+        }else{
+          showToast("Could not save Collection game order");
+        }
+        return false;
+      }
+
+      collectionGameOrderByKey.clear();
+      clean.forEach((group,index)=>collectionGameOrderByKey.set(group.key,index+1));
+      collectionGameOrderSupported=true;
+      return Number(data||0)>=0;
+    }catch(error){
+      console.error("Collection game-order save failed:",error);
+      showToast("Could not save Collection game order");
+      return false;
+    }
+  }
 
   async function loadCollectionCardOrder(){
     try{
@@ -19694,7 +19818,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     // Collection custom order is stored separately so the existing Cards
     // schema and secure owner-card RPC do not need to change.
-    await loadCollectionCardOrder();
+    await Promise.all([
+      loadCollectionCardOrder(),
+      loadCollectionGameOrder()
+    ]);
 
     // The eye counter shown to Owner Mode is now sourced from the fresh
     // qualified-view analytics table, not the legacy cards.view_count field.
@@ -28062,6 +28189,11 @@ function wireShimmer(container){
       });
 
       const ordered=Array.from(groups.values()).sort((a,b)=>{
+        const ao=collectionCustomGameOrderValue(a.key);
+        const bo=collectionCustomGameOrderValue(b.key);
+        if(ao!==bo) return ao-bo;
+
+        // New/unordered games fall back to alphabetical order, with Other last.
         const aOther=a.key==="__other__";
         const bOther=b.key==="__other__";
         if(aOther!==bOther) return aOther ? 1 : -1;
@@ -28096,11 +28228,13 @@ function wireShimmer(container){
 
         return `
           <button type="button"
-                  class="collection-game-group-header ${collapsed ? "collapsed" : ""} ${collectionRearrangeMode ? "rearranging" : ""}"
+                  class="collection-game-group-header ${collapsed ? "collapsed" : ""} ${collectionRearrangeMode ? "rearranging collection-game-draggable" : ""}"
                   data-collection-game-toggle="${escapeHtml(group.key)}"
+                  data-collection-game-label="${escapeHtml(group.label)}"
                   aria-expanded="${collapsed ? "false" : "true"}"
-                  ${collectionRearrangeMode ? "disabled" : ""}>
+                  ${collectionRearrangeMode ? 'draggable="true"' : ""}>
             <span class="collection-game-group-main">
+              ${collectionRearrangeMode ? `<span class="collection-game-drag-handle" aria-hidden="true">☰</span>` : ""}
               <span class="collection-game-chevron" aria-hidden="true">⌄</span>
               <strong>${escapeHtml(group.label)}</strong>
             </span>
@@ -28338,6 +28472,15 @@ function wireShimmer(container){
       ).map(card=>safeCardId(card.dataset.cardId||"")).filter(Boolean);
     }
 
+    function collectionRearrangeGamesFromDom(){
+      return Array.from(
+        $("invGrid")?.querySelectorAll(".collection-game-group-header[data-collection-game-toggle]") || []
+      ).map(header=>({
+        key:String(header.dataset.collectionGameToggle||""),
+        label:String(header.dataset.collectionGameLabel||"").trim() || "Other"
+      })).filter(group=>group.key);
+    }
+
     function collectionHasActiveFiltersForRearrange(){
       if(String($("search")?.value||"").trim()) return true;
       if(activeQuickFilter && activeQuickFilter!=="all") return true;
@@ -28371,6 +28514,10 @@ function wireShimmer(container){
         showToast("Run the Collection Custom Order SQL migration first");
         return;
       }
+      if(collectionGameOrderSupported===false){
+        showToast("Run the Collection Game Order SQL migration first");
+        return;
+      }
 
       if(collectionHasActiveFiltersForRearrange()){
         showToast("Clear Collection filters before rearranging");
@@ -28389,7 +28536,7 @@ function wireShimmer(container){
       draw();
       syncCollectionRearrangeButton();
       document.body.classList.add("collection-rearrange-mode");
-      showToast("Drag cards within each game, then Save Order");
+      showToast("Drag game headers and cards, then Save Order");
     }
 
     async function finishCollectionRearrangeMode(save){
@@ -28406,16 +28553,20 @@ function wireShimmer(container){
       }
 
       const ids=collectionRearrangeCardIdsFromDom();
+      const groups=collectionRearrangeGamesFromDom();
       const button=$("collectionRearrangeBtn");
       if(button){
         button.disabled=true;
         button.textContent="Saving…";
       }
 
-      const ok=await saveCollectionCardOrder(ids);
+      const [cardsOk,gamesOk]=await Promise.all([
+        saveCollectionCardOrder(ids),
+        saveCollectionGameOrder(groups)
+      ]);
 
       if(button) button.disabled=false;
-      if(!ok){
+      if(!cardsOk || !gamesOk){
         syncCollectionRearrangeButton();
         return;
       }
@@ -28435,10 +28586,85 @@ function wireShimmer(container){
       else enterCollectionRearrangeMode();
     });
 
+    let collectionDraggedGameHeader=null;
+
+    function collectionGameBlockNodes(header){
+      const nodes=[];
+      let node=header;
+      while(node){
+        if(node!==header && node.classList?.contains("collection-game-group-header")) break;
+        nodes.push(node);
+        node=node.nextElementSibling;
+      }
+      return nodes;
+    }
+
+    function moveCollectionGameBlock(sourceHeader,targetHeader,before){
+      if(!sourceHeader || !targetHeader || sourceHeader===targetHeader) return;
+
+      const grid=$("invGrid");
+      if(!grid) return;
+
+      const sourceNodes=collectionGameBlockNodes(sourceHeader);
+      if(!sourceNodes.length) return;
+
+      const sourceSet=new Set(sourceNodes);
+      if(sourceSet.has(targetHeader)) return;
+
+      // Detach the whole category first so header + its cards move together.
+      const fragment=document.createDocumentFragment();
+      sourceNodes.forEach(node=>fragment.appendChild(node));
+
+      if(before){
+        grid.insertBefore(fragment,targetHeader);
+      }else{
+        const targetNodes=collectionGameBlockNodes(targetHeader);
+        const last=targetNodes[targetNodes.length-1];
+        grid.insertBefore(fragment,last?.nextSibling||null);
+      }
+
+      collectionRearrangeDirty=true;
+      syncCollectionRearrangeButton();
+    }
+
+    $("invGrid")?.addEventListener("dragstart",event=>{
+      if(!collectionRearrangeMode || listingAvailabilityScope!=="collection") return;
+
+      const header=event.target.closest(".collection-game-group-header[data-collection-game-toggle]");
+      if(!header) return;
+
+      collectionDraggedGameHeader=header;
+      header.classList.add("collection-game-dragging");
+      try{
+        event.dataTransfer.effectAllowed="move";
+        event.dataTransfer.setData("text/plain",`game:${header.dataset.collectionGameToggle||""}`);
+      }catch{}
+    },{signal:inventorySignal});
+
+    $("invGrid")?.addEventListener("dragover",event=>{
+      if(!collectionRearrangeMode || !collectionDraggedGameHeader) return;
+
+      const targetHeader=event.target.closest(".collection-game-group-header[data-collection-game-toggle]");
+      if(!targetHeader || targetHeader===collectionDraggedGameHeader) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      try{event.dataTransfer.dropEffect="move";}catch{}
+
+      $("invGrid")?.querySelectorAll(".collection-game-drag-over")
+        .forEach(el=>el.classList.remove("collection-game-drag-over"));
+      targetHeader.classList.add("collection-game-drag-over");
+
+      const rect=targetHeader.getBoundingClientRect();
+      const before=event.clientY < rect.top+rect.height/2;
+      moveCollectionGameBlock(collectionDraggedGameHeader,targetHeader,before);
+    },{signal:inventorySignal});
+
     let collectionDraggedCard=null;
 
     $("invGrid")?.addEventListener("dragstart",event=>{
       if(!collectionRearrangeMode || listingAvailabilityScope!=="collection") return;
+      if(event.target.closest(".collection-game-group-header")) return;
       const card=event.target.closest(".collection-game-card[data-card-id]");
       if(!card) return;
 
@@ -28452,13 +28678,18 @@ function wireShimmer(container){
 
     $("invGrid")?.addEventListener("dragend",()=>{
       collectionDraggedCard?.classList.remove("collection-dragging");
+      collectionDraggedGameHeader?.classList.remove("collection-game-dragging");
       collectionDraggedCard=null;
-      $("invGrid")?.querySelectorAll(".collection-drag-over")
-        .forEach(el=>el.classList.remove("collection-drag-over"));
+      collectionDraggedGameHeader=null;
+      $("invGrid")?.querySelectorAll(".collection-drag-over,.collection-game-drag-over")
+        .forEach(el=>{
+          el.classList.remove("collection-drag-over");
+          el.classList.remove("collection-game-drag-over");
+        });
     },{signal:inventorySignal});
 
     $("invGrid")?.addEventListener("dragover",event=>{
-      if(!collectionRearrangeMode || !collectionDraggedCard) return;
+      if(!collectionRearrangeMode || collectionDraggedGameHeader || !collectionDraggedCard) return;
 
       const target=event.target.closest(".collection-game-card[data-card-id]");
       if(!target || target===collectionDraggedCard) return;
