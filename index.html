@@ -17905,6 +17905,25 @@ body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game
   opacity:.45;
 }
 
+
+/* Collection rearrange — Game headers remain expandable/collapsible */
+body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game-group-header.rearranging{
+  cursor:grab;
+}
+
+body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game-group-header.rearranging .collection-game-chevron{
+  opacity:1;
+  cursor:pointer;
+}
+
+body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game-group-header.rearranging:hover{
+  border-color:rgba(227,179,65,.72);
+}
+
+body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game-group-header.collapsed{
+  margin-bottom:8px;
+}
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -28587,6 +28606,8 @@ function wireShimmer(container){
     });
 
     let collectionDraggedGameHeader=null;
+    let collectionGameDragMoved=false;
+    let collectionSuppressNextGameClick=false;
 
     function collectionGameBlockNodes(header){
       const nodes=[];
@@ -28634,6 +28655,7 @@ function wireShimmer(container){
       if(!header) return;
 
       collectionDraggedGameHeader=header;
+      collectionGameDragMoved=false;
       header.classList.add("collection-game-dragging");
       try{
         event.dataTransfer.effectAllowed="move";
@@ -28658,6 +28680,7 @@ function wireShimmer(container){
       const rect=targetHeader.getBoundingClientRect();
       const before=event.clientY < rect.top+rect.height/2;
       moveCollectionGameBlock(collectionDraggedGameHeader,targetHeader,before);
+      collectionGameDragMoved=true;
     },{signal:inventorySignal});
 
     let collectionDraggedCard=null;
@@ -28679,8 +28702,15 @@ function wireShimmer(container){
     $("invGrid")?.addEventListener("dragend",()=>{
       collectionDraggedCard?.classList.remove("collection-dragging");
       collectionDraggedGameHeader?.classList.remove("collection-game-dragging");
+
+      if(collectionDraggedGameHeader && collectionGameDragMoved){
+        collectionSuppressNextGameClick=true;
+        setTimeout(()=>{ collectionSuppressNextGameClick=false; },120);
+      }
+
       collectionDraggedCard=null;
       collectionDraggedGameHeader=null;
+      collectionGameDragMoved=false;
       $("invGrid")?.querySelectorAll(".collection-drag-over,.collection-game-drag-over")
         .forEach(el=>{
           el.classList.remove("collection-drag-over");
@@ -28725,33 +28755,41 @@ function wireShimmer(container){
     $("invGrid")?.addEventListener("click",event=>{
       if(listingAvailabilityScope!=="collection") return;
 
+      const header=event.target.closest("[data-collection-game-toggle]");
+      if(header){
+        event.preventDefault();
+        event.stopPropagation();
+
+        if(collectionSuppressNextGameClick){
+          collectionSuppressNextGameClick=false;
+          return;
+        }
+
+        const key=String(header.dataset.collectionGameToggle||"");
+        if(!key) return;
+
+        const collapse=!collectionCollapsedGames.has(key);
+        if(collapse) collectionCollapsedGames.add(key);
+        else collectionCollapsedGames.delete(key);
+
+        header.classList.toggle("collapsed",collapse);
+        header.setAttribute("aria-expanded",collapse ? "false" : "true");
+
+        $("invGrid")?.querySelectorAll(".collection-game-card").forEach(card=>{
+          if(String(card.dataset.collectionGameKey||"")===key){
+            card.hidden=collapse;
+          }
+        });
+        return;
+      }
+
       if(collectionRearrangeMode){
+        // In rearrange mode, normal card actions/details are disabled,
+        // but Game headers above remain usable for collapse/expand.
         event.preventDefault();
         event.stopPropagation();
         return;
       }
-
-      const header=event.target.closest("[data-collection-game-toggle]");
-      if(!header) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      const key=String(header.dataset.collectionGameToggle||"");
-      if(!key) return;
-
-      const collapse=!collectionCollapsedGames.has(key);
-      if(collapse) collectionCollapsedGames.add(key);
-      else collectionCollapsedGames.delete(key);
-
-      header.classList.toggle("collapsed",collapse);
-      header.setAttribute("aria-expanded",collapse ? "false" : "true");
-
-      $("invGrid")?.querySelectorAll(".collection-game-card").forEach(card=>{
-        if(String(card.dataset.collectionGameKey||"")===key){
-          card.hidden=collapse;
-        }
-      });
     },{signal:inventorySignal});
 
     const searchSuggestions=$("searchSuggestions");
