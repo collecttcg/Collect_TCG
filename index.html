@@ -17120,6 +17120,32 @@ body.showcase-dragging-body{
 @media(max-width:800px){.insights-return-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.insights-return-grid{grid-template-columns:1fr}}
 @media(max-width:520px){.insights-return-summary{grid-template-columns:1fr}.insights-depth-row{grid-template-columns:58px minmax(0,1fr) 30px 34px;gap:6px}}
 
+
+/* Insights — Engaged Visits */
+.insights-engaged-visits-card{margin-top:12px}
+.insights-engaged-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:14px}
+.insights-engaged-summary article{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2)}
+.insights-engaged-summary span{display:block;color:var(--text-muted);font-size:8px}
+.insights-engaged-summary strong{display:block;margin-top:3px;color:var(--text);font-size:17px}
+.engaged-visit-chart{display:flex;flex-direction:column;gap:8px}
+.engaged-visit-day{display:grid;grid-template-columns:54px minmax(0,1fr) 46px;gap:10px;align-items:center}
+.engaged-visit-date{color:var(--text);font-size:8.5px;font-weight:900}
+.engaged-visit-bars{display:flex;flex-direction:column;gap:4px}
+.engaged-visit-line{display:grid;grid-template-columns:48px minmax(0,1fr) 38px;gap:7px;align-items:center}
+.engaged-visit-line>span{color:var(--text-muted);font-size:7.5px}
+.engaged-visit-line>i{display:block;height:8px;overflow:hidden;border:1px solid var(--border);border-radius:999px;background:var(--surface-2)}
+.engaged-visit-line>i>b{display:block;height:100%;border-radius:inherit}
+.engaged-visits-total{background:var(--accent-teal)}
+.engaged-visits-active{background:var(--accent-gold)}
+.engaged-visit-line>strong{color:var(--text);font-size:8px;text-align:right}
+.engaged-visit-day>small{color:var(--text-muted);font-size:7.5px;text-align:right}
+.insights-engaged-note{margin-top:11px}
+@media(max-width:620px){
+  .insights-engaged-summary{grid-template-columns:1fr}
+  .engaged-visit-day{grid-template-columns:44px minmax(0,1fr) 40px;gap:7px}
+  .engaged-visit-line{grid-template-columns:42px minmax(0,1fr) 32px;gap:5px}
+}
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -20669,6 +20695,30 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }catch(error){
       console.warn("Returning visitor insights unavailable:",error);
       return {supported:false,row:null};
+    }
+  }
+
+  async function fetchEngagedVisitSeries(start,end){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_engaged_visit_series_my_sg",{
+        p_start:start.toISOString(),
+        p_end:end.toISOString()
+      });
+
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        const unavailable=
+          message.includes("get_engaged_visit_series_my_sg") ||
+          message.includes("function") ||
+          message.includes("schema cache");
+        if(!unavailable) console.warn("Engaged visit series unavailable:",error);
+        return {supported:false,rows:[]};
+      }
+
+      return {supported:true,rows:Array.isArray(data)?data:[]};
+    }catch(error){
+      console.warn("Engaged visit series unavailable:",error);
+      return {supported:false,rows:[]};
     }
   }
 
@@ -29236,6 +29286,7 @@ function wireShimmer(container){
       visitorSources:[],visitorSourceSupported:false,
       searchInsights:[],searchInsightsSupported:false,
       returningVisitorInsights:null,returningVisitorSupported:false,
+      engagedVisitSeries:[],engagedVisitSupported:false,
       engagementSupported:false,saleSnapshotsSupported:false,saleSnapshots:[],
       editHistoryRows:[],editHistoryLoaded:false
     };
@@ -29501,6 +29552,80 @@ function wireShimmer(container){
         </div>`;
     }
 
+    function engagedVisitDateLabel(value){
+      const raw=String(value||"");
+      const match=raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      return match ? `${match[2]}/${match[3]}` : raw;
+    }
+
+    function websiteVisitDateKey(row){
+      const raw=String(row?.bucket||row?.visit_date||row?.date||"");
+      const match=raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if(match) return `${match[1]}-${match[2]}-${match[3]}`;
+
+      const d=new Date(raw);
+      if(!Number.isFinite(d.getTime())) return raw;
+      return new Intl.DateTimeFormat("en-CA",{
+        timeZone:"Asia/Kuala_Lumpur",
+        year:"numeric",month:"2-digit",day:"2-digit"
+      }).format(d);
+    }
+
+    function renderEngagedVisitsComparison(websiteRows,engagedRows){
+      const siteMap=new Map(
+        (Array.isArray(websiteRows)?websiteRows:[]).map(r=>[
+          websiteVisitDateKey(r),
+          Number(r.visits||0)
+        ])
+      );
+
+      const engagedMap=new Map(
+        (Array.isArray(engagedRows)?engagedRows:[]).map(r=>[
+          String(r.visit_date||""),
+          Number(r.engaged_visits||0)
+        ])
+      );
+
+      const dates=[...new Set([...siteMap.keys(),...engagedMap.keys()])]
+        .filter(Boolean)
+        .sort();
+
+      if(!dates.length) return `<div class="hint">No visit data for this period yet.</div>`;
+
+      const rows=dates.map(date=>({
+        date,
+        visits:Number(siteMap.get(date)||0),
+        engaged:Number(engagedMap.get(date)||0)
+      }));
+
+      const max=Math.max(1,...rows.map(r=>Math.max(r.visits,r.engaged)));
+
+      return `<div class="engaged-visit-chart">
+        ${rows.map(r=>{
+          const visitWidth=r.visits?Math.max(2,r.visits/max*100):0;
+          const engagedWidth=r.engaged?Math.max(2,r.engaged/max*100):0;
+          const rate=r.visits?r.engaged/r.visits*100:0;
+
+          return `<div class="engaged-visit-day">
+            <div class="engaged-visit-date">${escapeHtml(engagedVisitDateLabel(r.date))}</div>
+            <div class="engaged-visit-bars">
+              <div class="engaged-visit-line">
+                <span>Visits</span>
+                <i><b class="engaged-visits-total" style="width:${visitWidth}%"></b></i>
+                <strong>${r.visits.toLocaleString()}</strong>
+              </div>
+              <div class="engaged-visit-line">
+                <span>Engaged</span>
+                <i><b class="engaged-visits-active" style="width:${engagedWidth}%"></b></i>
+                <strong>${r.engaged.toLocaleString()}</strong>
+              </div>
+            </div>
+            <small>${rate.toFixed(rate>=10?0:1)}%</small>
+          </div>`;
+        }).join("")}
+      </div>`;
+    }
+
     function renderReturningVisitorInsights(row){
       if(!row) return `<div class="hint">No session analytics for this period yet.</div>`;
 
@@ -29588,6 +29713,31 @@ function wireShimmer(container){
               </div>
             </div>
             <div id="insightsWebsiteChart" class="insights-chart insights-time-chart"></div>
+          </section>
+
+          <section class="insights-v4-card insights-engaged-visits-card">
+            <div class="insights-v4-card-head table-head">
+              <div>
+                <h3>Engaged Visits</h3>
+                <span>Sessions with at least 1 Qualified Card View (2+ seconds).</span>
+              </div>
+            </div>
+
+            ${!state.engagedVisitSupported
+              ? `<div class="hint">Run <code>insights-engaged-visits-migration.sql</code> in Supabase to enable this metric.</div>`
+              : (()=> {
+                  const rawVisits=state.websiteSeries.reduce((sum,r)=>sum+Number(r.visits||0),0);
+                  const engaged=state.engagedVisitSeries.reduce((sum,r)=>sum+Number(r.engaged_visits||0),0);
+                  const rate=rawVisits?engaged/rawVisits*100:0;
+
+                  return `<div class="insights-engaged-summary">
+                    <article><span>Website Visits</span><strong>${rawVisits.toLocaleString()}</strong></article>
+                    <article><span>Engaged Visits</span><strong>${engaged.toLocaleString()}</strong></article>
+                    <article><span>Engagement Rate</span><strong>${rate.toFixed(rate>=10?0:1)}%</strong></article>
+                  </div>
+                  ${renderEngagedVisitsComparison(state.websiteSeries,state.engagedVisitSeries)}
+                  <div class="hint insights-engaged-note">Raw Website Visits are unchanged. Engaged Visits help separate meaningful browsing from page loads that never produce a 2+ second card view.</div>`;
+                })()}
           </section>
         </div>
 
@@ -30192,6 +30342,13 @@ function wireShimmer(container){
           note:"One visit per browser session; Owner Mode excluded"
         },
         {
+          label:"Engaged visits",
+          ok:state.engagedVisitSupported,
+          note:state.engagedVisitSupported
+            ?"Session has at least one 2-second Qualified Card View"
+            :"Run Engaged Visits migration"
+        },
+        {
           label:"Buyer-intent events",
           ok:state.engagementSupported,
           note:state.engagementSupported?"Favorites, contacts, shares and image actions connected":"Run V4 migration"
@@ -30359,7 +30516,7 @@ function wireShimmer(container){
       const selectedStatus=statusSel.value;
       const selectedGame=gameSel.value;
 
-      const [views,series,siteSeries,countryResult,accessTimeResult,deviceResult,sourceResult,searchResult,returningResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
+      const [views,series,siteSeries,countryResult,accessTimeResult,deviceResult,sourceResult,searchResult,returningResult,engagedVisitResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
         fetchInsights(startDate,endDate),
         fetchViewSeries(startDate,endDate),
         fetchWebsiteVisitSeries(startDate,endDate),
@@ -30369,6 +30526,7 @@ function wireShimmer(container){
         fetchWebsiteVisitSources(startDate,endDate),
         fetchInventorySearchInsights(startDate,endDate),
         fetchReturningVisitorInsights(startDate,endDate),
+        fetchEngagedVisitSeries(startDate,endDate),
         previousRange?fetchInsights(previousRange.start,previousRange.end,{silent:true}):Promise.resolve([]),
         fetchCardEngagementInsights(startDate,endDate),
         fetchSaleConversionSnapshots(),
@@ -30449,6 +30607,10 @@ function wireShimmer(container){
         searchInsightsSupported:searchResult.supported,
         returningVisitorInsights:returningResult.supported ? returningResult.row : null,
         returningVisitorSupported:returningResult.supported,
+        engagedVisitSeries:engagedVisitResult.supported && Array.isArray(engagedVisitResult.rows)
+          ? engagedVisitResult.rows
+          : [],
+        engagedVisitSupported:engagedVisitResult.supported,
         engagementSupported:engagement.supported,
         saleSnapshotsSupported:saleSnapshots.supported,
         saleSnapshots:saleSnapshots.rows
