@@ -18737,6 +18737,20 @@ body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game
     display:flex !important;
   }
 }
+
+/* CATEGORY GROUP COUNT POSITION — keep card count directly beside category name */
+#invGrid.collection-game-grouped .collection-game-group-main{
+  flex:1 1 auto;
+  justify-content:flex-start;
+}
+#invGrid.collection-game-grouped .collection-game-group-main strong{
+  flex:0 1 auto;
+  min-width:0;
+}
+#invGrid.collection-game-grouped .collection-game-group-main .collection-game-count{
+  flex:0 0 auto;
+  margin-left:2px;
+}
 </style>
 
 </head>
@@ -29190,8 +29204,8 @@ function wireShimmer(container){
               ${collectionRearrangeMode ? `<span class="collection-game-drag-handle" aria-hidden="true">☰</span>` : ""}
               <span class="collection-game-chevron" aria-hidden="true">⌄</span>
               <strong>${escapeHtml(group.label)}</strong>
+              <span class="collection-game-count">${group.cards.length.toLocaleString()} ${group.cards.length===1 ? "card" : "cards"}</span>
             </span>
-            <span class="collection-game-count">${group.cards.length.toLocaleString()} ${group.cards.length===1 ? "card" : "cards"}</span>
           </button>
           ${cardsHtml}
         `;
