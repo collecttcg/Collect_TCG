@@ -18252,6 +18252,27 @@ body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+  /* Giveaway listing detail view — visually aligned with normal card details. */
+  .giveaway-card[data-giveaway-open]{cursor:pointer;transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease;}
+  .giveaway-card[data-giveaway-open]:hover{transform:translateY(-2px);border-color:var(--text-muted);box-shadow:0 10px 28px rgba(0,0,0,.20);}
+  .giveaway-card[data-giveaway-open]:focus-visible{outline:2px solid var(--accent-teal);outline-offset:3px;}
+  .giveaway-details-modal{width:min(94vw,1080px);max-width:min(94vw,1080px);max-height:92vh;overflow:auto;padding:22px;}
+  .giveaway-details-modal .giveaway-details-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;position:sticky;top:0;z-index:8;background:var(--surface);padding:4px 0 10px;}
+  .giveaway-details-modal .giveaway-details-actions-right{display:flex;gap:7px;align-items:center;}
+  .giveaway-details-modal .detail-slider-stage img{width:100%;height:100%;object-fit:contain;background:var(--surface-2);}
+  .giveaway-details-modal .giveaway-detail-status{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .giveaway-details-modal .giveaway-detail-entry{margin-top:12px;padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2);}
+  .giveaway-details-modal .giveaway-detail-entry h3{margin:0 0 8px;font-family:'Barlow Condensed',sans-serif;font-size:18px;}
+  .giveaway-details-modal .giveaway-detail-entry p{white-space:pre-wrap;line-height:1.6;color:var(--text-muted);margin:0;}
+  .giveaway-details-modal .giveaway-detail-entry-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+  @media(max-width:800px){
+    .giveaway-details-modal{width:100%;max-width:100%;max-height:calc(100dvh - 20px);padding:14px;border-radius:12px;}
+    .giveaway-details-modal .detail-layout{grid-template-columns:1fr !important;}
+  }
+</style>
+
 </head>
 <body>
 
@@ -20935,7 +20956,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         optionalColumnUnavailable(error,"bonus_share_facebook") ||
         optionalColumnUnavailable(error,"bonus_tag_friends") ||
         optionalColumnUnavailable(error,"bonus_share_instagram_story") ||
-        optionalColumnUnavailable(error,"gave_away_date");
+        optionalColumnUnavailable(error,"gave_away_date") ||
+        optionalColumnUnavailable(error,"images");
 
       if(!optionalMissing) break;
     }
@@ -31540,12 +31562,157 @@ function wireShimmer(container){
     });
   }
 
+
+  let giveawayDetailsId="";
+  let giveawayDetailsImageIndex=0;
+
+  function ensureGiveawayDetailsOverlay(){
+    let overlay=$("giveawayDetailsOverlay");
+    if(overlay) return overlay;
+
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal-overlay" id="giveawayDetailsOverlay" hidden aria-live="polite">
+        <div class="modal card-details-modal giveaway-details-modal" role="dialog" aria-modal="true" aria-labelledby="giveawayDetailsTitle">
+          <div class="giveaway-details-actions">
+            <button type="button" class="btn-ghost" id="giveawayDetailsShareBtn">Share</button>
+            <div class="giveaway-details-actions-right">
+              <button type="button" class="btn-primary owner-only" id="giveawayDetailsEditBtn">Edit giveaway</button>
+              <button type="button" class="details-close-btn" id="giveawayDetailsCloseBtn"><span aria-hidden="true">×</span> Close</button>
+            </div>
+          </div>
+          <div id="giveawayDetailsMount"></div>
+        </div>
+      </div>
+    `);
+
+    overlay=$("giveawayDetailsOverlay");
+    overlay.addEventListener("click",event=>{
+      if(event.target===overlay) closeGiveawayDetails();
+    });
+    $("giveawayDetailsCloseBtn")?.addEventListener("click",closeGiveawayDetails);
+    $("giveawayDetailsEditBtn")?.addEventListener("click",()=>{
+      if(!requireOwner("edit giveaway")) return;
+      const g=giveaways.find(item=>String(item.id)===String(giveawayDetailsId));
+      if(!g) return;
+      closeGiveawayDetails();
+      openGiveawayForm(g);
+    });
+    $("giveawayDetailsShareBtn")?.addEventListener("click",async()=>{
+      const g=giveaways.find(item=>String(item.id)===String(giveawayDetailsId));
+      if(!g) return;
+      const shareData={title:g.title||"Collect TCG Giveaway",text:g.card_name||g.title||"Collect TCG Giveaway",url:location.href};
+      try{
+        if(navigator.share) await navigator.share(shareData);
+        else if(navigator.clipboard){ await navigator.clipboard.writeText(location.href); showToast("Giveaway link copied"); }
+      }catch(error){ if(error?.name!=="AbortError") console.warn("Giveaway share failed",error); }
+    });
+    return overlay;
+  }
+
+  function closeGiveawayDetails(){
+    const overlay=$("giveawayDetailsOverlay");
+    if(overlay) overlay.hidden=true;
+    giveawayDetailsId="";
+    giveawayDetailsImageIndex=0;
+  }
+
+  function giveawayDetailRequirementsHTML(g){
+    const rows=[];
+    if(g.require_facebook) rows.push("Follow Collect TCG on Facebook");
+    if(g.require_instagram) rows.push("Follow @collecttcg.mysg on Instagram");
+    if(g.require_comment) rows.push("Comment on the giveaway post");
+    if(g.require_website_code) rows.push("Find the Giveaway Code on this page");
+    if(safeHttpUrl(g.entry_form_url)) rows.push("Submit the entry form");
+    if(!rows.length) return "";
+    return `<div class="detail-section"><h3>How to Enter</h3><div class="detail-slab-list">${rows.map((row,i)=>`<div class="detail-slab-row"><div><span class="detail-slab-number">Step ${i+1}</span><strong>${escapeHtml(row)}</strong></div></div>`).join("")}</div></div>`;
+  }
+
+  function renderGiveawayDetailsGallery(g,index=0){
+    const images=giveawayPublicImages(g);
+    if(!images.length) return `<div class="detail-empty-image">No uploaded pictures</div>`;
+    giveawayDetailsImageIndex=(Number(index)||0)%images.length;
+    if(giveawayDetailsImageIndex<0) giveawayDetailsImageIndex+=images.length;
+    const current=images[giveawayDetailsImageIndex];
+    return `<div class="detail-slider" data-giveaway-detail-slider>
+      <div class="detail-slider-stage">
+        <img class="detail-slider-image" src="${escapeHtml(current)}" alt="${escapeHtml(g.card_name||g.title)} image ${giveawayDetailsImageIndex+1}" decoding="async">
+      </div>
+      ${images.length>1 ? `
+        <button type="button" class="detail-slider-btn prev" data-giveaway-detail-step="-1" aria-label="Previous image">‹</button>
+        <button type="button" class="detail-slider-btn next" data-giveaway-detail-step="1" aria-label="Next image">›</button>
+        <div class="detail-slider-count">${giveawayDetailsImageIndex+1} / ${images.length}</div>
+        <div class="detail-slider-dots">${images.map((_,i)=>`<button type="button" class="detail-slider-dot ${i===giveawayDetailsImageIndex?"active":""}" data-giveaway-detail-go="${i}" aria-label="Image ${i+1}"></button>`).join("")}</div>
+        <div class="detail-thumb-strip-wrap">
+          <div class="detail-thumb-strip-head"><strong>More photos</strong><span>${images.length} photos · Tap a thumbnail</span></div>
+          <div class="detail-thumb-strip">${images.map((src,i)=>`<button type="button" class="detail-thumb-strip-btn ${i===giveawayDetailsImageIndex?"active":""}" data-giveaway-detail-go="${i}"><img src="${escapeHtml(src)}" alt="" loading="lazy"></button>`).join("")}</div>
+        </div>` : ""}
+    </div>`;
+  }
+
+  function openGiveawayDetails(g){
+    if(!g || (!isOwnerMode() && !giveawayVisibleToCurrentViewer(g))) return;
+    const overlay=ensureGiveawayDetailsOverlay();
+    const mount=$("giveawayDetailsMount");
+    giveawayDetailsId=String(g.id||"");
+    giveawayDetailsImageIndex=0;
+    const images=giveawayPublicImages(g);
+    const status=normalizeFilterValue(g.status);
+    const winner=isPastGiveawayWinner(g);
+
+    mount.innerHTML=`
+      <div class="detail-header">
+        <div class="detail-title">
+          <div class="eyebrow">Giveaway details</div>
+          <h2 id="giveawayDetailsTitle">${escapeHtml(g.title||"Giveaway").toUpperCase()}</h2>
+          <div class="detail-meta">${escapeHtml(g.card_name||"Collect TCG prize")}</div>
+        </div>
+      </div>
+      <div class="detail-layout">
+        <div data-giveaway-detail-gallery-mount>${renderGiveawayDetailsGallery(g,0)}</div>
+        <div class="detail-info">
+          <div class="detail-summary-strip">
+            <div class="detail-summary-card"><span>Status</span><strong>${escapeHtml(winner?"Gave Away":(status==="closed"?"Closed":"Active"))}</strong></div>
+            <div class="detail-summary-card"><span>Photos</span><strong>${images.length}</strong></div>
+            <div class="detail-summary-card"><span>${winner?"Winner":"Ends"}</span><strong>${escapeHtml(winner?(g.winner_name||"Winner announced"):(g.ends_at?giveawayDateLabel(g.ends_at):"No end date"))}</strong></div>
+          </div>
+
+          <div class="detail-info-section-title">Giveaway information</div>
+          <div class="detail-grid details-info-grid">
+            <div class="detail-item"><div class="detail-label">Prize</div><div class="detail-value">${escapeHtml(g.card_name||"—")}</div></div>
+            ${g.giveaway_code ? `<div class="detail-item"><div class="detail-label">Giveaway Code</div><div class="detail-value">${escapeHtml(g.giveaway_code)}</div></div>`:""}
+            ${winner && (g.gave_away_date||g.winner_announced_at) ? `<div class="detail-item"><div class="detail-label">Gave Away Date</div><div class="detail-value">${escapeHtml(giveawayWinnerDateLabel(g.gave_away_date||g.winner_announced_at))}</div></div>`:""}
+          </div>
+
+          ${giveawayDetailRequirementsHTML(g)}
+          ${String(g.how_to_enter||"").trim()?`<div class="giveaway-detail-entry"><h3>Additional instructions</h3><p>${escapeHtml(g.how_to_enter)}</p></div>`:""}
+          ${String(g.details||"").trim()?`<div class="giveaway-detail-entry"><h3>Details</h3><p>${escapeHtml(g.details)}</p></div>`:""}
+          ${safeHttpUrl(g.entry_form_url) && !winner ? `<div class="giveaway-detail-entry-actions"><a class="btn-primary" href="${escapeHtml(safeHttpUrl(g.entry_form_url))}" target="_blank" rel="noopener noreferrer">Enter Giveaway ↗</a></div>`:""}
+          ${winner && safePublicProfileUrl(g.winner_profile_url) ? `<div class="giveaway-detail-entry-actions"><a class="btn-ghost" href="${escapeHtml(safePublicProfileUrl(g.winner_profile_url))}" target="_blank" rel="noopener noreferrer">View winner profile ↗</a></div>`:""}
+        </div>
+      </div>`;
+
+    const rerenderGallery=next=>{
+      const galleryMount=mount.querySelector("[data-giveaway-detail-gallery-mount]");
+      if(!galleryMount) return;
+      galleryMount.innerHTML=renderGiveawayDetailsGallery(g,next);
+      wireGallery();
+    };
+    const wireGallery=()=>{
+      mount.querySelectorAll("[data-giveaway-detail-step]").forEach(btn=>btn.addEventListener("click",()=>rerenderGallery(giveawayDetailsImageIndex+Number(btn.dataset.giveawayDetailStep||0))));
+      mount.querySelectorAll("[data-giveaway-detail-go]").forEach(btn=>btn.addEventListener("click",()=>rerenderGallery(Number(btn.dataset.giveawayDetailGo||0))));
+    };
+    wireGallery();
+    overlay.hidden=false;
+    overlay.querySelector(".giveaway-details-modal")?.scrollTo?.(0,0);
+    $("giveawayDetailsCloseBtn")?.focus({preventScroll:true});
+  }
+
   function renderGiveawayPage(){
     const currentGiveaways=giveaways.filter(g=>!isPastGiveawayWinner(g) && giveawayVisibleToCurrentViewer(g));
     const pastWinners=sortedPastGiveawayWinners().filter(g=>giveawayVisibleToCurrentViewer(g));
 
     const currentCardHTML=g=>`
-      <article class="giveaway-card">
+      <article class="giveaway-card" data-giveaway-open="${escapeHtml(g.id)}" tabindex="0" role="button" aria-label="Open ${escapeHtml(g.title)} giveaway details">
         ${giveawayGalleryHTML(g)}
         <div class="giveaway-body">
           <div class="giveaway-title">${escapeHtml(g.title)}</div>
@@ -31697,6 +31864,7 @@ function wireShimmer(container){
     const winnerCardHTML=g=>`
       <article class="giveaway-card giveaway-winner-card"
                id="giveaway-winner-${escapeHtml(g.id)}"
+               data-giveaway-open="${escapeHtml(g.id)}" tabindex="0" role="button" aria-label="Open ${escapeHtml(g.title)} giveaway details"
                data-giveaway-winner-card="${escapeHtml(g.id)}">
         ${giveawayGalleryHTML(g)}
         <div class="giveaway-body">
@@ -31781,6 +31949,21 @@ function wireShimmer(container){
     $("addGiveawayBtn")?.addEventListener("click",()=>openGiveawayForm());
 
     recordGiveawayPageViewOnce();
+
+    view.querySelectorAll("[data-giveaway-open]").forEach(cardEl=>{
+      const open=event=>{
+        if(event?.target?.closest?.("a,button,input,select,textarea,label,[data-giveaway-gallery-step],[data-giveaway-gallery-go]")) return;
+        const g=giveaways.find(item=>String(item.id)===String(cardEl.dataset.giveawayOpen||""));
+        if(g) openGiveawayDetails(g);
+      };
+      cardEl.addEventListener("click",open);
+      cardEl.addEventListener("keydown",event=>{
+        if(event.key!=="Enter" && event.key!==" ") return;
+        if(event.target!==cardEl) return;
+        event.preventDefault();
+        open(event);
+      });
+    });
 
     view.querySelectorAll("[data-giveaway-growth-action]").forEach(link=>{
       link.addEventListener("click",()=>{
@@ -32193,6 +32376,11 @@ function wireShimmer(container){
     if(!requireOwner()) return;
 
     commitGiveawayActiveEditorItem();
+
+    if(giveawayPhotoItems.length>1 && giveawayImagesSupported===false){
+      showToast("Multiple giveaway photos need the giveaway images migration in Supabase");
+      return;
+    }
 
     let giveawayImageUrl="";
     let giveawayImageUrls=[];
