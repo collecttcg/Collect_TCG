@@ -17665,6 +17665,133 @@ body.owner-mode #giveawayForm .giveaway-growth-owner-block.owner-only{
   }
 }
 
+
+/* =========================================================
+   COLLECTION (NFS) — GROUP BY GAME
+   Scoped entirely to #invGrid.collection-game-grouped.
+   Other listing pages are untouched.
+   ========================================================= */
+#invGrid.collection-game-grouped{
+  align-items:start;
+}
+
+#invGrid.collection-game-grouped .collection-game-group-header{
+  grid-column:1 / -1;
+  width:100%;
+  min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin:14px 0 2px;
+  padding:12px 14px;
+  border:1px solid rgba(168,85,247,.28);
+  border-radius:11px;
+  background:
+    linear-gradient(180deg,rgba(168,85,247,.075),rgba(168,85,247,.025)),
+    var(--surface-1);
+  color:var(--text);
+  text-align:left;
+  cursor:pointer;
+}
+
+#invGrid.collection-game-grouped .collection-game-group-header:first-child{
+  margin-top:0;
+}
+
+#invGrid.collection-game-grouped .collection-game-group-header:hover,
+#invGrid.collection-game-grouped .collection-game-group-header:focus-visible{
+  border-color:rgba(192,132,252,.66);
+  box-shadow:0 0 0 3px rgba(168,85,247,.07);
+  outline:none;
+}
+
+#invGrid.collection-game-grouped .collection-game-group-main{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+
+#invGrid.collection-game-grouped .collection-game-group-main strong{
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  font-size:14px;
+  letter-spacing:.15px;
+}
+
+#invGrid.collection-game-grouped .collection-game-chevron{
+  flex:0 0 auto;
+  width:22px;
+  height:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:6px;
+  background:rgba(168,85,247,.10);
+  color:#c084fc;
+  font-size:17px;
+  line-height:1;
+  transform:rotate(0deg);
+  transition:transform .16s ease;
+}
+
+#invGrid.collection-game-grouped .collection-game-group-header.collapsed .collection-game-chevron{
+  transform:rotate(-90deg);
+}
+
+#invGrid.collection-game-grouped .collection-game-count{
+  flex:0 0 auto;
+  color:var(--text-muted);
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;
+  font-weight:700;
+}
+
+#invGrid.collection-game-grouped .collection-game-card[hidden]{
+  display:none !important;
+}
+
+/* Preserve the Collection card's existing PSA-photo ratio now that
+   game headers are inserted into the same grid. */
+@media(min-width:801px){
+  #invGrid.collection-game-grouped:not(.compact-list) .collection-game-card > .thumb-wrap,
+  #invGrid.collection-game-grouped:not(.compact-list) .collection-game-card > .thumb-placeholder{
+    aspect-ratio:1140 / 1905;
+  }
+
+  #invGrid.collection-game-grouped:not(.compact-list) .collection-game-card > .thumb-wrap .thumb{
+    width:100% !important;
+    height:100% !important;
+    aspect-ratio:1140 / 1905;
+    object-fit:cover;
+    object-position:center;
+  }
+}
+
+@media(max-width:800px){
+  #invGrid.collection-game-grouped .collection-game-group-header{
+    margin-top:12px;
+    padding:10px 11px;
+    border-radius:9px;
+  }
+
+  #invGrid.collection-game-grouped .collection-game-group-main strong{
+    font-size:12.5px;
+  }
+
+  #invGrid.collection-game-grouped .collection-game-count{
+    font-size:9px;
+  }
+}
+
+body.light-mode #invGrid.collection-game-grouped .collection-game-group-header{
+  background:
+    linear-gradient(180deg,rgba(168,85,247,.07),rgba(168,85,247,.02)),
+    var(--surface-1);
+}
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -27031,15 +27158,17 @@ function wireShimmer(container){
             </label>
           ` : ""}
 
-          <label class="listing-per-page-control" title="Choose how many listings are shown on each page.">
-            <span>Show</span>
-            <select id="listingPerPageSelect" aria-label="Listings per page">
-              ${LISTING_PER_PAGE_OPTIONS.map(value=>`
-                <option value="${value}" ${listingPerPage===value?"selected":""}>${value}</option>
-              `).join("")}
-            </select>
-            <span>per page</span>
-          </label>
+          ${!isCollection ? `
+            <label class="listing-per-page-control" title="Choose how many listings are shown on each page.">
+              <span>Show</span>
+              <select id="listingPerPageSelect" aria-label="Listings per page">
+                ${LISTING_PER_PAGE_OPTIONS.map(value=>`
+                  <option value="${value}" ${listingPerPage===value?"selected":""}>${value}</option>
+                `).join("")}
+              </select>
+              <span>per page</span>
+            </label>
+          ` : ""}
 
           <button type="button"
                   class="view-mode-toggle desktop-compact-view-toggle"
@@ -27152,17 +27281,19 @@ function wireShimmer(container){
             </div>
           ` : ""}
 
-          <label class="mobile-cards-per-page-control" for="mobileListingPerPageSelect">
-            <span>
-              <strong>Cards per page</strong>
-              <small>Choose how many listings to load on each page</small>
-            </span>
-            <select id="mobileListingPerPageSelect" aria-label="Cards per page">
-              ${LISTING_PER_PAGE_OPTIONS.map(value=>`
-                <option value="${value}" ${listingPerPage===value?"selected":""}>${value}</option>
-              `).join("")}
-            </select>
-          </label>
+          ${!isCollection ? `
+            <label class="mobile-cards-per-page-control" for="mobileListingPerPageSelect">
+              <span>
+                <strong>Cards per page</strong>
+                <small>Choose how many listings to load on each page</small>
+              </span>
+              <select id="mobileListingPerPageSelect" aria-label="Cards per page">
+                ${LISTING_PER_PAGE_OPTIONS.map(value=>`
+                  <option value="${value}" ${listingPerPage===value?"selected":""}>${value}</option>
+                `).join("")}
+              </select>
+            </label>
+          ` : ""}
 
           <a href="#/add" class="btn-primary owner-only" style="display:inline-block;">+ Add card</a>
         </div>
@@ -27721,6 +27852,75 @@ function wireShimmer(container){
 
     let inventoryDrawGeneration=0;
 
+    // Collection-only display state. Every game starts expanded.
+    // This lives inside renderInventoryPage so Inventory/Sold/Reserved
+    // and every other page remain completely unaffected.
+    const collectionCollapsedGames=new Set();
+
+    function collectionGameLabel(card){
+      const raw=String(card?.game||"").trim();
+      return raw || "Other";
+    }
+
+    function collectionGameKey(label){
+      const normalized=normalizeFilterValue(label);
+      return normalized || "__other__";
+    }
+
+    function groupedCollectionHTML(list,compact){
+      const groups=new Map();
+
+      list.forEach((card,index)=>{
+        const label=collectionGameLabel(card);
+        const key=collectionGameKey(label);
+        if(!groups.has(key)){
+          groups.set(key,{key,label,cards:[]});
+        }
+        groups.get(key).cards.push({card,index});
+      });
+
+      const ordered=Array.from(groups.values()).sort((a,b)=>{
+        const aOther=a.key==="__other__";
+        const bOther=b.key==="__other__";
+        if(aOther!==bOther) return aOther ? 1 : -1;
+        return a.label.localeCompare(b.label,undefined,{sensitivity:"base",numeric:true});
+      });
+
+      return ordered.map(group=>{
+        const collapsed=collectionCollapsedGames.has(group.key);
+
+        const cardsHtml=group.cards.map(({card,index})=>{
+          let html=cardTileHTML(card,index);
+
+          html=html.replace(
+            '<div class="card ',
+            `<div class="card collection-game-card `
+          );
+
+          html=html.replace(
+            ' data-shimmer=',
+            ` data-collection-game-key="${escapeHtml(group.key)}"${collapsed ? " hidden" : ""} data-shimmer=`
+          );
+
+          return html;
+        }).join("");
+
+        return `
+          <button type="button"
+                  class="collection-game-group-header ${collapsed ? "collapsed" : ""}"
+                  data-collection-game-toggle="${escapeHtml(group.key)}"
+                  aria-expanded="${collapsed ? "false" : "true"}">
+            <span class="collection-game-group-main">
+              <span class="collection-game-chevron" aria-hidden="true">⌄</span>
+              <strong>${escapeHtml(group.label)}</strong>
+            </span>
+            <span class="collection-game-count">${group.cards.length.toLocaleString()} ${group.cards.length===1 ? "card" : "cards"}</span>
+          </button>
+          ${cardsHtml}
+        `;
+      }).join("");
+    }
+
     let paginationFilterSignature=null;
     let paginationFirstDraw=true;
 
@@ -27898,22 +28098,40 @@ function wireShimmer(container){
 
       grid.className=effectiveInventoryViewMode()==="compact" ? "grid compact-list" : "grid";
 
-      const totalPages=Math.max(1,Math.ceil(list.length/listingPerPage));
-      const clampedPage=Math.min(Math.max(1,listingCurrentPage),totalPages);
-      if(clampedPage!==listingCurrentPage){
-        listingCurrentPage=clampedPage;
-        updateListingUrlFromControls();
+      if(listingAvailabilityScope==="collection"){
+        // Collection is intentionally not paginated: each game owns one
+        // continuous listing section, so a game never gets split across pages.
+        listingCurrentPage=1;
+        ["listingPaginationTop","listingPaginationBottom"].forEach(id=>{
+          const mount=$(id);
+          if(!mount) return;
+          mount.hidden=true;
+          mount.innerHTML="";
+        });
+
+        grid.classList.add("collection-game-grouped");
+        grid.innerHTML=groupedCollectionHTML(
+          list,
+          effectiveInventoryViewMode()==="compact"
+        );
+      }else{
+        const totalPages=Math.max(1,Math.ceil(list.length/listingPerPage));
+        const clampedPage=Math.min(Math.max(1,listingCurrentPage),totalPages);
+        if(clampedPage!==listingCurrentPage){
+          listingCurrentPage=clampedPage;
+          updateListingUrlFromControls();
+        }
+
+        renderPagination(list.length);
+
+        const pageStart=(listingCurrentPage-1)*listingPerPage;
+        const pageEnd=Math.min(pageStart+listingPerPage,list.length);
+        const pageCards=list.slice(pageStart,pageEnd);
+
+        grid.innerHTML=pageCards
+          .map((card,index)=>cardTileHTML(card,index))
+          .join("");
       }
-
-      renderPagination(list.length);
-
-      const pageStart=(listingCurrentPage-1)*listingPerPage;
-      const pageEnd=Math.min(pageStart+listingPerPage,list.length);
-      const pageCards=list.slice(pageStart,pageEnd);
-
-      grid.innerHTML=pageCards
-        .map((card,index)=>cardTileHTML(card,index))
-        .join("");
 
       wireShimmer(grid);
       requestAnimationFrame(()=>maybeShowFavoriteDiscoveryHint(grid));
@@ -27923,6 +28141,32 @@ function wireShimmer(container){
         refreshOwnerReservedAgeUI(false);
       }
     }
+
+    $("invGrid")?.addEventListener("click",event=>{
+      if(listingAvailabilityScope!=="collection") return;
+
+      const header=event.target.closest("[data-collection-game-toggle]");
+      if(!header) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const key=String(header.dataset.collectionGameToggle||"");
+      if(!key) return;
+
+      const collapse=!collectionCollapsedGames.has(key);
+      if(collapse) collectionCollapsedGames.add(key);
+      else collectionCollapsedGames.delete(key);
+
+      header.classList.toggle("collapsed",collapse);
+      header.setAttribute("aria-expanded",collapse ? "false" : "true");
+
+      $("invGrid")?.querySelectorAll(".collection-game-card").forEach(card=>{
+        if(String(card.dataset.collectionGameKey||"")===key){
+          card.hidden=collapse;
+        }
+      });
+    },{signal:inventorySignal});
 
     const searchSuggestions=$("searchSuggestions");
     let suggestionIndex=-1;
