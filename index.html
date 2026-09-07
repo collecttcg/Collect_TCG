@@ -30388,8 +30388,12 @@ function wireShimmer(container){
     if(giveawayImageEditorState.objectUrl) item.objectUrl=giveawayImageEditorState.objectUrl;
   }
 
-  function loadGiveawayEditorItem(index){
-    commitGiveawayActiveEditorItem();
+  function loadGiveawayEditorItem(index,{commitCurrent=true}={}){
+    // Loading and committing are separate operations. In particular, when a
+    // brand-new first photo is inserted at index 0 there is no previous item
+    // to commit; committing the stale blank editor state here would erase the
+    // newly-created object URL before it can ever be previewed.
+    if(commitCurrent) commitGiveawayActiveEditorItem();
     if(!giveawayPhotoItems.length){
       giveawaySelectedPhotoIndex=0;
       Object.assign(giveawayImageEditorState,newGiveawayPhotoItem(""));
@@ -30680,7 +30684,9 @@ function wireShimmer(container){
       .map(value=>newGiveawayPhotoItem(value,null));
 
     giveawaySelectedPhotoIndex=0;
-    loadGiveawayEditorItem(0);
+    // These items were just rebuilt from saved URLs, so there is no prior
+    // editor item to commit into them.
+    loadGiveawayEditorItem(0,{commitCurrent:false});
   }
 
   function selectedGiveawayPhotoPreviewSource(index){
@@ -32389,6 +32395,13 @@ function wireShimmer(container){
       return;
     }
 
+    // Save edits to the CURRENT photo before appending anything. This must
+    // happen before push(): when the giveaway has no photos yet, index 0 will
+    // become the first new item, and committing afterward would overwrite that
+    // new item's object URL with the old blank editor state.
+    if(giveawayPhotoItems.length) commitGiveawayActiveEditorItem();
+
+    const firstNewPhotoIndex=giveawayPhotoItems.length;
     const accepted=files.slice(0,remaining);
     accepted.forEach(file=>{
       const objectUrl=URL.createObjectURL(file);
@@ -32401,13 +32414,10 @@ function wireShimmer(container){
 
     $("giveawayImageFile").value="";
 
-    // IMPORTANT: do not change giveawaySelectedPhotoIndex before loading the
-    // new item. loadGiveawayEditorItem() first commits the CURRENT editor
-    // state. Changing the index early caused that old/blank state to overwrite
-    // the newly-added photo, which made its preview disappear and disabled the
-    // watermark / PSA privacy controls.
-    const firstNewPhotoIndex=Math.max(0,giveawayPhotoItems.length-accepted.length);
-    loadGiveawayEditorItem(firstNewPhotoIndex);
+    // The prior item was already committed above. Load the first newly-added
+    // photo without another commit, so its preview and editor controls remain
+    // intact.
+    loadGiveawayEditorItem(firstNewPhotoIndex,{commitCurrent:false});
   });
 
   $("giveawayImagePreview")?.addEventListener("click",event=>{
@@ -32426,20 +32436,24 @@ function wireShimmer(container){
       if(to<0 || to>=giveawayPhotoItems.length) return;
       [giveawayPhotoItems[from],giveawayPhotoItems[to]]=[giveawayPhotoItems[to],giveawayPhotoItems[from]];
       giveawaySelectedPhotoIndex=to;
-      loadGiveawayEditorItem(to);
+      // Current state was committed before the swap; do not commit it again
+      // into the item that now occupies the destination index.
+      loadGiveawayEditorItem(to,{commitCurrent:false});
       return;
     }
 
     const removeBtn=event.target.closest("[data-giveaway-photo-remove]");
     if(removeBtn){
       const index=Number(removeBtn.dataset.giveawayPhotoRemove||0);
+      // Preserve edits on the selected photo before the array indices change.
+      commitGiveawayActiveEditorItem();
       const item=giveawayPhotoItems[index];
       if(item?.file && item.objectUrl){
         try{ URL.revokeObjectURL(item.objectUrl); }catch{}
       }
       giveawayPhotoItems.splice(index,1);
       giveawaySelectedPhotoIndex=Math.max(0,Math.min(index,giveawayPhotoItems.length-1));
-      loadGiveawayEditorItem(giveawaySelectedPhotoIndex);
+      loadGiveawayEditorItem(giveawaySelectedPhotoIndex,{commitCurrent:false});
     }
   });
 
