@@ -17237,6 +17237,110 @@ body.showcase-dragging-body{
   }
 }
 
+
+/* Insights — Recently Viewed Cards */
+.insights-recent-qualified-card{margin-top:18px}
+.insights-recent-qualified-count{
+  color:var(--text-muted);
+  font-size:11px;
+  white-space:nowrap;
+}
+.insights-recent-qualified-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+}
+.insights-recent-qualified-item{
+  width:100%;
+  min-width:0;
+  display:grid;
+  grid-template-columns:52px minmax(0,1fr) auto;
+  gap:11px;
+  align-items:center;
+  text-align:left;
+  padding:8px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--surface-1);
+  color:var(--text);
+  cursor:pointer;
+}
+.insights-recent-qualified-item:hover,
+.insights-recent-qualified-item:focus-visible{
+  border-color:rgba(227,179,65,.62);
+  outline:none;
+  transform:translateY(-1px);
+}
+.insights-recent-qualified-image{
+  width:52px;
+  aspect-ratio:1140 / 1905;
+  border-radius:7px;
+  overflow:hidden;
+  background:var(--surface-2);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--border-soft);
+}
+.insights-recent-qualified-image img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.insights-recent-qualified-image i{
+  font-size:9px;
+  font-style:normal;
+  font-weight:800;
+  color:var(--text-muted);
+}
+.insights-recent-qualified-copy{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.insights-recent-qualified-copy strong{
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  font-size:12.5px;
+}
+.insights-recent-qualified-copy small,
+.insights-recent-qualified-copy > span{
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  color:var(--text-muted);
+  font-size:10px;
+}
+.insights-recent-qualified-copy > span{
+  color:var(--accent-gold);
+}
+.insights-recent-qualified-stats{
+  min-width:68px;
+  text-align:right;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.insights-recent-qualified-stats strong{
+  font-family:'JetBrains Mono',monospace;
+  font-size:15px;
+}
+.insights-recent-qualified-stats small{
+  color:var(--text-muted);
+  font-size:9px;
+  white-space:nowrap;
+}
+@media(max-width:800px){
+  .insights-recent-qualified-list{grid-template-columns:1fr}
+  .insights-recent-qualified-item{
+    grid-template-columns:48px minmax(0,1fr) auto;
+  }
+  .insights-recent-qualified-image{width:48px}
+}
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -20979,6 +21083,100 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       return [];
     }
     return Array.isArray(data) ? data : [];
+  }
+
+  let recentQualifiedViewsBackendState="unknown";
+
+  async function fetchRecentQualifiedCardViews(start,end,status="",game="",limit=20){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_recent_qualified_card_views",{
+        p_start:start.toISOString(),
+        p_end:end.toISOString(),
+        p_status:status || null,
+        p_game:game || null,
+        p_limit:Math.max(1,Math.min(50,Number(limit)||20))
+      });
+
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(
+          message.includes("get_recent_qualified_card_views") ||
+          message.includes("function") ||
+          message.includes("schema cache")
+        ){
+          recentQualifiedViewsBackendState="unavailable";
+        }else{
+          recentQualifiedViewsBackendState="error";
+          console.warn("Recently viewed Insights unavailable:",error);
+        }
+        return {supported:false,rows:[]};
+      }
+
+      recentQualifiedViewsBackendState="available";
+      return {supported:true,rows:Array.isArray(data)?data:[]};
+    }catch(error){
+      console.warn("Recently viewed Insights unavailable:",error);
+      recentQualifiedViewsBackendState="error";
+      return {supported:false,rows:[]};
+    }
+  }
+
+  function insightRecentViewTimeLabel(value){
+    const time=new Date(value||"").getTime();
+    if(!Number.isFinite(time)) return "Unknown time";
+
+    const delta=Math.max(0,Date.now()-time);
+    const minute=60*1000;
+    const hour=60*minute;
+    const day=24*hour;
+
+    if(delta<minute) return "Just now";
+    if(delta<hour){
+      const n=Math.max(1,Math.floor(delta/minute));
+      return `${n} min ago`;
+    }
+    if(delta<day){
+      const n=Math.max(1,Math.floor(delta/hour));
+      return `${n} hr${n===1?"":"s"} ago`;
+    }
+    if(delta<7*day){
+      const n=Math.max(1,Math.floor(delta/day));
+      return `${n} day${n===1?"":"s"} ago`;
+    }
+
+    try{
+      return new Date(time).toLocaleString("en-MY",{
+        day:"2-digit",
+        month:"short",
+        year:"numeric",
+        hour:"2-digit",
+        minute:"2-digit"
+      });
+    }catch{
+      return new Date(time).toLocaleString();
+    }
+  }
+
+  function insightRecentCardMeta(card){
+    if(!card) return "";
+    const pieces=[];
+
+    const grades=validGradingEntries(card);
+    if(grades.length){
+      const labels=[...new Set(grades.map(entry=>{
+        const company=String(entry?.company||"").trim().toUpperCase();
+        const grade=String(entry?.grade??"").trim();
+        return [company,grade].filter(Boolean).join(" ");
+      }).filter(Boolean))];
+      if(labels.length) pieces.push(labels.join(" · "));
+    }else if(normalizeFilterValue(card.format)==="sealed"){
+      pieces.push("Sealed");
+    }else if(String(card.condition||"").trim()){
+      pieces.push(String(card.condition).trim());
+    }
+
+    if(card.card_code) pieces.push(String(card.card_code).trim());
+    return pieces.join(" · ");
   }
 
   async function fetchFilteredQualifiedViewSeries(start,end,status="",game=""){
@@ -29925,6 +30123,7 @@ function wireShimmer(container){
       returningVisitorInsights:null,returningVisitorSupported:false,
       engagedVisitSeries:[],engagedVisitSupported:false,
       overviewPhotoRows:[],overviewPhotoSupported:false,
+      recentQualifiedViews:[],recentQualifiedViewsSupported:false,
       engagementSupported:false,saleSnapshotsSupported:false,saleSnapshots:[],
       editHistoryRows:[],editHistoryLoaded:false
     };
@@ -30567,6 +30766,56 @@ function wireShimmer(container){
           </section>
         </div>
 
+        <section class="insights-v4-card insights-recent-qualified-card">
+          <div class="insights-v4-card-head table-head">
+            <div>
+              <h3>Recently Viewed Cards</h3>
+              <span>Latest unique cards with a 2+ second Qualified Card View in this Insights period.</span>
+            </div>
+            ${state.recentQualifiedViewsSupported
+              ? `<span class="insights-recent-qualified-count">${state.recentQualifiedViews.length} shown</span>`
+              : ""}
+          </div>
+
+          ${
+            !state.recentQualifiedViewsSupported
+              ? `<div class="hint">Run <code>insights-recently-viewed-cards-migration.sql</code> in Supabase to enable this section.</div>`
+              : state.recentQualifiedViews.length
+                ? `<div class="insights-recent-qualified-list">
+                    ${state.recentQualifiedViews.map(row=>{
+                      const card=getCardById(row.card_id);
+                      if(!card) return "";
+
+                      const image=getImages(card)[0]||"";
+                      const views=Math.max(0,Number(row.views_in_period||0));
+                      const visitors=Math.max(0,Number(row.unique_visitors||0));
+                      const meta=insightRecentCardMeta(card);
+
+                      return `<button type="button"
+                                      class="insights-recent-qualified-item"
+                                      data-insights-open-card="${escapeHtml(card.id)}"
+                                      aria-label="${escapeHtml(`Open details for ${card.name||"card"}`)}">
+                        <span class="insights-recent-qualified-image">
+                          ${image
+                            ? `<img src="${escapeHtml(image)}" alt="" loading="lazy" decoding="async">`
+                            : `<i aria-hidden="true">TCG</i>`}
+                        </span>
+                        <span class="insights-recent-qualified-copy">
+                          <strong>${escapeHtml(card.name||"Untitled card")}</strong>
+                          ${meta ? `<small>${escapeHtml(meta)}</small>` : ""}
+                          <span>${escapeHtml(insightRecentViewTimeLabel(row.viewed_at))}</span>
+                        </span>
+                        <span class="insights-recent-qualified-stats">
+                          <strong>${views.toLocaleString()}</strong>
+                          <small>${views===1?"view":"views"} · ${visitors.toLocaleString()} ${visitors===1?"visitor":"visitors"}</small>
+                        </span>
+                      </button>`;
+                    }).join("")}
+                  </div>`
+                : `<div class="hint">No Qualified Card Views match the selected period and filters yet.</div>`
+          }
+        </section>
+
         <section class="insights-v4-card">
           <div class="insights-v4-card-head table-head insights-top-card-head">
             <div><h3>Top Card Performance</h3><span>Photo interactions capture deliberate overview browsing; Detail Opens remain a secondary signal.</span></div>
@@ -31001,6 +31250,13 @@ function wireShimmer(container){
             :"Run Overview Photo Interest migration"
         },
         {
+          label:"Recently viewed cards",
+          ok:state.recentQualifiedViewsSupported,
+          note:state.recentQualifiedViewsSupported
+            ?"Latest qualified-view timestamps available"
+            :"Run Recently Viewed Cards migration"
+        },
+        {
           label:"Buyer-intent events",
           ok:state.engagementSupported,
           note:state.engagementSupported?"Favorites, contacts, shares and image actions connected":"Run V4 migration"
@@ -31168,7 +31424,7 @@ function wireShimmer(container){
       const selectedStatus=statusSel.value;
       const selectedGame=gameSel.value;
 
-      const [views,series,siteSeries,countryResult,accessTimeResult,deviceResult,sourceResult,searchResult,returningResult,engagedVisitResult,overviewPhotoResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
+      const [views,series,siteSeries,countryResult,accessTimeResult,deviceResult,sourceResult,searchResult,returningResult,engagedVisitResult,overviewPhotoResult,recentQualifiedResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
         fetchInsights(startDate,endDate),
         fetchViewSeries(startDate,endDate),
         fetchWebsiteVisitSeries(startDate,endDate),
@@ -31180,6 +31436,7 @@ function wireShimmer(container){
         fetchReturningVisitorInsights(startDate,endDate),
         fetchEngagedVisitSeries(startDate,endDate),
         fetchOverviewPhotoInsights(startDate,endDate),
+        fetchRecentQualifiedCardViews(startDate,endDate,selectedStatus,selectedGame,20),
         previousRange?fetchInsights(previousRange.start,previousRange.end,{silent:true}):Promise.resolve([]),
         fetchCardEngagementInsights(startDate,endDate),
         fetchSaleConversionSnapshots(),
@@ -31308,6 +31565,10 @@ function wireShimmer(container){
           ? overviewPhotoResult.rows
           : [],
         overviewPhotoSupported:overviewPhotoResult.supported,
+        recentQualifiedViews:recentQualifiedResult.supported && Array.isArray(recentQualifiedResult.rows)
+          ? recentQualifiedResult.rows
+          : [],
+        recentQualifiedViewsSupported:recentQualifiedResult.supported,
         engagementSupported:engagement.supported,
         saleSnapshotsSupported:saleSnapshots.supported,
         saleSnapshots:saleSnapshots.rows
