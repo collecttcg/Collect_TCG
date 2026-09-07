@@ -17564,6 +17564,107 @@ body.showcase-dragging-body{
   flex:0 0 auto;color:var(--accent-gold);font-family:'JetBrains Mono',monospace;font-size:12px;
 }
 
+
+/* =========================================================
+   GIVEAWAY OWNER FORM — ROOMIER GROWTH SETUP
+   The global owner-only rule forces divs to flex; override it
+   here so Growth Entry Setup stacks vertically as intended.
+   ========================================================= */
+body.owner-mode #giveawayForm{
+  width:min(94vw,760px);
+  max-width:760px;
+  overflow-x:hidden;
+}
+
+body.owner-mode #giveawayForm .giveaway-growth-owner-block.owner-only{
+  display:block !important;
+  width:100%;
+  box-sizing:border-box;
+  padding:16px;
+}
+
+#giveawayForm .giveaway-growth-owner-block > .eyebrow{
+  display:block;
+  margin-bottom:13px;
+}
+
+#giveawayForm .giveaway-growth-owner-block > .field-row{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  width:100%;
+  margin-bottom:12px;
+}
+
+#giveawayForm .giveaway-growth-owner-block > .field-row .field{
+  min-width:0;
+  margin:0;
+}
+
+#giveawayForm .giveaway-growth-owner-block input[type="text"],
+#giveawayForm .giveaway-growth-owner-block input[type="url"]{
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+
+#giveawayForm .giveaway-growth-requirements,
+#giveawayForm .giveaway-bonus-actions-owner{
+  width:100%;
+  box-sizing:border-box;
+  margin-top:12px;
+  padding:13px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:rgba(255,255,255,.018);
+}
+
+#giveawayForm .giveaway-growth-requirements{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px 14px;
+  align-items:start;
+}
+
+#giveawayForm .giveaway-growth-requirements > strong{
+  grid-column:1 / -1;
+  width:auto;
+  margin-bottom:1px;
+}
+
+#giveawayForm .giveaway-growth-requirements label,
+#giveawayForm .giveaway-bonus-actions-owner label{
+  min-width:0;
+  line-height:1.35;
+}
+
+#giveawayForm .giveaway-bonus-actions-owner{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+
+#giveawayForm .giveaway-bonus-actions-owner > .hint{
+  margin-top:-2px;
+  margin-bottom:2px;
+}
+
+@media(max-width:700px){
+  body.owner-mode #giveawayForm{
+    width:100%;
+    max-width:100%;
+  }
+
+  #giveawayForm .giveaway-growth-owner-block > .field-row,
+  #giveawayForm .giveaway-growth-requirements{
+    grid-template-columns:1fr;
+  }
+
+  #giveawayForm .giveaway-growth-requirements > strong{
+    grid-column:auto;
+  }
+}
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -17917,7 +18018,11 @@ body.showcase-dragging-body{
              autocomplete="url"
              placeholder="https://www.instagram.com/username/">
 
-      <div class="hint">The winner name and optional profile link will be shown publicly under Past Winners. When saved as a winner, a newly uploaded giveaway image is automatically placed inside the Collect TCG Congratulations winner frame.</div>
+      <label for="giveawayGaveAwayDate" style="margin-top:10px;">Gave Away Date <span class="field-optional">(public)</span></label>
+      <input id="giveawayGaveAwayDate" type="date">
+      <div class="hint">This date is shown on the Past Winners card. If blank when first moving a giveaway to Past Winners, today is used.</div>
+
+      <div class="hint" style="margin-top:10px;">The winner name and optional profile link will be shown publicly under Past Winners. When saved as a winner, a newly uploaded giveaway image is automatically placed inside the Collect TCG Congratulations winner frame.</div>
     </div>
 
     <div class="field giveaway-how-to-enter-field">
@@ -19786,6 +19891,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   const GIVEAWAY_PUBLIC_COLUMNS_PROFILE =
     "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_profile_url,winner_announced_at,created_at";
   const GIVEAWAY_PUBLIC_COLUMNS =
+    "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_profile_url,winner_sort_order,is_hidden,giveaway_code,entry_form_url,require_facebook,require_instagram,require_comment,require_website_code,facebook_post_url,instagram_post_url,bonus_share_facebook,bonus_tag_friends,bonus_share_instagram_story,gave_away_date,winner_announced_at,created_at";
+  const GIVEAWAY_PUBLIC_COLUMNS_PRE_GAVE_AWAY_DATE =
     "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_profile_url,winner_sort_order,is_hidden,giveaway_code,entry_form_url,require_facebook,require_instagram,require_comment,require_website_code,facebook_post_url,instagram_post_url,bonus_share_facebook,bonus_tag_friends,bonus_share_instagram_story,winner_announced_at,created_at";
   const GIVEAWAY_PUBLIC_COLUMNS_PRE_BONUS =
     "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_profile_url,winner_sort_order,is_hidden,giveaway_code,entry_form_url,require_facebook,require_instagram,require_website_code,winner_announced_at,created_at";
@@ -19796,6 +19903,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   let giveawayHiddenSupported="unknown";
   let giveawayGrowthFieldsSupported="unknown";
   let giveawayBonusFieldsSupported="unknown";
+  let giveawayGaveAwayDateSupported="unknown";
   let giveawayGrowthAnalyticsSupported="unknown";
   const SHOWCASE_PUBLIC_COLUMNS =
     "id,title,category,series,video_url,thumbnail_url,description,featured,sort_order,created_at";
@@ -19828,6 +19936,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       bonus_share_facebook: row.bonus_share_facebook === true,
       bonus_tag_friends: row.bonus_tag_friends === true,
       bonus_share_instagram_story: row.bonus_share_instagram_story === true,
+      gave_away_date: String(row.gave_away_date || "").slice(0,10),
       winner_announced_at: row.winner_announced_at || null,
       created_at: row.created_at || null
     };
@@ -19951,7 +20060,17 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         sort:true,
         hidden:true,
         growth:true,
-        bonus:true
+        bonus:true,
+        gaveAwayDate:true
+      },
+      {
+        columns:GIVEAWAY_PUBLIC_COLUMNS_PRE_GAVE_AWAY_DATE,
+        profile:true,
+        sort:true,
+        hidden:true,
+        growth:true,
+        bonus:true,
+        gaveAwayDate:false
       },
       {
         columns:GIVEAWAY_PUBLIC_COLUMNS_PRE_BONUS,
@@ -20026,7 +20145,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         optionalColumnUnavailable(error,"instagram_post_url") ||
         optionalColumnUnavailable(error,"bonus_share_facebook") ||
         optionalColumnUnavailable(error,"bonus_tag_friends") ||
-        optionalColumnUnavailable(error,"bonus_share_instagram_story");
+        optionalColumnUnavailable(error,"bonus_share_instagram_story") ||
+        optionalColumnUnavailable(error,"gave_away_date");
 
       if(!optionalMissing) break;
     }
@@ -20042,6 +20162,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     giveawayHiddenSupported=!!selected?.hidden;
     giveawayGrowthFieldsSupported=!!selected?.growth;
     giveawayBonusFieldsSupported=!!selected?.bonus;
+    giveawayGaveAwayDateSupported=!!selected?.gaveAwayDate;
 
     giveaways = (data || []).map(giveawayFromDb);
     return true;
@@ -20087,6 +20208,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           "bonus_share_facebook","bonus_tag_friends","bonus_share_instagram_story"
         );
       }
+      if(giveawayGaveAwayDateSupported!==false) cols.push("gave_away_date");
 
       cols.push("winner_announced_at","created_at");
       return cols.join(",");
@@ -20112,6 +20234,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       delete writePayload.bonus_tag_friends;
       delete writePayload.bonus_share_instagram_story;
     }
+    if(giveawayGaveAwayDateSupported===false) delete writePayload.gave_away_date;
 
     let result=await runWrite(writePayload,currentColumns());
 
@@ -20129,7 +20252,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       ["instagram_post_url","giveawayBonusFieldsSupported"],
       ["bonus_share_facebook","giveawayBonusFieldsSupported"],
       ["bonus_tag_friends","giveawayBonusFieldsSupported"],
-      ["bonus_share_instagram_story","giveawayBonusFieldsSupported"]
+      ["bonus_share_instagram_story","giveawayBonusFieldsSupported"],
+      ["gave_away_date","giveawayGaveAwayDateSupported"]
     ];
 
     for(const [column,stateName] of optionalFields){
@@ -20143,6 +20267,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         if(stateName==="giveawayWinnerProfileUrlSupported") giveawayWinnerProfileUrlSupported=false;
         if(stateName==="giveawayGrowthFieldsSupported") giveawayGrowthFieldsSupported=false;
         if(stateName==="giveawayBonusFieldsSupported") giveawayBonusFieldsSupported=false;
+        if(stateName==="giveawayGaveAwayDateSupported") giveawayGaveAwayDateSupported=false;
 
         writePayload={...writePayload};
         if(stateName==="giveawayGrowthFieldsSupported"){
@@ -20187,6 +20312,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         Object.prototype.hasOwnProperty.call(writePayload,"instagram_post_url")
       ){
         giveawayBonusFieldsSupported=true;
+      }
+      if(Object.prototype.hasOwnProperty.call(writePayload,"gave_away_date")){
+        giveawayGaveAwayDateSupported=true;
       }
     }
 
@@ -20239,6 +20367,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       status:"gave_away",
       winner_name:cleanWinner,
       winner_sort_order:currentWinnerCount,
+      gave_away_date:new Date().toISOString().slice(0,10),
       winner_announced_at:new Date().toISOString()
     };
 
@@ -29526,8 +29655,8 @@ function wireShimmer(container){
 
         if(aOrder!==bOrder) return aOrder-bOrder;
 
-        return String(b.winner_announced_at||b.created_at||"")
-          .localeCompare(String(a.winner_announced_at||a.created_at||""));
+        return String(b.gave_away_date||b.winner_announced_at||b.created_at||"")
+          .localeCompare(String(a.gave_away_date||a.winner_announced_at||a.created_at||""));
       });
   }
 
@@ -29989,7 +30118,7 @@ function wireShimmer(container){
                 View user profile ↗
               </a>
             ` : ""}
-            ${g.winner_announced_at ? `<div class="giveaway-winner-date">Announced ${escapeHtml(giveawayWinnerDateLabel(g.winner_announced_at))}</div>` : ""}
+            ${(g.gave_away_date || g.winner_announced_at) ? `<div class="giveaway-winner-date">Gave Away ${escapeHtml(giveawayWinnerDateLabel(g.gave_away_date || g.winner_announced_at))}</div>` : ""}
           </div>
 
           ${g.details ? `<div class="giveaway-section"><h4>Giveaway details</h4><p>${escapeHtml(g.details)}</p></div>` : ""}
@@ -30188,6 +30317,7 @@ function wireShimmer(container){
           winner_name:null,
           winner_profile_url:null,
           winner_sort_order:null,
+          gave_away_date:null,
           winner_announced_at:null
         },g.id);
 
@@ -30239,6 +30369,7 @@ function wireShimmer(container){
     $("giveawayStatus").value = g ? g.status : "active";
     $("giveawayWinnerName").value = g ? (g.winner_name || "") : "";
     $("giveawayWinnerProfileUrl").value = g ? (g.winner_profile_url || "") : "";
+    $("giveawayGaveAwayDate").value = g ? (g.gave_away_date || "") : "";
     syncGiveawayWinnerField();
     $("giveawayHowToEnter").value = g ? g.how_to_enter : "";
     $("giveawayDetails").value = g ? g.details : "";
@@ -30278,6 +30409,14 @@ function wireShimmer(container){
     const input=$("giveawayWinnerName");
     if(field) field.hidden=!isWinner;
     if(input) input.required=isWinner;
+
+    const gaveAwayDateInput=$("giveawayGaveAwayDate");
+    if(gaveAwayDateInput){
+      gaveAwayDateInput.disabled=!isWinner || giveawayGaveAwayDateSupported===false;
+      if(isWinner && !gaveAwayDateInput.value){
+        gaveAwayDateInput.value=new Date().toISOString().slice(0,10);
+      }
+    }
 
     const profileInput=$("giveawayWinnerProfileUrl");
     if(profileInput){
@@ -30384,6 +30523,7 @@ function wireShimmer(container){
 
     const id = $("giveawayId").value || null;
     const endsValue = $("giveawayEndsAt").value;
+    const gaveAwayDateValue = $("giveawayGaveAwayDate")?.value || "";
 
     if(!requireOwner()) return;
 
@@ -30535,6 +30675,9 @@ function wireShimmer(container){
       bonus_share_facebook:$("giveawayBonusShareFacebook").checked,
       bonus_tag_friends:$("giveawayBonusTagFriends").checked,
       bonus_share_instagram_story:$("giveawayBonusInstagramStory").checked,
+      gave_away_date: status==="gave_away"
+        ? (gaveAwayDateValue || existing?.gave_away_date || new Date().toISOString().slice(0,10))
+        : null,
       winner_name: status==="gave_away" ? winnerName : null,
       winner_profile_url: status==="gave_away" ? (winnerProfileUrl || null) : null,
       winner_sort_order: status==="gave_away"
@@ -34279,7 +34422,7 @@ function wireShimmer(container){
         g.title,
         g.card_name,
         g.winner_profile_url,
-        giveawayWinnerDateLabel(g.winner_announced_at)
+        giveawayWinnerDateLabel(g.gave_away_date || g.winner_announced_at)
       ].map(v=>normalizeFilterValue(v)).join(" ");
       return hay.includes(q);
     }
