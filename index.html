@@ -17217,6 +17217,11 @@ body.showcase-dragging-body{
   }
 }
 
+
+/* Add/Edit photo watermark mode choices */
+.image-preview-watermark-actions{flex-wrap:wrap}
+.image-preview-watermark-btn{white-space:nowrap}
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -22149,54 +22154,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return watermarkLogoPromise;
   }
 
-  function drawWatermark(ctx, canvas, logo){
-    // The watermark logo is preprocessed into a transparent canvas so its white background is removed.
-
-    const margin = Math.max(12, Math.round(Math.min(canvas.width, canvas.height) * 0.024));
-    const targetWidth = Math.min(
-      420,
-      Math.max(120, Math.round(canvas.width * 0.20))
-    );
-    const ratio = logo.naturalHeight && logo.naturalWidth
-      ? logo.naturalHeight / logo.naturalWidth
-      : 1;
-    const targetHeight = Math.round(targetWidth * ratio);
-    const offsetLeft = Math.max(14, Math.round(targetWidth * 0.10));
-    const offsetDown = Math.max(16, Math.round(targetHeight * 0.20));
-    const x = Math.max(margin, canvas.width - targetWidth - margin - offsetLeft);
-    const y = Math.min(canvas.height - targetHeight - margin, margin + offsetDown);
-    const glowBlur = Math.max(12, Math.round(targetWidth * 0.10));
-    const lift = Math.max(3, Math.round(targetWidth * 0.018));
-
-    ctx.save();
-    ctx.imageSmoothingEnabled = true;
-    if("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
-
-    if("filter" in ctx){
-      ctx.filter = `drop-shadow(0 ${lift}px ${glowBlur}px rgba(0,0,0,0.42)) saturate(1.34) contrast(1.12) brightness(1.06)`;
-    }else{
-      ctx.shadowColor = "rgba(0,0,0,0.42)";
-      ctx.shadowBlur = glowBlur;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = lift;
-    }
-
-    ctx.globalAlpha = 0.94;
-    ctx.drawImage(logo, x, y, targetWidth, targetHeight);
-
-    // Add a subtle second pass so the colors feel more vibrant and the mark pops a little more.
-    if("filter" in ctx){
-      ctx.filter = "saturate(1.20) contrast(1.04) brightness(1.03)";
-    }else{
-      ctx.shadowColor = "transparent";
-      ctx.shadowBlur = 0;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
-    }
-    ctx.globalAlpha = 0.28;
-    ctx.drawImage(logo, x, y, targetWidth, targetHeight);
-    ctx.restore();
-
+  function drawWebsiteWatermark(ctx, canvas){
     const watermarkText = CARD_WATERMARK_URL;
     if(!watermarkText) return;
 
@@ -22336,6 +22294,58 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     ctx.restore();
   }
 
+  function drawWatermark(ctx, canvas, logo){
+    // The watermark logo is preprocessed into a transparent canvas so its white background is removed.
+
+    const margin = Math.max(12, Math.round(Math.min(canvas.width, canvas.height) * 0.024));
+    const targetWidth = Math.min(
+      420,
+      Math.max(120, Math.round(canvas.width * 0.20))
+    );
+    const ratio = logo.naturalHeight && logo.naturalWidth
+      ? logo.naturalHeight / logo.naturalWidth
+      : 1;
+    const targetHeight = Math.round(targetWidth * ratio);
+    const offsetLeft = Math.max(14, Math.round(targetWidth * 0.10));
+    const offsetDown = Math.max(16, Math.round(targetHeight * 0.20));
+    const x = Math.max(margin, canvas.width - targetWidth - margin - offsetLeft);
+    const y = Math.min(canvas.height - targetHeight - margin, margin + offsetDown);
+    const glowBlur = Math.max(12, Math.round(targetWidth * 0.10));
+    const lift = Math.max(3, Math.round(targetWidth * 0.018));
+
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    if("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
+
+    if("filter" in ctx){
+      ctx.filter = `drop-shadow(0 ${lift}px ${glowBlur}px rgba(0,0,0,0.42)) saturate(1.34) contrast(1.12) brightness(1.06)`;
+    }else{
+      ctx.shadowColor = "rgba(0,0,0,0.42)";
+      ctx.shadowBlur = glowBlur;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = lift;
+    }
+
+    ctx.globalAlpha = 0.94;
+    ctx.drawImage(logo, x, y, targetWidth, targetHeight);
+
+    // Add a subtle second pass so the colors feel more vibrant and the mark pops a little more.
+    if("filter" in ctx){
+      ctx.filter = "saturate(1.20) contrast(1.04) brightness(1.03)";
+    }else{
+      ctx.shadowColor = "transparent";
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+    }
+    ctx.globalAlpha = 0.28;
+    ctx.drawImage(logo, x, y, targetWidth, targetHeight);
+    ctx.restore();
+
+    drawWebsiteWatermark(ctx, canvas);
+
+  }
+
   function shouldApplySoldDownloadWatermark(card){
     return canonicalAvailability(card?.availability) === "Sold";
   }
@@ -22473,8 +22483,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(!requireOwner("apply image watermark")){
         throw new Error("Owner login required");
       }
-      const logo = await loadWatermarkLogo();
-      drawWatermark(ctx, canvas, logo);
+
+      if(applyWatermark==="website"){
+        drawWebsiteWatermark(ctx, canvas);
+      }else{
+        const logo = await loadWatermarkLogo();
+        drawWatermark(ctx, canvas, logo);
+      }
     }
 
     return canvas.toDataURL("image/jpeg", quality);
@@ -22664,6 +22679,17 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
 
     return processCardImageUrl(source,maxDim,quality,true);
+  }
+
+  async function applyWebsiteWatermarkToCardImageSource(source, maxDim = 1800, quality = 0.94){
+    if(!requireOwner("apply website watermark")) throw new Error("Owner login required");
+
+    if(isPendingCardImage(source)){
+      const img=await loadImageFromDataUrl(source);
+      return renderCardImage(img,maxDim,quality,"website");
+    }
+
+    return processCardImageUrl(source,maxDim,quality,"website");
   }
 
   async function watermarkImageUrl(url, maxDim = 1800, quality = 0.94){
@@ -23226,10 +23252,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 <div class="owner-only image-watermark-all-actions" id="${p}WatermarkAllActions">
             <div>
               <strong>All photos on this card</strong>
-              <span>Apply or remove the logo watermark from every photo in this Add/Edit form.</span>
+              <span>Choose logo + website, website only, or original for every photo in this Add/Edit form.</span>
             </div>
             <div class="image-watermark-all-buttons">
-              <button type="button" class="btn-ghost" id="${p}WatermarkAllPhotos">Watermark all photos</button>
+              <button type="button" class="btn-ghost" id="${p}WatermarkAllPhotos">Logo + website all photos</button>
+              <button type="button" class="btn-ghost" id="${p}WebsiteOnlyAllPhotos">Website only all photos</button>
               <button type="button" class="btn-ghost" id="${p}OriginalAllPhotos">Use originals for all photos</button>
             </div>
             <div class="image-watermark-all-status" id="${p}WatermarkAllStatus" hidden></div>
@@ -23415,6 +23442,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const addUrlBtn = $(p + "AddImageUrl");
     const preview = $(p + "ImageGalleryPreview");
     const watermarkAllBtn=$(p+"WatermarkAllPhotos");
+    const websiteOnlyAllBtn=$(p+"WebsiteOnlyAllPhotos");
     const originalAllBtn=$(p+"OriginalAllPhotos");
     const watermarkAllStatus=$(p+"WatermarkAllStatus");
     const psaPrivacyAuto=$(p+"PsaPrivacyAuto");
@@ -23446,6 +23474,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       : Array(formState.images.length).fill(false);
     while(formState.imageWatermarkStates.length<formState.images.length){
       formState.imageWatermarkStates.push(false);
+    }
+
+    formState.imageWatermarkModes=Array.isArray(formState.imageWatermarkModes)
+      ? formState.imageWatermarkModes.slice(0,formState.images.length)
+      : formState.imageWatermarkStates.map(state=>state ? "full" : "original");
+    while(formState.imageWatermarkModes.length<formState.images.length){
+      const i=formState.imageWatermarkModes.length;
+      formState.imageWatermarkModes.push(formState.imageWatermarkStates[i] ? "full" : "original");
     }
 
     // Temporary, edit-session-only undo source for PSA privacy masks.
@@ -23483,6 +23519,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       moveParallelArray(formState.imageWatermarkedSources,from,to);
       moveParallelArray(formState.imageVariantKeys,from,to);
       moveParallelArray(formState.imageWatermarkStates,from,to);
+      moveParallelArray(formState.imageWatermarkModes,from,to);
       moveParallelArray(formState.imagePrivacyUndoSources,from,to);
       refreshPreview();
     }
@@ -23493,6 +23530,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       formState.imageWatermarkedSources.splice(index,1);
       formState.imageVariantKeys.splice(index,1);
       formState.imageWatermarkStates.splice(index,1);
+      formState.imageWatermarkModes.splice(index,1);
       formState.imagePrivacyUndoSources.splice(index,1);
       refreshPreview();
     }
@@ -23503,7 +23541,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       });
     }
 
-    async function setImageWatermark(index,apply,silent=false){
+    async function setImageWatermark(index,mode,silent=false){
       if(!requireOwner("change image watermark")) return;
       if(!cardImageVariantsSupported){
         showToast("Run the reversible watermark migration first");
@@ -23511,11 +23549,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       }
       if(index<0 || index>=formState.images.length) return;
 
-      let cleanSource=formState.imageCleanSources[index];
-      let watermarkedSource=formState.imageWatermarkedSources[index];
+      const normalizedMode=
+        mode==="website" ? "website" :
+        (mode===true || mode==="full") ? "full" :
+        "original";
 
-      // A legacy image has no reversible pair yet. Its current stored file
-      // becomes the clean base going forward.
+      let cleanSource=formState.imageCleanSources[index];
       if(!cleanSource){
         cleanSource=formState.images[index];
         formState.imageCleanSources[index]=cleanSource;
@@ -23525,19 +23564,28 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       refreshPreview();
 
       try{
-        if(apply){
-          if(!watermarkedSource){
-            watermarkedSource=await applyWatermarkToCardImageSource(cleanSource,1800,0.94);
-            formState.imageWatermarkedSources[index]=watermarkedSource;
-          }
-
-          formState.images[index]=watermarkedSource;
-          formState.imageWatermarkStates[index]=true;
-          if(!silent) showToast("Watermarked version selected");
-        }else{
+        if(normalizedMode==="original"){
           formState.images[index]=cleanSource;
           formState.imageWatermarkStates[index]=false;
+          formState.imageWatermarkModes[index]="original";
           if(!silent) showToast("Original version selected");
+        }else{
+          const rendered=normalizedMode==="website"
+            ? await applyWebsiteWatermarkToCardImageSource(cleanSource,1800,0.94)
+            : await applyWatermarkToCardImageSource(cleanSource,1800,0.94);
+
+          formState.imageWatermarkedSources[index]=rendered;
+          formState.images[index]=rendered;
+          formState.imageWatermarkStates[index]=true;
+          formState.imageWatermarkModes[index]=normalizedMode;
+
+          if(!silent){
+            showToast(
+              normalizedMode==="website"
+                ? "Website-only watermark selected"
+                : "Logo + website watermark selected"
+            );
+          }
         }
       }catch(error){
         console.warn("Could not change image watermark:",error);
@@ -23556,6 +23604,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(!cleanSource) return;
 
       const wasWatermarked=formState.imageWatermarkStates[index]===true;
+      const watermarkMode=formState.imageWatermarkModes[index]==="website" ? "website" : "full";
 
       if(!apply && !formState.imagePrivacyUndoSources[index]){
         showToast("No unsaved PSA privacy edit to undo");
@@ -23583,13 +23632,17 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         formState.imageWatermarkedSources[index]=null;
 
         if(wasWatermarked){
-          const refreshed=await applyWatermarkToCardImageSource(nextClean,1800,0.94);
+          const refreshed=watermarkMode==="website"
+            ? await applyWebsiteWatermarkToCardImageSource(nextClean,1800,0.94)
+            : await applyWatermarkToCardImageSource(nextClean,1800,0.94);
           formState.imageWatermarkedSources[index]=refreshed;
           formState.images[index]=refreshed;
           formState.imageWatermarkStates[index]=true;
+          formState.imageWatermarkModes[index]=watermarkMode;
         }else{
           formState.images[index]=nextClean;
           formState.imageWatermarkStates[index]=false;
+          formState.imageWatermarkModes[index]="original";
         }
 
         showToast(apply ? "PSA barcode and certificate areas hidden" : "PSA privacy edit undone");
@@ -23613,6 +23666,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(!cleanSource) return;
 
       const wasWatermarked=formState.imageWatermarkStates[index]===true;
+      const watermarkMode=formState.imageWatermarkModes[index]==="website" ? "website" : "full";
 
       formState.processingImages=Number(formState.processingImages||0)+1;
       refreshPreview();
@@ -23627,13 +23681,17 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         formState.imageWatermarkedSources[index]=null;
 
         if(wasWatermarked){
-          const rotatedWatermarked=await applyWatermarkToCardImageSource(rotatedClean,1800,0.94);
+          const rotatedWatermarked=watermarkMode==="website"
+            ? await applyWebsiteWatermarkToCardImageSource(rotatedClean,1800,0.94)
+            : await applyWatermarkToCardImageSource(rotatedClean,1800,0.94);
           formState.imageWatermarkedSources[index]=rotatedWatermarked;
           formState.images[index]=rotatedWatermarked;
           formState.imageWatermarkStates[index]=true;
+          formState.imageWatermarkModes[index]=watermarkMode;
         }else{
           formState.images[index]=rotatedClean;
           formState.imageWatermarkStates[index]=false;
+          formState.imageWatermarkModes[index]="original";
         }
 
         showToast(quarterTurns<0 ? "Photo rotated left" : "Photo rotated right");
@@ -23646,7 +23704,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       }
     }
 
-    async function setAllImagesWatermark(apply){
+    async function setAllImagesWatermark(mode){
       if(!requireOwner("change all photos on this card")) return;
       if(!cardImageVariantsSupported){
         showToast("Run the reversible watermark migration first");
@@ -23657,18 +23715,27 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         return;
       }
 
-      const action=apply ? "watermark" : "switch to original";
+      const normalizedMode=
+        mode==="website" ? "website" :
+        (mode===true || mode==="full") ? "full" :
+        "original";
+
       const count=formState.images.length;
-      if(!confirm(
-        apply
-          ? `Apply the logo watermark to all ${count} photo${count===1?"":"s"} on this card?\n\nThe original versions will remain saved so you can switch back later.`
-          : `Switch all ${count} photo${count===1?"":"s"} on this card back to their original versions?`
-      )) return;
+      const prompt=
+        normalizedMode==="full"
+          ? `Apply logo + website watermark to all ${count} photo${count===1?"":"s"}?`
+          : normalizedMode==="website"
+            ? `Apply only the website watermark to all ${count} photo${count===1?"":"s"}?`
+            : `Switch all ${count} photo${count===1?"":"s"} back to original?`;
+
+      if(!confirm(prompt)) return;
 
       watermarkAllBtn.disabled=true;
+      websiteOnlyAllBtn.disabled=true;
       originalAllBtn.disabled=true;
       fileInput.disabled=true;
       addUrlBtn.disabled=true;
+
       if(watermarkAllStatus){
         watermarkAllStatus.hidden=false;
         watermarkAllStatus.textContent="Starting…";
@@ -23680,13 +23747,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       try{
         for(let i=0;i<formState.images.length;i++){
           if(watermarkAllStatus){
-            watermarkAllStatus.textContent=
-              `${apply ? "Watermarking" : "Restoring"} photo ${i+1} / ${formState.images.length}…`;
+            watermarkAllStatus.textContent=`Processing photo ${i+1} / ${formState.images.length}…`;
           }
-
           const before=formState.images[i];
           try{
-            await setImageWatermark(i,apply,true);
+            await setImageWatermark(i,normalizedMode,true);
             if(formState.images[i]!==before) changed++;
           }catch(error){
             failed++;
@@ -23708,14 +23773,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         );
       }finally{
         watermarkAllBtn.disabled=false;
+        websiteOnlyAllBtn.disabled=false;
         originalAllBtn.disabled=false;
         fileInput.disabled=false;
         addUrlBtn.disabled=false;
       }
     }
 
-    watermarkAllBtn?.addEventListener("click",()=>setAllImagesWatermark(true));
-    originalAllBtn?.addEventListener("click",()=>setAllImagesWatermark(false));
+    watermarkAllBtn?.addEventListener("click",()=>setAllImagesWatermark("full"));
+    websiteOnlyAllBtn?.addEventListener("click",()=>setAllImagesWatermark("website"));
+    originalAllBtn?.addEventListener("click",()=>setAllImagesWatermark("original"));
 
     function refreshPreview(){
       preview.innerHTML = "";
@@ -23730,6 +23797,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       formState.images.forEach((image, index)=>{
         const box = document.createElement("div");
         const state=formState.imageWatermarkStates[index]===true;
+        const watermarkMode=state
+          ? (formState.imageWatermarkModes[index]==="website" ? "website" : "full")
+          : "original";
         const cleanAvailable=Boolean(formState.imageCleanSources[index]);
 
         box.className = "image-preview-box";
@@ -23743,18 +23813,31 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           <div class="owner-only image-preview-watermark-actions">
             <span class="image-watermark-state ${
               state ? "with-mark" : "without-mark"
-            }">${state ? "Watermarked" : "Original"}</span>
+            }">${
+              watermarkMode==="website"
+                ? "Website only"
+                : watermarkMode==="full"
+                  ? "Logo + website"
+                  : "Original"
+            }</span>
 
             <button type="button"
                     class="image-preview-watermark-btn"
-                    data-preview-watermark="on"
-                    title="Apply the Collect TCG logo watermark">
-              Add watermark
+                    data-preview-watermark="full"
+                    title="Apply the Collect TCG logo + website watermark">
+              Logo + website
             </button>
 
             <button type="button"
                     class="image-preview-watermark-btn"
-                    data-preview-watermark="off"
+                    data-preview-watermark="website"
+                    title="Apply only the website banner watermark">
+              Website only
+            </button>
+
+            <button type="button"
+                    class="image-preview-watermark-btn"
+                    data-preview-watermark="original"
                     ${cleanAvailable ? "" : "disabled"}
                     title="${cleanAvailable ? "Switch back to the saved original photo" : "No original source is available"}">
               Original
@@ -23809,7 +23892,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           btn.addEventListener("click",async e=>{
             e.stopPropagation();
             if(btn.disabled) return;
-            await setImageWatermark(index,btn.dataset.previewWatermark==="on");
+            await setImageWatermark(index,btn.dataset.previewWatermark||"original");
           });
         });
 
@@ -23929,6 +24012,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           formState.imageWatermarkedSources.push(null);
           formState.imageVariantKeys.push(newCardImageVariantKey());
           formState.imageWatermarkStates.push(false);
+          formState.imageWatermarkModes.push("original");
           formState.imagePrivacyUndoSources.push(autoHide ? originalClean : null);
           added++;
         }
@@ -23976,6 +24060,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         formState.imageWatermarkedSources.push(null);
         formState.imageVariantKeys.push(newCardImageVariantKey());
         formState.imageWatermarkStates.push(false);
+        formState.imageWatermarkModes.push("original");
         formState.imagePrivacyUndoSources.push(autoHide ? originalClean : null);
         urlInput.value = "";
         refreshPreview();
