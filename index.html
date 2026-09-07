@@ -18028,6 +18028,227 @@ body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game
   }
 }
 
+
+/* =========================================================
+   GIVEAWAY — MULTIPLE PHOTOS
+   ========================================================= */
+.giveaway-photo-editor-note{
+  margin-top:6px;
+  color:var(--text-muted);
+  font-size:10px;
+  line-height:1.45;
+}
+
+.giveaway-photo-editor{
+  display:grid;
+  gap:10px;
+}
+
+.giveaway-photo-selected{
+  display:grid;
+  grid-template-columns:minmax(0,220px) 1fr;
+  gap:10px;
+  align-items:start;
+}
+
+.giveaway-photo-selected .giveaway-image-preview{
+  width:100%;
+  max-width:220px;
+  aspect-ratio:4/3;
+  position:relative;
+}
+
+.giveaway-photo-number{
+  position:absolute;
+  right:7px;
+  bottom:7px;
+  padding:3px 6px;
+  border-radius:999px;
+  background:rgba(0,0,0,.72);
+  color:#fff;
+  font:9px 'JetBrains Mono',monospace;
+}
+
+.giveaway-photo-selected-actions{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.giveaway-photo-thumbs{
+  display:flex;
+  gap:7px;
+  overflow-x:auto;
+  padding:2px 1px 5px;
+}
+
+.giveaway-photo-thumb{
+  position:relative;
+  width:62px;
+  height:78px;
+  flex:0 0 auto;
+  padding:2px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--surface-2);
+  overflow:hidden;
+  cursor:pointer;
+}
+
+.giveaway-photo-thumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  border-radius:5px;
+}
+
+.giveaway-photo-thumb span{
+  position:absolute;
+  right:3px;
+  bottom:3px;
+  min-width:18px;
+  height:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+  background:rgba(0,0,0,.75);
+  color:#fff;
+  font-size:8px;
+}
+
+.giveaway-photo-thumb.active{
+  border-color:var(--accent-gold);
+  box-shadow:0 0 0 1px var(--accent-gold);
+}
+
+.giveaway-photo-empty{
+  padding:18px;
+  border:1px dashed var(--border);
+  border-radius:10px;
+  color:var(--text-muted);
+  font-size:11px;
+  text-align:center;
+}
+
+.giveaway-gallery{
+  background:var(--surface-2);
+}
+
+.giveaway-gallery-stage{
+  position:relative;
+  aspect-ratio:4/3;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  background:var(--surface-2);
+}
+
+.giveaway-card .giveaway-gallery-stage > img,
+.giveaway-grid#pastWinnersGrid .giveaway-winner-card .giveaway-gallery-stage > img{
+  width:100% !important;
+  height:100% !important;
+  aspect-ratio:auto !important;
+  object-fit:contain !important;
+  object-position:center !important;
+  display:block !important;
+  padding:6px !important;
+  box-sizing:border-box !important;
+  background:var(--surface-2) !important;
+}
+
+.giveaway-gallery-nav{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:4;
+  width:36px;
+  height:36px;
+  padding:0;
+  border:1px solid rgba(255,255,255,.24);
+  border-radius:999px;
+  background:rgba(8,9,12,.68);
+  color:#fff;
+  font-size:24px;
+  line-height:1;
+  cursor:pointer;
+}
+
+.giveaway-gallery-prev{left:8px}
+.giveaway-gallery-next{right:8px}
+
+.giveaway-gallery-count{
+  position:absolute;
+  right:8px;
+  bottom:8px;
+  z-index:4;
+  padding:4px 7px;
+  border-radius:999px;
+  background:rgba(8,9,12,.72);
+  color:#fff;
+  font:9px 'JetBrains Mono',monospace;
+}
+
+.giveaway-gallery-thumbs{
+  display:flex;
+  gap:6px;
+  padding:7px 8px 9px;
+  overflow-x:auto;
+  border-top:1px solid var(--border-soft);
+}
+
+.giveaway-gallery-thumb{
+  width:44px;
+  height:54px;
+  flex:0 0 auto;
+  padding:1px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  overflow:hidden;
+  background:var(--surface);
+  opacity:.62;
+}
+
+.giveaway-gallery-thumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  border-radius:4px;
+}
+
+.giveaway-gallery-thumb.active{
+  opacity:1;
+  border-color:var(--accent-gold);
+  box-shadow:0 0 0 1px var(--accent-gold);
+}
+
+@media(max-width:800px){
+  .giveaway-photo-selected{
+    grid-template-columns:1fr;
+  }
+
+  .giveaway-photo-selected .giveaway-image-preview{
+    max-width:none;
+  }
+
+  .giveaway-photo-selected-actions .btn-ghost{
+    flex:1 1 auto;
+    min-height:40px;
+  }
+
+  .giveaway-gallery-nav{
+    width:34px;
+    height:34px;
+  }
+
+  .giveaway-gallery-thumbs{
+    padding-inline:7px;
+  }
+}
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -18321,10 +18542,14 @@ body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game
     </div>
 
     <div class="field">
-      <label for="giveawayImageFile">Giveaway image</label>
-      <input id="giveawayImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+      <label for="giveawayImageFile">Giveaway photos</label>
+      <input id="giveawayImageFile"
+             type="file"
+             multiple
+             accept="image/jpeg,image/png,image/webp,image/gif">
       <input id="giveawayImage" type="hidden">
-      <div id="giveawayImagePreview" style="margin-top:8px;"></div>
+      <div class="giveaway-photo-editor-note">Up to 10 photos. The first photo is the cover image. Select a thumbnail to edit its watermark / PSA privacy.</div>
+      <div id="giveawayImagePreview" class="giveaway-photo-editor" style="margin-top:8px;"></div>
       <div class="owner-only image-watermark-control giveaway-watermark-control" id="giveawayWatermarkControl">
         <div class="image-watermark-copy">
           <strong>Giveaway image watermark</strong>
@@ -18348,7 +18573,7 @@ body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game
         </div>
       </div>
       <div class="owner-only image-watermark-state without-mark" id="giveawayPrivacyState" style="margin-top:6px;">Original</div>
-      <div class="hint">Choose an image from your device. The image will be uploaded to Supabase Storage.</div>
+      <div class="hint">Choose one or more photos from your device. Photos are uploaded to Supabase Storage in the order shown above.</div>
     </div>
 
     <div class="field-row">
@@ -20430,6 +20655,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_announced_at,created_at";
   const GIVEAWAY_PUBLIC_COLUMNS_PROFILE =
     "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_profile_url,winner_announced_at,created_at";
+  const GIVEAWAY_PUBLIC_COLUMNS_MULTI =
+    "id,title,card_name,image_url,images,status,ends_at,how_to_enter,details,winner_name,winner_profile_url,winner_sort_order,is_hidden,giveaway_code,entry_form_url,require_facebook,require_instagram,require_comment,require_website_code,facebook_post_url,instagram_post_url,bonus_share_facebook,bonus_tag_friends,bonus_share_instagram_story,gave_away_date,winner_announced_at,created_at";
   const GIVEAWAY_PUBLIC_COLUMNS =
     "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_profile_url,winner_sort_order,is_hidden,giveaway_code,entry_form_url,require_facebook,require_instagram,require_comment,require_website_code,facebook_post_url,instagram_post_url,bonus_share_facebook,bonus_tag_friends,bonus_share_instagram_story,gave_away_date,winner_announced_at,created_at";
   const GIVEAWAY_PUBLIC_COLUMNS_PRE_GAVE_AWAY_DATE =
@@ -20444,6 +20671,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   let giveawayGrowthFieldsSupported="unknown";
   let giveawayBonusFieldsSupported="unknown";
   let giveawayGaveAwayDateSupported="unknown";
+  let giveawayImagesSupported="unknown";
   let giveawayGrowthAnalyticsSupported="unknown";
   const SHOWCASE_PUBLIC_COLUMNS =
     "id,title,category,series,video_url,thumbnail_url,description,featured,sort_order,created_at";
@@ -20455,6 +20683,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       title: row.title || "",
       card_name: row.card_name || "",
       image_url: row.image_url || "",
+      images: (() => {
+        const out=[];
+        const add=value=>{
+          const url=safeHttpUrl(value||"");
+          if(url && !out.includes(url)) out.push(url);
+        };
+        if(Array.isArray(row.images)) row.images.forEach(add);
+        add(row.image_url);
+        return out.slice(0,10);
+      })(),
       status: row.status || "active",
       ends_at: row.ends_at || null,
       how_to_enter: row.how_to_enter || "",
@@ -20595,13 +20833,24 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   async function loadGiveaways(){
     const columnSets=[
       {
+        columns:GIVEAWAY_PUBLIC_COLUMNS_MULTI,
+        profile:true,
+        sort:true,
+        hidden:true,
+        growth:true,
+        bonus:true,
+        gaveAwayDate:true,
+        images:true
+      },
+      {
         columns:GIVEAWAY_PUBLIC_COLUMNS,
         profile:true,
         sort:true,
         hidden:true,
         growth:true,
         bonus:true,
-        gaveAwayDate:true
+        gaveAwayDate:true,
+        images:false
       },
       {
         columns:GIVEAWAY_PUBLIC_COLUMNS_PRE_GAVE_AWAY_DATE,
@@ -20703,6 +20952,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     giveawayGrowthFieldsSupported=!!selected?.growth;
     giveawayBonusFieldsSupported=!!selected?.bonus;
     giveawayGaveAwayDateSupported=!!selected?.gaveAwayDate;
+    giveawayImagesSupported=!!selected?.images;
 
     giveaways = (data || []).map(giveawayFromDb);
     return true;
@@ -20729,7 +20979,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     function currentColumns(){
       const cols=[
-        "id","title","card_name","image_url","status","ends_at",
+        "id","title","card_name","image_url",
+        ...(giveawayImagesSupported!==false ? ["images"] : []),
+        "status","ends_at",
         "how_to_enter","details","winner_name"
       ];
 
@@ -20775,6 +21027,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       delete writePayload.bonus_share_instagram_story;
     }
     if(giveawayGaveAwayDateSupported===false) delete writePayload.gave_away_date;
+    if(giveawayImagesSupported===false) delete writePayload.images;
 
     let result=await runWrite(writePayload,currentColumns());
 
@@ -20793,7 +21046,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       ["bonus_share_facebook","giveawayBonusFieldsSupported"],
       ["bonus_tag_friends","giveawayBonusFieldsSupported"],
       ["bonus_share_instagram_story","giveawayBonusFieldsSupported"],
-      ["gave_away_date","giveawayGaveAwayDateSupported"]
+      ["gave_away_date","giveawayGaveAwayDateSupported"],
+      ["images","giveawayImagesSupported"]
     ];
 
     for(const [column,stateName] of optionalFields){
@@ -20808,6 +21062,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         if(stateName==="giveawayGrowthFieldsSupported") giveawayGrowthFieldsSupported=false;
         if(stateName==="giveawayBonusFieldsSupported") giveawayBonusFieldsSupported=false;
         if(stateName==="giveawayGaveAwayDateSupported") giveawayGaveAwayDateSupported=false;
+        if(stateName==="giveawayImagesSupported") giveawayImagesSupported=false;
 
         writePayload={...writePayload};
         if(stateName==="giveawayGrowthFieldsSupported"){
@@ -20855,6 +21110,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       }
       if(Object.prototype.hasOwnProperty.call(writePayload,"gave_away_date")){
         giveawayGaveAwayDateSupported=true;
+      }
+      if(Object.prototype.hasOwnProperty.call(writePayload,"images")){
+        giveawayImagesSupported=true;
       }
     }
 
@@ -20911,7 +21169,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       winner_announced_at:new Date().toISOString()
     };
 
-    const currentImage=safeHttpUrl(g?.image_url||"");
+    const currentImages=giveawayPhotoSourcesFromRecord(g);
+    const currentImage=currentImages[0]||safeHttpUrl(g?.image_url||"");
     if(currentImage){
       try{
         showToast("Preparing winner listing image…");
@@ -20925,6 +21184,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           return {data:null,error:new Error("Could not upload winner listing image")};
         }
         payload.image_url=uploaded;
+        if(giveawayImagesSupported!==false){
+          payload.images=[uploaded,...currentImages.slice(1)].slice(0,GIVEAWAY_PHOTO_LIMIT);
+        }
       }catch(error){
         console.error("Could not create winner listing frame:",error);
         return {data:null,error:new Error("Could not create winner listing image")};
@@ -29980,6 +30242,86 @@ function wireShimmer(container){
     return canvas.toDataURL("image/jpeg",quality);
   }
 
+  const GIVEAWAY_PHOTO_LIMIT=10;
+  let giveawayPhotoItems=[];
+  let giveawaySelectedPhotoIndex=0;
+
+  function newGiveawayPhotoItem(source="",file=null){
+    return {
+      file:file||null,
+      cleanSource:source||"",
+      privacyMaskedSource:"",
+      privacyApplied:false,
+      watermarkedSource:"",
+      websiteWatermarkedSource:"",
+      watermarkApplied:false,
+      watermarkMode:"original",
+      objectUrl:file && source ? source : ""
+    };
+  }
+
+  function giveawayPhotoSourcesFromRecord(g){
+    const out=[];
+    const add=value=>{
+      const url=safeHttpUrl(value||"");
+      if(url && !out.includes(url)) out.push(url);
+    };
+    if(Array.isArray(g?.images)) g.images.forEach(add);
+    add(g?.image_url);
+    return out.slice(0,GIVEAWAY_PHOTO_LIMIT);
+  }
+
+  function commitGiveawayActiveEditorItem(){
+    const item=giveawayPhotoItems[giveawaySelectedPhotoIndex];
+    if(!item) return;
+    item.cleanSource=giveawayImageEditorState.cleanSource||"";
+    item.privacyMaskedSource=giveawayImageEditorState.privacyMaskedSource||"";
+    item.privacyApplied=giveawayImageEditorState.privacyApplied===true;
+    item.watermarkedSource=giveawayImageEditorState.watermarkedSource||"";
+    item.websiteWatermarkedSource=giveawayImageEditorState.websiteWatermarkedSource||"";
+    item.watermarkApplied=giveawayImageEditorState.watermarkApplied===true;
+    item.watermarkMode=giveawayImageEditorState.watermarkMode||"original";
+    if(giveawayImageEditorState.objectUrl) item.objectUrl=giveawayImageEditorState.objectUrl;
+  }
+
+  function loadGiveawayEditorItem(index){
+    commitGiveawayActiveEditorItem();
+    if(!giveawayPhotoItems.length){
+      giveawaySelectedPhotoIndex=0;
+      Object.assign(giveawayImageEditorState,newGiveawayPhotoItem(""));
+      renderGiveawayImagePreview("");
+      syncGiveawayWatermarkControls();
+      syncGiveawayPrivacyControls();
+      return;
+    }
+
+    giveawaySelectedPhotoIndex=Math.max(0,Math.min(Number(index)||0,giveawayPhotoItems.length-1));
+    const item=giveawayPhotoItems[giveawaySelectedPhotoIndex];
+    Object.assign(giveawayImageEditorState,{
+      cleanSource:item.cleanSource||"",
+      privacyMaskedSource:item.privacyMaskedSource||"",
+      privacyApplied:item.privacyApplied===true,
+      watermarkedSource:item.watermarkedSource||"",
+      websiteWatermarkedSource:item.websiteWatermarkedSource||"",
+      watermarkApplied:item.watermarkApplied===true,
+      watermarkMode:item.watermarkMode||"original",
+      objectUrl:item.objectUrl||""
+    });
+
+    $("giveawayImage").value=giveawayPhotoItems[0]?.cleanSource||"";
+    renderGiveawayImagePreview(currentGiveawayPreviewSource());
+    syncGiveawayWatermarkControls();
+    syncGiveawayPrivacyControls();
+  }
+
+  function revokeAllGiveawayPhotoObjectUrls(){
+    giveawayPhotoItems.forEach(item=>{
+      if(item?.file && item.objectUrl){
+        try{ URL.revokeObjectURL(item.objectUrl); }catch{}
+      }
+    });
+  }
+
   const giveawayImageEditorState={
     cleanSource:"",
     privacyMaskedSource:"",
@@ -30016,7 +30358,7 @@ function wireShimmer(container){
   }
 
   function selectedGiveawayFileIsGif(){
-    const file=$("giveawayImageFile")?.files?.[0];
+    const file=giveawayPhotoItems[giveawaySelectedPhotoIndex]?.file || null;
     return normalizedImageMime(file?.type)==="image/gif";
   }
 
@@ -30122,6 +30464,7 @@ function wireShimmer(container){
     if(normalizedMode==="original"){
       giveawayImageEditorState.watermarkMode="original";
       giveawayImageEditorState.watermarkApplied=false;
+      commitGiveawayActiveEditorItem();
       renderGiveawayImagePreview(currentGiveawayPreviewSource());
       syncGiveawayWatermarkControls();
       return;
@@ -30150,6 +30493,7 @@ function wireShimmer(container){
         giveawayImageEditorState.watermarkApplied=true;
       }
 
+      commitGiveawayActiveEditorItem();
       renderGiveawayImagePreview(currentGiveawayPreviewSource());
       syncGiveawayWatermarkControls();
 
@@ -30205,6 +30549,7 @@ function wireShimmer(container){
         giveawayImageEditorState.watermarkApplied=false;
       }
 
+      commitGiveawayActiveEditorItem();
       renderGiveawayImagePreview(currentGiveawayPreviewSource());
       syncGiveawayWatermarkControls();
       syncGiveawayPrivacyControls();
@@ -30217,26 +30562,75 @@ function wireShimmer(container){
     }
   }
 
-  function resetGiveawayImageEditorState(url=""){
-    revokeGiveawayPreviewObjectUrl();
-    giveawayImageEditorState.cleanSource=url || "";
-    giveawayImageEditorState.privacyMaskedSource="";
-    giveawayImageEditorState.privacyApplied=false;
-    giveawayImageEditorState.watermarkedSource="";
-    giveawayImageEditorState.websiteWatermarkedSource="";
-    giveawayImageEditorState.watermarkApplied=false;
-    giveawayImageEditorState.watermarkMode="original";
-    renderGiveawayImagePreview(currentGiveawayPreviewSource());
-    syncGiveawayWatermarkControls();
-    syncGiveawayPrivacyControls();
+  function resetGiveawayImageEditorState(url="",images=null){
+    revokeAllGiveawayPhotoObjectUrls();
+
+    const initial=Array.isArray(images)
+      ? images
+      : (url ? [url] : []);
+
+    giveawayPhotoItems=initial
+      .map(value=>safeHttpUrl(value||""))
+      .filter(Boolean)
+      .slice(0,GIVEAWAY_PHOTO_LIMIT)
+      .map(value=>newGiveawayPhotoItem(value,null));
+
+    giveawaySelectedPhotoIndex=0;
+    loadGiveawayEditorItem(0);
+  }
+
+  function selectedGiveawayPhotoPreviewSource(index){
+    const item=giveawayPhotoItems[index];
+    if(!item) return "";
+    if(index===giveawaySelectedPhotoIndex){
+      commitGiveawayActiveEditorItem();
+    }
+    if(item.watermarkMode==="website" && item.websiteWatermarkedSource) return item.websiteWatermarkedSource;
+    if(item.watermarkMode==="full" && item.watermarkedSource) return item.watermarkedSource;
+    if(item.privacyApplied && item.privacyMaskedSource) return item.privacyMaskedSource;
+    return item.cleanSource||"";
   }
 
   function renderGiveawayImagePreview(url){
-    const mount = $("giveawayImagePreview");
+    const mount=$("giveawayImagePreview");
     if(!mount) return;
-    mount.innerHTML = url
-      ? `<div class="giveaway-image-preview"><img src="${escapeHtml(url)}" alt="Giveaway image preview"></div>`
-      : "";
+
+    if(!giveawayPhotoItems.length){
+      mount.innerHTML=`<div class="giveaway-photo-empty">No giveaway photos selected yet.</div>`;
+      return;
+    }
+
+    const selected=Math.max(0,Math.min(giveawaySelectedPhotoIndex,giveawayPhotoItems.length-1));
+    const selectedUrl=url || selectedGiveawayPhotoPreviewSource(selected);
+
+    mount.innerHTML=`
+      <div class="giveaway-photo-selected">
+        <div class="giveaway-image-preview">
+          ${selectedUrl ? `<img src="${escapeHtml(selectedUrl)}" alt="Giveaway photo ${selected+1} preview">` : ""}
+          <span class="giveaway-photo-number">${selected+1} / ${giveawayPhotoItems.length}</span>
+        </div>
+        <div class="giveaway-photo-selected-actions">
+          <button type="button" class="btn-ghost" data-giveaway-photo-move="-1" ${selected===0?"disabled":""}>← Move</button>
+          <button type="button" class="btn-ghost" data-giveaway-photo-move="1" ${selected===giveawayPhotoItems.length-1?"disabled":""}>Move →</button>
+          <button type="button" class="btn-ghost" data-giveaway-photo-remove="${selected}" style="color:var(--danger)">Remove</button>
+        </div>
+      </div>
+
+      <div class="giveaway-photo-thumbs" aria-label="Giveaway photos">
+        ${giveawayPhotoItems.map((item,index)=>{
+          const thumb=selectedGiveawayPhotoPreviewSource(index);
+          return `
+            <button type="button"
+                    class="giveaway-photo-thumb ${index===selected?"active":""}"
+                    data-giveaway-photo-select="${index}"
+                    aria-label="Edit giveaway photo ${index+1}">
+              ${thumb ? `<img src="${escapeHtml(thumb)}" alt="">` : ""}
+              <span>${index+1}</span>
+            </button>
+          `;
+        }).join("")}
+      </div>
+    `;
   }
 
   async function uploadShowcaseThumbnail(file){
@@ -31069,13 +31463,90 @@ function wireShimmer(container){
     });
   }
 
+  function giveawayPublicImages(g){
+    const out=[];
+    const add=value=>{
+      const url=safeHttpUrl(value||"");
+      if(url && !out.includes(url)) out.push(url);
+    };
+    if(Array.isArray(g?.images)) g.images.forEach(add);
+    add(g?.image_url);
+    return out.slice(0,GIVEAWAY_PHOTO_LIMIT);
+  }
+
+  function giveawayGalleryHTML(g){
+    const images=giveawayPublicImages(g);
+    if(!images.length) return "";
+    const id=escapeHtml(String(g.id||""));
+    const alt=escapeHtml(g.card_name||g.title||"Giveaway");
+
+    return `
+      <div class="giveaway-gallery"
+           data-giveaway-gallery="${id}"
+           data-giveaway-gallery-index="0">
+        <div class="giveaway-gallery-stage">
+          <img src="${escapeHtml(images[0])}"
+               alt="${alt}"
+               loading="lazy"
+               decoding="async"
+               data-giveaway-gallery-image>
+          ${images.length>1 ? `
+            <button type="button"
+                    class="giveaway-gallery-nav giveaway-gallery-prev"
+                    data-giveaway-gallery-step="-1"
+                    aria-label="Previous giveaway photo">‹</button>
+            <button type="button"
+                    class="giveaway-gallery-nav giveaway-gallery-next"
+                    data-giveaway-gallery-step="1"
+                    aria-label="Next giveaway photo">›</button>
+            <span class="giveaway-gallery-count" data-giveaway-gallery-count>1 / ${images.length}</span>
+          ` : ""}
+        </div>
+        ${images.length>1 ? `
+          <div class="giveaway-gallery-thumbs">
+            ${images.map((url,index)=>`
+              <button type="button"
+                      class="giveaway-gallery-thumb ${index===0?"active":""}"
+                      data-giveaway-gallery-go="${index}"
+                      aria-label="Show giveaway photo ${index+1}">
+                <img src="${escapeHtml(url)}" alt="">
+              </button>
+            `).join("")}
+          </div>
+        ` : ""}
+      </div>
+    `;
+  }
+
+  function updateGiveawayGallery(gallery,index){
+    if(!gallery) return;
+    const id=String(gallery.dataset.giveawayGallery||"");
+    const g=giveaways.find(item=>String(item.id)===id);
+    const images=giveawayPublicImages(g);
+    if(!images.length) return;
+
+    let next=Number(index||0);
+    next=(next%images.length+images.length)%images.length;
+    gallery.dataset.giveawayGalleryIndex=String(next);
+
+    const img=gallery.querySelector("[data-giveaway-gallery-image]");
+    if(img) img.src=images[next];
+
+    const count=gallery.querySelector("[data-giveaway-gallery-count]");
+    if(count) count.textContent=`${next+1} / ${images.length}`;
+
+    gallery.querySelectorAll("[data-giveaway-gallery-go]").forEach(btn=>{
+      btn.classList.toggle("active",Number(btn.dataset.giveawayGalleryGo)===next);
+    });
+  }
+
   function renderGiveawayPage(){
     const currentGiveaways=giveaways.filter(g=>!isPastGiveawayWinner(g) && giveawayVisibleToCurrentViewer(g));
     const pastWinners=sortedPastGiveawayWinners().filter(g=>giveawayVisibleToCurrentViewer(g));
 
     const currentCardHTML=g=>`
       <article class="giveaway-card">
-        ${g.image_url ? `<img src="${escapeHtml(g.image_url)}" alt="${escapeHtml(g.card_name)}" loading="lazy" decoding="async">` : ""}
+        ${giveawayGalleryHTML(g)}
         <div class="giveaway-body">
           <div class="giveaway-title">${escapeHtml(g.title)}</div>
           <div class="giveaway-meta">${escapeHtml(g.card_name)}</div>
@@ -31227,7 +31698,7 @@ function wireShimmer(container){
       <article class="giveaway-card giveaway-winner-card"
                id="giveaway-winner-${escapeHtml(g.id)}"
                data-giveaway-winner-card="${escapeHtml(g.id)}">
-        ${g.image_url ? `<img src="${escapeHtml(g.image_url)}" alt="${escapeHtml(g.card_name)}" loading="lazy" decoding="async">` : ""}
+        ${giveawayGalleryHTML(g)}
         <div class="giveaway-body">
           <div class="giveaway-winner-summary">
             <div class="giveaway-title">${escapeHtml(g.title)}</div>
@@ -31351,6 +31822,44 @@ function wireShimmer(container){
         setTimeout(()=>target.classList.remove("giveaway-linked-winner"),2600);
       }));
     }
+
+    view.querySelectorAll(".giveaway-gallery").forEach(gallery=>{
+      gallery.querySelectorAll("[data-giveaway-gallery-step]").forEach(btn=>{
+        btn.addEventListener("click",event=>{
+          event.preventDefault();
+          event.stopPropagation();
+          const current=Number(gallery.dataset.giveawayGalleryIndex||0);
+          updateGiveawayGallery(gallery,current+Number(btn.dataset.giveawayGalleryStep||0));
+        });
+      });
+
+      gallery.querySelectorAll("[data-giveaway-gallery-go]").forEach(btn=>{
+        btn.addEventListener("click",event=>{
+          event.preventDefault();
+          event.stopPropagation();
+          updateGiveawayGallery(gallery,Number(btn.dataset.giveawayGalleryGo||0));
+        });
+      });
+
+      let touchStartX=null;
+      let touchStartY=null;
+      gallery.addEventListener("touchstart",event=>{
+        if(event.touches.length!==1) return;
+        touchStartX=event.touches[0].clientX;
+        touchStartY=event.touches[0].clientY;
+      },{passive:true});
+
+      gallery.addEventListener("touchend",event=>{
+        if(touchStartX==null || !event.changedTouches.length) return;
+        const dx=event.changedTouches[0].clientX-touchStartX;
+        const dy=event.changedTouches[0].clientY-touchStartY;
+        touchStartX=null;
+        touchStartY=null;
+        if(Math.abs(dx)<42 || Math.abs(dx)<=Math.abs(dy)) return;
+        const current=Number(gallery.dataset.giveawayGalleryIndex||0);
+        updateGiveawayGallery(gallery,current+(dx<0?1:-1));
+      },{passive:true});
+    });
 
     view.querySelectorAll("[data-giveaway-edit]").forEach(btn=>{
       btn.addEventListener("click",()=>{
@@ -31491,9 +32000,10 @@ function wireShimmer(container){
     $("giveawayId").value = g ? g.id : "";
     $("giveawayTitle").value = g ? g.title : "";
     $("giveawayCardName").value = g ? g.card_name : "";
-    $("giveawayImage").value = g ? (g.image_url || "") : "";
+    const existingGiveawayPhotos=g ? giveawayPhotoSourcesFromRecord(g) : [];
+    $("giveawayImage").value = existingGiveawayPhotos[0] || "";
     $("giveawayImageFile").value = "";
-    resetGiveawayImageEditorState(g ? (g.image_url || "") : "");
+    resetGiveawayImageEditorState(existingGiveawayPhotos[0] || "",existingGiveawayPhotos);
     $("giveawayStatus").value = g ? g.status : "active";
     $("giveawayWinnerName").value = g ? (g.winner_name || "") : "";
     $("giveawayWinnerProfileUrl").value = g ? (g.winner_profile_url || "") : "";
@@ -31528,7 +32038,7 @@ function wireShimmer(container){
   function closeGiveawayForm(){
     giveawayOverlay.hidden = true;
     $("giveawayForm").reset();
-    resetGiveawayImageEditorState("");
+    resetGiveawayImageEditorState("",[]);
   }
 
   function syncGiveawayWinnerField(){
@@ -31604,35 +32114,62 @@ function wireShimmer(container){
   $("giveawayCancelBtn").addEventListener("click", closeGiveawayForm);
 
   $("giveawayImageFile").addEventListener("change", ()=>{
-    const file = $("giveawayImageFile").files?.[0];
-    revokeGiveawayPreviewObjectUrl();
+    const files=Array.from($("giveawayImageFile").files||[]);
+    if(!files.length) return;
 
-    if(!file){
-      giveawayImageEditorState.cleanSource=$("giveawayImage").value || "";
-      giveawayImageEditorState.privacyMaskedSource="";
-      giveawayImageEditorState.privacyApplied=false;
-      giveawayImageEditorState.watermarkedSource="";
-      giveawayImageEditorState.websiteWatermarkedSource="";
-      giveawayImageEditorState.watermarkApplied=false;
-      giveawayImageEditorState.watermarkMode="original";
-      renderGiveawayImagePreview(currentGiveawayPreviewSource());
-      syncGiveawayWatermarkControls();
-      syncGiveawayPrivacyControls();
+    const remaining=Math.max(0,GIVEAWAY_PHOTO_LIMIT-giveawayPhotoItems.length);
+    if(!remaining){
+      showToast(`Giveaway photos are limited to ${GIVEAWAY_PHOTO_LIMIT}`);
+      $("giveawayImageFile").value="";
       return;
     }
 
-    const objectUrl=URL.createObjectURL(file);
-    giveawayImageEditorState.objectUrl=objectUrl;
-    giveawayImageEditorState.cleanSource=objectUrl;
-    giveawayImageEditorState.privacyMaskedSource="";
-    giveawayImageEditorState.privacyApplied=false;
-    giveawayImageEditorState.watermarkedSource="";
-    giveawayImageEditorState.websiteWatermarkedSource="";
-    giveawayImageEditorState.watermarkApplied=false;
-    giveawayImageEditorState.watermarkMode="original";
-    renderGiveawayImagePreview(currentGiveawayPreviewSource());
-    syncGiveawayWatermarkControls();
-    syncGiveawayPrivacyControls();
+    const accepted=files.slice(0,remaining);
+    accepted.forEach(file=>{
+      const objectUrl=URL.createObjectURL(file);
+      giveawayPhotoItems.push(newGiveawayPhotoItem(objectUrl,file));
+    });
+
+    if(files.length>remaining){
+      showToast(`Added ${remaining} photo${remaining===1?"":"s"} · maximum ${GIVEAWAY_PHOTO_LIMIT}`);
+    }
+
+    $("giveawayImageFile").value="";
+    giveawaySelectedPhotoIndex=Math.max(0,giveawayPhotoItems.length-accepted.length);
+    loadGiveawayEditorItem(giveawaySelectedPhotoIndex);
+  });
+
+  $("giveawayImagePreview")?.addEventListener("click",event=>{
+    const selectBtn=event.target.closest("[data-giveaway-photo-select]");
+    if(selectBtn){
+      loadGiveawayEditorItem(Number(selectBtn.dataset.giveawayPhotoSelect||0));
+      return;
+    }
+
+    const moveBtn=event.target.closest("[data-giveaway-photo-move]");
+    if(moveBtn){
+      commitGiveawayActiveEditorItem();
+      const step=Number(moveBtn.dataset.giveawayPhotoMove||0);
+      const from=giveawaySelectedPhotoIndex;
+      const to=from+step;
+      if(to<0 || to>=giveawayPhotoItems.length) return;
+      [giveawayPhotoItems[from],giveawayPhotoItems[to]]=[giveawayPhotoItems[to],giveawayPhotoItems[from]];
+      giveawaySelectedPhotoIndex=to;
+      loadGiveawayEditorItem(to);
+      return;
+    }
+
+    const removeBtn=event.target.closest("[data-giveaway-photo-remove]");
+    if(removeBtn){
+      const index=Number(removeBtn.dataset.giveawayPhotoRemove||0);
+      const item=giveawayPhotoItems[index];
+      if(item?.file && item.objectUrl){
+        try{ URL.revokeObjectURL(item.objectUrl); }catch{}
+      }
+      giveawayPhotoItems.splice(index,1);
+      giveawaySelectedPhotoIndex=Math.max(0,Math.min(index,giveawayPhotoItems.length-1));
+      loadGiveawayEditorItem(giveawaySelectedPhotoIndex);
+    }
   });
 
   $("giveawayWatermarkOriginalBtn")?.addEventListener("click", ()=>setGiveawayImageWatermark("original"));
@@ -31655,89 +32192,92 @@ function wireShimmer(container){
 
     if(!requireOwner()) return;
 
-    let giveawayImageUrl = $("giveawayImage").value.trim();
-    const giveawayImageFile = $("giveawayImageFile").files?.[0];
+    commitGiveawayActiveEditorItem();
+
+    let giveawayImageUrl="";
+    let giveawayImageUrls=[];
     const status=$("giveawayStatus").value;
     const existing=id ? giveaways.find(g=>String(g.id)===String(id)) : null;
     const transitioningToWinner=
       status==="gave_away" &&
       normalizeFilterValue(existing?.status)!=="gave_away";
 
-    const shouldCreateWinnerFrame=
-      status==="gave_away" &&
-      Boolean(giveawayImageFile || transitioningToWinner);
+    if(!giveawayPhotoItems.length){
+      giveawayImageUrls=[];
+      giveawayImageUrl="";
+    }else{
+      for(let index=0;index<giveawayPhotoItems.length;index++){
+        const item=giveawayPhotoItems[index];
+        let finalUrl="";
 
-    if(shouldCreateWinnerFrame){
-      const winnerSource=currentGiveawayPreviewSource() || giveawayImageUrl;
+        const processed=
+          item.watermarkMode==="website" && item.websiteWatermarkedSource
+            ? item.websiteWatermarkedSource
+            : item.watermarkMode==="full" && item.watermarkedSource
+              ? item.watermarkedSource
+              : item.privacyApplied && item.privacyMaskedSource
+                ? item.privacyMaskedSource
+                : item.cleanSource;
 
-      if(winnerSource){
+        const hasProcessed=Boolean(
+          processed &&
+          processed!==item.cleanSource &&
+          (item.watermarkApplied || item.privacyApplied)
+        );
+
+        if(item.file){
+          if(hasProcessed){
+            showToast(`Uploading giveaway photo ${index+1}/${giveawayPhotoItems.length}…`);
+            finalUrl=await uploadOwnerProcessedImage(
+              processed,
+              "giveaway-images",
+              `Giveaway photo ${index+1}`
+            );
+          }else{
+            showToast(`Uploading giveaway photo ${index+1}/${giveawayPhotoItems.length}…`);
+            finalUrl=await uploadGiveawayImage(item.file);
+          }
+        }else if(hasProcessed){
+          showToast(`Uploading processed giveaway photo ${index+1}/${giveawayPhotoItems.length}…`);
+          finalUrl=await uploadOwnerProcessedImage(
+            processed,
+            "giveaway-images",
+            `Giveaway photo ${index+1}`
+          );
+        }else{
+          finalUrl=safeHttpUrl(item.cleanSource||"");
+        }
+
+        if(!finalUrl){
+          showToast(`Could not save giveaway photo ${index+1}`);
+          return;
+        }
+
+        giveawayImageUrls.push(finalUrl);
+      }
+
+      // The winner artwork is applied only to the cover image. Extra photos
+      // remain available in the public gallery unchanged.
+      const shouldCreateWinnerFrame=status==="gave_away" && (transitioningToWinner || giveawayPhotoItems[0]?.file);
+      if(shouldCreateWinnerFrame && giveawayImageUrls[0]){
         try{
-          showToast("Preparing winner listing image…");
-          const framed=await renderGiveawayWinnerListingImage(winnerSource,0.94);
+          showToast("Preparing winner cover image…");
+          const framed=await renderGiveawayWinnerListingImage(giveawayImageUrls[0],0.94);
           const uploaded=await uploadOwnerProcessedImage(
             framed,
             "giveaway-images",
             "Winner listing image"
           );
           if(!uploaded) return;
-          giveawayImageUrl=uploaded;
+          giveawayImageUrls[0]=uploaded;
         }catch(error){
           console.error("Could not create winner listing image:",error);
           showToast("Could not apply the winner frame");
           return;
         }
       }
-    }else if(giveawayImageFile){
-      const selectedProcessed=currentGiveawayPreviewSource();
-      const hasProcessedPreview=Boolean(
-        selectedProcessed &&
-        selectedProcessed!==giveawayImageEditorState.cleanSource &&
-        (giveawayImageEditorState.watermarkApplied || giveawayImageEditorState.privacyApplied)
-      );
 
-      if(hasProcessedPreview){
-        const uploadLabel=
-          giveawayImageEditorState.watermarkMode==="website"
-            ? (giveawayImageEditorState.privacyApplied ? "Uploading website-only + PSA-hidden giveaway image…" : "Uploading website-only giveaway image…")
-            : giveawayImageEditorState.watermarkMode==="full"
-              ? (giveawayImageEditorState.privacyApplied ? "Uploading logo + website + PSA-hidden giveaway image…" : "Uploading logo + website giveaway image…")
-              : "Uploading PSA-hidden giveaway image…";
-        showToast(uploadLabel);
-        const uploaded=await uploadOwnerProcessedImage(
-          selectedProcessed,
-          "giveaway-images",
-          "Giveaway image"
-        );
-        if(!uploaded) return;
-        giveawayImageUrl=uploaded;
-      }else{
-        showToast("Uploading giveaway image…");
-        const uploaded=await uploadGiveawayImage(giveawayImageFile);
-        if(!uploaded) return;
-        giveawayImageUrl=uploaded;
-      }
-    }else if(
-      (giveawayImageEditorState.watermarkApplied || giveawayImageEditorState.privacyApplied) &&
-      giveawayImageUrl
-    ){
-      const selectedProcessed=currentGiveawayPreviewSource();
-
-      if(selectedProcessed && selectedProcessed!==giveawayImageUrl){
-        const uploadLabel=
-          giveawayImageEditorState.watermarkMode==="website"
-            ? (giveawayImageEditorState.privacyApplied ? "Uploading website-only + PSA-hidden giveaway image…" : "Uploading website-only giveaway image…")
-            : giveawayImageEditorState.watermarkMode==="full"
-              ? (giveawayImageEditorState.privacyApplied ? "Uploading logo + website + PSA-hidden giveaway image…" : "Uploading logo + website giveaway image…")
-              : "Uploading PSA-hidden giveaway image…";
-        showToast(uploadLabel);
-        const uploaded=await uploadOwnerProcessedImage(
-          selectedProcessed,
-          "giveaway-images",
-          "Giveaway image"
-        );
-        if(!uploaded) return;
-        giveawayImageUrl=uploaded;
-      }
+      giveawayImageUrl=giveawayImageUrls[0]||"";
     }
 
     const winnerName=$("giveawayWinnerName").value.trim().slice(0,120);
@@ -31788,6 +32328,7 @@ function wireShimmer(container){
       title: $("giveawayTitle").value.trim(),
       card_name: $("giveawayCardName").value.trim(),
       image_url: giveawayImageUrl,
+      images: giveawayImageUrls,
       status,
       ends_at: giveawayEndsIso,
       how_to_enter: $("giveawayHowToEnter").value.trim(),
