@@ -20392,7 +20392,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   function insightInterestScore(values){
     return Math.round(
       Number(values?.overview_photo_interactions||0) +
-      Number(values?.unique_views||0) +
+      Number(values?.unique_views||0)*2 +
       Number(values?.image_expands||0) +
       Number(values?.favorite_adds||0)*3 +
       Number(values?.shares||0)*4 +
