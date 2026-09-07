@@ -17862,7 +17862,9 @@ body.light-mode #invGrid.collection-game-grouped .collection-game-group-header{
 }
 
 @media(max-width:800px){
-  .collection-rearrange-btn{display:none !important}
+  .collection-rearrange-btn{
+    display:none !important;
+  }
 }
 
 
@@ -17922,6 +17924,108 @@ body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game
 
 body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game-group-header.collapsed{
   margin-bottom:8px;
+}
+
+
+/* =========================================================
+   COLLECTION MOBILE REARRANGE
+   Touch-first controls; general Owner Mode remains disabled.
+   ========================================================= */
+.collection-mobile-owner-bar{
+  display:none;
+}
+
+@media(max-width:800px){
+  .collection-mobile-owner-bar{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:8px;
+    margin:0 0 12px;
+  }
+
+  .collection-mobile-owner-btn,
+  .collection-mobile-owner-logout{
+    min-height:44px;
+    border-radius:11px;
+  }
+
+  .collection-mobile-owner-btn{
+    width:100%;
+    justify-content:center;
+    font-size:11px;
+    font-weight:800;
+  }
+
+  .collection-mobile-owner-btn.active{
+    border-color:rgba(227,179,65,.72);
+    background:rgba(227,179,65,.12);
+    color:var(--accent-gold);
+  }
+
+  .collection-mobile-owner-logout{
+    padding-inline:12px;
+    font-size:10px;
+  }
+
+  body.collection-rearrange-mode #invGrid.collection-game-grouped
+    .collection-game-group-header.rearranging{
+    min-height:48px;
+    padding:10px 11px;
+    touch-action:pan-y;
+  }
+
+  body.collection-rearrange-mode #invGrid.collection-game-grouped
+    .collection-game-drag-handle{
+    width:40px;
+    height:36px;
+    border-radius:9px;
+    font-size:17px;
+    cursor:grab;
+    touch-action:none;
+    pointer-events:auto;
+  }
+
+  body.collection-rearrange-mode #invGrid.collection-game-grouped
+    .collection-drag-handle{
+    width:42px;
+    min-width:42px;
+    height:38px;
+    top:8px;
+    left:8px;
+    padding:0;
+    font-size:18px;
+    letter-spacing:-2px;
+    cursor:grab;
+    touch-action:none;
+    pointer-events:auto;
+  }
+
+  body.collection-rearrange-mode #invGrid.collection-game-grouped
+    .collection-rearrange-card{
+    cursor:default;
+    touch-action:pan-y;
+  }
+
+  body.collection-touch-drag-active{
+    overscroll-behavior-y:contain;
+  }
+
+  #invGrid.collection-game-grouped .collection-touch-dragging{
+    opacity:.62;
+    outline:2px solid rgba(227,179,65,.82);
+    outline-offset:-2px;
+  }
+
+  #invGrid.collection-game-grouped .collection-touch-target{
+    box-shadow:0 0 0 2px rgba(227,179,65,.45);
+  }
+
+  /* Tap the rest of the game header to expand/collapse.
+     Only the handle itself captures the drag gesture. */
+  body.collection-rearrange-mode #invGrid.collection-game-grouped
+    .collection-game-group-main{
+    min-height:36px;
+  }
 }
 
 </style>
@@ -18704,7 +18808,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function saveCollectionGameOrder(groups){
-    if(!requireOwner("save Collection game order")) return false;
+    if(!requireCollectionOrderOwner("save Collection game order")) return false;
 
     const clean=(groups||[]).map(group=>({
       key:normalizeFilterValue(group?.key||"") || "__other__",
@@ -18786,7 +18890,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   async function saveCollectionCardOrder(cardIds){
-    if(!requireOwner("save Collection card order")) return false;
+    if(!requireCollectionOrderOwner("save Collection card order")) return false;
 
     const ids=(cardIds||[]).map(id=>safeCardId(id)).filter(Boolean);
     if(!ids.length){
@@ -18864,6 +18968,19 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function isOwnerMode(){
     return !isMobileOwnerBlocked() && !!ownerSession && ownerVerified === true;
+  }
+
+  // Narrow mobile exception: an authenticated owner may rearrange Collection
+  // order on a phone, while every other owner tool remains desktop-only.
+  function canManageCollectionOrder(){
+    return !!ownerSession && ownerVerified === true;
+  }
+
+  function requireCollectionOrderOwner(action="rearrange Collection"){
+    if(canManageCollectionOrder()) return true;
+    console.warn(`Blocked non-owner attempt to ${action}.`);
+    showToast("Owner login required");
+    return false;
   }
 
   let cardLookupVersion=-1;
@@ -19141,14 +19258,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     ownerSession=data?.session||null;
 
     if(isMobileOwnerBlocked()){
-      ownerVerified=false;
-      if(ownerSession){
-        try{ await supabaseClient.auth.signOut(); }catch(error){
-          console.warn("Could not clear owner session on mobile:",error);
-        }
-        ownerSession=null;
+      ownerVerified=await verifyOwnerSession(ownerSession);
+      if(ownerSession && !ownerVerified){
+        console.warn("Authenticated mobile session is not authorized for Collection ordering.");
       }
-      clearOwnerOnlyClientState();
       applyOwnerMode();
       return;
     }
@@ -27489,7 +27602,7 @@ function wireShimmer(container){
             ${compact?"▦ Grid View":"☷ Compact View"}
           </button>
 
-          ${isCollection && isOwnerMode() ? `
+          ${isCollection && canManageCollectionOrder() ? `
             <button type="button"
                     class="btn-ghost collection-rearrange-btn"
                     id="collectionRearrangeBtn"
@@ -27504,6 +27617,24 @@ function wireShimmer(container){
           </button>
         </div>
       </div>
+
+      ${isCollection && isMobileOwnerBlocked() ? `
+        <div class="collection-mobile-owner-bar">
+          <button type="button"
+                  class="btn-ghost collection-mobile-owner-btn"
+                  id="collectionMobileOwnerBtn">
+            ${canManageCollectionOrder() ? "⇅ Rearrange Collection" : "🔒 Owner Arrange"}
+          </button>
+          ${canManageCollectionOrder() ? `
+            <button type="button"
+                    class="btn-ghost collection-mobile-owner-logout"
+                    id="collectionMobileOwnerLogoutBtn"
+                    title="Disable mobile Collection owner access">
+              Log out
+            </button>
+          ` : ""}
+        </div>
+      ` : ""}
 
       <div class="mobile-search-filter-row">
         <div class="mobile-inventory-search" id="mobileInventorySearchWrap">
@@ -28509,24 +28640,30 @@ function wireShimmer(container){
     }
 
     function syncCollectionRearrangeButton(){
-      const button=$("collectionRearrangeBtn");
-      if(!button) return;
+      const buttons=[
+        $("collectionRearrangeBtn"),
+        $("collectionMobileOwnerBtn")
+      ].filter(Boolean);
 
-      if(collectionRearrangeMode){
-        button.textContent="✓ Save Order";
-        button.classList.add("active");
-        button.title=collectionRearrangeDirty
-          ? "Save this new Collection card order"
-          : "Save Collection card order";
-      }else{
-        button.textContent="⇅ Rearrange Cards";
-        button.classList.remove("active");
-        button.title="Drag Collection cards into your preferred default order";
-      }
+      buttons.forEach(button=>{
+        if(collectionRearrangeMode){
+          button.textContent="✓ Save Order";
+          button.classList.add("active");
+          button.title=collectionRearrangeDirty
+            ? "Save this new Collection card order"
+            : "Save Collection card order";
+        }else{
+          button.textContent=isMobileOwnerBlocked()
+            ? "⇅ Rearrange Collection"
+            : "⇅ Rearrange Cards";
+          button.classList.remove("active");
+          button.title="Rearrange Game categories and cards";
+        }
+      });
     }
 
     function enterCollectionRearrangeMode(){
-      if(!requireOwner("rearrange Collection cards")) return;
+      if(!requireCollectionOrderOwner("rearrange Collection cards")) return;
       if(listingAvailabilityScope!=="collection") return;
 
       if(collectionCardOrderSupported===false){
@@ -28600,9 +28737,20 @@ function wireShimmer(container){
       showToast("Collection order saved");
     }
 
-    $("collectionRearrangeBtn")?.addEventListener("click",async()=>{
+    const handleCollectionRearrangeButton=async()=>{
+      if(!canManageCollectionOrder()){
+        await openOwnerAccess();
+        return;
+      }
       if(collectionRearrangeMode) await finishCollectionRearrangeMode(true);
       else enterCollectionRearrangeMode();
+    };
+
+    $("collectionRearrangeBtn")?.addEventListener("click",handleCollectionRearrangeButton);
+    $("collectionMobileOwnerBtn")?.addEventListener("click",handleCollectionRearrangeButton);
+    $("collectionMobileOwnerLogoutBtn")?.addEventListener("click",async()=>{
+      if(collectionRearrangeMode) await finishCollectionRearrangeMode(false);
+      await openOwnerAccess();
     });
 
     let collectionDraggedGameHeader=null;
@@ -28745,6 +28893,111 @@ function wireShimmer(container){
       collectionRearrangeDirty=true;
       syncCollectionRearrangeButton();
     },{signal:inventorySignal});
+
+    let collectionPointerDrag=null;
+
+    function clearCollectionPointerDrag(){
+      if(!collectionPointerDrag) return;
+      collectionPointerDrag.element?.classList.remove(
+        "collection-touch-dragging",
+        "collection-game-dragging",
+        "collection-dragging"
+      );
+      $("invGrid")?.querySelectorAll(".collection-touch-target")
+        .forEach(el=>el.classList.remove("collection-touch-target"));
+      collectionPointerDrag=null;
+      document.body.classList.remove("collection-touch-drag-active");
+    }
+
+    $("invGrid")?.addEventListener("pointerdown",event=>{
+      if(!collectionRearrangeMode || !isMobileOwnerBlocked()) return;
+      if(event.pointerType==="mouse") return;
+
+      const gameHandle=event.target.closest(".collection-game-drag-handle");
+      const cardHandle=event.target.closest(".collection-drag-handle");
+      if(!gameHandle && !cardHandle) return;
+
+      const element=gameHandle
+        ? gameHandle.closest(".collection-game-group-header")
+        : cardHandle.closest(".collection-game-card[data-card-id]");
+      if(!element) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      collectionPointerDrag={
+        pointerId:event.pointerId,
+        type:gameHandle ? "game" : "card",
+        element,
+        gameKey:String(
+          gameHandle
+            ? element.dataset.collectionGameToggle||""
+            : element.dataset.collectionGameKey||""
+        )
+      };
+
+      element.classList.add("collection-touch-dragging");
+      document.body.classList.add("collection-touch-drag-active");
+      try{ event.target.setPointerCapture(event.pointerId); }catch{}
+    },{signal:inventorySignal});
+
+    $("invGrid")?.addEventListener("pointermove",event=>{
+      const state=collectionPointerDrag;
+      if(!state || event.pointerId!==state.pointerId) return;
+
+      event.preventDefault();
+
+      // elementFromPoint may return the dragged element itself. Temporarily
+      // hide its pointer hit-testing while we inspect what is underneath.
+      state.element.style.pointerEvents="none";
+      const under=document.elementFromPoint(event.clientX,event.clientY);
+      state.element.style.pointerEvents="";
+
+      if(!under) return;
+
+      if(state.type==="game"){
+        const target=under.closest?.(".collection-game-group-header[data-collection-game-toggle]");
+        if(!target || target===state.element) return;
+
+        $("invGrid")?.querySelectorAll(".collection-touch-target")
+          .forEach(el=>el.classList.remove("collection-touch-target"));
+        target.classList.add("collection-touch-target");
+
+        const rect=target.getBoundingClientRect();
+        moveCollectionGameBlock(
+          state.element,
+          target,
+          event.clientY < rect.top+rect.height/2
+        );
+        return;
+      }
+
+      const target=under.closest?.(".collection-game-card[data-card-id]");
+      if(!target || target===state.element) return;
+      if(String(target.dataset.collectionGameKey||"")!==state.gameKey) return;
+
+      $("invGrid")?.querySelectorAll(".collection-touch-target")
+        .forEach(el=>el.classList.remove("collection-touch-target"));
+      target.classList.add("collection-touch-target");
+
+      const rect=target.getBoundingClientRect();
+      const parent=target.parentNode;
+      if(event.clientY < rect.top+rect.height/2){
+        parent.insertBefore(state.element,target);
+      }else{
+        parent.insertBefore(state.element,target.nextSibling);
+      }
+
+      collectionRearrangeDirty=true;
+      syncCollectionRearrangeButton();
+    },{signal:inventorySignal});
+
+    ["pointerup","pointercancel"].forEach(type=>{
+      $("invGrid")?.addEventListener(type,event=>{
+        if(!collectionPointerDrag || event.pointerId!==collectionPointerDrag.pointerId) return;
+        clearCollectionPointerDrag();
+      },{signal:inventorySignal});
+    });
 
     document.addEventListener("keydown",event=>{
       if(!collectionRearrangeMode || event.key!=="Escape") return;
@@ -43840,11 +44093,15 @@ function wireShimmer(container){
 
   wireCardActions(view);
   async function openOwnerAccess(){
-    if(isMobileOwnerBlocked()){
+    const mobileCollectionAccess=isMobileOwnerBlocked();
+
+    if(mobileCollectionAccess && canManageCollectionOrder()){
+      await supabaseClient.auth.signOut();
+      ownerSession=null;
       ownerVerified=false;
-      clearOwnerOnlyClientState();
       applyOwnerMode();
-      showToast("Owner mode is available on desktop only");
+      if(currentRoute()==="collection") router();
+      showToast("Collection owner access logged out");
       return;
     }
 
@@ -43897,6 +44154,17 @@ function wireShimmer(container){
     }
 
     applyOwnerMode();
+
+    if(isMobileOwnerBlocked()){
+      // Mobile remains on the public catalogue; only Collection ordering RPCs
+      // are authorized by this verified session.
+      await loadCollectionCardOrder();
+      await loadCollectionGameOrder();
+      router();
+      showToast("Collection rearrange access enabled");
+      return;
+    }
+
     const loaded=await loadCards();
 
     if(!loaded && !cards.length){
@@ -43905,9 +44173,7 @@ function wireShimmer(container){
     }
 
     router();
-    showToast(isOwnerMode()
-      ? "Owner login successful"
-      : "Owner access unavailable · public inventory loaded");
+    showToast("Owner login successful");
   }
 
   // Hidden owner shortcut: Ctrl + Shift + L
@@ -43925,22 +44191,26 @@ function wireShimmer(container){
     ownerSession=session;
 
     if(isMobileOwnerBlocked()){
+      if(!session){
+        ownerVerified=false;
+        applyOwnerMode();
+        if(currentRoute()==="collection") router();
+        return;
+      }
+
       ownerVerified=false;
-      clearOwnerOnlyClientState();
       applyOwnerMode();
 
-      if(session){
-        // Sign out outside the auth callback to avoid re-entering the auth client.
-        setTimeout(async()=>{
-          try{ await supabaseClient.auth.signOut(); }catch(error){
-            console.warn("Could not clear owner session on mobile:",error);
-          }
-          ownerSession=null;
-          ownerVerified=false;
-          clearOwnerOnlyClientState();
-          applyOwnerMode();
-        },0);
-      }
+      // Verify the mobile session only for Collection ordering. Other owner
+      // routes/actions remain blocked because isOwnerMode() is still false.
+      setTimeout(async()=>{
+        if(ownerSession?.access_token!==session.access_token) return;
+        const verified=await verifyOwnerSession(session);
+        if(ownerSession?.access_token!==session.access_token) return;
+        ownerVerified=verified;
+        applyOwnerMode();
+        if(currentRoute()==="collection") router();
+      },0);
       return;
     }
 
