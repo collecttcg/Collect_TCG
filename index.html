@@ -20149,6 +20149,101 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
   }
 
+  const OVERVIEW_PHOTO_INTERACTION_KEY="collect_tcg_overview_photo_interest_v1";
+  let overviewPhotoTrackingBackendState="unknown";
+
+  function readOverviewPhotoInteractionDedupe(){
+    try{
+      const parsed=JSON.parse(sessionStorage.getItem(OVERVIEW_PHOTO_INTERACTION_KEY)||"{}");
+      return parsed && typeof parsed==="object" && !Array.isArray(parsed) ? parsed : {};
+    }catch{
+      return {};
+    }
+  }
+
+  function overviewPhotoInteractionAlreadyRecorded(cardId){
+    const id=safeCardId(cardId);
+    if(!id) return true;
+    const map=readOverviewPhotoInteractionDedupe();
+    return map[id]===true;
+  }
+
+  function markOverviewPhotoInteractionRecorded(cardId){
+    const id=safeCardId(cardId);
+    if(!id) return;
+    const map=readOverviewPhotoInteractionDedupe();
+    map[id]=true;
+    try{ sessionStorage.setItem(OVERVIEW_PHOTO_INTERACTION_KEY,JSON.stringify(map)); }catch{}
+  }
+
+  async function recordOverviewPhotoInteraction(cardId){
+    try{
+      if(isOwnerMode() || isAnalyticsExcludedDevice()) return false;
+
+      const id=safeCardId(cardId);
+      if(!id || overviewPhotoInteractionAlreadyRecorded(id)) return false;
+      if(overviewPhotoTrackingBackendState==="unavailable") return false;
+
+      const sessionId=getAnalyticsSessionId();
+      const visitorId=getVisitorId();
+      if(!sessionId || !visitorId) return false;
+
+      const {data,error}=await supabaseClient.rpc("record_card_overview_photo_interaction",{
+        p_card_id:id,
+        p_visitor_id:visitorId,
+        p_session_id:sessionId
+      });
+
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(
+          message.includes("record_card_overview_photo_interaction") ||
+          message.includes("function") ||
+          message.includes("schema cache")
+        ){
+          overviewPhotoTrackingBackendState="unavailable";
+        }
+        console.warn("Overview photo interaction tracking unavailable:",error);
+        return false;
+      }
+
+      overviewPhotoTrackingBackendState="available";
+      markOverviewPhotoInteractionRecorded(id);
+      return data!==false;
+    }catch(error){
+      console.warn("Overview photo interaction tracking unavailable:",error);
+      return false;
+    }
+  }
+
+  async function fetchOverviewPhotoInsights(start,end){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_card_overview_photo_insights",{
+        p_start:start.toISOString(),
+        p_end:end.toISOString()
+      });
+
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(
+          message.includes("get_card_overview_photo_insights") ||
+          message.includes("function") ||
+          message.includes("schema cache")
+        ){
+          overviewPhotoTrackingBackendState="unavailable";
+        }
+        console.warn("Overview photo insights unavailable:",error);
+        return {supported:false,rows:[]};
+      }
+
+      overviewPhotoTrackingBackendState="available";
+      return {supported:true,rows:Array.isArray(data)?data:[]};
+    }catch(error){
+      console.warn("Overview photo insights unavailable:",error);
+      return {supported:false,rows:[]};
+    }
+  }
+
   async function fetchCardEngagementInsights(start,end){
     try{
       const {data,error}=await supabaseClient.rpc("get_card_engagement_insights",{
@@ -20296,6 +20391,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function insightInterestScore(values){
     return Math.round(
+      Number(values?.overview_photo_interactions||0) +
       Number(values?.unique_views||0) +
       Number(values?.image_expands||0) +
       Number(values?.favorite_adds||0)*3 +
@@ -25872,6 +25968,10 @@ function wireShimmer(container){
     const preload=new Image();
     preload.decoding="async";
     preload.src=images[(index+(step>=0?1:-1)+images.length)%images.length];
+
+    // Deliberate overview interest: count once per card per browser session,
+    // regardless of how many times the visitor continues switching images.
+    recordOverviewPhotoInteraction(card.id).catch(()=>{});
     return true;
   }
 
@@ -29613,6 +29713,7 @@ function wireShimmer(container){
       searchInsights:[],searchInsightsSupported:false,
       returningVisitorInsights:null,returningVisitorSupported:false,
       engagedVisitSeries:[],engagedVisitSupported:false,
+      overviewPhotoRows:[],overviewPhotoSupported:false,
       engagementSupported:false,saleSnapshotsSupported:false,saleSnapshots:[],
       editHistoryRows:[],editHistoryLoaded:false
     };
@@ -29654,7 +29755,7 @@ function wireShimmer(container){
       return {
         favorite_adds:0,favorite_visitors:0,contact_opens:0,contact_visitors:0,
         platform_clicks:0,inquiry_copies:0,image_expands:0,shares:0,downloads:0,
-        intent_visitors:0
+        overview_photo_interactions:0,overview_photo_visitors:0,intent_visitors:0
       };
     }
 
@@ -30017,6 +30118,7 @@ function wireShimmer(container){
 
       const hottest=rows.slice().sort((a,b)=>b._trend.score-a._trend.score)[0];
       const mostFav=rows.slice().sort((a,b)=>Number(b.favorite_adds||0)-Number(a.favorite_adds||0))[0];
+      const mostPhoto=rows.slice().sort((a,b)=>Number(b.overview_photo_interactions||0)-Number(a.overview_photo_interactions||0))[0];
       const mostContact=rows.slice().sort((a,b)=>b._contactActions-a._contactActions)[0];
 
       $("insightsOverview").innerHTML=`
@@ -30240,6 +30342,10 @@ function wireShimmer(container){
               <small>${hottest&&hottest._trend.score>0?escapeHtml(hottest._trend.label):"—"}</small>
             </div>
             <div class="insights-v4-winner">
+              <span>Most photo browsed</span><strong>${mostPhoto&&Number(mostPhoto.overview_photo_interactions||0)>0?escapeHtml(mostPhoto.name||mostPhoto._card?.name||"—"):"No photo interactions yet"}</strong>
+              <small>${mostPhoto?`${Number(mostPhoto.overview_photo_interactions||0)} overview photo interaction${Number(mostPhoto.overview_photo_interactions||0)===1?"":"s"}`:"—"}</small>
+            </div>
+            <div class="insights-v4-winner">
               <span>Most favorited</span><strong>${mostFav&&Number(mostFav.favorite_adds||0)>0?escapeHtml(mostFav.name||"—"):"No favorites yet"}</strong>
               <small>${mostFav?`${Number(mostFav.favorite_adds||0)} favorites`:"—"}</small>
             </div>
@@ -30252,7 +30358,7 @@ function wireShimmer(container){
 
         <section class="insights-v4-card">
           <div class="insights-v4-card-head table-head insights-top-card-head">
-            <div><h3>Top Card Performance</h3><span>Interest Score weighs stronger buyer actions more heavily than views.</span></div>
+            <div><h3>Top Card Performance</h3><span>Photo interactions capture deliberate overview browsing; Detail Opens remain a secondary signal.</span></div>
             <label class="insights-top-card-limit">
               <span>Show</span>
               <select id="insightsTopCardLimit" aria-label="Number of Top Card Performance rows">
@@ -30262,7 +30368,7 @@ function wireShimmer(container){
           </div>
           <div class="insights-table-wrap">
             <table class="insights-table insights-v4-table">
-              <thead><tr><th>#</th><th>Card</th><th>Status</th><th>Unique</th><th>Fav</th><th>Contact</th><th>Score</th><th>Trend</th></tr></thead>
+              <thead><tr><th>#</th><th>Card</th><th>Status</th><th>Photo</th><th>Detail</th><th>Fav</th><th>Contact</th><th>Score</th><th>Trend</th></tr></thead>
               <tbody>${(()=>{
                 const ranked=rows.slice().sort((a,b)=>b._interestScore-a._interestScore);
                 const shown=topCardPerformanceLimit==="all"
@@ -30306,10 +30412,12 @@ function wireShimmer(container){
                     </button>
                   </td>
                   <td><span class="insights-status-tag">${escapeHtml(row._status)}</span></td>
-                  <td>${Number(row.unique_views||0)}</td><td>${Number(row.favorite_adds||0)}</td>
+                  <td title="Overview photo interaction">${Number(row.overview_photo_interactions||0)}</td>
+                  <td title="Unique Card Detail opens">${Number(row.unique_views||0)}</td>
+                  <td>${Number(row.favorite_adds||0)}</td>
                   <td>${row._contactActions}</td><td><strong class="insights-v3-score">${row._interestScore}</strong></td>
                   <td><span class="trend-tag ${row._trend.className}">${escapeHtml(row._trend.label)}</span></td>
-                </tr>`).join("") || `<tr><td colspan="8" class="hint">No activity for this period.</td></tr>`;
+                </tr>`).join("") || `<tr><td colspan="9" class="hint">No activity for this period.</td></tr>`;
               })()}
               </tbody>
             </table>
@@ -30675,6 +30783,13 @@ function wireShimmer(container){
             :"Run Engaged Visits migration"
         },
         {
+          label:"Overview photo interest",
+          ok:state.overviewPhotoSupported,
+          note:state.overviewPhotoSupported
+            ?"One deliberate image change per card per browser session"
+            :"Run Overview Photo Interest migration"
+        },
+        {
           label:"Buyer-intent events",
           ok:state.engagementSupported,
           note:state.engagementSupported?"Favorites, contacts, shares and image actions connected":"Run V4 migration"
@@ -30842,7 +30957,7 @@ function wireShimmer(container){
       const selectedStatus=statusSel.value;
       const selectedGame=gameSel.value;
 
-      const [views,series,siteSeries,countryResult,accessTimeResult,deviceResult,sourceResult,searchResult,returningResult,engagedVisitResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
+      const [views,series,siteSeries,countryResult,accessTimeResult,deviceResult,sourceResult,searchResult,returningResult,engagedVisitResult,overviewPhotoResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
         fetchInsights(startDate,endDate),
         fetchViewSeries(startDate,endDate),
         fetchWebsiteVisitSeries(startDate,endDate),
@@ -30853,6 +30968,7 @@ function wireShimmer(container){
         fetchInventorySearchInsights(startDate,endDate),
         fetchReturningVisitorInsights(startDate,endDate),
         fetchEngagedVisitSeries(startDate,endDate),
+        fetchOverviewPhotoInsights(startDate,endDate),
         previousRange?fetchInsights(previousRange.start,previousRange.end,{silent:true}):Promise.resolve([]),
         fetchCardEngagementInsights(startDate,endDate),
         fetchSaleConversionSnapshots(),
@@ -30860,12 +30976,22 @@ function wireShimmer(container){
       ]);
 
       const engagementMap=new Map(engagement.rows.map(row=>[String(row.card_id||""),row]));
+      const overviewPhotoMap=new Map(
+        (overviewPhotoResult.rows||[]).map(row=>[String(row.card_id||""),row])
+      );
       const previousMap=new Map(previous.map(row=>[insightRowKey(row),row]));
 
       let rows=views.map(row=>{
         const card=insightCardForRow(row);
-        const e=engagementMap.get(String(row.card_id||card?.id||""))||emptyEngagement();
-        const combined={...row,...e};
+        const id=String(row.card_id||card?.id||"");
+        const e=engagementMap.get(id)||emptyEngagement();
+        const photo=overviewPhotoMap.get(id)||{};
+        const combined={
+          ...row,
+          ...e,
+          overview_photo_interactions:Number(photo.photo_interactions||0),
+          overview_photo_visitors:Number(photo.unique_visitors||0)
+        };
         return {
           ...combined,
           _card:card,
@@ -30884,12 +31010,42 @@ function wireShimmer(container){
         if(rows.some(row=>String(row.card_id||row._card?.id||"")===String(e.card_id||""))) return;
         const card=getCardById(e.card_id);
         if(!card) return;
-        const combined={card_id:e.card_id,name:card.name,game:card.game,views:0,unique_views:0,...e};
+        const photo=overviewPhotoMap.get(String(e.card_id||""))||{};
+        const combined={
+          card_id:e.card_id,name:card.name,game:card.game,views:0,unique_views:0,...e,
+          overview_photo_interactions:Number(photo.photo_interactions||0),
+          overview_photo_visitors:Number(photo.unique_visitors||0)
+        };
         rows.push({
           ...combined,
           _card:card,_status:insightStatusLabel(combined),
           _trend:{className:"",label:"—",score:0,current:0,previous:0,pct:null},
           _contactActions:contactActions(combined),
+          _interestScore:insightInterestScore(combined),
+          _daysListed:cardDaysListed(card)
+        });
+      });
+
+      // Cards can have deliberate overview-photo activity without a Detail Open
+      // or another engagement event, so include those cards too.
+      (overviewPhotoResult.rows||[]).forEach(photo=>{
+        const id=String(photo.card_id||"");
+        if(!id || rows.some(row=>String(row.card_id||row._card?.id||"")===id)) return;
+        const card=getCardById(id);
+        if(!card) return;
+
+        const combined={
+          card_id:id,name:card.name,game:card.game,views:0,unique_views:0,
+          ...emptyEngagement(),
+          overview_photo_interactions:Number(photo.photo_interactions||0),
+          overview_photo_visitors:Number(photo.unique_visitors||0)
+        };
+
+        rows.push({
+          ...combined,
+          _card:card,_status:insightStatusLabel(combined),
+          _trend:{className:"",label:"—",score:0,current:0,previous:0,pct:null},
+          _contactActions:0,
           _interestScore:insightInterestScore(combined),
           _daysListed:cardDaysListed(card)
         });
@@ -30937,6 +31093,10 @@ function wireShimmer(container){
           ? engagedVisitResult.rows
           : [],
         engagedVisitSupported:engagedVisitResult.supported,
+        overviewPhotoRows:overviewPhotoResult.supported && Array.isArray(overviewPhotoResult.rows)
+          ? overviewPhotoResult.rows
+          : [],
+        overviewPhotoSupported:overviewPhotoResult.supported,
         engagementSupported:engagement.supported,
         saleSnapshotsSupported:saleSnapshots.supported,
         saleSnapshots:saleSnapshots.rows
