@@ -18605,6 +18605,140 @@ body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game
   }
 }
 </style>
+
+<style id="desktop-collapsible-filters-v9">
+/* =========================================================
+   DESKTOP COLLAPSIBLE FILTERS
+   Desktop > 800px starts compact. Mobile keeps its existing drawer.
+   ========================================================= */
+.desktop-filter-toggle-row{display:none;}
+
+@media(min-width:801px){
+  .desktop-filter-toggle-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin:8px 0 8px;
+  }
+
+  .desktop-filter-toggle-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    min-width:0;
+  }
+
+  .desktop-filter-toggle-btn{
+    appearance:none;
+    -webkit-appearance:none;
+    min-height:38px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 11px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--surface);
+    color:var(--text);
+    font:inherit;
+    font-size:10px;
+    font-weight:800;
+    cursor:pointer;
+    transition:border-color .15s ease,background .15s ease,transform .15s ease;
+  }
+  .desktop-filter-toggle-btn:hover,
+  .desktop-filter-toggle-btn:focus-visible{
+    border-color:rgba(95,212,196,.55);
+    background:rgba(95,212,196,.055);
+    outline:none;
+  }
+  .desktop-filter-toggle-btn:active{transform:translateY(1px);}
+
+  .desktop-filter-toggle-icon{
+    width:17px;
+    height:17px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:6px;
+    color:var(--accent-teal);
+    font-size:12px;
+    line-height:1;
+  }
+
+  .desktop-filter-toggle-summary{
+    max-width:min(42vw,460px);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:var(--text-muted);
+    font-size:8.5px;
+    font-weight:600;
+  }
+
+  .desktop-filter-toggle-chevron{
+    color:var(--text-muted);
+    font-size:10px;
+    transition:transform .18s ease;
+  }
+  .desktop-filter-toggle-btn[aria-expanded="true"] .desktop-filter-toggle-chevron{
+    transform:rotate(180deg);
+  }
+
+  .desktop-filter-toggle-btn .filter-count-badge{
+    min-width:19px;
+    height:19px;
+    font-size:8px;
+  }
+
+  .desktop-filter-add-card{
+    min-height:38px !important;
+    display:inline-flex !important;
+    align-items:center;
+    justify-content:center;
+    padding:7px 12px !important;
+    text-decoration:none;
+    white-space:nowrap;
+  }
+
+  /* The filter shell is display:contents on desktop in the legacy layout.
+     This class intentionally removes all of its children from layout. */
+  .filter-drawer-shell.desktop-collapsed{
+    display:none !important;
+  }
+
+  /* Add Card lives beside the desktop Filters toggle now. Avoid a duplicate
+     when the filter area is expanded. */
+  .filter-drawer-shell > .filter-row > a[href="#/add"]{
+    display:none !important;
+  }
+
+  /* Mobile-only completion footer never needs desktop space. */
+  .filter-drawer-shell > .filter-drawer-footer{
+    display:none !important;
+  }
+
+  /* Expanded desktop filters get a subtle contained surface so the opening
+     feels deliberate rather than like a sudden block of controls. */
+  .filter-drawer-shell:not(.desktop-collapsed) > .filter-drawer-head{
+    margin-top:2px;
+  }
+}
+
+@media(min-width:801px) and (max-width:1100px){
+  .desktop-filter-toggle-summary{max-width:260px;}
+}
+
+@media(max-width:800px){
+  .desktop-filter-toggle-row{display:none !important;}
+  /* Never let the desktop collapsed class suppress the existing mobile sheet. */
+  .filter-drawer-shell.desktop-collapsed{
+    display:flex !important;
+  }
+}
+</style>
+
 </head>
 <body>
 
@@ -28239,6 +28373,23 @@ function wireShimmer(container){
         </div>
       </div>
 
+      <div class="desktop-filter-toggle-row" id="desktopFilterToggleRow">
+        <div class="desktop-filter-toggle-actions">
+          <button type="button"
+                  class="desktop-filter-toggle-btn"
+                  id="desktopFilterToggleBtn"
+                  aria-expanded="false"
+                  aria-controls="filterDrawerShell">
+            <span class="desktop-filter-toggle-icon" aria-hidden="true">⌕</span>
+            <span>Filters</span>
+            <span class="filter-count-badge" id="desktopFilterCountBadge" hidden>0</span>
+            <span class="desktop-filter-toggle-summary" id="desktopFilterSummary">No active filters</span>
+            <span class="desktop-filter-toggle-chevron" aria-hidden="true">⌄</span>
+          </button>
+        </div>
+        <a href="#/add" class="btn-primary owner-only desktop-filter-add-card">+ Add card</a>
+      </div>
+
       ${isCollection && isMobileOwnerBlocked() ? `
         <div class="collection-mobile-owner-bar">
           <button type="button"
@@ -28281,7 +28432,7 @@ function wireShimmer(container){
 
       <div class="mobile-filter-backdrop" id="mobileFilterBackdrop" hidden></div>
 
-      <section class="filter-drawer-shell" id="filterDrawerShell" aria-label="Inventory filters">
+      <section class="filter-drawer-shell desktop-collapsed" id="filterDrawerShell" aria-label="Inventory filters">
         <div class="filter-drawer-head">
           <div>
             <strong>Filters</strong>
@@ -28581,6 +28732,27 @@ function wireShimmer(container){
       : "all";
     view.innerHTML=inventoryPageHTML(scopeMeta,listingAvailabilityScope);
 
+    // Desktop filter panel: compact by default, expandable in-place.
+    // Mobile keeps using the existing bottom-sheet controls and ignores this class.
+    const desktopFilterToggleBtn=$("desktopFilterToggleBtn");
+    const desktopFilterShell=$("filterDrawerShell");
+    const desktopFilterMq=window.matchMedia("(min-width:801px)");
+
+    function setDesktopFiltersExpanded(expanded){
+      if(!desktopFilterShell || !desktopFilterToggleBtn) return;
+      const shouldExpand=Boolean(expanded);
+      desktopFilterShell.classList.toggle("desktop-collapsed",!shouldExpand);
+      desktopFilterToggleBtn.setAttribute("aria-expanded",shouldExpand?"true":"false");
+    }
+
+    if(desktopFilterToggleBtn && desktopFilterShell){
+      setDesktopFiltersExpanded(false);
+      desktopFilterToggleBtn.addEventListener("click",()=>{
+        if(!desktopFilterMq.matches) return;
+        setDesktopFiltersExpanded(desktopFilterToggleBtn.getAttribute("aria-expanded")!=="true");
+      },{signal:inventorySignal});
+    }
+
     const scopedCards=cards.filter(c=>cardMatchesListingScope(c,listingAvailabilityScope));
     const {
       games,
@@ -28860,6 +29032,16 @@ function wireShimmer(container){
 
       const summary=$("filterActiveSummary");
       if(summary) summary.textContent=count ? `${count} active filter${count===1?"":"s"}` : "No active filters";
+
+      const desktopBadge=$("desktopFilterCountBadge");
+      if(desktopBadge){
+        desktopBadge.textContent=String(count);
+        desktopBadge.hidden=count===0;
+      }
+      const desktopSummary=$("desktopFilterSummary");
+      if(desktopSummary){
+        desktopSummary.textContent=count ? `${count} active filter${count===1?"":"s"}` : "No active filters";
+      }
 
       const sticky=$("stickyMobileFilterBtn");
       if(sticky) sticky.classList.toggle("has-active-filters",count>0);
