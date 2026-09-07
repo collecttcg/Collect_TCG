@@ -17146,6 +17146,60 @@ body.showcase-dragging-body{
   .engaged-visit-line{grid-template-columns:42px minmax(0,1fr) 32px;gap:5px}
 }
 
+
+/* Owner Add/Edit — PSA label privacy masks */
+.psa-image-privacy-control{
+  margin:10px 0;
+  padding:11px 12px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--surface-2);
+}
+.psa-image-privacy-toggle{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  cursor:pointer;
+}
+.psa-image-privacy-toggle input{
+  width:18px;
+  height:18px;
+  margin-top:1px;
+  accent-color:var(--accent-teal);
+}
+.psa-image-privacy-toggle span{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.psa-image-privacy-toggle strong{
+  color:var(--text);
+  font-size:9px;
+}
+.psa-image-privacy-toggle small{
+  color:var(--text-muted);
+  font-size:8px;
+  line-height:1.35;
+}
+.image-preview-privacy-btn{
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(0,0,0,.66);
+  color:#fff;
+  border-radius:7px;
+  padding:4px 6px;
+  font-size:7px;
+  font-weight:800;
+  cursor:pointer;
+}
+.image-preview-privacy-btn:hover:not(:disabled){
+  border-color:var(--accent-teal);
+  color:var(--accent-teal);
+}
+.image-preview-privacy-btn:disabled{
+  opacity:.38;
+  cursor:not-allowed;
+}
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -22599,6 +22653,55 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return processCardImageUrl(url,maxDim,quality,true);
   }
 
+  const PSA_PRIVACY_MASKS=[
+    // Fixed positions based on the standard PSA slab framing used by Collect TCG.
+    // Values are percentages of the full image so resizing preserves placement.
+    {x:0.109,y:0.143,w:0.226,h:0.028},
+    {x:0.604,y:0.143,w:0.286,h:0.028}
+  ];
+
+  async function applyPsaPrivacyMaskToCardImageSource(source,quality=0.94){
+    if(!requireOwner("hide PSA label information")) throw new Error("Owner login required");
+
+    const img=isPendingCardImage(source)
+      ? await loadImageFromDataUrl(source)
+      : await new Promise(async(resolve,reject)=>{
+          try{
+            const response=await fetch(source,{
+              method:"GET",mode:"cors",credentials:"omit",referrerPolicy:"no-referrer"
+            });
+            if(!response.ok) throw new Error("image fetch failed");
+            const blob=await response.blob();
+            const objectUrl=URL.createObjectURL(blob);
+            const image=new Image();
+            image.onload=()=>{ URL.revokeObjectURL(objectUrl); resolve(image); };
+            image.onerror=()=>{ URL.revokeObjectURL(objectUrl); reject(new Error("decode failed")); };
+            image.src=objectUrl;
+          }catch(error){ reject(error); }
+        });
+
+    const canvas=document.createElement("canvas");
+    canvas.width=img.naturalWidth||img.width;
+    canvas.height=img.naturalHeight||img.height;
+
+    const ctx=canvas.getContext("2d");
+    if(!ctx) throw new Error("canvas unavailable");
+
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    ctx.fillStyle="#000";
+
+    for(const mask of PSA_PRIVACY_MASKS){
+      ctx.fillRect(
+        Math.round(canvas.width*mask.x),
+        Math.round(canvas.height*mask.y),
+        Math.round(canvas.width*mask.w),
+        Math.round(canvas.height*mask.h)
+      );
+    }
+
+    return canvas.toDataURL("image/jpeg",quality);
+  }
+
   const CARD_IMAGE_STORAGE_BUCKET="card-images";
   const CARD_IMAGE_STORAGE_MAX_BYTES=20*1024*1024;
 
@@ -23115,6 +23218,17 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             <div class="image-watermark-all-status" id="${p}WatermarkAllStatus" hidden></div>
           </div>
 
+          <div class="owner-only psa-image-privacy-control">
+            <label class="psa-image-privacy-toggle">
+              <input type="checkbox" id="${p}PsaPrivacyAuto">
+              <span>
+                <strong>Auto-hide PSA info on new photos</strong>
+                <small>Add two fixed black rectangles over the PSA barcode / certificate-number areas when a new photo is added.</small>
+              </span>
+            </label>
+            <div class="hint">Designed for your standard PSA slab photo framing. You can also apply or undo it per photo before saving.</div>
+          </div>
+
           <input type="file" id="${p}ImageFile" accept="image/jpeg,image/png,image/webp" multiple>
           <div class="image-url-row">
             <input type="text" id="${p}ImageUrl" placeholder="Paste an image URL, then click Add URL">
@@ -23126,7 +23240,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             The clean original and the watermarked version are saved separately in owner-protected metadata, while only the selected version is shown publicly.
             You can save a card with the watermark, edit it later, choose <strong>Original</strong>, and save again without re-uploading the photo.
             Images that were already permanently watermarked before this reversible system was installed cannot be restored unless you upload the original clean file once.
-            Use ↺ / ↻ on any photo to rotate it 90° left or right. Rotation updates the clean original for this listing, and if that photo is currently watermarked the watermark is regenerated in the correct orientation. Drag pictures to change their order; the first picture is the listing thumbnail.
+            Use <strong>Hide PSA info</strong> on a photo to place two fixed black privacy rectangles over the PSA barcode / certificate-number areas. <strong>Undo hide</strong> is available during the current Add/Edit session until Save. Use ↺ / ↻ on any photo to rotate it 90° left or right. Rotation updates the clean original for this listing, and if that photo is currently watermarked the watermark is regenerated in the correct orientation. Drag pictures to change their order; the first picture is the listing thumbnail.
           </div>
         </div>
       </div>
@@ -23286,8 +23400,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const watermarkAllBtn=$(p+"WatermarkAllPhotos");
     const originalAllBtn=$(p+"OriginalAllPhotos");
     const watermarkAllStatus=$(p+"WatermarkAllStatus");
+    const psaPrivacyAuto=$(p+"PsaPrivacyAuto");
 
     formState.watermarkEnabled=Boolean(formState.watermarkEnabled);
+    formState.psaPrivacyAuto=Boolean(formState.psaPrivacyAuto);
     formState.imageCleanSources=Array.isArray(formState.imageCleanSources)
       ? formState.imageCleanSources.slice(0,formState.images.length)
       : Array(formState.images.length).fill(null);
@@ -23315,6 +23431,22 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       formState.imageWatermarkStates.push(false);
     }
 
+    // Temporary, edit-session-only undo source for PSA privacy masks.
+    // After Save, the masked photo becomes the saved clean revision.
+    formState.imagePrivacyUndoSources=Array.isArray(formState.imagePrivacyUndoSources)
+      ? formState.imagePrivacyUndoSources.slice(0,formState.images.length)
+      : Array(formState.images.length).fill(null);
+    while(formState.imagePrivacyUndoSources.length<formState.images.length){
+      formState.imagePrivacyUndoSources.push(null);
+    }
+
+    if(psaPrivacyAuto){
+      psaPrivacyAuto.checked=formState.psaPrivacyAuto;
+      psaPrivacyAuto.addEventListener("change",()=>{
+        formState.psaPrivacyAuto=psaPrivacyAuto.checked;
+      });
+    }
+
     let dragIndex = null;
     let pointerDragIndex = null;
 
@@ -23334,6 +23466,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       moveParallelArray(formState.imageWatermarkedSources,from,to);
       moveParallelArray(formState.imageVariantKeys,from,to);
       moveParallelArray(formState.imageWatermarkStates,from,to);
+      moveParallelArray(formState.imagePrivacyUndoSources,from,to);
       refreshPreview();
     }
 
@@ -23343,6 +23476,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       formState.imageWatermarkedSources.splice(index,1);
       formState.imageVariantKeys.splice(index,1);
       formState.imageWatermarkStates.splice(index,1);
+      formState.imagePrivacyUndoSources.splice(index,1);
       refreshPreview();
     }
 
@@ -23391,6 +23525,60 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       }catch(error){
         console.warn("Could not change image watermark:",error);
         if(!silent) showToast("Could not switch the watermark for this photo.");
+      }finally{
+        formState.processingImages=Math.max(0,Number(formState.processingImages||0)-1);
+        refreshPreview();
+      }
+    }
+
+    async function setImagePsaPrivacy(index,apply){
+      if(!requireOwner("edit PSA image privacy")) return;
+      if(index<0 || index>=formState.images.length) return;
+
+      let cleanSource=formState.imageCleanSources[index] || formState.images[index];
+      if(!cleanSource) return;
+
+      const wasWatermarked=formState.imageWatermarkStates[index]===true;
+
+      if(!apply && !formState.imagePrivacyUndoSources[index]){
+        showToast("No unsaved PSA privacy edit to undo");
+        return;
+      }
+
+      formState.processingImages=Number(formState.processingImages||0)+1;
+      refreshPreview();
+
+      try{
+        let nextClean;
+
+        if(apply){
+          if(!formState.imagePrivacyUndoSources[index]){
+            formState.imagePrivacyUndoSources[index]=cleanSource;
+          }
+          nextClean=await applyPsaPrivacyMaskToCardImageSource(cleanSource,0.94);
+        }else{
+          nextClean=formState.imagePrivacyUndoSources[index];
+          formState.imagePrivacyUndoSources[index]=null;
+        }
+
+        formState.imageVariantKeys[index]=newCardImageVariantKey();
+        formState.imageCleanSources[index]=nextClean;
+        formState.imageWatermarkedSources[index]=null;
+
+        if(wasWatermarked){
+          const refreshed=await applyWatermarkToCardImageSource(nextClean,1800,0.94);
+          formState.imageWatermarkedSources[index]=refreshed;
+          formState.images[index]=refreshed;
+          formState.imageWatermarkStates[index]=true;
+        }else{
+          formState.images[index]=nextClean;
+          formState.imageWatermarkStates[index]=false;
+        }
+
+        showToast(apply ? "PSA barcode and certificate areas hidden" : "PSA privacy edit undone");
+      }catch(error){
+        console.warn("Could not change PSA image privacy:",error);
+        showToast("Could not apply PSA privacy mask");
       }finally{
         formState.processingImages=Math.max(0,Number(formState.processingImages||0)-1);
         refreshPreview();
@@ -23558,6 +23746,23 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             <span class="image-preview-action-divider" aria-hidden="true"></span>
 
             <button type="button"
+                    class="image-preview-privacy-btn"
+                    data-preview-privacy="on"
+                    title="Add two black rectangles over the PSA barcode and certificate number areas">
+              Hide PSA info
+            </button>
+
+            <button type="button"
+                    class="image-preview-privacy-btn"
+                    data-preview-privacy="off"
+                    ${formState.imagePrivacyUndoSources[index] ? "" : "disabled"}
+                    title="${formState.imagePrivacyUndoSources[index] ? "Undo the PSA privacy edit before saving" : "No unsaved PSA privacy edit to undo"}">
+              Undo hide
+            </button>
+
+            <span class="image-preview-action-divider" aria-hidden="true"></span>
+
+            <button type="button"
                     class="image-preview-rotate-btn"
                     data-preview-rotate="-1"
                     title="Rotate photo 90° left"
@@ -23588,6 +23793,15 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             e.stopPropagation();
             if(btn.disabled) return;
             await setImageWatermark(index,btn.dataset.previewWatermark==="on");
+          });
+        });
+
+        box.querySelectorAll("[data-preview-privacy]").forEach(btn=>{
+          btn.addEventListener("pointerdown",e=>e.stopPropagation());
+          btn.addEventListener("click",async e=>{
+            e.stopPropagation();
+            if(btn.disabled || Number(formState.processingImages||0)>0) return;
+            await setImagePsaPrivacy(index,btn.dataset.previewPrivacy==="on");
           });
         });
 
@@ -23686,7 +23900,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         for(const file of files){
           // Always keep a clean, high-quality version client-side during this
           // Add/Edit session so the owner can switch watermark on/off.
-          const clean=await resizeImageFile(file,1800,0.94,false);
+          const originalClean=await resizeImageFile(file,1800,0.94,false);
+          const autoHide=Boolean(psaPrivacyAuto?.checked);
+          const clean=autoHide
+            ? await applyPsaPrivacyMaskToCardImageSource(originalClean,0.94)
+            : originalClean;
           const finalImage=clean;
 
           formState.images.push(finalImage);
@@ -23694,6 +23912,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           formState.imageWatermarkedSources.push(null);
           formState.imageVariantKeys.push(newCardImageVariantKey());
           formState.imageWatermarkStates.push(false);
+          formState.imagePrivacyUndoSources.push(autoHide ? originalClean : null);
           added++;
         }
 
@@ -23728,7 +23947,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       addUrlBtn.textContent = "Processing…";
 
       try{
-        const clean=await processCardImageUrl(val,1800,0.94,false);
+        const originalClean=await processCardImageUrl(val,1800,0.94,false);
+        const autoHide=Boolean(psaPrivacyAuto?.checked);
+        const clean=autoHide
+          ? await applyPsaPrivacyMaskToCardImageSource(originalClean,0.94)
+          : originalClean;
         const finalImage=clean;
 
         formState.images.push(finalImage);
@@ -23736,6 +23959,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         formState.imageWatermarkedSources.push(null);
         formState.imageVariantKeys.push(newCardImageVariantKey());
         formState.imageWatermarkStates.push(false);
+        formState.imagePrivacyUndoSources.push(autoHide ? originalClean : null);
         urlInput.value = "";
         refreshPreview();
 
