@@ -17529,6 +17529,41 @@ body.showcase-dragging-body{
   .giveaway-performance-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 
+
+/* Giveaway comment + bonus actions */
+.giveaway-bonus-actions-owner{
+  margin-top:12px;padding-top:11px;border-top:1px solid var(--border);
+  display:grid;gap:7px;
+}
+.giveaway-bonus-actions-owner > strong{font-size:12px}
+.giveaway-bonus-actions-owner label{
+  display:flex;align-items:center;gap:7px;color:var(--text-muted);font-size:12px;
+}
+.giveaway-bonus-actions-owner label b{
+  margin-left:auto;color:var(--accent-gold);font-family:'JetBrains Mono',monospace;
+}
+.giveaway-action-link{
+  display:flex;align-items:center;justify-content:center;width:100%;min-height:36px;
+  margin-top:10px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;
+  background:var(--surface-1);color:var(--text);text-decoration:none;font-size:10px;font-weight:700;
+}
+.giveaway-action-link:hover{border-color:rgba(227,179,65,.68)}
+.giveaway-bonus-actions{margin-top:14px;display:grid;gap:6px}
+.giveaway-bonus-actions-head{
+  display:flex;justify-content:space-between;gap:8px;align-items:end;
+}
+.giveaway-bonus-actions-head strong{font-size:11px;color:var(--accent-gold)}
+.giveaway-bonus-actions-head span{font-size:9px;color:var(--text-muted)}
+.giveaway-bonus-actions > a{
+  display:flex;justify-content:space-between;gap:10px;align-items:center;min-height:38px;
+  padding:8px 10px;border:1px solid rgba(227,179,65,.28);border-radius:8px;
+  background:rgba(227,179,65,.05);color:var(--text);text-decoration:none;font-size:10px;
+}
+.giveaway-bonus-actions > a:hover{border-color:rgba(227,179,65,.7)}
+.giveaway-bonus-actions > a b{
+  flex:0 0 auto;color:var(--accent-gold);font-family:'JetBrains Mono',monospace;font-size:12px;
+}
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -17903,31 +17938,43 @@ body.showcase-dragging-body{
       <div class="field-row">
         <div class="field">
           <label for="giveawayCode">Giveaway Code <span class="field-optional">(optional)</span></label>
-          <input id="giveawayCode"
-                 maxlength="40"
-                 autocomplete="off"
-                 spellcheck="false"
-                 placeholder="e.g. SUNNYGO2026">
+          <input id="giveawayCode" maxlength="40" autocomplete="off" spellcheck="false" placeholder="e.g. SUNNYGO2026">
           <div class="hint">Shown on the public Giveaway page when website-code entry is enabled.</div>
         </div>
-
         <div class="field">
           <label for="giveawayEntryFormUrl">Entry Form URL <span class="field-optional">(optional)</span></label>
-          <input id="giveawayEntryFormUrl"
-                 type="url"
-                 maxlength="1000"
-                 inputmode="url"
-                 autocomplete="url"
-                 placeholder="https://forms.gle/...">
+          <input id="giveawayEntryFormUrl" type="url" maxlength="1000" inputmode="url" autocomplete="url" placeholder="https://forms.gle/...">
           <div class="hint">The public Enter Giveaway button opens this form.</div>
         </div>
       </div>
 
+      <div class="field-row">
+        <div class="field">
+          <label for="giveawayFacebookPostUrl">Facebook Giveaway Post URL <span class="field-optional">(optional)</span></label>
+          <input id="giveawayFacebookPostUrl" type="url" maxlength="1000" inputmode="url" autocomplete="url" placeholder="https://www.facebook.com/...">
+          <div class="hint">Comment, Share Facebook, and Tag 2 Friends buttons open this post.</div>
+        </div>
+        <div class="field">
+          <label for="giveawayInstagramPostUrl">Instagram Giveaway Post URL <span class="field-optional">(optional)</span></label>
+          <input id="giveawayInstagramPostUrl" type="url" maxlength="1000" inputmode="url" autocomplete="url" placeholder="https://www.instagram.com/p/...">
+          <div class="hint">Share IG Story opens this post. If blank, Instagram profile is used.</div>
+        </div>
+      </div>
+
       <div class="giveaway-growth-requirements">
-        <strong>Entry requirements</strong>
+        <strong>Required actions</strong>
         <label><input id="giveawayRequireFacebook" type="checkbox" checked> Follow Facebook</label>
         <label><input id="giveawayRequireInstagram" type="checkbox" checked> Follow Instagram</label>
+        <label><input id="giveawayRequireComment" type="checkbox" checked> Comment on giveaway post</label>
         <label><input id="giveawayRequireWebsiteCode" type="checkbox" checked> Find website Giveaway Code</label>
+      </div>
+
+      <div class="giveaway-bonus-actions-owner">
+        <strong>Extra Actions / Bonus Entries</strong>
+        <span class="hint">Optional. Each enabled action adds +1 bonus entry.</span>
+        <label><input id="giveawayBonusShareFacebook" type="checkbox"> Share Facebook post publicly <b>+1</b></label>
+        <label><input id="giveawayBonusTagFriends" type="checkbox"> Tag 2 friends <b>+1</b></label>
+        <label><input id="giveawayBonusInstagramStory" type="checkbox"> Share IG Story and tag us <b>+1</b></label>
       </div>
     </div>
 
@@ -19740,6 +19787,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   const GIVEAWAY_PUBLIC_COLUMNS_PROFILE =
     "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_profile_url,winner_announced_at,created_at";
   const GIVEAWAY_PUBLIC_COLUMNS =
+    "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_profile_url,winner_sort_order,is_hidden,giveaway_code,entry_form_url,require_facebook,require_instagram,require_comment,require_website_code,facebook_post_url,instagram_post_url,bonus_share_facebook,bonus_tag_friends,bonus_share_instagram_story,winner_announced_at,created_at";
+  const GIVEAWAY_PUBLIC_COLUMNS_PRE_BONUS =
     "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_profile_url,winner_sort_order,is_hidden,giveaway_code,entry_form_url,require_facebook,require_instagram,require_website_code,winner_announced_at,created_at";
   const GIVEAWAY_PUBLIC_COLUMNS_PRE_GROWTH =
     "id,title,card_name,image_url,status,ends_at,how_to_enter,details,winner_name,winner_profile_url,winner_sort_order,is_hidden,winner_announced_at,created_at";
@@ -19747,6 +19796,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   let giveawayWinnerSortOrderSupported="unknown";
   let giveawayHiddenSupported="unknown";
   let giveawayGrowthFieldsSupported="unknown";
+  let giveawayBonusFieldsSupported="unknown";
   let giveawayGrowthAnalyticsSupported="unknown";
   const SHOWCASE_PUBLIC_COLUMNS =
     "id,title,category,series,video_url,thumbnail_url,description,featured,sort_order,created_at";
@@ -19772,7 +19822,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       entry_form_url: safeHttpUrl(row.entry_form_url || ""),
       require_facebook: row.require_facebook !== false,
       require_instagram: row.require_instagram !== false,
+      require_comment: row.require_comment !== false,
       require_website_code: row.require_website_code !== false,
+      facebook_post_url: safeHttpUrl(row.facebook_post_url || ""),
+      instagram_post_url: safeHttpUrl(row.instagram_post_url || ""),
+      bonus_share_facebook: row.bonus_share_facebook === true,
+      bonus_tag_friends: row.bonus_tag_friends === true,
+      bonus_share_instagram_story: row.bonus_share_instagram_story === true,
       winner_announced_at: row.winner_announced_at || null,
       created_at: row.created_at || null
     };
@@ -19895,7 +19951,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         profile:true,
         sort:true,
         hidden:true,
-        growth:true
+        growth:true,
+        bonus:true
+      },
+      {
+        columns:GIVEAWAY_PUBLIC_COLUMNS_PRE_BONUS,
+        profile:true,
+        sort:true,
+        hidden:true,
+        growth:true,
+        bonus:false
       },
       {
         columns:GIVEAWAY_PUBLIC_COLUMNS_PRE_GROWTH,
@@ -19956,7 +20021,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         optionalColumnUnavailable(error,"entry_form_url") ||
         optionalColumnUnavailable(error,"require_facebook") ||
         optionalColumnUnavailable(error,"require_instagram") ||
-        optionalColumnUnavailable(error,"require_website_code");
+        optionalColumnUnavailable(error,"require_comment") ||
+        optionalColumnUnavailable(error,"require_website_code") ||
+        optionalColumnUnavailable(error,"facebook_post_url") ||
+        optionalColumnUnavailable(error,"instagram_post_url") ||
+        optionalColumnUnavailable(error,"bonus_share_facebook") ||
+        optionalColumnUnavailable(error,"bonus_tag_friends") ||
+        optionalColumnUnavailable(error,"bonus_share_instagram_story");
 
       if(!optionalMissing) break;
     }
@@ -19971,6 +20042,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     giveawayWinnerSortOrderSupported=!!selected?.sort;
     giveawayHiddenSupported=!!selected?.hidden;
     giveawayGrowthFieldsSupported=!!selected?.growth;
+    giveawayBonusFieldsSupported=!!selected?.bonus;
 
     giveaways = (data || []).map(giveawayFromDb);
     return true;
@@ -20006,11 +20078,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(giveawayHiddenSupported!==false) cols.push("is_hidden");
       if(giveawayGrowthFieldsSupported!==false){
         cols.push(
-          "giveaway_code",
-          "entry_form_url",
-          "require_facebook",
-          "require_instagram",
-          "require_website_code"
+          "giveaway_code","entry_form_url","require_facebook",
+          "require_instagram","require_website_code"
+        );
+      }
+      if(giveawayBonusFieldsSupported!==false){
+        cols.push(
+          "require_comment","facebook_post_url","instagram_post_url",
+          "bonus_share_facebook","bonus_tag_friends","bonus_share_instagram_story"
         );
       }
 
@@ -20030,6 +20105,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       delete writePayload.require_instagram;
       delete writePayload.require_website_code;
     }
+    if(giveawayBonusFieldsSupported===false){
+      delete writePayload.require_comment;
+      delete writePayload.facebook_post_url;
+      delete writePayload.instagram_post_url;
+      delete writePayload.bonus_share_facebook;
+      delete writePayload.bonus_tag_friends;
+      delete writePayload.bonus_share_instagram_story;
+    }
 
     let result=await runWrite(writePayload,currentColumns());
 
@@ -20041,7 +20124,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       ["entry_form_url","giveawayGrowthFieldsSupported"],
       ["require_facebook","giveawayGrowthFieldsSupported"],
       ["require_instagram","giveawayGrowthFieldsSupported"],
-      ["require_website_code","giveawayGrowthFieldsSupported"]
+      ["require_website_code","giveawayGrowthFieldsSupported"],
+      ["require_comment","giveawayBonusFieldsSupported"],
+      ["facebook_post_url","giveawayBonusFieldsSupported"],
+      ["instagram_post_url","giveawayBonusFieldsSupported"],
+      ["bonus_share_facebook","giveawayBonusFieldsSupported"],
+      ["bonus_tag_friends","giveawayBonusFieldsSupported"],
+      ["bonus_share_instagram_story","giveawayBonusFieldsSupported"]
     ];
 
     for(const [column,stateName] of optionalFields){
@@ -20054,6 +20143,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         if(stateName==="giveawayWinnerSortOrderSupported") giveawayWinnerSortOrderSupported=false;
         if(stateName==="giveawayWinnerProfileUrlSupported") giveawayWinnerProfileUrlSupported=false;
         if(stateName==="giveawayGrowthFieldsSupported") giveawayGrowthFieldsSupported=false;
+        if(stateName==="giveawayBonusFieldsSupported") giveawayBonusFieldsSupported=false;
 
         writePayload={...writePayload};
         if(stateName==="giveawayGrowthFieldsSupported"){
@@ -20062,6 +20152,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           delete writePayload.require_facebook;
           delete writePayload.require_instagram;
           delete writePayload.require_website_code;
+        }else if(stateName==="giveawayBonusFieldsSupported"){
+          delete writePayload.require_comment;
+          delete writePayload.facebook_post_url;
+          delete writePayload.instagram_post_url;
+          delete writePayload.bonus_share_facebook;
+          delete writePayload.bonus_tag_friends;
+          delete writePayload.bonus_share_instagram_story;
         }else{
           delete writePayload[column];
         }
@@ -20084,6 +20181,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         Object.prototype.hasOwnProperty.call(writePayload,"entry_form_url")
       ){
         giveawayGrowthFieldsSupported=true;
+      }
+      if(
+        Object.prototype.hasOwnProperty.call(writePayload,"require_comment") ||
+        Object.prototype.hasOwnProperty.call(writePayload,"facebook_post_url") ||
+        Object.prototype.hasOwnProperty.call(writePayload,"instagram_post_url")
+      ){
+        giveawayBonusFieldsSupported=true;
       }
     }
 
@@ -29739,9 +29843,20 @@ function wireShimmer(container){
               <div class="giveaway-growth-steps">
                 ${g.require_facebook ? `<div><b>1</b><span>Follow Collect TCG on Facebook</span></div>` : ""}
                 ${g.require_instagram ? `<div><b>${g.require_facebook?2:1}</b><span>Follow @collecttcg.mysg on Instagram</span></div>` : ""}
-                ${g.require_website_code ? `<div><b>${(g.require_facebook?1:0)+(g.require_instagram?1:0)+1}</b><span>Find the Giveaway Code on this page</span></div>` : ""}
-                ${safeHttpUrl(g.entry_form_url) ? `<div><b>${(g.require_facebook?1:0)+(g.require_instagram?1:0)+(g.require_website_code?1:0)+1}</b><span>Submit your entry using the button below</span></div>` : ""}
+                ${g.require_comment ? `<div><b>${(g.require_facebook?1:0)+(g.require_instagram?1:0)+1}</b><span>Comment on the giveaway post</span></div>` : ""}
+                ${g.require_website_code ? `<div><b>${(g.require_facebook?1:0)+(g.require_instagram?1:0)+(g.require_comment?1:0)+1}</b><span>Find the Giveaway Code on this page</span></div>` : ""}
+                ${safeHttpUrl(g.entry_form_url) ? `<div><b>${(g.require_facebook?1:0)+(g.require_instagram?1:0)+(g.require_comment?1:0)+(g.require_website_code?1:0)+1}</b><span>Submit your entry using the button below</span></div>` : ""}
               </div>
+
+              ${g.require_comment ? `
+                <a class="giveaway-action-link"
+                   href="${escapeHtml(safeHttpUrl(g.facebook_post_url)||COLLECT_SOCIAL_LINKS.facebook)}"
+                   target="_blank" rel="noopener noreferrer"
+                   data-giveaway-growth-action="comment_click"
+                   data-giveaway-id="${escapeHtml(g.id)}">
+                  Open Giveaway Post to Comment ↗
+                </a>
+              ` : ""}
 
               ${g.require_website_code && g.giveaway_code ? `
                 <div class="giveaway-code-box">
@@ -29760,6 +29875,39 @@ function wireShimmer(container){
                    data-giveaway-id="${escapeHtml(g.id)}">
                   Enter Giveaway ↗
                 </a>
+              ` : ""}
+
+              ${(g.bonus_share_facebook || g.bonus_tag_friends || g.bonus_share_instagram_story) ? `
+                <div class="giveaway-bonus-actions">
+                  <div class="giveaway-bonus-actions-head">
+                    <strong>Extra Actions</strong>
+                    <span>Optional bonus entries</span>
+                  </div>
+                  ${g.bonus_share_facebook ? `
+                    <a href="${escapeHtml(safeHttpUrl(g.facebook_post_url)||COLLECT_SOCIAL_LINKS.facebook)}"
+                       target="_blank" rel="noopener noreferrer"
+                       data-giveaway-growth-action="bonus_facebook_share_click"
+                       data-giveaway-id="${escapeHtml(g.id)}">
+                      <span>Share Facebook post publicly</span><b>+1</b>
+                    </a>
+                  ` : ""}
+                  ${g.bonus_tag_friends ? `
+                    <a href="${escapeHtml(safeHttpUrl(g.facebook_post_url)||COLLECT_SOCIAL_LINKS.facebook)}"
+                       target="_blank" rel="noopener noreferrer"
+                       data-giveaway-growth-action="bonus_tag_friends_click"
+                       data-giveaway-id="${escapeHtml(g.id)}">
+                      <span>Tag 2 friends</span><b>+1</b>
+                    </a>
+                  ` : ""}
+                  ${g.bonus_share_instagram_story ? `
+                    <a href="${escapeHtml(safeHttpUrl(g.instagram_post_url)||COLLECT_SOCIAL_LINKS.instagram)}"
+                       target="_blank" rel="noopener noreferrer"
+                       data-giveaway-growth-action="bonus_instagram_story_click"
+                       data-giveaway-id="${escapeHtml(g.id)}">
+                      <span>Share IG Story + tag us</span><b>+1</b>
+                    </a>
+                  ` : ""}
+                </div>
               ` : ""}
 
               <div class="giveaway-explore-title">Explore Collect TCG</div>
@@ -30097,7 +30245,13 @@ function wireShimmer(container){
     $("giveawayEntryFormUrl").value = g ? (g.entry_form_url || "") : "";
     $("giveawayRequireFacebook").checked = g ? g.require_facebook !== false : true;
     $("giveawayRequireInstagram").checked = g ? g.require_instagram !== false : true;
+    $("giveawayRequireComment").checked = g ? g.require_comment !== false : true;
     $("giveawayRequireWebsiteCode").checked = g ? g.require_website_code !== false : true;
+    $("giveawayFacebookPostUrl").value = g ? (g.facebook_post_url || "") : "";
+    $("giveawayInstagramPostUrl").value = g ? (g.instagram_post_url || "") : "";
+    $("giveawayBonusShareFacebook").checked = g ? g.bonus_share_facebook === true : false;
+    $("giveawayBonusTagFriends").checked = g ? g.bonus_tag_friends === true : false;
+    $("giveawayBonusInstagramStory").checked = g ? g.bonus_share_instagram_story === true : false;
 
     const growthBlock=$(".giveaway-growth-owner-block");
     if(growthBlock){
@@ -30340,6 +30494,20 @@ function wireShimmer(container){
       return;
     }
 
+    const facebookPostRaw=$("giveawayFacebookPostUrl").value.trim();
+    if(facebookPostRaw && !safeHttpUrl(facebookPostRaw)){
+      showToast("Please enter a valid Facebook Giveaway Post URL");
+      $("giveawayFacebookPostUrl").focus();
+      return;
+    }
+
+    const instagramPostRaw=$("giveawayInstagramPostUrl").value.trim();
+    if(instagramPostRaw && !safeHttpUrl(instagramPostRaw)){
+      showToast("Please enter a valid Instagram Giveaway Post URL");
+      $("giveawayInstagramPostUrl").focus();
+      return;
+    }
+
     const giveawayEndsIso=endsValue ? giveawayEndsInputToIso(endsValue) : null;
     if(endsValue && !giveawayEndsIso){
       showToast("Please enter a valid giveaway end date/time");
@@ -30359,7 +30527,13 @@ function wireShimmer(container){
       entry_form_url:safeHttpUrl($("giveawayEntryFormUrl").value.trim()) || null,
       require_facebook:$("giveawayRequireFacebook").checked,
       require_instagram:$("giveawayRequireInstagram").checked,
+      require_comment:$("giveawayRequireComment").checked,
       require_website_code:$("giveawayRequireWebsiteCode").checked,
+      facebook_post_url:safeHttpUrl(facebookPostRaw) || null,
+      instagram_post_url:safeHttpUrl(instagramPostRaw) || null,
+      bonus_share_facebook:$("giveawayBonusShareFacebook").checked,
+      bonus_tag_friends:$("giveawayBonusTagFriends").checked,
+      bonus_share_instagram_story:$("giveawayBonusInstagramStory").checked,
       winner_name: status==="gave_away" ? winnerName : null,
       winner_profile_url: status==="gave_away" ? (winnerProfileUrl || null) : null,
       winner_sort_order: status==="gave_away"
@@ -31236,8 +31410,12 @@ function wireShimmer(container){
               <div class="giveaway-performance-actions">
                 <div><span>Instagram</span><strong>${Number(p.instagram_clicks||0).toLocaleString()}</strong></div>
                 <div><span>Facebook</span><strong>${Number(p.facebook_clicks||0).toLocaleString()}</strong></div>
+                <div><span>Comment</span><strong>${Number(p.comment_clicks||0).toLocaleString()}</strong></div>
                 <div><span>Inventory</span><strong>${Number(p.inventory_clicks||0).toLocaleString()}</strong></div>
                 <div><span>Collection</span><strong>${Number(p.collection_clicks||0).toLocaleString()}</strong></div>
+                <div><span>FB Share +1</span><strong>${Number(p.bonus_facebook_share_clicks||0).toLocaleString()}</strong></div>
+                <div><span>Tag Friends +1</span><strong>${Number(p.bonus_tag_friends_clicks||0).toLocaleString()}</strong></div>
+                <div><span>IG Story +1</span><strong>${Number(p.bonus_instagram_story_clicks||0).toLocaleString()}</strong></div>
               </div>
             `;
           })() : `<div class="hint">Run <code>giveaway-growth-upgrade-migration.sql</code> to enable Giveaway Performance analytics.</div>`}
@@ -34259,10 +34437,12 @@ function wireShimmer(container){
         if(!sourceGiveaway || sourceGiveaway.require_instagram!==false){
           steps.push(`${n++}️⃣ FOLLOW our Instagram: ${safeHttpUrl(values.instagramUrl)||"[LINK NOT SET]"}`);
         }
+        if(!sourceGiveaway || sourceGiveaway.require_comment!==false){
+          steps.push(`${n++}️⃣ COMMENT on the giveaway post: ${giveawayComment}`);
+        }
         if(sourceGiveaway?.require_website_code){
           steps.push(`${n++}️⃣ VISIT our website and find the Giveaway Code: ${getGiveawayShareUrl()}`);
         }
-        steps.push(`${n++}️⃣ Comment: ${giveawayComment}`);
         if(safeHttpUrl(sourceGiveaway?.entry_form_url)){
           steps.push(`${n++}️⃣ SUBMIT your entry here: ${safeHttpUrl(sourceGiveaway.entry_form_url)}`);
         }
@@ -34276,6 +34456,21 @@ function wireShimmer(container){
       `Facebook Pages cannot send the first message to personal accounts. We will reply to the winner’s comment, and the winner must PM our Facebook Page within ${claimHours} hours to claim the prize.`,
       ""
     ];
+
+    if(sourceGiveaway){
+      const bonusLines=[];
+      if(sourceGiveaway.bonus_share_facebook) bonusLines.push("➕ +1 BONUS: Share this Facebook post publicly");
+      if(sourceGiveaway.bonus_tag_friends) bonusLines.push("➕ +1 BONUS: Tag 2 friends");
+      if(sourceGiveaway.bonus_share_instagram_story) bonusLines.push("➕ +1 BONUS: Share to your IG Story and tag @collecttcg.mysg");
+
+      if(bonusLines.length){
+        lines.push(
+          "⭐ EXTRA ACTIONS / BONUS ENTRIES:",
+          ...bonusLines,
+          ""
+        );
+      }
+    }
 
     if(values.includeMultiGroupNotice){
       lines.push(
@@ -34561,8 +34756,10 @@ function wireShimmer(container){
               <b>Entry setup</b>
               <span>${selectedGiveaway.require_facebook ? "✓ Facebook" : "— Facebook"}</span>
               <span>${selectedGiveaway.require_instagram ? "✓ Instagram" : "— Instagram"}</span>
+              <span>${selectedGiveaway.require_comment ? "✓ Comment" : "— Comment"}</span>
               <span>${selectedGiveaway.require_website_code ? "✓ Website code" : "— Website code"}</span>
               <span>${safeHttpUrl(selectedGiveaway.entry_form_url) ? "✓ Entry form" : "— Entry form"}</span>
+              <span>${(selectedGiveaway.bonus_share_facebook||selectedGiveaway.bonus_tag_friends||selectedGiveaway.bonus_share_instagram_story) ? "✓ Bonus actions" : "— Bonus actions"}</span>
             </div>
           ` : ""}
         </div>
