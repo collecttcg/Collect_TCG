@@ -18956,6 +18956,91 @@ body.owner-mode .card-actions.owner-only {
   }
 }
 </style>
+
+<style id="mobile-header-theme-page-currency-v22">
+.mobile-header-theme-toggle,
+.mobile-page-currency-control{display:none;}
+
+@media (max-width:800px){
+  /* Logo row: four social icons + a compact light/dark toggle on the far right. */
+  .mobile-header-theme-toggle{
+    display:inline-flex !important;
+    align-items:center;
+    justify-content:center;
+    flex:0 0 30px;
+    width:30px;
+    height:30px;
+    margin-left:5px;
+    padding:0;
+    border:1px solid var(--border);
+    border-radius:999px;
+    background:var(--panel);
+    color:var(--text);
+    font:700 14px/1 inherit;
+    cursor:pointer;
+  }
+  .mobile-header-theme-toggle:active{transform:scale(.96);}
+
+  /* Currency now belongs to the page-title row on mobile, not the footer/toolbar. */
+  .listing-page-head{
+    display:flex !important;
+    align-items:flex-start !important;
+    justify-content:space-between !important;
+    gap:10px !important;
+  }
+  .listing-page-title-copy{
+    flex:1 1 auto;
+    min-width:0;
+  }
+  .mobile-page-currency-control{
+    display:flex !important;
+    flex:0 0 auto;
+    align-items:center;
+    margin-left:auto;
+    padding-top:1px;
+  }
+  .mobile-page-currency-control select{
+    appearance:auto;
+    min-width:66px;
+    height:32px;
+    padding:0 5px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:var(--panel);
+    color:var(--text);
+    font:700 11px/1 inherit;
+  }
+  /* Hide the duplicate currency selectors on mobile after moving it to the heading. */
+  .listing-filter-tools .currency-preference-control,
+  .sidebar-footer > .mobile-footer-currency{display:none !important;}
+}
+
+@media (max-width:390px){
+  .mobile-header-theme-toggle{
+    flex-basis:27px;
+    width:27px;
+    height:27px;
+    margin-left:4px;
+    font-size:12px;
+  }
+  .mobile-page-currency-control select{
+    min-width:61px;
+    height:30px;
+    font-size:10px;
+  }
+}
+
+@media (max-width:345px){
+  .mobile-header-theme-toggle{
+    flex-basis:25px;
+    width:25px;
+    height:25px;
+    margin-left:3px;
+    font-size:11px;
+  }
+  .mobile-page-currency-control select{min-width:58px;}
+}
+</style>
 </head>
 <body>
 
@@ -18990,6 +19075,7 @@ body.owner-mode .card-actions.owner-only {
     <a href="https://www.carousell.com.my/u/collect_tcg_my_sg/" target="_blank" rel="noopener noreferrer" class="collect-social-icon" aria-label="Carousell Malaysia" title="Carousell Malaysia"><span aria-hidden="true">C</span><small>MY</small></a>
     <a href="https://www.carousell.sg/u/collect_tcg_sg/" target="_blank" rel="noopener noreferrer" class="collect-social-icon" aria-label="Carousell Singapore" title="Carousell Singapore"><span aria-hidden="true">C</span><small>SG</small></a>
   </div>
+  <button class="mobile-header-theme-toggle" id="mobileHeaderThemeToggle" type="button" aria-label="Switch to light mode" title="Light mode">☀</button>
 </div>
 
 
@@ -20470,7 +20556,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       : getPriceCurrencyPreference();
 
     // Keep every currency selector in sync, even when it is behind an open modal.
-    ["homeCurrencyPreference","currencyPreference","detailsCurrencyPreference","mobileFooterCurrencyPreference"].forEach(id=>{
+    ["homeCurrencyPreference","currencyPreference","detailsCurrencyPreference","mobileFooterCurrencyPreference","mobileHeaderCurrencyPreference"].forEach(id=>{
       const el=$(id);
       if(el && el.value!==safe) el.value=safe;
     });
@@ -28545,11 +28631,21 @@ function wireShimmer(container){
 
     return `
       <div class="page-head listing-page-head">
-        <div>
+        <div class="listing-page-title-copy">
           <div class="eyebrow">${escapeHtml(scopeMeta.eyebrow)}</div>
           <h2>${escapeHtml(scopeMeta.title)}</h2>
           <p>${escapeHtml(scopeMeta.description)}</p>
         </div>
+        ${!isCollection ? `
+          <label class="mobile-page-currency-control" title="Choose which stored currency is shown first. No currency conversion is performed.">
+            <span class="sr-only">Currency</span>
+            <select id="mobileHeaderCurrencyPreference" aria-label="Preferred display currency">
+              <option value="USD" ${getPriceCurrencyPreference()==="USD"?"selected":""}>USD</option>
+              <option value="MYR" ${getPriceCurrencyPreference()==="MYR"?"selected":""}>MYR</option>
+              <option value="SGD" ${getPriceCurrencyPreference()==="SGD"?"selected":""}>SGD</option>
+            </select>
+          </label>
+        ` : ""}
       </div>
 
       <!-- Desktop/mobile top controls only. Keep the filter drawer OUTSIDE
@@ -45867,6 +45963,12 @@ function wireShimmer(container){
     document.body.classList.toggle("light-mode", light);
     const btn = $("themeToggle");
     if(btn) btn.textContent = light ? "☾ Dark mode" : "☀ Light mode";
+    const mobileBtn = $("mobileHeaderThemeToggle");
+    if(mobileBtn){
+      mobileBtn.textContent = light ? "☾" : "☀";
+      mobileBtn.setAttribute("aria-label", light ? "Switch to dark mode" : "Switch to light mode");
+      mobileBtn.title = light ? "Dark mode" : "Light mode";
+    }
   }
 
   function loadTheme(){
@@ -45876,6 +45978,12 @@ function wireShimmer(container){
   }
 
   $("themeToggle").addEventListener("click", ()=>{
+    const next = document.body.classList.contains("light-mode") ? "dark" : "light";
+    localStorage.setItem(THEME_KEY, next);
+    applyTheme(next);
+  });
+
+  $("mobileHeaderThemeToggle")?.addEventListener("click", ()=>{
     const next = document.body.classList.contains("light-mode") ? "dark" : "light";
     localStorage.setItem(THEME_KEY, next);
     applyTheme(next);
@@ -45895,6 +46003,22 @@ function wireShimmer(container){
       draw();
     }
 
+    showToast(`${currency} prices shown first`);
+  });
+
+  // Mobile listing-page currency selector mirrors the existing currency controls.
+  view.addEventListener("change",e=>{
+    const select=e.target.closest?.("#mobileHeaderCurrencyPreference");
+    if(!select) return;
+    const currency=setPriceCurrencyPreference(select.value);
+    syncCurrencyEverywhere(currency);
+    const route=currentRoute();
+    if(isInventoryRoute(route) && $("invGrid")){
+      const priceLabel=document.querySelector(".price-range-label");
+      if(priceLabel) priceLabel.textContent=`Price (${currency})`;
+      updateListingUrlFromControls();
+      draw();
+    }
     showToast(`${currency} prices shown first`);
   });
 
