@@ -18633,6 +18633,70 @@ body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game
     align-items:center;
     gap:8px;
     min-width:0;
+    flex:1 1 auto;
+  }
+
+  .desktop-inline-search{
+    position:relative;
+    flex:1 1 420px;
+    min-width:220px;
+    max-width:620px;
+  }
+
+  .desktop-inline-search input{
+    width:100%;
+    min-height:38px;
+    box-sizing:border-box;
+    padding:7px 36px 7px 12px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--surface);
+    color:var(--text);
+    font:inherit;
+    font-size:10px;
+    outline:none;
+    transition:border-color .15s ease,background .15s ease,box-shadow .15s ease;
+  }
+
+  .desktop-inline-search input::placeholder{
+    color:var(--text-muted);
+    opacity:.82;
+  }
+
+  .desktop-inline-search input:hover{
+    border-color:rgba(95,212,196,.35);
+  }
+
+  .desktop-inline-search input:focus{
+    border-color:rgba(95,212,196,.72);
+    background:rgba(95,212,196,.035);
+    box-shadow:0 0 0 3px rgba(95,212,196,.08);
+  }
+
+  .desktop-inline-search-clear{
+    position:absolute;
+    top:50%;
+    right:7px;
+    transform:translateY(-50%);
+    width:25px;
+    height:25px;
+    display:grid;
+    place-items:center;
+    padding:0;
+    border:0;
+    border-radius:7px;
+    background:transparent;
+    color:var(--text-muted);
+    font-size:15px;
+    line-height:1;
+    cursor:pointer;
+  }
+
+  .desktop-inline-search-clear:hover,
+  .desktop-inline-search-clear:focus-visible{
+    background:var(--surface-2);
+    color:var(--text);
+    outline:none;
   }
 
   .desktop-filter-toggle-btn{
@@ -18733,7 +18797,28 @@ body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game
 }
 
 @media(min-width:801px) and (max-width:1100px){
-  .desktop-filter-toggle-summary{max-width:260px;}
+  .desktop-filter-toggle-summary{display:none;}
+  .desktop-inline-search{
+    flex-basis:300px;
+    min-width:180px;
+    max-width:none;
+  }
+}
+
+@media(min-width:801px) and (max-width:930px){
+  .desktop-filter-toggle-row{gap:7px;}
+  .desktop-filter-toggle-actions{gap:6px;}
+  .desktop-filter-toggle-btn{padding-inline:9px;}
+  .desktop-filter-toggle-icon{display:none;}
+  .desktop-inline-search input{
+    min-height:36px;
+    font-size:9.5px;
+    padding-left:10px;
+  }
+  .desktop-filter-add-card{
+    min-height:36px !important;
+    padding-inline:9px !important;
+  }
 }
 
 @media(max-width:800px){
@@ -28407,6 +28492,20 @@ function wireShimmer(container){
 
       <div class="desktop-filter-toggle-row" id="desktopFilterToggleRow">
         <div class="desktop-filter-toggle-actions">
+          <div class="desktop-inline-search">
+            <input type="search"
+                   id="desktopInventorySearch"
+                   maxlength="100"
+                   autocomplete="off"
+                   placeholder="Search name, code, year or series…"
+                   aria-label="Search listings">
+            <button type="button"
+                    class="desktop-inline-search-clear"
+                    id="desktopInventorySearchClear"
+                    aria-label="Clear search"
+                    hidden>×</button>
+          </div>
+
           <button type="button"
                   class="desktop-filter-toggle-btn"
                   id="desktopFilterToggleBtn"
@@ -29011,6 +29110,46 @@ function wireShimmer(container){
     }
 
     restoreListingFiltersFromUrl();
+
+    // Desktop search stays visible beside the collapsed Filters button.
+    // The existing #search field remains the single source of truth for
+    // filtering/URL state; this compact desktop input mirrors it.
+    const desktopInventorySearch=$("desktopInventorySearch");
+    const desktopInventorySearchClear=$("desktopInventorySearchClear");
+
+    function syncDesktopSearchFromMain(){
+      if(!desktopInventorySearch) return;
+      const value=String($("search")?.value||"").slice(0,100);
+      if(desktopInventorySearch.value!==value) desktopInventorySearch.value=value;
+      if(desktopInventorySearchClear) desktopInventorySearchClear.hidden=!value;
+    }
+
+    function commitDesktopSearchToMain(){
+      if(!desktopInventorySearch || !$("search")) return;
+      const value=desktopInventorySearch.value.slice(0,100);
+      $("search").value=value;
+      if(desktopInventorySearchClear) desktopInventorySearchClear.hidden=!value;
+      $("search").dispatchEvent(new Event("input",{bubbles:true}));
+    }
+
+    syncDesktopSearchFromMain();
+    desktopInventorySearch?.addEventListener("input",commitDesktopSearchToMain,{signal:inventorySignal});
+    desktopInventorySearch?.addEventListener("search",commitDesktopSearchToMain,{signal:inventorySignal});
+    desktopInventorySearch?.addEventListener("keydown",e=>{
+      if(e.key==="Enter"){
+        commitDesktopSearchToMain();
+        desktopInventorySearch.blur();
+      }else if(e.key==="Escape" && desktopInventorySearch.value){
+        desktopInventorySearch.value="";
+        commitDesktopSearchToMain();
+      }
+    },{signal:inventorySignal});
+    desktopInventorySearchClear?.addEventListener("click",()=>{
+      if(!desktopInventorySearch) return;
+      desktopInventorySearch.value="";
+      commitDesktopSearchToMain();
+      desktopInventorySearch.focus();
+    },{signal:inventorySignal});
 
     const perPageSelect=$("listingPerPageSelect");
     if(perPageSelect) perPageSelect.value=String(listingPerPage);
@@ -30023,6 +30162,7 @@ function wireShimmer(container){
     $("search").addEventListener("input",()=>{
       renderSearchSuggestions();
       syncMobileSearchFromMain();
+      syncDesktopSearchFromMain();
       scheduleInventorySearchAnalytics();
     });
     $("search").addEventListener("keydown",e=>{
