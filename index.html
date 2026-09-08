@@ -26823,6 +26823,175 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return watermarkLogoPromise;
   }
 
+  let inventoryListingBarcodeDataUrl = "";
+
+  function getInventoryListingBarcodeDataUrl(){
+    if(inventoryListingBarcodeDataUrl) return inventoryListingBarcodeDataUrl;
+    if(typeof document === "undefined" || typeof QRCode !== "function") return "";
+
+    let qrHolder = null;
+    try{
+      qrHolder = document.createElement("div");
+      qrHolder.style.position = "fixed";
+      qrHolder.style.left = "-99999px";
+      qrHolder.style.top = "0";
+      qrHolder.style.width = "520px";
+      qrHolder.style.height = "520px";
+      qrHolder.style.pointerEvents = "none";
+      qrHolder.setAttribute("aria-hidden", "true");
+      document.body.appendChild(qrHolder);
+
+      new QRCode(qrHolder, {
+        text: CARD_WATERMARK_URL,
+        width: 520,
+        height: 520,
+        colorDark: "#111827",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+      const qrCanvas = qrHolder.querySelector("canvas");
+      const qrImg = qrHolder.querySelector("img");
+      if(!qrCanvas && !(qrImg && qrImg.src)){
+        return "";
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = 1600;
+      canvas.height = 2000;
+      const ctx = canvas.getContext("2d");
+      ctx.imageSmoothingEnabled = true;
+      if("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
+
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, "#0f172a");
+      gradient.addColorStop(0.5, "#111827");
+      gradient.addColorStop(1, "#1f2937");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const gold = "rgba(255, 198, 56, 0.96)";
+      const teal = "rgba(74, 203, 184, 0.28)";
+      ctx.fillStyle = teal;
+      ctx.beginPath();
+      ctx.moveTo(0, 240);
+      ctx.quadraticCurveTo(220, 120, 520, 210);
+      ctx.quadraticCurveTo(760, 280, 1040, 150);
+      ctx.quadraticCurveTo(1310, 20, 1600, 160);
+      ctx.lineTo(1600, 0);
+      ctx.lineTo(0, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "rgba(255, 198, 56, 0.12)";
+      for(const [x,y,r] of [[132,1680,92],[1458,360,84],[1450,1710,120],[210,470,56]]){
+        ctx.beginPath();
+        ctx.arc(x,y,r,0,Math.PI*2);
+        ctx.fill();
+      }
+
+      const panelX = 175;
+      const panelY = 245;
+      const panelW = canvas.width - panelX * 2;
+      const panelH = canvas.height - 420;
+      const radius = 54;
+      const drawRoundRect = (x,y,w,h,r)=>{
+        ctx.beginPath();
+        if(typeof ctx.roundRect === "function"){
+          ctx.roundRect(x,y,w,h,r);
+        }else{
+          ctx.moveTo(x+r,y);
+          ctx.lineTo(x+w-r,y);
+          ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+          ctx.lineTo(x+w,y+h-r);
+          ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+          ctx.lineTo(x+r,y+h);
+          ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+          ctx.lineTo(x,y+r);
+          ctx.quadraticCurveTo(x,y,x+r,y);
+          ctx.closePath();
+        }
+      };
+
+      ctx.save();
+      ctx.shadowColor = "rgba(0, 0, 0, 0.34)";
+      ctx.shadowBlur = 44;
+      ctx.shadowOffsetY = 16;
+      drawRoundRect(panelX, panelY, panelW, panelH, radius);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.97)";
+      ctx.fill();
+      ctx.restore();
+
+      drawRoundRect(panelX, panelY, panelW, panelH, radius);
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = "rgba(255, 198, 56, 0.92)";
+      ctx.stroke();
+
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "700 94px Inter, Arial, sans-serif";
+      ctx.fillText("Scan to browse", canvas.width / 2, panelY + 92);
+      ctx.fillStyle = "#111827";
+      ctx.font = "800 106px Inter, Arial, sans-serif";
+      ctx.fillText("Collect TCG Inventory", canvas.width / 2, panelY + 188);
+      ctx.fillStyle = "rgba(17, 24, 39, 0.72)";
+      ctx.font = "500 42px Inter, Arial, sans-serif";
+      ctx.fillText("See more cards, pricing, and updates on our website", canvas.width / 2, panelY + 318);
+
+      const qrSize = 760;
+      const qrX = Math.round((canvas.width - qrSize) / 2);
+      const qrY = panelY + 420;
+
+      drawRoundRect(qrX - 24, qrY - 24, qrSize + 48, qrSize + 48, 38);
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+
+      if(qrCanvas){
+        ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+      }else if(qrImg && qrImg.src){
+        const temp = new Image();
+        temp.src = qrImg.src;
+        if(temp.complete){
+          ctx.drawImage(temp, qrX, qrY, qrSize, qrSize);
+        }
+      }
+
+      ctx.fillStyle = gold;
+      ctx.font = "700 48px Inter, Arial, sans-serif";
+      ctx.fillText("Open our full inventory", canvas.width / 2, qrY + qrSize + 66);
+      ctx.fillStyle = "rgba(17, 24, 39, 0.80)";
+      ctx.font = "500 34px 'JetBrains Mono', monospace";
+      ctx.fillText("collecttcg.github.io/Collect_TCG/#/inventory", canvas.width / 2, qrY + qrSize + 132);
+
+      ctx.strokeStyle = "rgba(17, 24, 39, 0.08)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(panelX + 120, qrY + qrSize + 182);
+      ctx.lineTo(panelX + panelW - 120, qrY + qrSize + 182);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(17, 24, 39, 0.56)";
+      ctx.font = "500 28px Inter, Arial, sans-serif";
+      ctx.fillText("Thank you for supporting Collect TCG", canvas.width / 2, panelY + panelH - 94);
+
+      inventoryListingBarcodeDataUrl = canvas.toDataURL("image/png");
+      return inventoryListingBarcodeDataUrl;
+    }catch(err){
+      console.warn("Could not generate listing inventory barcode image:", err);
+      return "";
+    }finally{
+      try{ qrHolder?.remove(); }catch{}
+    }
+  }
+
+  function getListingDisplayImages(card){
+    const images = getImages(card).filter(Boolean);
+    if(!images.length) return [];
+    const barcode = getInventoryListingBarcodeDataUrl();
+    return barcode ? [...images, barcode] : images;
+  }
+
   function drawWebsiteWatermark(ctx, canvas){
     const watermarkText = CARD_WATERMARK_URL;
     if(!watermarkText) return;
@@ -27726,7 +27895,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function cardThumbHTML(c, renderIndex=999){
     const color = RARITY_COLOR[c.rarity] || "var(--r-common)";
-    const images = getImages(c);
+    const images = getListingDisplayImages(c);
     if(images.length){
       const initialCount=Math.max(1,images.length);
       return `<div class="thumb-wrap listing-card-gallery"
@@ -30537,7 +30706,7 @@ function wireShimmer(container){
     if(!wrap || !card || (!isOwnerMode() && !isLiveLifecycle(card))) return false;
 
     await ensureCardImagesLoaded(card);
-    const images=getImages(card);
+    const images=getListingDisplayImages(card);
     const prevBtn=wrap.querySelector(".listing-gallery-arrow-prev");
     const nextBtn=wrap.querySelector(".listing-gallery-arrow-next");
     const counter=wrap.querySelector("[data-listing-gallery-counter]");
@@ -40763,7 +40932,7 @@ function wireShimmer(container){
       cards.slice(0,2).forEach(card=>{
         lines.push(cardListItemLine(card),"",cardListPriceLine(card),"");
       });
-      lines.push("...","");
+      lines.push(".",".",".","");
       const lastCard=cards[cards.length-1];
       lines.push(cardListItemLine(lastCard),"",cardListPriceLine(lastCard),"");
     });
@@ -47482,7 +47651,7 @@ function wireShimmer(container){
     }
 
     recordCardViewEvent(card);
-    const images = getImages(card);
+    const images = getListingDisplayImages(card);
     const imageHTML = images.length
       ? `<div class="detail-slider" data-card-slider>
           <div class="detail-slider-stage">
