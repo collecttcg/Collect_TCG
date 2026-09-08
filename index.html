@@ -45972,30 +45972,20 @@ function wireShimmer(container){
       indicator.setAttribute("aria-hidden","false");
       label.textContent="Refreshing…";
 
+      // Mobile pull-to-refresh used to fire three independent Supabase reloads
+      // (cards, giveaways, and showcases). A transient failure in any auxiliary
+      // request could incorrectly report that the whole collection failed.
+      // Reload the current document instead: the hash route is preserved, app
+      // startup performs the canonical data load, and browser refresh behavior
+      // is consistent regardless of which screen the visitor is viewing.
       try{
-        const [cardsLoaded]=await Promise.all([
-          loadCards(),
-          loadGiveaways(),
-          loadShowcases()
-        ]);
-
-        if(cardsLoaded){
-          router();
-          label.textContent="Refreshed";
-          showToast("Collection refreshed");
-        }else{
-          label.textContent="Refresh failed";
-          showToast("Could not refresh collection");
-        }
+        await new Promise(resolve=>setTimeout(resolve,120));
+        window.location.reload();
       }catch(error){
-        console.error("Pull-to-refresh error:",error);
-        label.textContent="Refresh failed";
-        showToast("Could not refresh collection");
-      }finally{
-        await new Promise(resolve=>setTimeout(resolve,380));
-        refreshing=false;
-        indicator.classList.remove("is-refreshing");
-        resetVisual();
+        console.error("Page refresh error:",error);
+        // Very old/embedded browsers may reject reload(). Fall back to assigning
+        // the exact current URL, which also preserves the current hash route.
+        window.location.href=window.location.href;
       }
     };
 
