@@ -46283,10 +46283,12 @@ function wireShimmer(container){
   }
 
   setupMobileMoreMenu();
+  // Restore the app's mobile pull-to-refresh gesture. The handler now performs
+  // a normal document reload, so it cannot surface the old "Could not refresh
+  // collection" error from auxiliary Supabase refresh calls.
+  setupMobilePullToRefresh();
 
-  // Do NOT install the custom mobile pull-to-refresh handler here. Native
-  // browser pull-to-refresh is more reliable and cannot fail just because an
-  // auxiliary Supabase request (giveaways/showcases/etc.) happens to fail.
+  // Remove stale legacy service-worker/cache state, then start the app normally.
   removeLegacyAppRefreshCaches().finally(()=>startApp());
 
 })();
