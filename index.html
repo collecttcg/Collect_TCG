@@ -19938,6 +19938,47 @@ body.owner-mode .card-actions.owner-only {
    on desktop and mobile. Existing collection-game-* classes are intentionally
    shared so both scopes receive the same responsive/collapse/touch behavior. */
 </style>
+<style>
+
+/* =========================================================
+   OVERVIEW SCAN EYE COMFORT — LISTING THUMBNAILS ONLY
+   Softens bright PSA scans in dense browsing grids without
+   modifying Card Details / lightbox / compare / original files.
+   ========================================================= */
+#invGrid .card .thumb-wrap,
+#invGrid .card .thumb-placeholder{
+  background:#252a31 !important;
+}
+
+#invGrid .card img.thumb{
+  filter:brightness(.90) contrast(.96) !important;
+  transition:filter .16s ease, opacity .16s ease !important;
+}
+
+/* Light mode needs only a subtle reduction. */
+body.light-mode #invGrid .card .thumb-wrap,
+body.light-mode #invGrid .card .thumb-placeholder{
+  background:#e7e9ed !important;
+}
+body.light-mode #invGrid .card img.thumb{
+  filter:brightness(.95) contrast(.98) !important;
+}
+
+/* Do not dim the scan while the visitor intentionally focuses it. */
+@media(hover:hover) and (pointer:fine){
+  #invGrid .card:hover img.thumb{
+    filter:brightness(.94) contrast(.98) !important;
+  }
+  body.light-mode #invGrid .card:hover img.thumb{
+    filter:brightness(.98) contrast(.99) !important;
+  }
+}
+
+/* Preserve natural image rendering for print/share contexts. */
+@media print{
+  #invGrid .card img.thumb{filter:none !important;}
+}
+</style>
 </head>
 <body>
 
