@@ -19981,6 +19981,7 @@ body.light-mode #invGrid .card img.thumb{
 </style>
 
 <!-- V47: Home Recently Added now uses the shared home-storefront-grid layout (same as High Value / Vintage / Recently Sold). -->
+  <!-- v49: Inventory grouped catalogue uses no per-page selector or pagination. -->
 </head>
 <body>
 
@@ -25428,8 +25429,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       params.set("quick", activeQuickFilter);
     }
 
-    params.set("per",String(listingPerPage));
-    if(listingCurrentPage>1) params.set("page",String(listingCurrentPage));
+    if(!["inventory","collection"].includes(route)){
+      params.set("per",String(listingPerPage));
+      if(listingCurrentPage>1) params.set("page",String(listingCurrentPage));
+    }
 
     const pillKeys = {
       game:"pga",
@@ -29809,7 +29812,7 @@ function wireShimmer(container){
             </label>
           ` : ""}
 
-          ${!isCollection ? `
+          ${!isCollection && scope!=="inventory" ? `
             <label class="listing-per-page-control" title="Choose how many listings are shown on each page.">
               <span>Show</span>
               <select id="listingPerPageSelect" aria-label="Listings per page">
@@ -29996,7 +29999,7 @@ function wireShimmer(container){
             </div>
           ` : ""}
 
-          ${!isCollection ? `
+          ${!isCollection && scope!=="inventory" ? `
             <label class="mobile-cards-per-page-control" for="mobileListingPerPageSelect">
               <span>
                 <strong>Cards per page</strong>
@@ -30031,12 +30034,16 @@ function wireShimmer(container){
       <div class="inventory-mobile-compact-result" aria-live="polite">
         <strong id="inventoryMobileCompactResultCount">0</strong> listings
       </div>
-      <div class="listing-pagination-shell listing-pagination-top" id="listingPaginationTop" hidden></div>
+      ${!["inventory","collection"].includes(scope) ? `
+        <div class="listing-pagination-shell listing-pagination-top" id="listingPaginationTop" hidden></div>
+      ` : ""}
 
       <div id="invGrid" aria-busy="true">${inventorySkeletonHTML(8)}</div>
 
-      <div class="listing-pagination-shell listing-pagination-bottom" id="listingPaginationBottom" hidden></div>
-      <div class="listing-pagination-viewport-guard" id="listingPaginationViewportGuard" aria-hidden="true"></div>
+      ${!["inventory","collection"].includes(scope) ? `
+        <div class="listing-pagination-shell listing-pagination-bottom" id="listingPaginationBottom" hidden></div>
+        <div class="listing-pagination-viewport-guard" id="listingPaginationViewportGuard" aria-hidden="true"></div>
+      ` : ""}
 
       <div class="sticky-mobile-results-bar" id="stickyMobileResultsBar" aria-label="Results controls">
         <div class="sticky-mobile-results-count">
@@ -30210,11 +30217,18 @@ function wireShimmer(container){
     listingAvailabilityScope = isInventoryRoute(scope) ? scope : "inventory";
 
     const listingParams=currentHashParams();
-    const requestedPer=Number(listingParams.get("per"));
-    listingPerPage=LISTING_PER_PAGE_OPTIONS.includes(requestedPer)
-      ? requestedPer
-      : getSavedListingPerPage();
-    listingCurrentPage=safeListingPage(listingParams.get("page"));
+    if(["inventory","collection"].includes(listingAvailabilityScope)){
+      // Grouped catalogue views are one continuous collapsible page.
+      // Old per/page URL values are intentionally ignored.
+      listingPerPage=getSavedListingPerPage();
+      listingCurrentPage=1;
+    }else{
+      const requestedPer=Number(listingParams.get("per"));
+      listingPerPage=LISTING_PER_PAGE_OPTIONS.includes(requestedPer)
+        ? requestedPer
+        : getSavedListingPerPage();
+      listingCurrentPage=safeListingPage(listingParams.get("page"));
+    }
 
     const scopeMeta = listingScopeMeta(listingAvailabilityScope);
     const requestedQuick=safeUrlFilterText(listingParams.get("quick"),24);
