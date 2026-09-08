@@ -20088,6 +20088,8 @@ body.light-mode #invGrid .card img.thumb{
   <!-- v66: Multi-photo uploads are validated individually and after Storage upload; Add/Edit previews also show the automatic Inventory QR as a fixed final image. -->
   <!-- v67: Single-card post-generator ZIP downloads now include the automatic Inventory QR image as the final file. -->
   <!-- v69: Insights adds active session-duration tracking with 2+ minute and 5+ minute engagement metrics. -->
+<!-- v70: Reliable session-duration heartbeat: 10s writes + flush foreground time on hide/pagehide. -->
+<!-- v71: Final session-duration flush uses sendBeacon when available, with keepalive fetch fallback. -->
 </head>
 <body>
 
@@ -25035,24 +25037,30 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
 
-  const SESSION_DURATION_HEARTBEAT_MS=30000;
+  const SESSION_DURATION_HEARTBEAT_MS=10000;
   let sessionDurationHeartbeatTimer=null;
   let sessionDurationLastTick=0;
   let sessionDurationBackendState="unknown";
 
-  async function recordSessionActiveSeconds(seconds){
-    if(isOwnerMode() || isAnalyticsExcludedDevice() || document.hidden) return false;
-    if(sessionDurationBackendState==="unavailable") return false;
+  function sessionDurationPayload(seconds){
     const sessionId=getAnalyticsSessionId();
     const visitorId=getVisitorId();
     const safeSeconds=Math.max(0,Math.min(60,Math.round(Number(seconds)||0)));
-    if(!sessionId || !visitorId || safeSeconds<1) return false;
+    if(!sessionId || !visitorId || safeSeconds<1) return null;
+    return {
+      p_session_id:sessionId,
+      p_visitor_id:visitorId,
+      p_active_seconds:safeSeconds
+    };
+  }
+
+  async function recordSessionActiveSeconds(seconds,{allowHidden=false}={}){
+    if(isOwnerMode() || isAnalyticsExcludedDevice() || (!allowHidden && document.hidden)) return false;
+    if(sessionDurationBackendState==="unavailable") return false;
+    const payload=sessionDurationPayload(seconds);
+    if(!payload) return false;
     try{
-      const {error}=await supabaseClient.rpc("record_site_session_active_time",{
-        p_session_id:sessionId,
-        p_visitor_id:visitorId,
-        p_active_seconds:safeSeconds
-      });
+      const {error}=await supabaseClient.rpc("record_site_session_active_time",payload);
       if(error){
         const message=`${error.message||""} ${error.details||""}`.toLowerCase();
         if(message.includes("record_site_session_active_time") || message.includes("function") || message.includes("schema cache")){
@@ -25070,7 +25078,54 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
   }
 
-  function sessionDurationHeartbeatTick(){
+  function beaconSessionActiveSeconds(seconds){
+    if(isOwnerMode() || isAnalyticsExcludedDevice() || sessionDurationBackendState==="unavailable") return false;
+    const payload=sessionDurationPayload(seconds);
+    if(!payload) return false;
+
+    const base=String(window.COLLECT_TCG_SUPABASE_URL||"").replace(/\/$/,"");
+    const key=String(window.COLLECT_TCG_SUPABASE_KEY||"");
+    if(!base || !key) return false;
+
+    // Supabase's API gateway accepts the publishable apikey on the request URL.
+    // That lets sendBeacon authenticate the unload-time RPC even though the
+    // Beacon API does not allow custom request headers.
+    const endpoint=`${base}/rest/v1/rpc/record_site_session_active_time?apikey=${encodeURIComponent(key)}`;
+    const body=JSON.stringify(payload);
+
+    if(typeof navigator.sendBeacon==="function"){
+      try{
+        const queued=navigator.sendBeacon(
+          endpoint,
+          new Blob([body],{type:"application/json"})
+        );
+        if(queued) return true;
+      }catch(error){
+        console.warn("Session duration beacon could not be queued:",error);
+      }
+    }
+
+    // keepalive is the fallback for browsers that reject/disable Beacon.
+    try{
+      fetch(endpoint,{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "apikey":key,
+          "Authorization":`Bearer ${key}`
+        },
+        body,
+        keepalive:true,
+        credentials:"omit"
+      }).catch(error=>console.warn("Session duration keepalive flush failed:",error));
+      return true;
+    }catch(error){
+      console.warn("Session duration final flush failed:",error);
+      return false;
+    }
+  }
+
+  function sessionDurationHeartbeatTick({flushVisibleTime=false,useBeacon=false}={}){
     const now=Date.now();
     if(!sessionDurationLastTick){
       sessionDurationLastTick=now;
@@ -25078,9 +25133,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
     const elapsed=Math.round((now-sessionDurationLastTick)/1000);
     sessionDurationLastTick=now;
-    if(document.hidden || elapsed<=0) return;
-    // Cap a single tick so sleep/background throttling cannot inflate engagement.
-    recordSessionActiveSeconds(Math.min(45,elapsed));
+    if(elapsed<=0) return;
+
+    // Normal heartbeats only count while the tab is visible. When visibility
+    // has just changed to hidden/pagehide, flushVisibleTime records the time
+    // accumulated immediately BEFORE the browser hid the page.
+    if(document.hidden && !flushVisibleTime) return;
+    const seconds=Math.min(20,elapsed);
+    if(flushVisibleTime && useBeacon){
+      beaconSessionActiveSeconds(seconds);
+    }else{
+      recordSessionActiveSeconds(seconds,{allowHidden:flushVisibleTime});
+    }
   }
 
   function startSessionDurationTracking(){
@@ -25090,11 +25154,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     sessionDurationHeartbeatTimer=setInterval(sessionDurationHeartbeatTick,SESSION_DURATION_HEARTBEAT_MS);
     document.addEventListener("visibilitychange",()=>{
       if(document.hidden){
-        sessionDurationHeartbeatTick();
+        sessionDurationHeartbeatTick({flushVisibleTime:true,useBeacon:true});
+      }else{
+        sessionDurationLastTick=Date.now();
       }
-      sessionDurationLastTick=Date.now();
     },{passive:true});
-    window.addEventListener("pagehide",()=>sessionDurationHeartbeatTick(),{passive:true});
+    window.addEventListener("pagehide",()=>sessionDurationHeartbeatTick({flushVisibleTime:true,useBeacon:true}),{passive:true});
   }
 
   function formatActiveDuration(seconds){
@@ -36984,7 +37049,7 @@ function wireShimmer(container){
             ${!state.sessionDurationSupported
               ? `<div class="hint">Run <code>insights-session-duration-migration.sql</code> in Supabase to enable active-time metrics.</div>`
               : renderSessionDurationInsights(state.sessionDurationInsights)}
-            <div class="hint insights-engaged-note">A 2+ minute visit is a strong browsing signal; 5+ minutes is classified as highly engaged. This measures active visible-tab time rather than simply elapsed clock time.</div>
+            <div class="hint insights-engaged-note">A 2+ minute visit is a strong browsing signal; 5+ minutes is classified as highly engaged. This measures active visible-tab time rather than simply elapsed clock time. Active time is saved about every 10 seconds.</div>
           </section>
         </div>
 
