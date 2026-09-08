@@ -27637,6 +27637,51 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return "jpg";
   }
 
+  async function verifyPublicCardImageUrl(url){
+    const safe=safeHttpUrl(url||"");
+    if(!safe) throw new Error("card image public URL unavailable");
+
+    const response=await fetch(safe,{
+      method:"GET",
+      mode:"cors",
+      credentials:"omit",
+      cache:"no-store",
+      referrerPolicy:"no-referrer"
+    });
+    if(!response.ok) throw new Error(`card image public URL returned ${response.status}`);
+
+    const blob=await response.blob();
+    if(!blob || !blob.size) throw new Error("card image public URL returned an empty file");
+
+    const mime=normalizedImageMime(blob.type||"");
+    if(mime && !mime.startsWith("image/")) throw new Error("card image public URL is not an image");
+
+    // Decode the exact publicly-addressable object as a final integrity check.
+    // This catches URLs that authenticated Storage.download() can read but the
+    // public listing cannot display.
+    if(typeof createImageBitmap==="function"){
+      const bitmap=await createImageBitmap(blob);
+      const valid=bitmap.width>0 && bitmap.height>0;
+      try{ bitmap.close(); }catch{}
+      if(!valid) throw new Error("card image public URL could not be decoded");
+    }else{
+      const objectUrl=URL.createObjectURL(blob);
+      try{
+        await new Promise((resolve,reject)=>{
+          const img=new Image();
+          img.onload=()=>img.naturalWidth>0 && img.naturalHeight>0
+            ? resolve()
+            : reject(new Error("card image public URL could not be decoded"));
+          img.onerror=()=>reject(new Error("card image public URL could not be decoded"));
+          img.src=objectUrl;
+        });
+      }finally{
+        URL.revokeObjectURL(objectUrl);
+      }
+    }
+    return safe;
+  }
+
   async function uploadPendingCardImage(dataUrl,index){
     if(!requireOwner("upload card image")) throw new Error("Owner login required");
 
@@ -27682,6 +27727,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(!publicUrl){
       await supabaseClient.storage.from(CARD_IMAGE_STORAGE_BUCKET).remove([path]);
       throw new Error("card image public URL unavailable");
+    }
+
+    try{
+      await verifyPublicCardImageUrl(publicUrl);
+    }catch(publicError){
+      await supabaseClient.storage.from(CARD_IMAGE_STORAGE_BUCKET).remove([path]);
+      console.error("Card image public URL verification error:",publicError);
+      throw new Error(`card image public verification failed: ${String(publicError?.message||publicError).slice(0,160)}`);
     }
 
     return {url:publicUrl,path};
@@ -46952,7 +47005,7 @@ function wireShimmer(container){
 
         const message=String(error?.message||"");
         showToast(
-          /card-images|card image upload|processed image|permission denied/i.test(message)
+          /card-images|card image upload|card image public|processed image|permission denied/i.test(message)
             ? cardImageStorageErrorText(error)
             : (message==="Card name and game are required."
                 ? message
@@ -48493,6 +48546,12 @@ function wireShimmer(container){
     if(!requireOwner()) return;
     captureEditReturnScroll();
     resetEditSubmitButton();
+
+    // Listings are normally loaded with only thumbnail_url for performance.
+    // Editing must first hydrate the COMPLETE images[] array; otherwise adding
+    // new photos can rebuild the listing from only the thumbnail + new files.
+    await ensureCardImagesLoaded(card);
+
     const [privateMeta,storedImageVariants]=await Promise.all([
       fetchOwnerPrivateMeta(card.id),
       fetchOwnerCardImageVariants(card.id)
@@ -48694,7 +48753,7 @@ function wireShimmer(container){
 
       const message=String(error?.message||"");
       showToast(
-        /card-images|card image upload|processed image|permission denied/i.test(message)
+        /card-images|card image upload|card image public|processed image|permission denied/i.test(message)
           ? cardImageStorageErrorText(error)
           : (message==="Card name and game are required."
               ? message
