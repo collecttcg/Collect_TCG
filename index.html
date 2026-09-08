@@ -19577,6 +19577,116 @@ body.owner-mode .card-actions.owner-only {
   .modal.card-details-modal .detail-header-desktop{display:none !important;}
 }
 </style>
+<style>
+
+/* =========================================================
+   v39 — PC LISTING OVERVIEW: IMAGE LEFT / DETAILS RIGHT
+   Applies to Inventory, Reserved, Sold, Collection and Giveaway.
+   Mobile (<=800px) keeps its existing layout unchanged.
+   ========================================================= */
+@media (min-width:801px){
+  /* Inventory / Reserved / Sold / Collection share #invGrid. */
+  #invGrid.grid:not(.compact-list){
+    grid-template-columns:repeat(auto-fit,minmax(500px,1fr)) !important;
+    gap:16px !important;
+    align-items:start;
+  }
+
+  #invGrid.grid:not(.compact-list) .card{
+    display:grid !important;
+    grid-template-columns:minmax(190px,38%) minmax(0,1fr) !important;
+    grid-template-rows:auto !important;
+    align-items:start !important;
+    gap:0 !important;
+    padding:0 !important;
+    min-width:0;
+    overflow:hidden;
+  }
+
+  #invGrid.grid:not(.compact-list) .card > .thumb-wrap,
+  #invGrid.grid:not(.compact-list) .card > .thumb-placeholder{
+    grid-column:1 !important;
+    grid-row:1 !important;
+    width:100% !important;
+    height:auto !important;
+    align-self:start !important;
+    border:0 !important;
+    border-right:1px solid var(--border) !important;
+    border-radius:0 !important;
+    aspect-ratio:1140 / 1905 !important;
+    overflow:hidden;
+    background:var(--surface-2);
+  }
+
+  #invGrid.grid:not(.compact-list) .card > .thumb-wrap .thumb{
+    width:100% !important;
+    height:100% !important;
+    aspect-ratio:auto !important;
+    object-fit:cover !important;
+    object-position:center !important;
+    border:0 !important;
+    border-radius:0 !important;
+    display:block !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .card-body,
+  #invGrid.grid:not(.compact-list) .card .clean-card-body{
+    grid-column:2 !important;
+    grid-row:1 !important;
+    min-width:0;
+    width:100%;
+    padding:16px 17px !important;
+    align-self:stretch;
+  }
+
+  /* Collection game headers still span the full listing width. */
+  #invGrid.collection-game-grouped .collection-game-group-header{
+    grid-column:1 / -1 !important;
+  }
+
+  /* Giveaway overview cards use the same desktop reading direction. */
+  .giveaway-grid{
+    grid-template-columns:repeat(auto-fit,minmax(620px,1fr)) !important;
+    gap:16px !important;
+    align-items:start;
+  }
+
+  .giveaway-grid .giveaway-card{
+    display:grid !important;
+    grid-template-columns:minmax(250px,38%) minmax(0,1fr) !important;
+    align-items:start !important;
+    min-width:0;
+  }
+
+  .giveaway-grid .giveaway-card > .giveaway-gallery,
+  .giveaway-grid .giveaway-card > img{
+    grid-column:1 !important;
+    grid-row:1 !important;
+    width:100% !important;
+    min-width:0;
+    align-self:start;
+    border-right:1px solid var(--border);
+  }
+
+  .giveaway-grid .giveaway-card > .giveaway-body{
+    grid-column:2 !important;
+    grid-row:1 !important;
+    min-width:0;
+    padding:16px 17px !important;
+  }
+
+  .giveaway-grid .giveaway-gallery-stage{
+    width:100%;
+  }
+}
+
+@media (min-width:801px) and (max-width:1120px){
+  #invGrid.grid:not(.compact-list),
+  .giveaway-grid{
+    grid-template-columns:1fr !important;
+  }
+}
+</style>
 </head>
 <body>
 
