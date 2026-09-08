@@ -24057,16 +24057,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function psaPopEntries(){
     const rows=[];
-    const seen=new Set();
 
+    // Keep one row per listing/slab, even when multiple listings intentionally
+    // reference the same PSA certificate. The UI/counts are listing-based;
+    // startBulkPsaPopSync() still deduplicates the actual PSA cert lookup queue.
     cards.forEach(card=>{
       (Array.isArray(card.grading)?card.grading:[]).forEach((grade,index)=>{
         if(String(grade?.company||"").trim().toUpperCase()!=="PSA") return;
 
         const cert=normalizePsaCertInput(grade?.cert||"");
-        if(!cert || seen.has(cert)) return;
-
-        seen.add(cert);
+        if(!cert) return;
 
         const updatedAt=String(grade?.pop_updated_at||"");
         const updatedMs=updatedAt ? new Date(updatedAt).getTime() : NaN;
@@ -41093,6 +41093,8 @@ function wireShimmer(container){
     const due=entries.filter(psaPopEntryIsDue);
     const withPop=entries.filter(entry=>entry.pop!=null && entry.pop!=="");
     const never=entries.filter(entry=>entry.pop==null || entry.pop==="");
+    const uniqueCertCount=new Set(entries.map(entry=>normalizePsaCertInput(entry.cert)).filter(Boolean)).size;
+    const dueUniqueCertCount=new Set(due.map(entry=>normalizePsaCertInput(entry.cert)).filter(Boolean)).size;
 
     let previousResult=null;
     try{
@@ -41118,8 +41120,8 @@ function wireShimmer(container){
       ` : ""}
 
       <div class="psa-bulk-stats">
-        <article><span>PSA certs</span><strong>${entries.length.toLocaleString()}</strong><small>Unique PSA certificates</small></article>
-        <article><span>Due today</span><strong>${due.length.toLocaleString()}</strong><small>Never synced or 24h+ old</small></article>
+        <article><span>PSA listings</span><strong>${entries.length.toLocaleString()}</strong><small>${uniqueCertCount.toLocaleString()} unique PSA cert${uniqueCertCount===1?"":"s"}</small></article>
+        <article><span>Due today</span><strong>${due.length.toLocaleString()}</strong><small>${dueUniqueCertCount.toLocaleString()} unique cert${dueUniqueCertCount===1?"":"s"} to look up</small></article>
         <article><span>With POP</span><strong>${withPop.length.toLocaleString()}</strong><small>Current saved population</small></article>
         <article><span>Never synced</span><strong>${never.length.toLocaleString()}</strong><small>No POP saved yet</small></article>
       </div>
@@ -41136,7 +41138,7 @@ function wireShimmer(container){
 
         <div class="psa-bulk-note">
           <strong>Daily workflow</strong>
-          <span><b>Update Due PSA POPs</b> refreshes only certs that have never been synced or were last synced at least 24 hours ago. PSA pages open one-by-one in this same tab and automatically return here when finished.</span>
+          <span><b>Update Due PSA POPs</b> counts each due listing separately. If multiple listings share the same cert, PSA is still opened only once for that cert and the returned POP is applied to every matching listing.</span>
         </div>
 
         ${activeState ? `
@@ -41223,13 +41225,13 @@ function wireShimmer(container){
         }
 
         const ok=confirm(
-          `Update ${due.length} PSA POP record${due.length===1?"":"s"} now?\n\n` +
-          `The browser will visit each PSA cert page automatically in this same tab.`
+          `Update ${due.length} due listing${due.length===1?"":"s"} now?\n\n` +
+          `${dueUniqueCertCount} unique PSA cert${dueUniqueCertCount===1?"":"s"} will be looked up. Shared certs are queried once and applied to every matching listing.`
         );
         if(!ok) return;
 
         button.disabled=true;
-        showToast(`Starting PSA POP refresh for ${due.length} cert${due.length===1?"":"s"}…`);
+        showToast(`Starting PSA POP refresh · ${due.length} listing${due.length===1?"":"s"} · ${dueUniqueCertCount} unique cert${dueUniqueCertCount===1?"":"s"}…`);
 
         requestAnimationFrame(()=>{
           startBulkPsaPopSync(due,"Daily PSA POP");
@@ -44670,7 +44672,7 @@ function wireShimmer(container){
     pendingCloneCard = null;
     view.innerHTML = `
       <div class="page-head"><div><div class="eyebrow">${cloneDraft ? "Clone Listing" : "New listing"}</div><h2>${cloneDraft ? "Clone card" : "Add a card"}</h2><p>${cloneDraft ? "Review the copied details and add new photos before saving." : "List a new card in your inventory."}</p></div></div>
-      ${cloneDraft ? `<div class="clone-card-notice"><strong>Cloning safely</strong><span>Review every field before saving. Card ID, grading certificate, sold information, timestamps and view count were cleared.</span></div>` : ""}
+      ${cloneDraft ? `<div class="clone-card-notice"><strong>Cloning safely</strong><span>Review every field before saving. PSA certificate numbers are copied when available, while POP data, sold information, timestamps and view count are cleared.</span></div>` : ""}
       <form class="form-card" id="addForm">
         ${fieldsTemplate("add")}
         <div class="modal-actions">
