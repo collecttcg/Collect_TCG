@@ -21577,6 +21577,128 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return best;
   }
 
+  function chooseCollectionCollageGridWithCenterGap(count,areaW,areaH,gap){
+    const desiredAspect=0.704;
+    let best=null;
+    const maxCols=Math.min(14,Math.max(4,count+2));
+    for(let cols=2; cols<=maxCols; cols++){
+      const minRows=Math.max(2,Math.ceil(count/cols));
+      const maxRows=Math.min(18,Math.ceil((count+6)/cols)+4);
+      for(let rows=minRows; rows<=maxRows; rows++){
+        const cellW=(areaW-gap*(cols-1))/cols;
+        const cellH=(areaH-gap*(rows-1))/rows;
+        if(cellW<=20 || cellH<=20) continue;
+
+        const reserveCols = cols>=7 ? 2 : 1;
+        const reserveRows = rows>=6 ? 2 : 1;
+        const startCol = Math.max(0,Math.floor((cols-reserveCols)/2));
+        const startRow = Math.max(0,Math.floor((rows-reserveRows)/2));
+        const capacity = cols*rows - reserveCols*reserveRows;
+        if(capacity < count) continue;
+
+        const qrW = reserveCols*cellW + gap*(reserveCols-1);
+        const qrH = reserveRows*cellH + gap*(reserveRows-1);
+        const qrSize = Math.min(qrW,qrH);
+        if(qrSize < 150) continue;
+
+        const area=cellW*cellH;
+        const cellAspect=cellW/cellH;
+        const aspectPenalty=Math.abs(Math.log(Math.max(.01,cellAspect/desiredAspect)));
+        const unused=capacity-count;
+        const qrBonus=Math.log(Math.max(1,qrSize))*1.4;
+        const score=Math.log(Math.max(1,area))*5-aspectPenalty*2-unused*.03+qrBonus;
+
+        if(!best || score>best.score){
+          const positions=[];
+          for(let r=0;r<rows;r++){
+            for(let c=0;c<cols;c++){
+              const inGap = c>=startCol && c<startCol+reserveCols && r>=startRow && r<startRow+reserveRows;
+              if(inGap) continue;
+              positions.push({x:c*(cellW+gap),y:r*(cellH+gap),col:c,row:r});
+            }
+          }
+          best={
+            cols,rows,cellW,cellH,score,
+            positions,
+            qrBox:{
+              x:startCol*(cellW+gap),
+              y:startRow*(cellH+gap),
+              w:qrW,
+              h:qrH,
+              reserveCols,
+              reserveRows,
+              startCol,
+              startRow
+            }
+          };
+        }
+      }
+    }
+    return best || chooseCollectionCollageGrid(count,areaW,areaH,gap);
+  }
+
+  function createCollectionCollageQrCode(text,size=640){
+    return new Promise((resolve,reject)=>{
+      if(typeof QRCode!=="function"){
+        reject(new Error("QR library could not load"));
+        return;
+      }
+      const holder=document.createElement("div");
+      holder.style.position="fixed";
+      holder.style.left="-99999px";
+      holder.style.top="0";
+      holder.style.width=size+"px";
+      holder.style.height=size+"px";
+      holder.style.pointerEvents="none";
+      holder.setAttribute("aria-hidden","true");
+      document.body.appendChild(holder);
+      try{
+        new QRCode(holder,{
+          text,
+          width:size,
+          height:size,
+          colorDark:"#111111",
+          colorLight:"#ffffff",
+          correctLevel:QRCode.CorrectLevel.H
+        });
+      }catch(error){
+        holder.remove();
+        reject(error);
+        return;
+      }
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          try{
+            const qrCanvas=holder.querySelector("canvas");
+            const qrImg=holder.querySelector("img");
+            if(qrCanvas){
+              const copy=document.createElement("canvas");
+              copy.width=qrCanvas.width;
+              copy.height=qrCanvas.height;
+              const copyCtx=copy.getContext("2d");
+              copyCtx.drawImage(qrCanvas,0,0);
+              holder.remove();
+              resolve(copy);
+              return;
+            }
+            if(qrImg && qrImg.complete){
+              const img=new Image();
+              img.onload=()=>{ holder.remove(); resolve(img); };
+              img.onerror=(err)=>{ holder.remove(); reject(err || new Error("Could not load QR image")); };
+              img.src=qrImg.src;
+              return;
+            }
+            holder.remove();
+            reject(new Error("Could not generate QR code"));
+          }catch(error){
+            holder.remove();
+            reject(error);
+          }
+        });
+      });
+    });
+  }
+
   function closeCollectionCollageSettingsModal(){
     const overlay=$("collectionCollageSettingsOverlay");
     if(overlay) overlay.remove();
@@ -21654,10 +21776,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             <label class="collection-collage-check"><input id="collectionCollageShowDate" type="checkbox" checked> Show date</label>
             <label class="collection-collage-check"><input id="collectionCollageShowWebsite" type="checkbox" checked> Show website footer</label>
             <label class="collection-collage-check"><input id="collectionCollageShowPrice" type="checkbox"> Show price below each card</label>
+            <label class="collection-collage-check"><input id="collectionCollageShowQr" type="checkbox"> Add centre QR code to Inventory page</label>
           </div>
 
           <div class="collection-collage-preview-note">
-            Export uses the first image of every card in the currently displayed ${scopeLabel} results and preserves your ${scopeLabel} custom order.
+            Export uses the first image of every card in the currently displayed ${scopeLabel} results and preserves your ${scopeLabel} custom order. If QR is enabled, the code points to your Inventory page and the cards are arranged around it.
           </div>
         </div>
 
@@ -21686,7 +21809,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         showLogo:!!$("collectionCollageShowLogo")?.checked,
         showDate:!!$("collectionCollageShowDate")?.checked,
         showWebsite:!!$("collectionCollageShowWebsite")?.checked,
-        showPrice:!!$("collectionCollageShowPrice")?.checked
+        showPrice:!!$("collectionCollageShowPrice")?.checked,
+        showQr:!!$("collectionCollageShowQr")?.checked
       };
       close();
       await exportCollectionCollage(settings);
@@ -21740,11 +21864,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       const footerHeight=settings.showWebsite ? Math.round(height*0.022) : 0;
       const cardsTop=padding+headerHeight;
       const cardsBottom=height-padding-footerHeight;
-      const gridInfo=chooseCollectionCollageGrid(prepared.length,width-padding*2,cardsBottom-cardsTop,gap);
+      const gridInfo=(settings.showQr ? chooseCollectionCollageGridWithCenterGap(prepared.length,width-padding*2,cardsBottom-cardsTop,gap) : chooseCollectionCollageGrid(prepared.length,width-padding*2,cardsBottom-cardsTop,gap));
       const cols=gridInfo.cols;
       const rows=gridInfo.rows;
       const slotW=gridInfo.cellW;
       const slotH=gridInfo.cellH;
+      const slotPositions=(Array.isArray(gridInfo.positions) && gridInfo.positions.length ? gridInfo.positions : Array.from({length:prepared.length},(_,index)=>({x:(index%cols)*(slotW+gap),y:Math.floor(index/cols)*(slotH+gap)})));
+      const qrBox=gridInfo.qrBox||null;
       canvas.width=width;
       canvas.height=height;
 
@@ -21794,14 +21920,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       let collageLogoCleanup=()=>{};
       if(settings.showLogo){
         try{
-          const logoSrc=safeHttpUrl(document.querySelector(".shop-logo")?.src||"") || document.querySelector(".shop-logo")?.src || "";
-          if(logoSrc){
-            const logoAsset=await loadImageForCollectionCollage(logoSrc);
-            collageLogo=logoAsset.img;
-            collageLogoCleanup=logoAsset.cleanup||(()=>{});
-          }
+          collageLogo=await loadWatermarkLogo();
         }catch(error){
-          console.warn("Could not load collage logo:",error);
+          console.warn("Could not load collage watermark logo:",error);
+        }
+      }
+
+      let collageQr=null;
+      if(settings.showQr && qrBox){
+        try{
+          collageQr=await createCollectionCollageQrCode(CARD_WATERMARK_URL,720);
+        }catch(error){
+          console.warn("Could not generate collage QR code:",error);
         }
       }
 
@@ -21814,23 +21944,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         ctx.fillStyle="#f8f8fb";
         const titleFontSize=Math.round(width*0.021);
         ctx.font=`700 ${titleFontSize}px Inter, system-ui, sans-serif`;
-        const titleWidth=ctx.measureText(collageTitle).width;
-        const logoSize=collageLogo ? Math.max(64,Math.round(width*0.026)) : 0;
-        const logoGap=collageLogo ? Math.max(18,Math.round(width*0.007)) : 0;
-        const groupWidth=titleWidth+logoSize+logoGap;
-        const groupStart=width/2-groupWidth/2;
-        if(collageLogo){
-          const logoY=padding-10;
-          ctx.save();
-          ctx.shadowBlur=12;
-          ctx.shadowOffsetY=3;
-          ctx.drawImage(collageLogo,groupStart,logoY,logoSize,logoSize);
-          ctx.restore();
-        }
-        ctx.textAlign="left";
-        const titleX=groupStart+logoSize+logoGap;
-        const titleY=padding-8+(collageLogo ? Math.max(0,(logoSize-titleFontSize)*0.42) : 0);
-        ctx.fillText(collageTitle,titleX,titleY);
+        ctx.textAlign="center";
+        const titleY=padding-8;
+        ctx.fillText(collageTitle,width/2,titleY);
         ctx.restore();
 
         const lineY=padding+Math.max(90,Math.round(width*0.025));
@@ -21846,13 +21962,6 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         ctx.moveTo(width*0.31,lineY);
         ctx.lineTo(width*0.69,lineY);
         ctx.stroke();
-      }else if(collageLogo){
-        const logoSize=Math.max(72,Math.round(width*0.030));
-        ctx.save();
-        ctx.shadowColor="rgba(0,0,0,0.36)";
-        ctx.shadowBlur=14;
-        ctx.drawImage(collageLogo,width/2-logoSize/2,padding-8,logoSize,logoSize);
-        ctx.restore();
       }
 
       if(settings.showDate){
@@ -21886,11 +21995,62 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         showToast(`Preparing collage… ${Math.min(loadedCount,prepared.length)}/${prepared.length}`);
       }
 
+      if(collageQr && qrBox){
+        const panelX=padding+qrBox.x;
+        const panelY=cardsTop+qrBox.y;
+        const panelW=qrBox.w;
+        const panelH=qrBox.h;
+        const panelRadius=settings.corners==="square" ? 8 : Math.max(20,Math.round(Math.min(panelW,panelH)*0.09));
+        const panelBg=ctx.createLinearGradient(panelX,panelY,panelX,panelY+panelH);
+        panelBg.addColorStop(0,"rgba(255,255,255,0.13)");
+        panelBg.addColorStop(1,"rgba(255,255,255,0.06)");
+        ctx.save();
+        collectionCollageRoundedRect(ctx,panelX,panelY,panelW,panelH,panelRadius);
+        ctx.fillStyle=panelBg;
+        ctx.fill();
+        ctx.strokeStyle="rgba(255,255,255,0.18)";
+        ctx.lineWidth=2;
+        ctx.stroke();
+        ctx.restore();
+
+        const qrInset=Math.max(18,Math.round(Math.min(panelW,panelH)*0.08));
+        const labelTop=Math.max(24,Math.round(panelH*0.14));
+        const labelBottom=Math.max(26,Math.round(panelH*0.14));
+        const qrSize=Math.max(120,Math.min(panelW-qrInset*2,panelH-qrInset*2-labelTop-labelBottom));
+        const qrX=panelX+(panelW-qrSize)/2;
+        const qrY=panelY+qrInset+labelTop;
+
+        ctx.save();
+        ctx.textAlign="center";
+        ctx.textBaseline="top";
+        ctx.fillStyle="rgba(248,248,251,0.95)";
+        ctx.font=`700 ${Math.max(18,Math.round(qrSize*0.11))}px Inter, system-ui, sans-serif`;
+        ctx.fillText("Scan to browse",panelX+panelW/2,panelY+qrInset*0.72);
+        ctx.fillStyle="rgba(248,248,251,0.76)";
+        ctx.font=`500 ${Math.max(16,Math.round(qrSize*0.075))}px Inter, system-ui, sans-serif`;
+        ctx.fillText("Collect TCG Inventory",panelX+panelW/2,panelY+qrInset*0.72+Math.max(26,Math.round(qrSize*0.13)));
+        ctx.restore();
+
+        ctx.save();
+        collectionCollageRoundedRect(ctx,qrX-10,qrY-10,qrSize+20,qrSize+20,settings.corners==="square" ? 6 : Math.max(14,Math.round(qrSize*0.08)));
+        ctx.fillStyle="rgba(255,255,255,0.96)";
+        ctx.fill();
+        ctx.restore();
+        ctx.drawImage(collageQr,qrX,qrY,qrSize,qrSize);
+
+        ctx.save();
+        ctx.textAlign="center";
+        ctx.textBaseline="bottom";
+        ctx.fillStyle="rgba(248,248,251,0.55)";
+        ctx.font=`400 ${Math.max(14,Math.round(qrSize*0.058))}px Inter, system-ui, sans-serif`;
+        ctx.fillText("collecttcg.github.io",panelX+panelW/2,panelY+panelH-qrInset*0.75);
+        ctx.restore();
+      }
+
       loaded.forEach((entry,index)=>{
-        const col=index%cols;
-        const row=Math.floor(index/cols);
-        const x=padding+col*(slotW+gap);
-        const y=cardsTop+row*(slotH+gap);
+        const position=slotPositions[index] || {x:(index%cols)*(slotW+gap),y:Math.floor(index/cols)*(slotH+gap)};
+        const x=padding+position.x;
+        const y=cardsTop+position.y;
         const outerRadius=settings.corners==="square" ? 4 : Math.max(14,Math.round(slotW*.035));
         const innerRadius=settings.corners==="square" ? 3 : Math.max(12,Math.round(slotW*.032));
         const priceLabel=settings.showPrice ? collageCardPriceLabel(entry.card) : "";
@@ -21951,9 +22111,22 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(settings.showWebsite){
         ctx.fillStyle="rgba(247,248,251,0.42)";
         ctx.font=`400 ${Math.max(18,Math.round(width*0.0062))}px Inter, system-ui, sans-serif`;
-        ctx.textAlign="right";
-        ctx.fillText("collecttcg.github.io",width-padding,height-Math.round(padding*.55));
         ctx.textAlign="left";
+        ctx.fillText("collecttcg.github.io",padding,height-Math.round(padding*.55));
+        ctx.textAlign="left";
+      }
+
+      if(collageLogo && settings.showLogo){
+        const logoSize=Math.max(86,Math.round(width*0.056));
+        const logoX=width-padding-logoSize;
+        const logoY=height-padding-logoSize-Math.max(0,footerHeight-Math.round(logoSize*0.12));
+        ctx.save();
+        ctx.shadowColor="rgba(0,0,0,0.32)";
+        ctx.shadowBlur=18;
+        ctx.shadowOffsetY=6;
+        ctx.globalAlpha=0.96;
+        ctx.drawImage(collageLogo,logoX,logoY,logoSize,logoSize);
+        ctx.restore();
       }
 
       try{ collageLogoCleanup(); }catch{}
