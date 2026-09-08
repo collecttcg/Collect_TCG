@@ -19729,11 +19729,11 @@ body.owner-mode .card-actions.owner-only {
       </button>
       <button type="button" class="clone-option-card" data-clone-mode="grading">
         <strong>With grading</strong>
-        <span>Copies grading company and grade. Images are cleared and certificate numbers are removed.</span>
+        <span>Copies grading company, grade and certificate number when available. Images are cleared.</span>
       </button>
       <button type="button" class="clone-option-card recommended" data-clone-mode="safe-all">
         <strong>Everything safe</strong>
-        <span>Copies images, grade, prices and metadata while clearing listing-specific/private fields.</span>
+        <span>Copies images, grade, certificate number when available, prices and metadata while clearing listing-specific/private fields.</span>
       </button>
     </div>
 
@@ -24381,57 +24381,68 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       return;
     }
 
-    if(matches.length>1){
-      if(continuePsaBulkSync(cert,{ok:false,reason:"Duplicate PSA cert in inventory",encodedState:incomingBulkState})) return;
-      view.innerHTML=`
-        <div class="empty">
-          <h2>Duplicate PSA Cert</h2>
-          <p>More than one card currently uses PSA cert <strong>${escapeHtml(cert)}</strong>. POP was not changed.</p>
-          <p>Correct the duplicate cert number first and retry.</p>
-          <button type="button" class="btn-primary" id="psaSyncBackBtn">Browse Inventory</button>
-        </div>`;
-      $("psaSyncBackBtn")?.addEventListener("click",()=>goToRoute("inventory"));
-      return;
-    }
+    // The same PSA cert may intentionally be referenced by more than one listing.
+    // POP is cert-level information, so one successful lookup should populate every
+    // matching listing instead of treating the duplicate reference as an error.
+    const matchesByCard=new Map();
+    matches.forEach(match=>{
+      const id=String(match.card?.id||"");
+      if(!id) return;
+      if(!matchesByCard.has(id)) matchesByCard.set(id,{card:match.card,indexes:new Set()});
+      matchesByCard.get(id).indexes.add(match.index);
+    });
 
-    const match=matches[0];
-    const nextGrades=(Array.isArray(match.card.grading)?match.card.grading:[]).map((grade,index)=>
-      index===match.index
-        ? {
-            ...grade,
-            cert,
-            pop_count:Math.round(pop),
-            pop_higher:higher!=null && Number.isFinite(higher) && higher>=0 ? Math.round(higher) : null,
-            pop_updated_at:new Date().toISOString()
-          }
-        : grade
-    );
+    const targets=[...matchesByCard.values()];
+    const popUpdatedAt=new Date().toISOString();
 
     view.innerHTML=`
       <div class="empty psa-sync-waiting">
         <h2>Updating PSA POP…</h2>
-        <p>${escapeHtml(match.card.name)} · Cert ${escapeHtml(cert)}</p>
+        <p>Cert ${escapeHtml(cert)} · applying POP to ${escapeHtml(String(targets.length))} ${targets.length===1?"listing":"listings"}</p>
       </div>`;
 
-    const saved=await updateCardStorage({...match.card,grading:nextGrades});
-    if(!saved){
-      if(continuePsaBulkSync(cert,{ok:false,reason:"Supabase card update failed",encodedState:incomingBulkState})) return;
-      view.innerHTML=`
-        <div class="empty">
-          <h2>PSA POP Update Failed</h2>
-          <p>The card was found, but Supabase did not accept the update.</p>
-          <button type="button" class="btn-primary" id="psaSyncRetryBtn">Retry</button>
-        </div>`;
-      $("psaSyncRetryBtn")?.addEventListener("click",handleIncomingPsaPopSync);
-      return;
+    const savedCards=[];
+    for(const target of targets){
+      const nextGrades=(Array.isArray(target.card.grading)?target.card.grading:[]).map((grade,index)=>
+        target.indexes.has(index)
+          ? {
+              ...grade,
+              cert,
+              pop_count:Math.round(pop),
+              pop_higher:higher!=null && Number.isFinite(higher) && higher>=0 ? Math.round(higher) : null,
+              pop_updated_at:popUpdatedAt
+            }
+          : grade
+      );
+
+      const saved=await updateCardStorage({...target.card,grading:nextGrades});
+      if(!saved){
+        if(continuePsaBulkSync(cert,{ok:false,reason:"Supabase card update failed",encodedState:incomingBulkState})) return;
+        view.innerHTML=`
+          <div class="empty">
+            <h2>PSA POP Update Failed</h2>
+            <p>PSA returned the POP, but Supabase did not accept the update for every matching listing.</p>
+            <button type="button" class="btn-primary" id="psaSyncRetryBtn">Retry</button>
+          </div>`;
+        $("psaSyncRetryBtn")?.addEventListener("click",handleIncomingPsaPopSync);
+        return;
+      }
+
+      replaceCardInMemory(saved);
+      savedCards.push(saved);
     }
 
-    replaceCardInMemory(saved);
-    showToast(`PSA POP ${Math.round(pop).toLocaleString()} saved`);
+    showToast(
+      targets.length>1
+        ? `PSA POP ${Math.round(pop).toLocaleString()} saved to ${targets.length} listings`
+        : `PSA POP ${Math.round(pop).toLocaleString()} saved`
+    );
 
     if(continuePsaBulkSync(cert,{ok:true,encodedState:incomingBulkState})) return;
 
-    goToRoute(`card/${encodeURIComponent(saved.id)}`);
+    const firstSaved=savedCards[0];
+    if(firstSaved) goToRoute(`card/${encodeURIComponent(firstSaved.id)}`);
+    else goToRoute("inventory");
   }
 
   // ---------------- Router ----------------
@@ -39956,7 +39967,9 @@ function wireShimmer(container){
       ? card.grading.filter(g=>g&&g.company).map(g=>({
           company:g.company||"PSA",
           grade:String(g.grade||""),
-          cert:"",
+          // A cloned slab may intentionally represent the same physical cert/reference.
+          // Preserve the cert when available, but refresh POP fields independently later.
+          cert:String(g.cert||"").trim(),
           pop_count:null,
           pop_higher:null,
           pop_updated_at:null
