@@ -40879,6 +40879,7 @@ function wireShimmer(container){
 
       const originalText=applyBtn.textContent;
       applyBtn.disabled=true;
+      status.textContent="Preparing bulk update…";
       let savedCount=0;
       let failedCount=0;
 
@@ -43974,6 +43975,8 @@ function wireShimmer(container){
         notes:sanitizeOwnerPrivateNotes(row.notes||"")
       })).filter(row=>row.card_id);
 
+      if(!payload.length) throw new Error("No valid card IDs were available for the private bulk update.");
+
       for(let start=0;start<payload.length;start+=100){
         const chunk=payload.slice(start,start+100);
         const {error}=await supabaseClient
@@ -44123,6 +44126,16 @@ function wireShimmer(container){
       box.addEventListener("change",updateSummary);
     });
 
+    // Private owner fields are separate from the public metadata checkboxes,
+    // so wire them explicitly. Without this, checking Private owner tags/notes
+    // does not enable the controls or refresh the Apply button state.
+    [privateTagsEnable,privateTagsMode,privateTagsValue,privateNotesEnable,privateNotesMode,privateNotesValue]
+      .filter(Boolean)
+      .forEach(el=>{
+        el.addEventListener("input",updateSummary);
+        el.addEventListener("change",updateSummary);
+      });
+
     ["game","series","era","language","format","condition","availability"].forEach(field=>{
       const input=$(`bulkMetaValue_${field}`);
       if(!input) return;
@@ -44142,10 +44155,20 @@ function wireShimmer(container){
       const err=validateChanges(changes) || validatePrivateChanges(privateChanges);
 
       if(err){
+        status.textContent=err;
         showToast(err);
         return;
       }
-      if(!selected.length || !totalFields) return;
+      if(!selected.length){
+        status.textContent="Select at least one listing first.";
+        showToast("Select at least one listing");
+        return;
+      }
+      if(!totalFields){
+        status.textContent="Enable at least one field to update.";
+        showToast("Choose at least one field to update");
+        return;
+      }
 
       const includesSold=changes.availability==="Sold";
       const privateLabel=privateFields.length ? ` including ${privateFields.length} private owner field${privateFields.length===1?"":"s"}` : "";
@@ -44208,12 +44231,16 @@ function wireShimmer(container){
 
         if(privateFields.length){
           applyBtn.textContent="Saving private owner information…";
+          status.textContent=`Saving private owner information for ${privateRows.length} listing${privateRows.length===1?"":"s"}…`;
           try{
             await savePrivateMetaRows(privateRows);
           }catch(error){
             console.error("Bulk private metadata save error:",error);
-            showToast("Could not save private owner information");
-            status.textContent="Public changes may have saved, but private owner information failed to save.";
+            const detail=String(error?.message||error?.details||error?.hint||"").trim();
+            showToast(detail ? `Private owner save failed: ${detail.slice(0,120)}` : "Could not save private owner information");
+            status.textContent=detail
+              ? `Private owner information failed to save: ${detail}`
+              : "Public changes may have saved, but private owner information failed to save.";
             return;
           }
         }
