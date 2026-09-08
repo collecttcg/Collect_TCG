@@ -19978,10 +19978,14 @@ body.light-mode #invGrid .card img.thumb{
 @media print{
   #invGrid .card img.thumb{filter:none !important;}
 }
+
+.collection-export-collage-btn{white-space:nowrap;}
+.collection-collage-progress{font-variant-numeric:tabular-nums;}
 </style>
 
 <!-- V47: Home Recently Added now uses the shared home-storefront-grid layout (same as High Value / Vintage / Recently Sold). -->
   <!-- v49: Inventory grouped catalogue uses no per-page selector or pagination. -->
+  <!-- v51: Owner-only Collection collage export downloads a high-resolution social-media mesh using the first image of each Collection card. -->
   <!-- v50: Overview/listing thumbnails dimmed a little more for eye comfort. -->
 </head>
 <body>
@@ -21078,6 +21082,257 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     console.warn(`Blocked non-owner attempt to ${action}.`);
     showToast("Owner login required");
     return false;
+  }
+
+  function setCollectionCollageExportBusy(isBusy,label="Preparing collage…"){
+    [$("collectionExportCollageBtn"),$("collectionMobileCollageBtn")].filter(Boolean).forEach(btn=>{
+      if(isBusy){
+        btn.dataset.originalLabel=btn.dataset.originalLabel||btn.textContent;
+        btn.disabled=true;
+        btn.textContent=label;
+      }else{
+        btn.disabled=false;
+        btn.textContent=btn.dataset.originalLabel||"⬇ Export Collage";
+      }
+    });
+  }
+
+  function collectionCardsForCollage(){
+    if(listingAvailabilityScope!=="collection") return [];
+    return getFiltered().filter(card=>cardMatchesListingScope(card,"collection"));
+  }
+
+  function collectionCollageRoundedRect(ctx,x,y,w,h,r){
+    const radius=Math.max(0,Math.min(r,Math.min(w,h)/2));
+    ctx.beginPath();
+    ctx.moveTo(x+radius,y);
+    ctx.arcTo(x+w,y,x+w,y+h,radius);
+    ctx.arcTo(x+w,y+h,x,y+h,radius);
+    ctx.arcTo(x,y+h,x,y,radius);
+    ctx.arcTo(x,y,x+w,y,radius);
+    ctx.closePath();
+  }
+
+  function collectionCollageDrawImageContain(ctx,img,x,y,w,h){
+    const sw=Math.max(1,img.naturalWidth||img.width||1);
+    const sh=Math.max(1,img.naturalHeight||img.height||1);
+    const scale=Math.min(w/sw,h/sh);
+    const dw=sw*scale;
+    const dh=sh*scale;
+    const dx=x+(w-dw)/2;
+    const dy=y+(h-dh)/2;
+    ctx.drawImage(img,dx,dy,dw,dh);
+  }
+
+  async function loadImageForCollectionCollage(url){
+    const safe=safeHttpUrl(url);
+    if(!safe) throw new Error("Missing image URL");
+
+    let objectUrl="";
+    try{
+      const response=await fetch(safe,{mode:"cors",cache:"force-cache"});
+      if(response.ok){
+        const blob=await response.blob();
+        objectUrl=URL.createObjectURL(blob);
+      }
+    }catch(error){
+      console.warn("Collection collage fetch fallback:",error);
+    }
+
+    const img=new Image();
+    img.decoding="async";
+    img.crossOrigin="anonymous";
+    img.referrerPolicy="no-referrer";
+
+    const src=objectUrl||safe;
+    await new Promise((resolve,reject)=>{
+      img.onload=()=>resolve();
+      img.onerror=()=>reject(new Error("Image could not be loaded"));
+      img.src=src;
+    });
+
+    return {
+      img,
+      cleanup:()=>{ if(objectUrl) URL.revokeObjectURL(objectUrl); }
+    };
+  }
+
+  function chooseCollectionCollageColumns(count,width,targetHeight,padding,gap){
+    const maxCols=Math.min(9,Math.max(4,Math.ceil(Math.sqrt(Math.max(1,count))))+2);
+    let bestCols=4;
+    let bestScore=Number.POSITIVE_INFINITY;
+
+    for(let cols=4; cols<=maxCols; cols++){
+      const slotW=Math.floor((width-padding*2-gap*(cols-1))/cols);
+      if(slotW<150) continue;
+      const slotH=Math.round(slotW*1.42);
+      const rows=Math.ceil(count/cols);
+      const totalH=padding+170+rows*slotH+Math.max(0,rows-1)*gap+padding;
+      const aspectScore=Math.abs(totalH-targetHeight);
+      const rowPenalty=rows*3;
+      const score=aspectScore+rowPenalty;
+      if(score<bestScore){
+        bestScore=score;
+        bestCols=cols;
+      }
+    }
+    return bestCols;
+  }
+
+  async function exportCollectionCollage(){
+    if(!requireCollectionOrderOwner("export Collection collage")) return;
+    if(listingAvailabilityScope!=="collection"){
+      showToast("Open Collection first");
+      return;
+    }
+
+    const items=collectionCardsForCollage();
+    if(!items.length){
+      showToast("No Collection cards to export");
+      return;
+    }
+
+    setCollectionCollageExportBusy(true,"Preparing…");
+    showToast(`Preparing collage for ${items.length} Collection cards…`);
+
+    try{
+      const prepared=[];
+      for(const card of items){
+        let src=safeHttpUrl(card?.thumbnail_url||card?.image||(Array.isArray(card?.images)?card.images[0]:""));
+        if(!src && card?._images_loaded===false){
+          await ensureCardImagesLoaded(card);
+          src=safeHttpUrl(card?.thumbnail_url||card?.image||(Array.isArray(card?.images)?card.images[0]:""));
+        }
+        if(src) prepared.push({card,src});
+      }
+
+      if(!prepared.length){
+        showToast("No Collection images available");
+        return;
+      }
+
+      const canvas=document.createElement("canvas");
+      const width=3600;
+      const targetHeight=Math.round(width*1.25);
+      const padding=120;
+      const gap=24;
+      const headerHeight=170;
+      const cols=chooseCollectionCollageColumns(prepared.length,width,targetHeight,padding,gap);
+      const slotW=Math.floor((width-padding*2-gap*(cols-1))/cols);
+      const slotH=Math.round(slotW*1.42);
+      const rows=Math.ceil(prepared.length/cols);
+      const height=padding+headerHeight+rows*slotH+Math.max(0,rows-1)*gap+padding;
+      canvas.width=width;
+      canvas.height=height;
+
+      const ctx=canvas.getContext("2d",{alpha:false});
+      ctx.fillStyle="#0f1319";
+      ctx.fillRect(0,0,width,height);
+
+      const grad=ctx.createLinearGradient(0,0,0,height);
+      grad.addColorStop(0,"rgba(255,255,255,0.045)");
+      grad.addColorStop(0.2,"rgba(255,255,255,0.01)");
+      grad.addColorStop(1,"rgba(255,255,255,0)");
+      ctx.fillStyle=grad;
+      ctx.fillRect(0,0,width,height);
+
+      ctx.fillStyle="#f7f8fb";
+      ctx.font="700 72px Inter, system-ui, sans-serif";
+      ctx.textBaseline="top";
+      ctx.fillText("Collect TCG Collection",padding,padding-6);
+
+      ctx.fillStyle="rgba(247,248,251,0.72)";
+      ctx.font="400 34px Inter, system-ui, sans-serif";
+      const subtitle=`${prepared.length} cards · first image from each Collection listing`;
+      ctx.fillText(subtitle,padding,padding+88);
+
+      ctx.textAlign="right";
+      ctx.fillStyle="rgba(247,248,251,0.62)";
+      ctx.font="500 28px Inter, system-ui, sans-serif";
+      ctx.fillText(new Date().toLocaleDateString(),width-padding,padding+94);
+      ctx.textAlign="left";
+
+      const loaded=[];
+      const cleanups=[];
+      let loadedCount=0;
+      const batchSize=8;
+      for(let i=0;i<prepared.length;i+=batchSize){
+        const batch=prepared.slice(i,i+batchSize);
+        const results=await Promise.all(batch.map(async entry=>{
+          try{
+            const asset=await loadImageForCollectionCollage(entry.src);
+            return {...entry,...asset};
+          }catch(error){
+            console.warn("Collection collage image skipped:",entry.src,error);
+            return {...entry,img:null,cleanup:()=>{}};
+          }
+        }));
+        results.forEach(result=>{
+          loaded.push(result);
+          if(typeof result.cleanup==="function") cleanups.push(result.cleanup);
+          loadedCount+=1;
+        });
+        showToast(`Preparing collage… ${Math.min(loadedCount,prepared.length)}/${prepared.length}`);
+      }
+
+      loaded.forEach((entry,index)=>{
+        const col=index%cols;
+        const row=Math.floor(index/cols);
+        const x=padding+col*(slotW+gap);
+        const y=padding+headerHeight+row*(slotH+gap);
+
+        ctx.save();
+        collectionCollageRoundedRect(ctx,x,y,slotW,slotH,26);
+        ctx.fillStyle="#1b2028";
+        ctx.fill();
+        ctx.restore();
+
+        if(entry.img){
+          ctx.save();
+          collectionCollageRoundedRect(ctx,x+2,y+2,slotW-4,slotH-4,24);
+          ctx.clip();
+          collectionCollageDrawImageContain(ctx,entry.img,x+8,y+8,slotW-16,slotH-16);
+          ctx.restore();
+        }else{
+          ctx.save();
+          collectionCollageRoundedRect(ctx,x+2,y+2,slotW-4,slotH-4,24);
+          ctx.fillStyle="#2b313b";
+          ctx.fill();
+          ctx.fillStyle="rgba(247,248,251,0.72)";
+          ctx.font="600 28px Inter, system-ui, sans-serif";
+          ctx.textAlign="center";
+          ctx.textBaseline="middle";
+          ctx.fillText("No Image",x+slotW/2,y+slotH/2);
+          ctx.restore();
+        }
+      });
+
+      ctx.fillStyle="rgba(247,248,251,0.42)";
+      ctx.font="400 22px Inter, system-ui, sans-serif";
+      ctx.textAlign="right";
+      ctx.fillText("collecttcg.github.io",width-padding,height-padding+24);
+      ctx.textAlign="left";
+
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png",1));
+      if(!blob) throw new Error("Could not generate collage image");
+
+      const url=URL.createObjectURL(blob);
+      const link=document.createElement("a");
+      const stamp=new Date().toISOString().slice(0,10);
+      link.href=url;
+      link.download=`collect-tcg-collection-collage-${stamp}.png`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1500);
+      cleanups.forEach(fn=>{ try{ fn(); }catch{} });
+      showToast(`Collection collage downloaded (${prepared.length} cards)`);
+    }catch(error){
+      console.error("Collection collage export failed:",error);
+      showToast(error?.message ? `Could not export collage: ${error.message}` : "Could not export Collection collage");
+    }finally{
+      setCollectionCollageExportBusy(false);
+    }
   }
 
   let cardLookupVersion=-1;
@@ -29839,6 +30094,12 @@ function wireShimmer(container){
                     title="Drag Collection cards into your preferred default order">
               ⇅ Rearrange Cards
             </button>
+            <button type="button"
+                    class="btn-ghost collection-export-collage-btn"
+                    id="collectionExportCollageBtn"
+                    title="Download a high-resolution collage using the first image of each Collection card">
+              ⬇ Export Collage
+            </button>
           ` : ""}
           ${scope==="inventory" && canManageCollectionOrder() ? `
             <button type="button"
@@ -29894,6 +30155,14 @@ function wireShimmer(container){
                   id="${scope==="collection" ? "collectionMobileOwnerBtn" : "inventoryMobileOwnerBtn"}">
             ⇅ Rearrange ${scope==="collection" ? "Collection" : "Inventory"}
           </button>
+          ${scope==="collection" ? `
+            <button type="button"
+                    class="btn-ghost collection-mobile-owner-btn"
+                    id="collectionMobileCollageBtn"
+                    title="Download a high-resolution collage using the first image of each Collection card">
+              ⬇ Export Collage
+            </button>
+          ` : ""}
           <button type="button"
                   class="btn-ghost collection-mobile-owner-logout"
                   id="${scope==="collection" ? "collectionMobileOwnerLogoutBtn" : "inventoryMobileOwnerLogoutBtn"}"
@@ -31163,6 +31432,8 @@ function wireShimmer(container){
     $("collectionMobileOwnerBtn")?.addEventListener("click",handleCollectionRearrangeButton);
     $("inventoryRearrangeBtn")?.addEventListener("click",handleCollectionRearrangeButton);
     $("inventoryMobileOwnerBtn")?.addEventListener("click",handleCollectionRearrangeButton);
+    $("collectionExportCollageBtn")?.addEventListener("click",exportCollectionCollage);
+    $("collectionMobileCollageBtn")?.addEventListener("click",exportCollectionCollage);
     [$("collectionMobileOwnerLogoutBtn"),$("inventoryMobileOwnerLogoutBtn")].filter(Boolean).forEach(btn=>{
       btn.addEventListener("click",async()=>{
         if(collectionRearrangeMode) await finishCollectionRearrangeMode(false);
