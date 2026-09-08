@@ -5289,6 +5289,62 @@
   .duplicate-row span{margin-top:3px;color:var(--text-muted);font-size:7.5px;}
   .duplicate-actions{display:flex;gap:5px;flex:0 0 auto;}
 
+  /* ---------- Inventory Tools: private owner bulk editor ---------- */
+  .bulk-private-section{
+    margin-top:12px;
+    padding:11px;
+    border:1px solid rgba(95,212,196,.18);
+    border-radius:10px;
+    background:rgba(95,212,196,.025);
+  }
+  .bulk-private-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:9px;
+  }
+  .bulk-private-head strong{display:block;font-size:9px;}
+  .bulk-private-head span{display:block;margin-top:3px;color:var(--text-muted);font-size:7.5px;line-height:1.35;}
+  .bulk-private-fields{display:flex;flex-direction:column;gap:8px;}
+  .bulk-private-field{
+    padding:8px;
+    border:1px solid var(--border-soft);
+    border-radius:8px;
+    background:var(--bg);
+  }
+  .bulk-private-field-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:7px;
+  }
+  .bulk-private-field-top .bulk-meta-enable{font-weight:600;}
+  .bulk-private-field-controls{
+    display:grid;
+    grid-template-columns:120px minmax(0,1fr);
+    gap:7px;
+  }
+  .bulk-private-field-controls select,
+  .bulk-private-field-controls input,
+  .bulk-private-field-controls textarea{
+    width:100%;
+    min-height:34px;
+  }
+  .bulk-private-field-controls textarea{min-height:72px;resize:vertical;}
+  .bulk-private-field[aria-disabled="true"] .bulk-private-field-controls{opacity:.48;pointer-events:none;}
+  .bulk-private-migration{
+    padding:7px 8px;
+    border-radius:7px;
+    color:var(--accent-gold)!important;
+    background:rgba(227,179,65,.07);
+    font-size:7.2px!important;
+  }
+  @media(max-width:500px){
+    .bulk-private-field-controls{grid-template-columns:1fr;}
+  }
+
   /* ---------- Edit history ---------- */
   .history-list{display:flex;flex-direction:column;gap:6px;}
   .history-row{
@@ -40791,6 +40847,14 @@ function wireShimmer(container){
     $("bulkStatusSelectFilteredBtn").addEventListener("click",()=>setVisibleSelection(true));
     $("bulkStatusClearFilteredBtn").addEventListener("click",()=>setVisibleSelection(false));
 
+    [privateTagsEnable,privateTagsMode,privateTagsValue,privateNotesEnable,privateNotesMode,privateNotesValue]
+      .filter(Boolean)
+      .forEach(el=>{
+        el.addEventListener("input",updateSummary);
+        el.addEventListener("change",updateSummary);
+      });
+    syncPrivateFieldState();
+
     applyBtn.addEventListener("click",async()=>{
       if(!requireOwner("apply bulk status changes")) return;
 
@@ -43634,7 +43698,7 @@ function wireShimmer(container){
         <section class="panel bulk-meta-editor-panel">
           <div class="eyebrow">2 · Choose Fields</div>
           <h3>Metadata Changes</h3>
-          <p class="bulk-meta-help">Only enabled fields below will be changed. Every other card field stays untouched.</p>
+          <p class="bulk-meta-help">Only enabled fields below will be changed. Public metadata and private owner information can be updated independently.</p>
 
           <div class="bulk-meta-fields">
             ${["game","series","era","language","format","condition","availability"].map(field=>{
@@ -43660,8 +43724,57 @@ function wireShimmer(container){
             }).join("")}
           </div>
 
+          <div class="bulk-private-section" id="bulkPrivateSection">
+            <div class="bulk-private-head">
+              <div>
+                <strong>Private owner information</strong>
+                <span>Owner-only tags and notes stored separately from the public listing.</span>
+              </div>
+              ${ownerPrivateSupported
+                ? `<span class="owner-private-ready">Owner only</span>`
+                : `<span class="bulk-private-migration">Migration required</span>`}
+            </div>
+
+            <div class="bulk-private-fields">
+              <div class="bulk-private-field" id="bulkPrivateTagsField" aria-disabled="true">
+                <div class="bulk-private-field-top">
+                  <label class="bulk-meta-enable">
+                    <input type="checkbox" id="bulkPrivateTagsEnable" ${ownerPrivateSupported?"":"disabled"}>
+                    <span>Private owner tags</span>
+                  </label>
+                </div>
+                <div class="bulk-private-field-controls">
+                  <select id="bulkPrivateTagsMode" disabled>
+                    <option value="add">Add tags</option>
+                    <option value="replace">Replace tags</option>
+                    <option value="remove">Remove tags</option>
+                    <option value="clear">Clear all tags</option>
+                  </select>
+                  <input type="text" id="bulkPrivateTagsValue" maxlength="500" placeholder="e.g. Regrade, Priority Sale" disabled>
+                </div>
+              </div>
+
+              <div class="bulk-private-field" id="bulkPrivateNotesField" aria-disabled="true">
+                <div class="bulk-private-field-top">
+                  <label class="bulk-meta-enable">
+                    <input type="checkbox" id="bulkPrivateNotesEnable" ${ownerPrivateSupported?"":"disabled"}>
+                    <span>Private owner notes</span>
+                  </label>
+                </div>
+                <div class="bulk-private-field-controls">
+                  <select id="bulkPrivateNotesMode" disabled>
+                    <option value="replace">Replace notes</option>
+                    <option value="append">Append to notes</option>
+                    <option value="clear">Clear notes</option>
+                  </select>
+                  <textarea id="bulkPrivateNotesValue" maxlength="2000" placeholder="Internal notes only" disabled></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="bulk-meta-warning">
-            Images, prices, quantities, grading certificate numbers, IDs, timestamps, sold dates and view counts cannot be changed here.
+            Images, prices, quantities, grading certificate numbers, IDs, timestamps, sold dates and view counts cannot be changed here. Private owner information remains protected by owner-only RLS.
           </div>
 
           <div class="bulk-meta-preview" id="bulkMetaPreview">
@@ -43692,6 +43805,14 @@ function wireShimmer(container){
     const preview=$("bulkMetaPreview");
     const applyBtn=$("bulkMetaApplyBtn");
     const status=$("bulkMetaStatus");
+    const privateTagsEnable=$("bulkPrivateTagsEnable");
+    const privateTagsMode=$("bulkPrivateTagsMode");
+    const privateTagsValue=$("bulkPrivateTagsValue");
+    const privateTagsField=$("bulkPrivateTagsField");
+    const privateNotesEnable=$("bulkPrivateNotesEnable");
+    const privateNotesMode=$("bulkPrivateNotesMode");
+    const privateNotesValue=$("bulkPrivateNotesValue");
+    const privateNotesField=$("bulkPrivateNotesField");
 
     function visibleCards(){
       const q=normalizeFilterValue(search.value);
@@ -43759,6 +43880,123 @@ function wireShimmer(container){
       return changes;
     }
 
+    function enabledPrivateChanges(){
+      const changes={};
+
+      if(privateTagsEnable?.checked){
+        const mode=String(privateTagsMode?.value||"add");
+        const tags=sanitizeOwnerTags(privateTagsValue?.value||"");
+        changes.tags={mode,tags};
+      }
+
+      if(privateNotesEnable?.checked){
+        const mode=String(privateNotesMode?.value||"replace");
+        const notes=sanitizeOwnerPrivateNotes(privateNotesValue?.value||"");
+        changes.notes={mode,notes};
+      }
+
+      return changes;
+    }
+
+    function validatePrivateChanges(changes){
+      if(!Object.keys(changes).length) return "";
+      if(!ownerPrivateSupported) return "Private owner information migration is required.";
+
+      if(changes.tags){
+        if(!["add","replace","remove","clear"].includes(changes.tags.mode)) return "Invalid private tag operation.";
+        if(changes.tags.mode!=="clear" && !changes.tags.tags.length) return "Enter at least one private owner tag.";
+      }
+
+      if(changes.notes){
+        if(!["replace","append","clear"].includes(changes.notes.mode)) return "Invalid private notes operation.";
+        if(changes.notes.mode!=="clear" && !changes.notes.notes) return "Enter private owner notes.";
+      }
+
+      return "";
+    }
+
+    async function fetchSelectedPrivateMeta(cardIds){
+      const ids=cardIds.map(safeCardId).filter(Boolean);
+      const map=new Map(ids.map(id=>[id,{tags:[],notes:""}]));
+      if(!ids.length || !ownerPrivateSupported) return map;
+
+      for(let start=0;start<ids.length;start+=100){
+        const chunk=ids.slice(start,start+100);
+        const {data,error}=await supabaseClient
+          .from("card_owner_private")
+          .select("card_id,tags,notes")
+          .in("card_id",chunk);
+        if(error) throw error;
+        (data||[]).forEach(row=>{
+          const id=safeCardId(row.card_id);
+          if(!id) return;
+          map.set(id,{
+            tags:sanitizeOwnerTags(row.tags||[]),
+            notes:sanitizeOwnerPrivateNotes(row.notes||"")
+          });
+        });
+      }
+      return map;
+    }
+
+    function applyPrivateChangeToMeta(current,changes){
+      let tags=sanitizeOwnerTags(current?.tags||[]);
+      let notes=sanitizeOwnerPrivateNotes(current?.notes||"");
+
+      if(changes.tags){
+        const incoming=sanitizeOwnerTags(changes.tags.tags||[]);
+        if(changes.tags.mode==="clear") tags=[];
+        else if(changes.tags.mode==="replace") tags=incoming;
+        else if(changes.tags.mode==="add") tags=sanitizeOwnerTags([...tags,...incoming]);
+        else if(changes.tags.mode==="remove"){
+          const remove=new Set(incoming.map(tag=>tag.toLowerCase()));
+          tags=tags.filter(tag=>!remove.has(tag.toLowerCase()));
+        }
+      }
+
+      if(changes.notes){
+        const incoming=sanitizeOwnerPrivateNotes(changes.notes.notes||"");
+        if(changes.notes.mode==="clear") notes="";
+        else if(changes.notes.mode==="replace") notes=incoming;
+        else if(changes.notes.mode==="append"){
+          notes=sanitizeOwnerPrivateNotes([notes,incoming].filter(Boolean).join("\n"));
+        }
+      }
+
+      return {tags,notes};
+    }
+
+    async function savePrivateMetaRows(rows){
+      if(!rows.length) return true;
+      const payload=rows.map(row=>({
+        card_id:safeCardId(row.card_id),
+        tags:sanitizeOwnerTags(row.tags||[]),
+        notes:sanitizeOwnerPrivateNotes(row.notes||"")
+      })).filter(row=>row.card_id);
+
+      for(let start=0;start<payload.length;start+=100){
+        const chunk=payload.slice(start,start+100);
+        const {error}=await supabaseClient
+          .from("card_owner_private")
+          .upsert(chunk,{onConflict:"card_id"});
+        if(error) throw error;
+      }
+      return true;
+    }
+
+    function syncPrivateFieldState(){
+      const tagsOn=Boolean(privateTagsEnable?.checked && ownerPrivateSupported);
+      const notesOn=Boolean(privateNotesEnable?.checked && ownerPrivateSupported);
+
+      if(privateTagsMode) privateTagsMode.disabled=!tagsOn;
+      if(privateTagsValue) privateTagsValue.disabled=!tagsOn || privateTagsMode?.value==="clear";
+      privateTagsField?.setAttribute("aria-disabled",tagsOn?"false":"true");
+
+      if(privateNotesMode) privateNotesMode.disabled=!notesOn;
+      if(privateNotesValue) privateNotesValue.disabled=!notesOn || privateNotesMode?.value==="clear";
+      privateNotesField?.setAttribute("aria-disabled",notesOn?"false":"true");
+    }
+
     function validateChanges(changes){
       for(const [field,value] of Object.entries(changes)){
         if(!["game","series","era","language","format","condition","availability"].includes(field)){
@@ -43774,22 +44012,26 @@ function wireShimmer(container){
     }
 
     function updateSummary(){
+      syncPrivateFieldState();
       const changes=enabledChanges();
+      const privateChanges=enabledPrivateChanges();
       const fields=Object.keys(changes);
+      const privateFields=Object.keys(privateChanges);
       const selected=selectedCards();
+      const totalFields=fields.length+privateFields.length;
 
       selectedCount.textContent=selected.length;
-      fieldCount.textContent=fields.length;
+      fieldCount.textContent=totalFields;
 
-      const err=validateChanges(changes);
-      applyBtn.disabled=selected.length===0 || fields.length===0 || !!err;
+      const err=validateChanges(changes) || validatePrivateChanges(privateChanges);
+      applyBtn.disabled=selected.length===0 || totalFields===0 || !!err;
 
       if(err){
         preview.textContent=err;
         return;
       }
 
-      if(!selected.length || !fields.length){
+      if(!selected.length || !totalFields){
         preview.textContent="Select listings and at least one field to see a preview.";
         return;
       }
@@ -43797,6 +44039,15 @@ function wireShimmer(container){
       const details=fields.map(field=>
         `${bulkMetadataFieldLabel(field)} → ${changes[field]}`
       );
+
+      if(privateChanges.tags){
+        const label={add:"Add tags",replace:"Replace tags",remove:"Remove tags",clear:"Clear tags"}[privateChanges.tags.mode];
+        details.push(`Private: ${label}${privateChanges.tags.mode==="clear"?"":` → ${privateChanges.tags.tags.join(", ")}`}`);
+      }
+      if(privateChanges.notes){
+        const label={replace:"Replace notes",append:"Append notes",clear:"Clear notes"}[privateChanges.notes.mode];
+        details.push(`Private: ${label}`);
+      }
 
       preview.innerHTML=`
         <strong>${selected.length} listing${selected.length===1?"":"s"} will be updated.</strong>
@@ -43884,19 +44135,23 @@ function wireShimmer(container){
 
       const selected=selectedCards();
       const changes=enabledChanges();
+      const privateChanges=enabledPrivateChanges();
       const fields=Object.keys(changes);
-      const err=validateChanges(changes);
+      const privateFields=Object.keys(privateChanges);
+      const totalFields=fields.length+privateFields.length;
+      const err=validateChanges(changes) || validatePrivateChanges(privateChanges);
 
       if(err){
         showToast(err);
         return;
       }
-      if(!selected.length || !fields.length) return;
+      if(!selected.length || !totalFields) return;
 
       const includesSold=changes.availability==="Sold";
+      const privateLabel=privateFields.length ? ` including ${privateFields.length} private owner field${privateFields.length===1?"":"s"}` : "";
       const confirmText=includesSold
-        ? `Apply ${fields.length} field change${fields.length===1?"":"s"} to ${selected.length} listings? Some listings will be marked Sold.`
-        : `Apply ${fields.length} field change${fields.length===1?"":"s"} to ${selected.length} listings?`;
+        ? `Apply ${totalFields} field change${totalFields===1?"":"s"} to ${selected.length} listings${privateLabel}? Some listings will be marked Sold.`
+        : `Apply ${totalFields} field change${totalFields===1?"":"s"} to ${selected.length} listings${privateLabel}?`;
 
       if(!confirm(confirmText)) return;
 
@@ -43906,19 +44161,60 @@ function wireShimmer(container){
       let failedCount=0;
 
       try{
+        let privateMap=new Map();
+        if(privateFields.length){
+          applyBtn.textContent="Loading private data…";
+          try{
+            privateMap=await fetchSelectedPrivateMeta(selected.map(card=>card.id));
+          }catch(error){
+            console.error("Bulk private metadata read error:",error);
+            showToast("Could not load private owner information");
+            status.textContent="Private owner information could not be loaded. No changes were applied.";
+            return;
+          }
+        }
+
+        const privateRows=[];
+
         for(let i=0;i<selected.length;i++){
           const card=selected[i];
           applyBtn.textContent=`Saving ${i+1}/${selected.length}…`;
+          let cardOk=true;
 
-          const saved=await updateCardMetadataFields(card,changes);
-          if(saved){
-            const index=getCardIndexById(card.id);
-            if(index>-1) cards[index]=saved;
-            byId.set(String(card.id),saved);
-            savedCount++;
-          }else{
+          if(fields.length){
+            const saved=await updateCardMetadataFields(card,changes);
+            if(saved){
+              const index=getCardIndexById(card.id);
+              if(index>-1) cards[index]=saved;
+              byId.set(String(card.id),saved);
+            }else{
+              cardOk=false;
+            }
+          }
+
+          if(privateFields.length){
+            const id=safeCardId(card.id);
+            const current=privateMap.get(id)||{tags:[],notes:""};
+            const next=applyPrivateChangeToMeta(current,privateChanges);
+            privateRows.push({card_id:id,...next});
+          }
+
+          if(cardOk) savedCount++;
+          else{
             failedCount++;
             status.textContent=`Could not update ${card.name||card.card_code||"a listing"}. Continuing with the remaining selections…`;
+          }
+        }
+
+        if(privateFields.length){
+          applyBtn.textContent="Saving private owner information…";
+          try{
+            await savePrivateMetaRows(privateRows);
+          }catch(error){
+            console.error("Bulk private metadata save error:",error);
+            showToast("Could not save private owner information");
+            status.textContent="Public changes may have saved, but private owner information failed to save.";
+            return;
           }
         }
 
@@ -43928,7 +44224,7 @@ function wireShimmer(container){
 
         showToast(
           failedCount
-            ? `Bulk metadata: ${savedCount} saved · ${failedCount} failed`
+            ? `Bulk edit: ${savedCount} saved · ${failedCount} failed`
             : `Updated ${savedCount} listing${savedCount===1?"":"s"}`
         );
 
