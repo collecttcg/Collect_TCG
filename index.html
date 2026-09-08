@@ -18311,6 +18311,20 @@ body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game
   }
 }
 
+
+  .image-preview-box.auto-inventory-barcode-preview{
+    cursor:default;
+    border-style:dashed;
+    border-color:rgba(227,179,65,.48);
+    background:linear-gradient(180deg,rgba(227,179,65,.07),rgba(95,212,196,.05));
+  }
+  .image-preview-box.auto-inventory-barcode-preview img{object-fit:contain;background:#111827;}
+  .image-preview-box.auto-inventory-barcode-preview .image-drag-handle{display:none!important;}
+  .image-preview-box.auto-inventory-barcode-preview .auto-barcode-label{
+    position:absolute;left:7px;right:7px;bottom:7px;padding:5px 7px;border-radius:7px;
+    background:rgba(10,12,16,.82);color:#f2cf70;font-size:8px;font-weight:700;text-align:center;
+    border:1px solid rgba(227,179,65,.26);backdrop-filter:blur(5px);
+  }
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -20045,6 +20059,19 @@ body.light-mode #invGrid .card img.thumb{
   <!-- v58: Owner-only collage export now works on both Collection and Inventory, with automatic scope titles/filenames and an optional website-logo toggle. -->
   <!-- v56: Fixes the collage settings modal being hidden by the global owner-auth-only display:none rule. Owner access remains enforced before the modal can open. -->
   <!-- v50: Overview/listing thumbnails dimmed a little more for eye comfort. -->
+
+<style id="pc-single-currency-selector-v65">
+/* v65: the page-title currency control is mobile-only.
+   A later shared currency style had unintentionally forced it visible on PC,
+   creating a duplicate beside the normal desktop listing currency selector. */
+@media (min-width:801px){
+  .mobile-page-currency-control{
+    display:none !important;
+  }
+}
+</style>
+  <!-- v66: Multi-photo uploads are validated individually and after Storage upload; Add/Edit previews also show the automatic Inventory QR as a fixed final image. -->
+  <!-- v67: Single-card post-generator ZIP downloads now include the automatic Inventory QR image as the final file. -->
 </head>
 <body>
 
@@ -27639,6 +27666,17 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       throw new Error(`card image upload failed: ${errorText(error,"unknown Storage error").slice(0,220)}`);
     }
 
+    // Verify that this exact object can be read back before its URL is saved.
+    // This prevents a multi-photo save from committing broken later images.
+    const {data:verifiedBlob,error:verifyError}=await supabaseClient.storage
+      .from(CARD_IMAGE_STORAGE_BUCKET)
+      .download(path);
+    if(verifyError || !verifiedBlob || !verifiedBlob.size){
+      await supabaseClient.storage.from(CARD_IMAGE_STORAGE_BUCKET).remove([path]);
+      console.error("Card image Storage verification error:",verifyError);
+      throw new Error("card image upload verification failed");
+    }
+
     const {data}=supabaseClient.storage.from(CARD_IMAGE_STORAGE_BUCKET).getPublicUrl(path);
     const publicUrl=safeHttpUrl(data?.publicUrl||"");
     if(!publicUrl){
@@ -27755,6 +27793,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         return resolvedClean[index] || resolveSource(image);
       });
 
+      const invalidResolvedIndex=resultImages.findIndex(value=>!safeHttpUrl(value));
+      if(invalidResolvedIndex>=0){
+        throw new Error(`card image ${invalidResolvedIndex+1} did not resolve to a saved Storage URL`);
+      }
+
       const variantRecords=resultImages.map((_,index)=>({
         image_key:variantKeys[index] || newCardImageVariantKey(),
         original_url:resolvedClean[index],
@@ -27804,6 +27847,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
     if(message.includes("too large")){
       return "Processed image is too large for card image Storage.";
+    }
+    if(message.includes("verification")){
+      return "One or more uploaded photos could not be verified in Storage. The listing was not saved with broken image links; please try the upload again.";
     }
     return "Could not upload the card image to Supabase Storage. Nothing was saved.";
   }
@@ -28822,6 +28868,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
         preview.appendChild(box);
       });
+
+      const barcode=getInventoryListingBarcodeDataUrl();
+      if(barcode){
+        const barcodeBox=document.createElement("div");
+        barcodeBox.className="image-preview-box auto-inventory-barcode-preview";
+        barcodeBox.setAttribute("aria-label","Automatic Inventory QR image");
+        barcodeBox.innerHTML=`
+          <img src="${escapeHtml(barcode)}" alt="Automatic Inventory QR image" draggable="false">
+          <span class="image-number">${formState.images.length+1}</span>
+          <span class="auto-barcode-label">Automatic final image · Inventory QR</span>`;
+        preview.appendChild(barcodeBox);
+      }
     }
 
     fileInput.addEventListener("change", async ()=>{
@@ -28835,39 +28893,47 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
       try{
         let added=0;
-        for(const file of files){
-          // Always keep a clean, high-quality version client-side during this
-          // Add/Edit session so the owner can switch watermark on/off.
-          const originalClean=await resizeImageFile(file,1800,0.94,false);
-          const autoHide=Boolean(psaPrivacyAuto?.checked);
-          const clean=autoHide
-            ? await applyPsaPrivacyMaskToCardImageSource(originalClean,0.94)
-            : originalClean;
-          const finalImage=clean;
+        let failed=0;
+        for(let fileIndex=0;fileIndex<files.length;fileIndex++){
+          const file=files[fileIndex];
+          try{
+            // Process every selected file independently. A problem with one
+            // photo must never corrupt or prevent the later photos.
+            const originalClean=await resizeImageFile(file,1800,0.94,false);
+            const autoHide=Boolean(psaPrivacyAuto?.checked);
+            const clean=autoHide
+              ? await applyPsaPrivacyMaskToCardImageSource(originalClean,0.94)
+              : originalClean;
 
-          formState.images.push(finalImage);
-          formState.imageCleanSources.push(clean);
-          formState.imageWatermarkedSources.push(null);
-          formState.imageVariantKeys.push(newCardImageVariantKey());
-          formState.imageWatermarkStates.push(false);
-          formState.imageWatermarkModes.push("original");
-          formState.imagePrivacyUndoSources.push(autoHide ? originalClean : null);
-          added++;
+            if(!isPendingCardImage(clean)){
+              throw new Error("processed image was not created correctly");
+            }
+
+            formState.images.push(clean);
+            formState.imageCleanSources.push(clean);
+            formState.imageWatermarkedSources.push(null);
+            formState.imageVariantKeys.push(newCardImageVariantKey());
+            formState.imageWatermarkStates.push(false);
+            formState.imageWatermarkModes.push("original");
+            formState.imagePrivacyUndoSources.push(autoHide ? originalClean : null);
+            added++;
+            refreshPreview();
+          }catch(fileError){
+            failed++;
+            console.warn(`Card image ${fileIndex+1} processing failed:`,fileError);
+          }
         }
 
         fileInput.value = "";
         refreshPreview();
 
-        showToast(`${files.length===1 ? "Image" : `${files.length} images`} added as original`);
-      }catch(e){
-        console.warn("Card image processing failed:", e);
-        showToast(
-          String(e?.message || "").includes("too large")
-            ? "Image is too large. Maximum size is 20 MB."
-            : String(e?.message || "").includes("unsupported")
-              ? "That image format is not supported by this browser."
-              : "Could not process the image."
-        );
+        if(added && failed){
+          showToast(`${added} image${added===1?"":"s"} added · ${failed} failed`);
+        }else if(added){
+          showToast(`${added===1 ? "Image" : `${added} images`} added as original`);
+        }else{
+          showToast("Could not process the selected images");
+        }
       }finally{
         formState.processingImages = Math.max(0, Number(formState.processingImages || 0) - files.length);
         fileInput.disabled = false;
@@ -47155,9 +47221,12 @@ function wireShimmer(container){
   async function downloadSingleCardImagesZip(card, progressCallback){
     if(!card) return {added:0, failed:[]};
 
-    const images = getImages(card);
+    // The post-generator package mirrors the public listing gallery: uploaded
+    // card photos first, followed by the automatic Inventory QR image.
+    const images = getListingDisplayImages(card);
     if(!images.length) return {added:0, failed:[]};
 
+    const barcodeImage = getInventoryListingBarcodeDataUrl();
     const ZipCtor = await ensureJsZip();
     const zip = new ZipCtor();
     const failed = [];
@@ -47166,14 +47235,19 @@ function wireShimmer(container){
 
     for(let i=0;i<images.length;i++){
       try{
-        const blob = soldWatermark
+        const isBarcode = !!barcodeImage && images[i] === barcodeImage;
+        // Never place SOLD/RESERVED artwork over the QR because that could
+        // reduce scan reliability. The barcode is already a generated asset.
+        const blob = soldWatermark && !isBarcode
           ? await renderSoldDownloadBlob(images[i], card)
           : await imageSourceToBlob(images[i]);
-        const ext = soldWatermark ? "jpg" : imageExtensionFromBlob(blob);
+        const ext = soldWatermark && !isBarcode ? "jpg" : imageExtensionFromBlob(blob);
         const base = safeDownloadName(
           [card.card_code, card.name].filter(Boolean).join(" - ") || "card"
         );
-        const filename = `${String(i+1).padStart(2,"0")} - ${base}.${ext}`;
+        const filename = isBarcode
+          ? `${String(i+1).padStart(2,"0")} - Inventory QR.${ext || "png"}`
+          : `${String(i+1).padStart(2,"0")} - ${base}.${ext}`;
         zip.file(filename, blob);
         added++;
       }catch(err){
