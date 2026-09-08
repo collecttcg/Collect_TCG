@@ -17202,6 +17202,21 @@ body.showcase-dragging-body{
 .engaged-visit-line>strong{color:var(--text);font-size:8px;text-align:right}
 .engaged-visit-day>small{color:var(--text-muted);font-size:7.5px;text-align:right}
 .insights-engaged-note{margin-top:11px}
+.insights-duration-card{margin-top:12px}
+.insights-duration-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:14px}
+.insights-duration-summary article{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2)}
+.insights-duration-summary span{display:block;color:var(--text-muted);font-size:8px}
+.insights-duration-summary strong{display:block;margin-top:3px;color:var(--text);font-size:17px}
+.insights-duration-summary small{display:block;margin-top:2px;color:var(--text-muted);font-size:7.5px}
+.insights-duration-buckets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.insights-duration-bucket{padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2)}
+.insights-duration-bucket span{display:block;color:var(--text-muted);font-size:7.5px}
+.insights-duration-bucket strong{display:block;margin-top:3px;font-size:14px;color:var(--text)}
+.insights-duration-bucket i{display:block;height:6px;margin-top:7px;border-radius:999px;background:var(--surface);overflow:hidden}
+.insights-duration-bucket i>b{display:block;height:100%;border-radius:inherit;background:var(--accent-teal)}
+@media(max-width:760px){
+  .insights-duration-summary,.insights-duration-buckets{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 @media(max-width:620px){
   .insights-engaged-summary{grid-template-columns:1fr}
   .engaged-visit-day{grid-template-columns:44px minmax(0,1fr) 40px;gap:7px}
@@ -20072,6 +20087,7 @@ body.light-mode #invGrid .card img.thumb{
 </style>
   <!-- v66: Multi-photo uploads are validated individually and after Storage upload; Add/Edit previews also show the automatic Inventory QR as a fixed final image. -->
   <!-- v67: Single-card post-generator ZIP downloads now include the automatic Inventory QR image as the final file. -->
+  <!-- v69: Insights adds active session-duration tracking with 2+ minute and 5+ minute engagement metrics. -->
 </head>
 <body>
 
@@ -25019,6 +25035,80 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
 
+  const SESSION_DURATION_HEARTBEAT_MS=30000;
+  let sessionDurationHeartbeatTimer=null;
+  let sessionDurationLastTick=0;
+  let sessionDurationBackendState="unknown";
+
+  async function recordSessionActiveSeconds(seconds){
+    if(isOwnerMode() || isAnalyticsExcludedDevice() || document.hidden) return false;
+    if(sessionDurationBackendState==="unavailable") return false;
+    const sessionId=getAnalyticsSessionId();
+    const visitorId=getVisitorId();
+    const safeSeconds=Math.max(0,Math.min(60,Math.round(Number(seconds)||0)));
+    if(!sessionId || !visitorId || safeSeconds<1) return false;
+    try{
+      const {error}=await supabaseClient.rpc("record_site_session_active_time",{
+        p_session_id:sessionId,
+        p_visitor_id:visitorId,
+        p_active_seconds:safeSeconds
+      });
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(message.includes("record_site_session_active_time") || message.includes("function") || message.includes("schema cache")){
+          sessionDurationBackendState="unavailable";
+        }else{
+          console.warn("Session duration analytics unavailable:",error);
+        }
+        return false;
+      }
+      sessionDurationBackendState="available";
+      return true;
+    }catch(error){
+      console.warn("Session duration analytics unavailable:",error);
+      return false;
+    }
+  }
+
+  function sessionDurationHeartbeatTick(){
+    const now=Date.now();
+    if(!sessionDurationLastTick){
+      sessionDurationLastTick=now;
+      return;
+    }
+    const elapsed=Math.round((now-sessionDurationLastTick)/1000);
+    sessionDurationLastTick=now;
+    if(document.hidden || elapsed<=0) return;
+    // Cap a single tick so sleep/background throttling cannot inflate engagement.
+    recordSessionActiveSeconds(Math.min(45,elapsed));
+  }
+
+  function startSessionDurationTracking(){
+    if(isOwnerMode() || isAnalyticsExcludedDevice()) return;
+    if(sessionDurationHeartbeatTimer) clearInterval(sessionDurationHeartbeatTimer);
+    sessionDurationLastTick=Date.now();
+    sessionDurationHeartbeatTimer=setInterval(sessionDurationHeartbeatTick,SESSION_DURATION_HEARTBEAT_MS);
+    document.addEventListener("visibilitychange",()=>{
+      if(document.hidden){
+        sessionDurationHeartbeatTick();
+      }
+      sessionDurationLastTick=Date.now();
+    },{passive:true});
+    window.addEventListener("pagehide",()=>sessionDurationHeartbeatTick(),{passive:true});
+  }
+
+  function formatActiveDuration(seconds){
+    const total=Math.max(0,Math.round(Number(seconds)||0));
+    const minutes=Math.floor(total/60);
+    const secs=total%60;
+    if(minutes<1) return `${secs}s`;
+    if(minutes<60) return `${minutes}m ${String(secs).padStart(2,"0")}s`;
+    const hours=Math.floor(minutes/60);
+    const rem=minutes%60;
+    return `${hours}h ${rem}m`;
+  }
+
+
   let inventorySearchAnalyticsTimer=null;
   let lastRecordedInventorySearch="";
 
@@ -25357,6 +25447,26 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       return {supported:true,row:row||null};
     }catch(error){
       console.warn("Returning visitor insights unavailable:",error);
+      return {supported:false,row:null};
+    }
+  }
+
+  async function fetchSessionDurationInsights(start,end){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_site_session_duration_insights",{
+        p_start:start.toISOString(),
+        p_end:end.toISOString()
+      });
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        const unavailable=message.includes("get_site_session_duration_insights") || message.includes("function") || message.includes("schema cache");
+        if(!unavailable) console.warn("Session duration insights unavailable:",error);
+        return {supported:false,row:null};
+      }
+      const row=Array.isArray(data)?data[0]:data;
+      return {supported:true,row:row||null};
+    }catch(error){
+      console.warn("Session duration insights unavailable:",error);
       return {supported:false,row:null};
     }
   }
@@ -36376,6 +36486,7 @@ function wireShimmer(container){
       visitorSources:[],visitorSourceSupported:false,
       searchInsights:[],searchInsightsSupported:false,
       returningVisitorInsights:null,returningVisitorSupported:false,
+      sessionDurationInsights:null,sessionDurationSupported:false,
       engagedVisitSeries:[],engagedVisitSupported:false,
       overviewPhotoRows:[],overviewPhotoSupported:false,
       recentQualifiedViews:[],recentQualifiedViewsSupported:false,
@@ -36772,6 +36883,35 @@ function wireShimmer(container){
         </div>`;
     }
 
+    function renderSessionDurationInsights(row){
+      if(!row) return `<div class="hint">No active-duration sessions in this period yet.</div>`;
+      const total=Math.max(0,Number(row.total_sessions||0));
+      const engaged2=Math.max(0,Number(row.engaged_2m||0));
+      const engaged5=Math.max(0,Number(row.engaged_5m||0));
+      const avg=Math.max(0,Number(row.avg_active_seconds||0));
+      const longest=Math.max(0,Number(row.longest_active_seconds||0));
+      const rate2=total?engaged2/total*100:0;
+      const rate5=total?engaged5/total*100:0;
+      const buckets=[
+        {label:"Quick · <30s",value:Number(row.bucket_under_30||0)},
+        {label:"Browsing · 30s–2m",value:Number(row.bucket_30_119||0)},
+        {label:"Engaged · 2–5m",value:Number(row.bucket_120_299||0)},
+        {label:"Highly engaged · 5m+",value:Number(row.bucket_300_plus||0)}
+      ];
+      return `<div class="insights-duration-summary">
+          <article><span>2+ Minute Sessions</span><strong>${engaged2.toLocaleString()}</strong><small>${rate2.toFixed(rate2>=10?0:1)}% of tracked sessions</small></article>
+          <article><span>5+ Minute Sessions</span><strong>${engaged5.toLocaleString()}</strong><small>${rate5.toFixed(rate5>=10?0:1)}% highly engaged</small></article>
+          <article><span>Avg Active Time</span><strong>${escapeHtml(formatActiveDuration(avg))}</strong><small>Foreground time only</small></article>
+          <article><span>Longest Session</span><strong>${escapeHtml(formatActiveDuration(longest))}</strong><small>Within selected period</small></article>
+        </div>
+        <div class="insights-duration-buckets">
+          ${buckets.map(item=>{
+            const pct=total?item.value/total*100:0;
+            return `<div class="insights-duration-bucket"><span>${escapeHtml(item.label)}</span><strong>${item.value.toLocaleString()} · ${pct.toFixed(pct>=10?0:1)}%</strong><i><b style="width:${pct}%"></b></i></div>`;
+          }).join("")}
+        </div>`;
+    }
+
     function renderOverview(){
       const rows=state.visible;
       const websiteVisits=state.websiteSeries.reduce((s,r)=>s+Number(r.visits||0),0);
@@ -36832,6 +36972,19 @@ function wireShimmer(container){
                   ${renderEngagedVisitsComparison(state.websiteSeries,state.engagedVisitSeries)}
                   <div class="hint insights-engaged-note">Raw Website Visits are unchanged. Engaged Visits help separate meaningful browsing from page loads that never produce a 2+ second card view.</div>`;
                 })()}
+          </section>
+
+          <section class="insights-v4-card insights-duration-card">
+            <div class="insights-v4-card-head table-head">
+              <div>
+                <h3>Session Duration</h3>
+                <span>Active foreground time — background tabs and long idle gaps are not counted.</span>
+              </div>
+            </div>
+            ${!state.sessionDurationSupported
+              ? `<div class="hint">Run <code>insights-session-duration-migration.sql</code> in Supabase to enable active-time metrics.</div>`
+              : renderSessionDurationInsights(state.sessionDurationInsights)}
+            <div class="hint insights-engaged-note">A 2+ minute visit is a strong browsing signal; 5+ minutes is classified as highly engaged. This measures active visible-tab time rather than simply elapsed clock time.</div>
           </section>
         </div>
 
@@ -37721,7 +37874,7 @@ function wireShimmer(container){
       const selectedStatus=statusSel.value;
       const selectedGame=gameSel.value;
 
-      const [views,series,siteSeries,countryResult,accessTimeResult,deviceResult,sourceResult,searchResult,returningResult,engagedVisitResult,overviewPhotoResult,recentQualifiedResult,giveawayPerformanceResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
+      const [views,series,siteSeries,countryResult,accessTimeResult,deviceResult,sourceResult,searchResult,returningResult,sessionDurationResult,engagedVisitResult,overviewPhotoResult,recentQualifiedResult,giveawayPerformanceResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
         fetchInsights(startDate,endDate),
         fetchViewSeries(startDate,endDate),
         fetchWebsiteVisitSeries(startDate,endDate),
@@ -37731,6 +37884,7 @@ function wireShimmer(container){
         fetchWebsiteVisitSources(startDate,endDate),
         fetchInventorySearchInsights(startDate,endDate),
         fetchReturningVisitorInsights(startDate,endDate),
+        fetchSessionDurationInsights(startDate,endDate),
         fetchEngagedVisitSeries(startDate,endDate),
         fetchOverviewPhotoInsights(startDate,endDate),
         fetchRecentQualifiedCardViews(startDate,endDate,selectedStatus,selectedGame,20),
@@ -37855,6 +38009,8 @@ function wireShimmer(container){
         searchInsightsSupported:searchResult.supported,
         returningVisitorInsights:returningResult.supported ? returningResult.row : null,
         returningVisitorSupported:returningResult.supported,
+        sessionDurationInsights:sessionDurationResult.supported ? sessionDurationResult.row : null,
+        sessionDurationSupported:sessionDurationResult.supported,
         engagedVisitSeries:engagedVisitResult.supported && Array.isArray(engagedVisitResult.rows)
           ? engagedVisitResult.rows
           : [],
@@ -49276,6 +49432,7 @@ function wireShimmer(container){
     // later Qualified Views can contribute to Browsing Depth.
     if(!isOwnerMode() && !isAnalyticsExcludedDevice()){
       await recordAnalyticsSession();
+      startSessionDurationTracking();
       recordWebsiteVisit();
     }
 
