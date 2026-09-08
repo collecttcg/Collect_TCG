@@ -20090,6 +20090,7 @@ body.light-mode #invGrid .card img.thumb{
   <!-- v69: Insights adds active session-duration tracking with 2+ minute and 5+ minute engagement metrics. -->
 <!-- v70: Reliable session-duration heartbeat: 10s writes + flush foreground time on hide/pagehide. -->
 <!-- v71: Final session-duration flush uses sendBeacon when available, with keepalive fetch fallback. -->
+  <!-- v72: persist thumbnail_url from images[0] so new/edited listings render their first photo correctly in lightweight mobile/desktop catalogues. -->
 </head>
 <body>
 
@@ -22981,6 +22982,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       cost: card.cost == null ? null : Number(card.cost),
       notes: card.notes || "",
       images: Array.isArray(card.images) ? card.images : [],
+      ...(thumbnailUrlSupported ? {
+        // Keep the lightweight public catalogue query in sync with the real
+        // first uploaded photo. Without this, newly-created/edited listings
+        // can have images[] populated but an empty thumbnail_url, causing the
+        // first image to appear broken/blank on mobile until the full gallery
+        // is lazy-loaded.
+        thumbnail_url: Array.isArray(card.images) && card.images.length
+          ? (safeHttpUrl(card.images[0]) || null)
+          : null
+      } : {}),
       grading: Array.isArray(card.grading) ? card.grading.map(g=>({
         company: g.company || "",
         grade: g.grade || "",
@@ -23557,6 +23568,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       const optionalColumns=[
         ["sold_at",()=>{ soldAtSupported=false; }],
         ["lifecycle_status",()=>{ lifecycleSupported=false; }],
+        ["thumbnail_url",()=>{ thumbnailUrlSupported=false; }],
         ["grading_private",()=>{}]
       ];
 
@@ -23626,6 +23638,15 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         payload={...payload};
         delete payload.sold_at;
         soldAtSupported=false;
+        result=await updateCurrentPayload();
+      }
+
+      if(result.error &&
+         Object.prototype.hasOwnProperty.call(payload,"thumbnail_url") &&
+         optionalCardWriteColumnUnavailable(result.error,"thumbnail_url")){
+        payload={...payload};
+        delete payload.thumbnail_url;
+        thumbnailUrlSupported=false;
         result=await updateCurrentPayload();
       }
 
