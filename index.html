@@ -19932,6 +19932,12 @@ body.owner-mode .card-actions.owner-only {
   }
 }
 </style>
+
+<style>
+/* v45 — Inventory uses the same grouped Game-section presentation as Collection
+   on desktop and mobile. Existing collection-game-* classes are intentionally
+   shared so both scopes receive the same responsive/collapse/touch behavior. */
+</style>
 </head>
 <body>
 
@@ -20688,6 +20694,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   let collectionCardOrderSupported="unknown";
   let collectionGameOrderSupported="unknown";
 
+  // Inventory has its own persistent custom order so rearranging Available
+  // listings never changes the Collection / NFS order.
+  const inventoryCardOrderById=new Map();
+  const inventoryGameOrderByKey=new Map();
+  let inventoryCardOrderSupported="unknown";
+  let inventoryGameOrderSupported="unknown";
+
   async function loadCollectionGameOrder(){
     try{
       const {data,error}=await supabaseClient.rpc("get_collection_game_order");
@@ -20840,6 +20853,128 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }catch(error){
       console.error("Collection order save failed:",error);
       showToast("Could not save Collection card order");
+      return false;
+    }
+  }
+
+  async function loadInventoryGameOrder(){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_inventory_game_order");
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(message.includes("get_inventory_game_order") || message.includes("function") || message.includes("schema cache"))
+          inventoryGameOrderSupported=false;
+        inventoryGameOrderByKey.clear();
+        return false;
+      }
+      inventoryGameOrderByKey.clear();
+      (Array.isArray(data)?data:[]).forEach(row=>{
+        const key=normalizeFilterValue(row?.game_key||"") || "__other__";
+        const order=Number(row?.sort_order);
+        if(key && Number.isFinite(order)) inventoryGameOrderByKey.set(key,order);
+      });
+      inventoryGameOrderSupported=true;
+      return true;
+    }catch(error){
+      console.warn("Inventory game order unavailable:",error);
+      inventoryGameOrderSupported=false;
+      inventoryGameOrderByKey.clear();
+      return false;
+    }
+  }
+
+  function inventoryCustomGameOrderValue(gameKey){
+    const key=normalizeFilterValue(gameKey||"") || "__other__";
+    const value=inventoryGameOrderByKey.get(key);
+    return Number.isFinite(value) ? value : Number.MAX_SAFE_INTEGER;
+  }
+
+  async function saveInventoryGameOrder(groups){
+    if(!requireCollectionOrderOwner("save Inventory game order")) return false;
+    const clean=(groups||[]).map(group=>({
+      key:normalizeFilterValue(group?.key||"") || "__other__",
+      label:String(group?.label||"").trim() || "Other"
+    })).filter(group=>group.key);
+    if(!clean.length){ showToast("No Inventory game categories to save"); return false; }
+    try{
+      const {data,error}=await supabaseClient.rpc("set_inventory_game_order",{
+        p_game_keys:clean.map(group=>group.key),
+        p_game_labels:clean.map(group=>group.label)
+      });
+      if(error){
+        console.error("Inventory game-order save error:",error);
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(message.includes("set_inventory_game_order") || message.includes("function") || message.includes("schema cache")){
+          inventoryGameOrderSupported=false;
+          showToast("Run the Inventory Custom Order SQL migration first");
+        }else showToast("Could not save Inventory game order");
+        return false;
+      }
+      inventoryGameOrderByKey.clear();
+      clean.forEach((group,index)=>inventoryGameOrderByKey.set(group.key,index+1));
+      inventoryGameOrderSupported=true;
+      return Number(data||0)>=0;
+    }catch(error){
+      console.error("Inventory game-order save failed:",error);
+      showToast("Could not save Inventory game order");
+      return false;
+    }
+  }
+
+  async function loadInventoryCardOrder(){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_inventory_card_order");
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(message.includes("get_inventory_card_order") || message.includes("function") || message.includes("schema cache"))
+          inventoryCardOrderSupported=false;
+        inventoryCardOrderById.clear();
+        return false;
+      }
+      inventoryCardOrderById.clear();
+      (Array.isArray(data)?data:[]).forEach(row=>{
+        const id=safeCardId(row?.card_id||"");
+        const order=Number(row?.sort_order);
+        if(id && Number.isFinite(order)) inventoryCardOrderById.set(id,order);
+      });
+      inventoryCardOrderSupported=true;
+      return true;
+    }catch(error){
+      console.warn("Inventory custom order unavailable:",error);
+      inventoryCardOrderSupported=false;
+      inventoryCardOrderById.clear();
+      return false;
+    }
+  }
+
+  function inventoryCustomOrderValue(card){
+    const id=safeCardId(card?.id||"");
+    const value=id ? inventoryCardOrderById.get(id) : null;
+    return Number.isFinite(value) ? value : Number.MAX_SAFE_INTEGER;
+  }
+
+  async function saveInventoryCardOrder(cardIds){
+    if(!requireCollectionOrderOwner("save Inventory card order")) return false;
+    const ids=(cardIds||[]).map(id=>safeCardId(id)).filter(Boolean);
+    if(!ids.length){ showToast("No Inventory cards to reorder"); return false; }
+    try{
+      const {data,error}=await supabaseClient.rpc("set_inventory_card_order",{p_card_ids:ids});
+      if(error){
+        console.error("Inventory order save error:",error);
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(message.includes("set_inventory_card_order") || message.includes("function") || message.includes("schema cache")){
+          inventoryCardOrderSupported=false;
+          showToast("Run the Inventory Custom Order SQL migration first");
+        }else showToast("Could not save Inventory card order");
+        return false;
+      }
+      inventoryCardOrderById.clear();
+      ids.forEach((id,index)=>inventoryCardOrderById.set(id,index+1));
+      inventoryCardOrderSupported=true;
+      return Number(data||0)>=0;
+    }catch(error){
+      console.error("Inventory order save failed:",error);
+      showToast("Could not save Inventory card order");
       return false;
     }
   }
@@ -21871,7 +22006,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     // schema and secure owner-card RPC do not need to change.
     await Promise.all([
       loadCollectionCardOrder(),
-      loadCollectionGameOrder()
+      loadCollectionGameOrder(),
+      loadInventoryCardOrder(),
+      loadInventoryGameOrder()
     ]);
 
     // The eye counter shown to Owner Mode is now sourced from the fresh
@@ -28770,7 +28907,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const sortBy = ($("sortBy") && $("sortBy").value) || (
       listingAvailabilityScope === "sold"
         ? "recent-sold"
-        : (listingAvailabilityScope==="collection" ? "custom" : "name")
+        : (["collection","inventory"].includes(listingAvailabilityScope) ? "custom" : "name")
     );
 
     let list = cards.filter(c=>{
@@ -28852,10 +28989,17 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     list.sort((a,b)=>{
       switch(sortBy){
         case "custom": {
-          if(listingAvailabilityScope!=="collection") return a.name.localeCompare(b.name);
-          const ao=collectionCustomOrderValue(a);
-          const bo=collectionCustomOrderValue(b);
-          return ao-bo || a.name.localeCompare(b.name);
+          if(listingAvailabilityScope==="collection"){
+            const ao=collectionCustomOrderValue(a);
+            const bo=collectionCustomOrderValue(b);
+            return ao-bo || a.name.localeCompare(b.name);
+          }
+          if(listingAvailabilityScope==="inventory"){
+            const ao=inventoryCustomOrderValue(a);
+            const bo=inventoryCustomOrderValue(b);
+            return ao-bo || a.name.localeCompare(b.name);
+          }
+          return a.name.localeCompare(b.name);
         }
         case "recent-sold": {
           const at = Date.parse(a.sold_at || a.updated_at || a.created_at || "") || 0;
@@ -29649,6 +29793,14 @@ function wireShimmer(container){
               ⇅ Rearrange Cards
             </button>
           ` : ""}
+          ${scope==="inventory" && canManageCollectionOrder() ? `
+            <button type="button"
+                    class="btn-ghost collection-rearrange-btn"
+                    id="inventoryRearrangeBtn"
+                    title="Rearrange Inventory game categories and cards">
+              ⇅ Rearrange Inventory
+            </button>
+          ` : ""}
 
           <button type="button" class="copy-filter-link-btn" id="copyFilterLinkBtn" title="Copy a link to these filters">
             <span class="copy-filter-link-desktop">Copy Filtered Link</span>
@@ -29688,17 +29840,17 @@ function wireShimmer(container){
         <a href="#/add" class="btn-primary owner-only desktop-filter-add-card">+ Add card</a>
       </div>
 
-      ${isCollection && isMobileOwnerBlocked() && canManageCollectionOrder() ? `
+      ${["collection","inventory"].includes(scope) && isMobileOwnerBlocked() && canManageCollectionOrder() ? `
         <div class="collection-mobile-owner-bar owner-auth-only">
           <button type="button"
                   class="btn-ghost collection-mobile-owner-btn"
-                  id="collectionMobileOwnerBtn">
-            ⇅ Rearrange Collection
+                  id="${scope==="collection" ? "collectionMobileOwnerBtn" : "inventoryMobileOwnerBtn"}">
+            ⇅ Rearrange ${scope==="collection" ? "Collection" : "Inventory"}
           </button>
           <button type="button"
                   class="btn-ghost collection-mobile-owner-logout"
-                  id="collectionMobileOwnerLogoutBtn"
-                  title="Disable mobile Collection owner access">
+                  id="${scope==="collection" ? "collectionMobileOwnerLogoutBtn" : "inventoryMobileOwnerLogoutBtn"}"
+                  title="Disable mobile rearrange access">
             Log out
           </button>
         </div>
@@ -29946,7 +30098,7 @@ function wireShimmer(container){
   function inventorySortOptions(scope){
     return [
       ...(scope==="sold" ? [{value:"recent-sold",label:"Sort: Recently Sold"}] : []),
-      ...(scope==="collection" ? [{value:"custom",label:"Custom Order"}] : []),
+      ...(["collection","inventory"].includes(scope) ? [{value:"custom",label:"Custom Order"}] : []),
       {value:"name",label:"Name: A → Z"},
       {value:"name-desc",label:"Name: Z → A"},
       {value:"newest",label:"Newest Added"},
@@ -30218,13 +30370,15 @@ function wireShimmer(container){
           ? ["recent-sold","name","name-desc","newest","oldest","year-new","year-old","grade-high","grade-low","price-low","price-high"]
           : (listingAvailabilityScope==="collection"
               ? ["custom","name","name-desc","newest","oldest","year-new","year-old","grade-high","grade-low"]
-              : ["name","name-desc","newest","oldest","year-new","year-old","grade-high","grade-low","price-low","price-high"])
+              : (listingAvailabilityScope==="inventory"
+                  ? ["custom","name","name-desc","newest","oldest","year-new","year-old","grade-high","grade-low","price-low","price-high"]
+                  : ["name","name-desc","newest","oldest","year-new","year-old","grade-high","grade-low","price-low","price-high"]))
       );
       const defaultSort = listingAvailabilityScope === "sold"
         ? "recent-sold"
-        : (listingAvailabilityScope === "inventory"
-            ? "newest"
-            : (listingAvailabilityScope==="collection" ? "custom" : "name"));
+        : (["inventory","collection"].includes(listingAvailabilityScope)
+            ? "custom"
+            : "name");
       const sort = safeUrlFilterText(params.get("sort"), 24);
       $("sortBy").value = allowedSort.has(sort) ? sort : defaultSort;
       const sortLabel = {
@@ -30534,6 +30688,65 @@ function wireShimmer(container){
       }).join("");
     }
 
+    function groupedInventoryHTML(list,compact){
+      const groups=new Map();
+      list.forEach((card,index)=>{
+        const label=collectionGameLabel(card);
+        const key=collectionGameKey(label);
+        if(!groups.has(key)) groups.set(key,{key,label,cards:[]});
+        groups.get(key).cards.push({card,index});
+      });
+
+      const ordered=Array.from(groups.values()).sort((a,b)=>{
+        const ao=inventoryCustomGameOrderValue(a.key);
+        const bo=inventoryCustomGameOrderValue(b.key);
+        if(ao!==bo) return ao-bo;
+        const aOther=a.key==="__other__";
+        const bOther=b.key==="__other__";
+        if(aOther!==bOther) return aOther ? 1 : -1;
+        return a.label.localeCompare(b.label,undefined,{sensitivity:"base",numeric:true});
+      });
+
+      return ordered.map(group=>{
+        const collapsed=collectionCollapsedGames.has(group.key);
+        const cardsHtml=group.cards.map(({card,index})=>{
+          let html=cardTileHTML(card,index);
+          html=html.replace(
+            '<div class="card ',
+            `<div class="card collection-game-card ${collectionRearrangeMode ? "collection-rearrange-card " : ""}`
+          );
+          html=html.replace(
+            ' data-shimmer=',
+            ` data-collection-game-key="${escapeHtml(group.key)}"${collapsed ? " hidden" : ""}${collectionRearrangeMode ? ' draggable="true"' : ""} data-shimmer=`
+          );
+          if(collectionRearrangeMode){
+            html=html.replace(
+              /(<div class="card collection-game-card[^>]*>)/,
+              `$1<span class="collection-drag-handle" aria-hidden="true">⋮⋮</span>`
+            );
+          }
+          return html;
+        }).join("");
+
+        return `
+          <button type="button"
+                  class="collection-game-group-header ${collapsed ? "collapsed" : ""} ${collectionRearrangeMode ? "rearranging collection-game-draggable" : ""}"
+                  data-collection-game-toggle="${escapeHtml(group.key)}"
+                  data-collection-game-label="${escapeHtml(group.label)}"
+                  aria-expanded="${collapsed ? "false" : "true"}"
+                  ${collectionRearrangeMode ? 'draggable="true"' : ""}>
+            <span class="collection-game-group-main">
+              ${collectionRearrangeMode ? `<span class="collection-game-drag-handle" aria-hidden="true">☰</span>` : ""}
+              <span class="collection-game-chevron" aria-hidden="true">⌄</span>
+              <strong>${escapeHtml(group.label)}</strong>
+              <span class="collection-game-count">${group.cards.length.toLocaleString()} ${group.cards.length===1 ? "card" : "cards"}</span>
+            </span>
+          </button>
+          ${cardsHtml}
+        `;
+      }).join("");
+    }
+
     let paginationFilterSignature=null;
     let paginationFirstDraw=true;
 
@@ -30711,9 +30924,9 @@ function wireShimmer(container){
 
       grid.className=effectiveInventoryViewMode()==="compact" ? "grid compact-list" : "grid";
 
-      if(listingAvailabilityScope==="collection"){
-        // Collection is intentionally not paginated: each game owns one
-        // continuous listing section, so a game never gets split across pages.
+      if(["collection","inventory"].includes(listingAvailabilityScope)){
+        // Grouped catalogue views remain continuous so one Game category is
+        // never split across pagination pages.
         listingCurrentPage=1;
         ["listingPaginationTop","listingPaginationBottom"].forEach(id=>{
           const mount=$(id);
@@ -30723,10 +30936,9 @@ function wireShimmer(container){
         });
 
         grid.classList.add("collection-game-grouped");
-        grid.innerHTML=groupedCollectionHTML(
-          list,
-          effectiveInventoryViewMode()==="compact"
-        );
+        grid.innerHTML=listingAvailabilityScope==="collection"
+          ? groupedCollectionHTML(list,effectiveInventoryViewMode()==="compact")
+          : groupedInventoryHTML(list,effectiveInventoryViewMode()==="compact");
       }else{
         const totalPages=Math.max(1,Math.ceil(list.length/listingPerPage));
         const clampedPage=Math.min(Math.max(1,listingCurrentPage),totalPages);
@@ -30781,20 +30993,23 @@ function wireShimmer(container){
     function syncCollectionRearrangeButton(){
       const buttons=[
         $("collectionRearrangeBtn"),
-        $("collectionMobileOwnerBtn")
+        $("collectionMobileOwnerBtn"),
+        $("inventoryRearrangeBtn"),
+        $("inventoryMobileOwnerBtn")
       ].filter(Boolean);
+      const label=listingAvailabilityScope==="inventory" ? "Inventory" : "Collection";
 
       buttons.forEach(button=>{
         if(collectionRearrangeMode){
           button.textContent="✓ Save Order";
           button.classList.add("active");
           button.title=collectionRearrangeDirty
-            ? "Save this new Collection card order"
-            : "Save Collection card order";
+            ? `Save this new ${label} order`
+            : `Save ${label} order`;
         }else{
           button.textContent=isMobileOwnerBlocked()
-            ? "⇅ Rearrange Collection"
-            : "⇅ Rearrange Cards";
+            ? `⇅ Rearrange ${label}`
+            : (label==="Inventory" ? "⇅ Rearrange Inventory" : "⇅ Rearrange Cards");
           button.classList.remove("active");
           button.title="Rearrange Game categories and cards";
         }
@@ -30803,7 +31018,7 @@ function wireShimmer(container){
 
     function enterCollectionRearrangeMode(){
       if(!requireCollectionOrderOwner("rearrange Collection cards")) return;
-      if(listingAvailabilityScope!=="collection") return;
+      if(!["collection","inventory"].includes(listingAvailabilityScope)) return;
 
       if(collectionCardOrderSupported===false){
         showToast("Run the Collection Custom Order SQL migration first");
@@ -30831,7 +31046,7 @@ function wireShimmer(container){
       draw();
       syncCollectionRearrangeButton();
       document.body.classList.add("collection-rearrange-mode");
-      showToast("Drag game headers and cards, then Save Order");
+      showToast(`Drag ${listingAvailabilityScope==="inventory" ? "Inventory" : "Collection"} game headers and cards, then Save Order`);
     }
 
     async function finishCollectionRearrangeMode(save){
@@ -30849,18 +31064,19 @@ function wireShimmer(container){
 
       const ids=collectionRearrangeCardIdsFromDom();
       const groups=collectionRearrangeGamesFromDom();
-      const button=$("collectionRearrangeBtn");
-      if(button){
-        button.disabled=true;
-        button.textContent="Saving…";
-      }
+      const isInventoryOrder=listingAvailabilityScope==="inventory";
+      const buttons=[
+        $(isInventoryOrder ? "inventoryRearrangeBtn" : "collectionRearrangeBtn"),
+        $(isInventoryOrder ? "inventoryMobileOwnerBtn" : "collectionMobileOwnerBtn")
+      ].filter(Boolean);
+      buttons.forEach(button=>{ button.disabled=true; button.textContent="Saving…"; });
 
       const [cardsOk,gamesOk]=await Promise.all([
-        saveCollectionCardOrder(ids),
-        saveCollectionGameOrder(groups)
+        isInventoryOrder ? saveInventoryCardOrder(ids) : saveCollectionCardOrder(ids),
+        isInventoryOrder ? saveInventoryGameOrder(groups) : saveCollectionGameOrder(groups)
       ]);
 
-      if(button) button.disabled=false;
+      buttons.forEach(button=>{ button.disabled=false; });
       if(!cardsOk || !gamesOk){
         syncCollectionRearrangeButton();
         return;
@@ -30873,7 +31089,7 @@ function wireShimmer(container){
       draw();
       syncCollectionRearrangeButton();
       updateListingUrlFromControls();
-      showToast("Collection order saved");
+      showToast(`${isInventoryOrder ? "Inventory" : "Collection"} order saved`);
     }
 
     const handleCollectionRearrangeButton=async()=>{
@@ -30887,9 +31103,13 @@ function wireShimmer(container){
 
     $("collectionRearrangeBtn")?.addEventListener("click",handleCollectionRearrangeButton);
     $("collectionMobileOwnerBtn")?.addEventListener("click",handleCollectionRearrangeButton);
-    $("collectionMobileOwnerLogoutBtn")?.addEventListener("click",async()=>{
-      if(collectionRearrangeMode) await finishCollectionRearrangeMode(false);
-      await openOwnerAccess();
+    $("inventoryRearrangeBtn")?.addEventListener("click",handleCollectionRearrangeButton);
+    $("inventoryMobileOwnerBtn")?.addEventListener("click",handleCollectionRearrangeButton);
+    [$("collectionMobileOwnerLogoutBtn"),$("inventoryMobileOwnerLogoutBtn")].filter(Boolean).forEach(btn=>{
+      btn.addEventListener("click",async()=>{
+        if(collectionRearrangeMode) await finishCollectionRearrangeMode(false);
+        await openOwnerAccess();
+      });
     });
 
     let collectionDraggedGameHeader=null;
@@ -30936,7 +31156,7 @@ function wireShimmer(container){
     }
 
     $("invGrid")?.addEventListener("dragstart",event=>{
-      if(!collectionRearrangeMode || listingAvailabilityScope!=="collection") return;
+      if(!collectionRearrangeMode || !["collection","inventory"].includes(listingAvailabilityScope)) return;
 
       const header=event.target.closest(".collection-game-group-header[data-collection-game-toggle]");
       if(!header) return;
@@ -30973,7 +31193,7 @@ function wireShimmer(container){
     let collectionDraggedCard=null;
 
     $("invGrid")?.addEventListener("dragstart",event=>{
-      if(!collectionRearrangeMode || listingAvailabilityScope!=="collection") return;
+      if(!collectionRearrangeMode || !["collection","inventory"].includes(listingAvailabilityScope)) return;
       if(event.target.closest(".collection-game-group-header")) return;
       const card=event.target.closest(".collection-game-card[data-card-id]");
       if(!card) return;
@@ -31145,7 +31365,7 @@ function wireShimmer(container){
     },{signal:inventorySignal});
 
     $("invGrid")?.addEventListener("click",event=>{
-      if(listingAvailabilityScope!=="collection") return;
+      if(!["collection","inventory"].includes(listingAvailabilityScope)) return;
 
       const header=event.target.closest("[data-collection-game-toggle]");
       if(header){
@@ -31585,9 +31805,9 @@ function wireShimmer(container){
 
       const defaultSort=listingAvailabilityScope==="sold"
         ? "recent-sold"
-        : (listingAvailabilityScope==="inventory"
-            ? "newest"
-            : (listingAvailabilityScope==="collection" ? "custom" : "name"));
+        : (["inventory","collection"].includes(listingAvailabilityScope)
+            ? "custom"
+            : "name");
       $("sortBy").value=defaultSort;
       $("sortByBtn").querySelector("span").textContent=
         defaultSort==="recent-sold"
@@ -31614,12 +31834,12 @@ function wireShimmer(container){
       if(!el) return;
 
       el.addEventListener("input", ()=>{
-        if(collectionRearrangeMode && listingAvailabilityScope==="collection") return;
+        if(collectionRearrangeMode && ["collection","inventory"].includes(listingAvailabilityScope)) return;
         updateListingUrlFromControls();
         draw();
       });
       el.addEventListener("change", ()=>{
-        if(collectionRearrangeMode && listingAvailabilityScope==="collection") return;
+        if(collectionRearrangeMode && ["collection","inventory"].includes(listingAvailabilityScope)) return;
         updateListingUrlFromControls();
         draw();
       });
@@ -31657,7 +31877,7 @@ function wireShimmer(container){
 
     $("quickFilters").querySelectorAll(".quick-filter").forEach(btn=>{
       btn.addEventListener("click", ()=>{
-        if(collectionRearrangeMode && listingAvailabilityScope==="collection") return;
+        if(collectionRearrangeMode && ["collection","inventory"].includes(listingAvailabilityScope)) return;
         activeQuickFilter = btn.dataset.quick;
         syncQuickFilterUI();
         updateListingUrlFromControls();
@@ -47133,10 +47353,14 @@ function wireShimmer(container){
     if(isMobileOwnerBlocked()){
       // Mobile remains on the public catalogue; only Collection ordering RPCs
       // are authorized by this verified session.
-      await loadCollectionCardOrder();
-      await loadCollectionGameOrder();
+      await Promise.all([
+        loadCollectionCardOrder(),
+        loadCollectionGameOrder(),
+        loadInventoryCardOrder(),
+        loadInventoryGameOrder()
+      ]);
       router();
-      showToast("Collection rearrange access enabled");
+      showToast("Mobile rearrange access enabled");
       return;
     }
 
