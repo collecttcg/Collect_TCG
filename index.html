@@ -20041,6 +20041,7 @@ body.light-mode #invGrid .card img.thumb{
   <!-- v53: Collection collage export uses a more premium lively background and centers the title. -->
   <!-- v54: Collection collage export background now includes geometric shapes, ribbons, networks, and ghost-card outlines for a more stylish social-media look. -->
   <!-- v55: Export Collage opens an owner-only settings modal for title, aspect ratio, background style, spacing, corners, date and website footer. -->
+  <!-- v56: Fixes the collage settings modal being hidden by the global owner-auth-only display:none rule. Owner access remains enforced before the modal can open. -->
   <!-- v50: Overview/listing thumbnails dimmed a little more for eye comfort. -->
 </head>
 <body>
@@ -21278,7 +21279,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     const overlay=document.createElement("div");
     overlay.id="collectionCollageSettingsOverlay";
-    overlay.className="collection-collage-modal-overlay owner-auth-only";
+    overlay.className="collection-collage-modal-overlay";
     overlay.innerHTML=`
       <div class="collection-collage-modal" role="dialog" aria-modal="true" aria-labelledby="collectionCollageModalTitle">
         <h2 id="collectionCollageModalTitle">Export Collection Collage</h2>
