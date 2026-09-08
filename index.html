@@ -19893,6 +19893,45 @@ body.owner-mode .card-actions.owner-only {
   .card-overview-collapsible-pills[hidden]{display:flex !important;}
 }
 </style>
+
+<style id="card-overview-pill-toggle-inline-v44">
+/* v44: save a row on desktop by placing the per-card Details toggle on the
+   same line as Card Code / Year, anchored to the far right. */
+.clean-card-reference-toggle-row{
+  display:flex;
+  align-items:center;
+  min-width:0;
+}
+.clean-card-reference-toggle-row .clean-card-reference{
+  min-width:0;
+}
+.clean-card-reference-spacer{
+  flex:1 1 auto;
+  min-width:0;
+}
+
+@media (min-width:801px){
+  .clean-card-reference-toggle-row{
+    width:100%;
+    gap:6px;
+  }
+  .clean-card-reference-toggle-row .clean-card-reference{
+    flex:0 1 auto;
+  }
+  .clean-card-reference-toggle-row .card-overview-pill-toggle{
+    flex:0 0 auto;
+    margin-top:0 !important;
+    margin-left:auto;
+  }
+}
+
+/* Mobile keeps its existing card layout; the desktop-only Details control is hidden. */
+@media (max-width:800px){
+  .clean-card-reference-toggle-row{
+    display:block;
+  }
+}
+</style>
 </head>
 <body>
 
@@ -29130,15 +29169,17 @@ function relatedCardHTML(c){
                   aria-label="${isFavorite(c.id) ? "Remove from favorites" : "Add to favorites"}">${isFavorite(c.id) ? "♥" : "♡"}</button>
               </div>
             </div>
-            ${(c.card_code || c.year) ? `<div class="clean-card-reference">${c.card_code ? `<span>${escapeHtml(c.card_code)}</span>` : ""}${c.card_code && c.year ? `<span class="clean-card-reference-dot">·</span>` : ""}${c.year ? `<span>${escapeHtml(c.year)}</span>` : ""}</div>` : ""}
+            <div class="clean-card-reference-toggle-row">
+              ${(c.card_code || c.year) ? `<div class="clean-card-reference">${c.card_code ? `<span>${escapeHtml(c.card_code)}</span>` : ""}${c.card_code && c.year ? `<span class="clean-card-reference-dot">·</span>` : ""}${c.year ? `<span>${escapeHtml(c.year)}</span>` : ""}</div>` : `<span class="clean-card-reference-spacer" aria-hidden="true"></span>`}
+              <button type="button"
+                      class="card-overview-pill-toggle"
+                      data-card-pill-toggle
+                      aria-expanded="false"
+                      title="Show card metadata">
+                <span>Details</span><span class="pill-toggle-chevron" aria-hidden="true">▾</span>
+              </button>
+            </div>
             ${normalizeFilterValue(c.availability) === "sold" && c.sold_at ? `<div class="sold-archive-date">Sold ${escapeHtml(formatSoldDate(c.sold_at))}</div>` : ""}
-            <button type="button"
-                    class="card-overview-pill-toggle"
-                    data-card-pill-toggle
-                    aria-expanded="false"
-                    title="Show card metadata">
-              <span>Details</span><span class="pill-toggle-chevron" aria-hidden="true">▾</span>
-            </button>
             <div class="clean-card-subrow clean-all-pills card-overview-collapsible-pills" hidden>
               ${c.game ? `<button type="button" class="clean-meta-pill clean-game-pill filter-pill-btn ${selectedSetMatches(pillFilterState.game, c.game) && pillFilterState.game.size ? "pill-selected" : ""}" data-pill-filter="game" data-pill-value="${escapeHtml(String(c.game))}" title="Filter by ${escapeHtml(String(c.game))}">${escapeHtml(String(c.game))}</button>` : ""}
               ${(grades.length || format === "Raw" || format === "Sealed")
