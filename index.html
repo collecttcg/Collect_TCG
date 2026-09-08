@@ -40736,15 +40736,36 @@ function wireShimmer(container){
     const divider = "━━━━━━━━━━━━━━━━━━━━━━━━";
     const lines = [divider,"",title,"",divider,""];
 
-    let lastHeading = null;
+    const groups=[];
+    const groupMap=new Map();
     cardsInSection.forEach(card=>{
-      const heading = cardListGroupHeading(card);
-      if(heading !== lastHeading){
-        if(lastHeading !== null) lines.push("");
-        lines.push(`【${heading}】`,"");
-        lastHeading = heading;
+      const heading=cardListGroupHeading(card);
+      if(!groupMap.has(heading)){
+        const group={heading,cards:[]};
+        groupMap.set(heading,group);
+        groups.push(group);
       }
-      lines.push(cardListItemLine(card),"",cardListPriceLine(card),"");
+      groupMap.get(heading).cards.push(card);
+    });
+
+    groups.forEach((group,groupIndex)=>{
+      if(groupIndex>0) lines.push("");
+      lines.push(`【${group.heading}】`,"");
+
+      const cards=group.cards;
+      if(cards.length<=2){
+        cards.forEach(card=>{
+          lines.push(cardListItemLine(card),"",cardListPriceLine(card),"");
+        });
+        return;
+      }
+
+      cards.slice(0,2).forEach(card=>{
+        lines.push(cardListItemLine(card),"",cardListPriceLine(card),"");
+      });
+      lines.push("...","");
+      const lastCard=cards[cards.length-1];
+      lines.push(cardListItemLine(lastCard),"",cardListPriceLine(lastCard),"");
     });
 
     return lines.join("\n").trimEnd();
