@@ -19809,6 +19809,27 @@ body.owner-mode .card-actions.owner-only {
   .listing-filter-tools .desktop-quick-filters-collapsible{display:flex !important;}
 }
 </style>
+
+<style id="desktop-collapse-collection-repair-v42">
+/* v42: make desktop category-pill collapse authoritative and restore
+   Collection game-group collapsing after the dense PC grid overrides. */
+@media (min-width:801px){
+  .listing-filter-tools .desktop-quick-filters-collapsible[hidden]{
+    display:none !important;
+  }
+  .listing-filter-tools .desktop-quick-filters-collapsible.is-expanded:not([hidden]){
+    display:flex !important;
+  }
+}
+
+/* Must come AFTER the responsive PC card rules. Their display:flex !important
+   previously overrode the hidden Collection-card state. */
+#invGrid.grid.collection-game-grouped .collection-game-card[hidden],
+#invGrid.grid.collection-game-grouped:not(.compact-list) .collection-game-card[hidden],
+#invGrid.collection-game-grouped.compact-list .collection-game-card[hidden]{
+  display:none !important;
+}
+</style>
 </head>
 <body>
 
@@ -31022,6 +31043,8 @@ function wireShimmer(container){
         $("invGrid")?.querySelectorAll(".collection-game-card").forEach(card=>{
           if(String(card.dataset.collectionGameKey||"")===key){
             card.hidden=collapse;
+            if(collapse) card.setAttribute("hidden","");
+            else card.removeAttribute("hidden");
           }
         });
         return;
@@ -31477,11 +31500,32 @@ function wireShimmer(container){
 
     const desktopQuickFiltersToggle=$("desktopQuickFiltersToggle");
     const desktopQuickFilters=$("quickFilters");
+
+    const setDesktopQuickFiltersExpanded=(expanded)=>{
+      if(!desktopQuickFilters || !desktopQuickFiltersToggle) return;
+
+      // Mobile keeps the existing always-visible category pills.
+      if(window.matchMedia("(max-width:800px)").matches){
+        desktopQuickFilters.hidden=false;
+        desktopQuickFilters.classList.remove("is-expanded");
+        desktopQuickFiltersToggle.classList.remove("is-expanded");
+        desktopQuickFiltersToggle.setAttribute("aria-expanded","true");
+        return;
+      }
+
+      const open=Boolean(expanded);
+      desktopQuickFilters.hidden=!open;
+      desktopQuickFilters.classList.toggle("is-expanded",open);
+      desktopQuickFiltersToggle.classList.toggle("is-expanded",open);
+      desktopQuickFiltersToggle.setAttribute("aria-expanded",open ? "true" : "false");
+    };
+
+    // PC starts collapsed every time the listing view is rendered.
+    setDesktopQuickFiltersExpanded(false);
+
     desktopQuickFiltersToggle?.addEventListener("click",()=>{
-      if(!desktopQuickFilters) return;
-      const expanded=desktopQuickFilters.classList.toggle("is-expanded");
-      desktopQuickFiltersToggle.setAttribute("aria-expanded",expanded ? "true" : "false");
-      desktopQuickFiltersToggle.classList.toggle("is-expanded",expanded);
+      const currentlyOpen=desktopQuickFiltersToggle.getAttribute("aria-expanded")==="true";
+      setDesktopQuickFiltersExpanded(!currentlyOpen);
     });
 
     $("quickFilters").querySelectorAll(".quick-filter").forEach(btn=>{
