@@ -18922,6 +18922,40 @@ body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game
 }
 </style>
 
+
+<style id="owner-public-visibility-v19">
+/* Fail closed: owner/admin controls never render for public visitors. */
+.owner-only,
+.owner-auth-only,
+.collection-mobile-owner-bar,
+.collection-rearrange-btn,
+.collection-mobile-owner-btn,
+.collection-mobile-owner-logout,
+.showcase-owner-actions,
+.giveaway-owner-actions,
+.card-actions.owner-only {
+  display:none !important;
+}
+
+body.owner-mode .owner-only,
+body.owner-mode .collection-rearrange-btn,
+body.owner-mode .showcase-owner-actions,
+body.owner-mode .giveaway-owner-actions,
+body.owner-mode .card-actions.owner-only {
+  display:flex !important;
+}
+
+/* Mobile Collection has a deliberately narrow authenticated-owner exception. */
+@media(max-width:800px){
+  body.owner-authenticated .collection-mobile-owner-bar.owner-auth-only{
+    display:grid !important;
+  }
+  body.owner-authenticated .collection-mobile-owner-btn,
+  body.owner-authenticated .collection-mobile-owner-logout{
+    display:inline-flex !important;
+  }
+}
+</style>
 </head>
 <body>
 
@@ -20001,7 +20035,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function applyOwnerMode(){
     const owner=isOwnerMode();
+    const authenticatedOwner=!!ownerSession && ownerVerified === true;
     document.body.classList.toggle("owner-mode", owner);
+    document.body.classList.toggle("owner-authenticated", authenticatedOwner);
 
     if(!owner){
       qualifiedViewTotalsByCard?.clear?.();
@@ -28605,21 +28641,19 @@ function wireShimmer(container){
         <a href="#/add" class="btn-primary owner-only desktop-filter-add-card">+ Add card</a>
       </div>
 
-      ${isCollection && isMobileOwnerBlocked() ? `
-        <div class="collection-mobile-owner-bar">
+      ${isCollection && isMobileOwnerBlocked() && canManageCollectionOrder() ? `
+        <div class="collection-mobile-owner-bar owner-auth-only">
           <button type="button"
                   class="btn-ghost collection-mobile-owner-btn"
                   id="collectionMobileOwnerBtn">
-            ${canManageCollectionOrder() ? "⇅ Rearrange Collection" : "🔒 Owner Arrange"}
+            ⇅ Rearrange Collection
           </button>
-          ${canManageCollectionOrder() ? `
-            <button type="button"
-                    class="btn-ghost collection-mobile-owner-logout"
-                    id="collectionMobileOwnerLogoutBtn"
-                    title="Disable mobile Collection owner access">
-              Log out
-            </button>
-          ` : ""}
+          <button type="button"
+                  class="btn-ghost collection-mobile-owner-logout"
+                  id="collectionMobileOwnerLogoutBtn"
+                  title="Disable mobile Collection owner access">
+            Log out
+          </button>
         </div>
       ` : ""}
 
