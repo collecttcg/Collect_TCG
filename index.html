@@ -21164,6 +21164,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return getFiltered().filter(card=>cardMatchesListingScope(card,listingAvailabilityScope));
   }
 
+  function collageCardPriceLabel(card){
+    const preferred=getPriceCurrencyPreference();
+    const candidates=[
+      {currency:preferred,value:cardCurrencyValue(card,preferred)},
+      ...["USD","MYR","SGD"].filter(c=>c!==preferred).map(currency=>({currency,value:cardCurrencyValue(card,currency)}))
+    ];
+    const match=candidates.find(entry=>hasListedPrice(entry.value));
+    return match ? formatCurrencyValue(match.currency, match.value) : "";
+  }
+
   function collectionCollageRoundedRect(ctx,x,y,w,h,r){
     const radius=Math.max(0,Math.min(r,Math.min(w,h)/2));
     ctx.beginPath();
@@ -21643,6 +21653,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
             <label class="collection-collage-check"><input id="collectionCollageShowLogo" type="checkbox" checked> Show website logo</label>
             <label class="collection-collage-check"><input id="collectionCollageShowDate" type="checkbox" checked> Show date</label>
             <label class="collection-collage-check"><input id="collectionCollageShowWebsite" type="checkbox" checked> Show website footer</label>
+            <label class="collection-collage-check"><input id="collectionCollageShowPrice" type="checkbox"> Show price below each card</label>
           </div>
 
           <div class="collection-collage-preview-note">
@@ -21674,7 +21685,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         corners:String($("collectionCollageCorners")?.value||"soft"),
         showLogo:!!$("collectionCollageShowLogo")?.checked,
         showDate:!!$("collectionCollageShowDate")?.checked,
-        showWebsite:!!$("collectionCollageShowWebsite")?.checked
+        showWebsite:!!$("collectionCollageShowWebsite")?.checked,
+        showPrice:!!$("collectionCollageShowPrice")?.checked
       };
       close();
       await exportCollectionCollage(settings);
@@ -21879,29 +21891,59 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         const row=Math.floor(index/cols);
         const x=padding+col*(slotW+gap);
         const y=cardsTop+row*(slotH+gap);
+        const outerRadius=settings.corners==="square" ? 4 : Math.max(14,Math.round(slotW*.035));
+        const innerRadius=settings.corners==="square" ? 3 : Math.max(12,Math.round(slotW*.032));
+        const priceLabel=settings.showPrice ? collageCardPriceLabel(entry.card) : "";
+        const priceAreaH=settings.showPrice ? Math.max(34,Math.min(58,Math.round(slotH*0.115))) : 0;
+        const contentInset=8;
+        const imageBoxY=y+contentInset;
+        const imageBoxH=slotH-contentInset*2-(priceAreaH ? priceAreaH+6 : 0);
 
         ctx.save();
-        collectionCollageRoundedRect(ctx,x,y,slotW,slotH,settings.corners==="square" ? 4 : Math.max(14,Math.round(slotW*.035)));
+        collectionCollageRoundedRect(ctx,x,y,slotW,slotH,outerRadius);
         ctx.fillStyle="#1b2028";
         ctx.fill();
         ctx.restore();
 
         if(entry.img){
           ctx.save();
-          collectionCollageRoundedRect(ctx,x+2,y+2,slotW-4,slotH-4,settings.corners==="square" ? 3 : Math.max(12,Math.round(slotW*.032)));
+          collectionCollageRoundedRect(ctx,x+2,imageBoxY,slotW-4,imageBoxH,innerRadius);
           ctx.clip();
-          collectionCollageDrawImageContain(ctx,entry.img,x+8,y+8,slotW-16,slotH-16);
+          collectionCollageDrawImageContain(ctx,entry.img,x+8,imageBoxY+6,slotW-16,Math.max(40,imageBoxH-12));
           ctx.restore();
         }else{
           ctx.save();
-          collectionCollageRoundedRect(ctx,x+2,y+2,slotW-4,slotH-4,settings.corners==="square" ? 3 : Math.max(12,Math.round(slotW*.032)));
+          collectionCollageRoundedRect(ctx,x+2,imageBoxY,slotW-4,imageBoxH,innerRadius);
           ctx.fillStyle="#2b313b";
           ctx.fill();
           ctx.fillStyle="rgba(247,248,251,0.72)";
-          ctx.font="600 28px Inter, system-ui, sans-serif";
+          ctx.font=`600 ${Math.max(20,Math.round(slotW*0.11))}px Inter, system-ui, sans-serif`;
           ctx.textAlign="center";
           ctx.textBaseline="middle";
-          ctx.fillText("No Image",x+slotW/2,y+slotH/2);
+          ctx.fillText("No Image",x+slotW/2,imageBoxY+imageBoxH/2);
+          ctx.restore();
+        }
+
+        if(settings.showPrice){
+          const priceY=y+slotH-priceAreaH-contentInset+2;
+          ctx.save();
+          collectionCollageRoundedRect(ctx,x+10,priceY,slotW-20,priceAreaH,settings.corners==="square" ? 3 : Math.max(10,Math.round(slotW*.026)));
+          const priceBg=ctx.createLinearGradient(x,priceY,x,priceY+priceAreaH);
+          priceBg.addColorStop(0,"rgba(255,255,255,0.06)");
+          priceBg.addColorStop(1,"rgba(255,255,255,0.025)");
+          ctx.fillStyle=priceBg;
+          ctx.fill();
+          ctx.strokeStyle="rgba(255,255,255,0.06)";
+          ctx.lineWidth=1;
+          ctx.stroke();
+          ctx.restore();
+
+          ctx.save();
+          ctx.textAlign="center";
+          ctx.textBaseline="middle";
+          ctx.fillStyle=priceLabel ? "rgba(248,248,251,0.96)" : "rgba(248,248,251,0.42)";
+          ctx.font=`600 ${Math.max(17,Math.min(28,Math.round(slotW*0.09)))}px Inter, system-ui, sans-serif`;
+          ctx.fillText(priceLabel || "—",x+slotW/2,priceY+priceAreaH/2+1);
           ctx.restore();
         }
       });
