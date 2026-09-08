@@ -19979,6 +19979,8 @@ body.light-mode #invGrid .card img.thumb{
   #invGrid .card img.thumb{filter:none !important;}
 }
 </style>
+
+<!-- V47: Home Recently Added now uses the shared home-storefront-grid layout (same as High Value / Vintage / Recently Sold). -->
 </head>
 <body>
 
@@ -28502,7 +28504,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       .filter(c=>cardMatchesListingScope(c, "inventory"))
       .slice()
       .sort((a,b)=>String(b.created_at || "").localeCompare(String(a.created_at || "")))
-      .slice(0,6);
+      .slice(0,4);
 
     view.innerHTML = `
       <div class="home-hero">
@@ -28617,16 +28619,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         </div>
       </section>
 
-      <section class="home-section">
+      <section class="home-section home-storefront-section">
         <div class="home-section-head">
           <div>
             <h3>Recently Added</h3>
             <p>Newest listings in our inventory.</p>
           </div>
-          <a href="#/inventory" class="btn-ghost" style="text-decoration:none;">View all</a>
+          <a href="#/inventory" class="home-section-link">View All</a>
         </div>
 
-        <div class="home-recent-grid" id="homeRecentGrid">
+        <div class="home-storefront-grid" id="homeRecentlyAddedGrid">
           ${recent.length
             ? recent.map(cardTileHTML).join("")
             : `<div class="hint">No listings yet.</div>`}
@@ -28695,7 +28697,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       </section>
     `;
 
-    const recentGrid = $("homeRecentGrid");
+    const recentGrid = $("homeRecentlyAddedGrid");
     if(recentGrid && recent.length){
       wireShimmer(recentGrid);
     }
@@ -48453,5 +48455,7 @@ function wireShimmer(container){
 })();
 </script>
 
+
+<!-- V48: Recently Added uses the exact same storefront row structure/count as High Value/Vintage/Recently Sold. -->
 </body>
 </html>
