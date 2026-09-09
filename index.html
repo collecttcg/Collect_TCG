@@ -20100,6 +20100,7 @@ body.light-mode #invGrid .card img.thumb{
 <!-- v71: Final session-duration flush uses sendBeacon when available, with keepalive fetch fallback. -->
   <!-- v72: persist thumbnail_url from images[0] so new/edited listings render their first photo correctly in lightweight mobile/desktop catalogues. -->
   <!-- v73: stop automatic Storage cleanup after successful Add/Edit saves to prevent valid gallery objects from being deleted; keep QR virtual only. -->
+  <!-- v74: Fresh card uploads must pass Storage + public URL readback/decoding before a listing can save them. -->
 </head>
 <body>
 
@@ -27923,6 +27924,43 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       throw new Error("card image public URL unavailable");
     }
 
+    // A successful Storage upload is not enough. The listing must only save a
+    // URL after the exact object can be read back and decoded through the same
+    // public URL that customers will use. This prevents the database from ever
+    // receiving a fresh broken image URL.
+    let lastVerifyError=null;
+    for(let attempt=0;attempt<5;attempt++){
+      try{
+        const {data:downloaded,error:downloadError}=await supabaseClient.storage
+          .from(CARD_IMAGE_STORAGE_BUCKET)
+          .download(path);
+        if(downloadError) throw new Error(`card image Storage readback failed: ${errorText(downloadError,"unknown Storage error")}`);
+        if(!downloaded || !downloaded.size) throw new Error("card image Storage readback returned an empty file");
+
+        const downloadedMime=normalizedImageMime(downloaded.type||"");
+        if(downloadedMime && !downloadedMime.startsWith("image/")){
+          throw new Error("card image Storage readback is not an image");
+        }
+
+        await verifyPublicCardImageUrl(publicUrl);
+        lastVerifyError=null;
+        break;
+      }catch(verifyError){
+        lastVerifyError=verifyError;
+        // Supabase/CDN publication can occasionally lag immediately after an
+        // upload. Retry briefly before deciding the URL is unsafe to save.
+        if(attempt<4){
+          await new Promise(resolve=>setTimeout(resolve,350*(attempt+1)));
+        }
+      }
+    }
+
+    if(lastVerifyError){
+      console.error("Fresh card image failed readback verification:",{path,publicUrl,error:lastVerifyError});
+      await supabaseClient.storage.from(CARD_IMAGE_STORAGE_BUCKET).remove([path]);
+      throw new Error(`card image verification failed: ${String(lastVerifyError?.message||lastVerifyError).slice(0,220)}`);
+    }
+
     return {url:publicUrl,path};
   }
 
@@ -28087,8 +28125,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(message.includes("too large")){
       return "Processed image is too large for card image Storage.";
     }
-    if(message.includes("verification")){
-      return "One or more uploaded photos could not be verified in Storage. The listing was not saved with broken image links; please try the upload again.";
+    if(message.includes("verification") || message.includes("readback")){
+      return "A newly uploaded photo could not be read back from Supabase Storage/public URL, so the listing was NOT saved with a broken image link. Please check the card-images bucket/public access and try again.";
     }
     return "Could not upload the card image to Supabase Storage. Nothing was saved.";
   }
