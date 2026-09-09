@@ -21615,7 +21615,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         const qrW = reserveCols*cellW + gap*(reserveCols-1);
         const qrH = reserveRows*cellH + gap*(reserveRows-1);
         const qrSize = Math.min(qrW,qrH);
-        if(qrSize < 150) continue;
+        if(qrSize < 120) continue;
 
         const area=cellW*cellH;
         const cellAspect=cellW/cellH;
@@ -22012,10 +22012,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       }
 
       if(collageQr && qrBox){
-        const panelX=padding+qrBox.x;
-        const panelY=cardsTop+qrBox.y;
         const panelW=qrBox.w;
         const panelH=qrBox.h;
+        const panelX=Math.round(padding+((width-padding*2)-panelW)/2);
+        const panelY=Math.round(cardsTop+((cardsBottom-cardsTop)-panelH)/2);
         const panelRadius=settings.corners==="square" ? 8 : Math.max(20,Math.round(Math.min(panelW,panelH)*0.09));
         const panelBg=ctx.createLinearGradient(panelX,panelY,panelX,panelY+panelH);
         panelBg.addColorStop(0,"rgba(255,255,255,0.13)");
