@@ -21605,8 +21605,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         const cellH=(areaH-gap*(rows-1))/rows;
         if(cellW<=20 || cellH<=20) continue;
 
-        const reserveCols = cols>=7 ? 2 : 1;
-        const reserveRows = rows>=6 ? 2 : 1;
+        // Keep the reserved QR gap centered on the grid's true midpoint.
+        // A 2-column gap inside an odd-column grid is inherently off-center,
+        // so match the gap parity to the grid parity.
+        const reserveCols = (cols % 2 === 0) ? 2 : 1;
+        const reserveRows = (rows % 2 === 0) ? 2 : 1;
         const startCol = Math.max(0,Math.floor((cols-reserveCols)/2));
         const startRow = Math.max(0,Math.floor((rows-reserveRows)/2));
         const capacity = cols*rows - reserveCols*reserveRows;
@@ -21887,6 +21890,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       const slotH=gridInfo.cellH;
       const slotPositions=(Array.isArray(gridInfo.positions) && gridInfo.positions.length ? gridInfo.positions : Array.from({length:prepared.length},(_,index)=>({x:(index%cols)*(slotW+gap),y:Math.floor(index/cols)*(slotH+gap)})));
       const qrBox=gridInfo.qrBox||null;
+      const gridBlockW=cols*slotW + Math.max(0,cols-1)*gap;
+      const gridBlockH=rows*slotH + Math.max(0,rows-1)*gap;
+      const gridOffsetX=Math.round(padding + ((width-padding*2)-gridBlockW)/2);
+      const gridOffsetY=Math.round(cardsTop + ((cardsBottom-cardsTop)-gridBlockH)/2);
       canvas.width=width;
       canvas.height=height;
 
@@ -22014,8 +22021,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       if(collageQr && qrBox){
         const panelW=qrBox.w;
         const panelH=qrBox.h;
-        const panelX=Math.round(padding+((width-padding*2)-panelW)/2);
-        const panelY=Math.round(cardsTop+((cardsBottom-cardsTop)-panelH)/2);
+        const panelX=Math.round(gridOffsetX+qrBox.x);
+        const panelY=Math.round(gridOffsetY+qrBox.y);
         const panelRadius=settings.corners==="square" ? 8 : Math.max(20,Math.round(Math.min(panelW,panelH)*0.09));
         const panelBg=ctx.createLinearGradient(panelX,panelY,panelX,panelY+panelH);
         panelBg.addColorStop(0,"rgba(255,255,255,0.13)");
@@ -22065,8 +22072,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
       loaded.forEach((entry,index)=>{
         const position=slotPositions[index] || {x:(index%cols)*(slotW+gap),y:Math.floor(index/cols)*(slotH+gap)};
-        const x=padding+position.x;
-        const y=cardsTop+position.y;
+        const x=gridOffsetX+position.x;
+        const y=gridOffsetY+position.y;
         const outerRadius=settings.corners==="square" ? 4 : Math.max(14,Math.round(slotW*.035));
         const innerRadius=settings.corners==="square" ? 3 : Math.max(12,Math.round(slotW*.032));
         const priceLabel=settings.showPrice ? collageCardPriceLabel(entry.card) : "";
