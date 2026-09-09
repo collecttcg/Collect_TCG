@@ -20086,6 +20086,7 @@ body.light-mode #invGrid .card img.thumb{
   <!-- v75: Reverted automatic Inventory QR as the final listing image. Listing galleries, Add/Edit previews, and post-generator ZIPs now use uploaded photos only. -->
   <!-- v76: Single-card post-generator ZIP downloads now append a branded Inventory QR image as the final file, without injecting QR into listing galleries or editors. -->
   <!-- v77: Normal Add/Edit image saves now treat images[] as the source of truth: existing Storage URLs are preserved byte-for-byte, and only newly-added pending images are replaced with fresh uploaded URLs. -->
+  <!-- v78: Normal Add/Edit bypasses reversible image-variant reads/writes. images[] is the only gallery source; existing URLs are preserved and new uploads are appended without variant metadata touching the listing. -->
 </head>
 <body>
 
@@ -47046,12 +47047,9 @@ function wireShimmer(container){
           return;
         }
 
-        let imageVariantsSaved=true;
-        if(preparedImages.variantRecords?.length){
-          const variantResult=await saveOwnerCardImageVariants(saved.id,preparedImages.variantRecords);
-          imageVariantsSaved=variantResult.ok;
-        }
-
+        // v78: Do not write card_image_variants from normal Add. The public
+        // gallery is represented only by saved.images. This avoids background
+        // variant metadata from ever remapping or interfering with gallery URLs.
         cards.push(saved);
 
         let privateMetaSaved=true;
@@ -47073,11 +47071,9 @@ function wireShimmer(container){
             ? "Card added · use the PSA browser helper to sync POP"
             : "Card added · private notes/tags were not saved");
         }else{
-          showToast(!imageVariantsSaved
-            ? "Card added · reversible watermark metadata was not saved"
-            : (privateMetaSaved
-                ? "Card added · images stored in Supabase Storage"
-                : "Card added · images stored in Supabase Storage · private notes/tags were not saved"));
+          showToast(privateMetaSaved
+            ? "Card added · images stored in Supabase Storage"
+            : "Card added · images stored in Supabase Storage · private notes/tags were not saved");
         }
 
         goToRoute("inventory");
@@ -48804,47 +48800,26 @@ function wireShimmer(container){
     // new photos can rebuild the listing from only the thumbnail + new files.
     await ensureCardImagesLoaded(card);
 
-    const [privateMeta,storedImageVariants]=await Promise.all([
-      fetchOwnerPrivateMeta(card.id),
-      fetchOwnerCardImageVariants(card.id)
-    ]);
+    // v78: Normal Add/Edit deliberately does not read reversible image-variant
+    // metadata. The listing's images[] array is the only source of truth here.
+    // Explicit watermark/reprocess tools may still use card_image_variants.
+    const privateMeta=await fetchOwnerPrivateMeta(card.id);
     $("editId").value = card.id;
     $("editFieldsMount").innerHTML = fieldsTemplate("edit");
     populateFields("edit", card);
     if($("editOwnerTags")) $("editOwnerTags").value=privateMeta.tags.join(", ");
     if($("editOwnerNotes")) $("editOwnerNotes").value=privateMeta.notes;
     const currentImages=getImages(card).slice();
-    const mappedVariants=currentImages.map(image=>{
-      const stored=storedImageVariants.find(v=>
-        v.original_url===image || v.watermarked_url===image
-      );
-
-      if(stored){
-        return {
-          key:stored.image_key,
-          original:stored.original_url,
-          watermarked:stored.watermarked_url||null,
-          active:stored.watermarked_url===image ? true : false
-        };
-      }
-
-      // Legacy image: current file becomes the clean base for future
-      // reversible watermark switching.
-      return {
-        key:newCardImageVariantKey(),
-        original:image,
-        watermarked:null,
-        active:false
-      };
-    });
 
     editFormState = {
       images: currentImages,
       originalImages: currentImages.slice(),
-      imageCleanSources: mappedVariants.map(v=>v.original),
-      imageWatermarkedSources: mappedVariants.map(v=>v.watermarked),
-      imageVariantKeys: mappedVariants.map(v=>v.key),
-      imageWatermarkStates: mappedVariants.map(v=>v.active),
+      // v78: These parallel arrays are only local editor state. They are not
+      // loaded from or written back to card_image_variants during normal edits.
+      imageCleanSources: currentImages.slice(),
+      imageWatermarkedSources: Array(currentImages.length).fill(null),
+      imageVariantKeys: Array.from({length:currentImages.length},()=>newCardImageVariantKey()),
+      imageWatermarkStates: Array(currentImages.length).fill(false),
       watermarkEnabled:false,
       processingImages: 0,
       grading: Array.isArray(card.grading) ? card.grading.map(g=>({
@@ -48937,11 +48912,9 @@ function wireShimmer(container){
         return;
       }
 
-      const variantResult=await saveOwnerCardImageVariants(id,preparedImages.variantRecords||[]);
-      const protectedVariantUrls=(preparedImages.variantRecords||[]).flatMap(v=>[
-        v.original_url,
-        v.watermarked_url
-      ]).filter(Boolean);
+      // v78: Normal Edit does not write card_image_variants. Existing gallery
+      // URLs remain exactly as they were; only newly-uploaded pending images are
+      // replaced with their own verified Storage URLs.
 
       // Keep the in-memory card lookup in sync immediately after save.
       // Directly assigning cards[idx] left cardLookupMap pointing at the old
@@ -48962,9 +48935,7 @@ function wireShimmer(container){
         await saveOwnerPrivateMeta(id,data._owner_tags,data._owner_notes);
       }
 
-      if(!variantResult.ok && preparedImages.variantRecords?.length){
-        showToast("Card updated · reversible watermark metadata was not saved");
-      }else if(hasPsaCert(data)){
+      if(hasPsaCert(data)){
         showToast("Card updated · use the PSA browser helper to sync POP");
       }else{
         showToast("Card updated · images stored in Supabase Storage");
