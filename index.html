@@ -27631,6 +27631,78 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return "jpg";
   }
 
+  async function verifyPublicCardImageUrl(url){
+    const safe=safeHttpUrl(url||"");
+    if(!safe) throw new Error("card image public URL unavailable");
+
+    const response=await fetch(safe,{
+      method:"GET",
+      mode:"cors",
+      credentials:"omit",
+      cache:"no-store",
+      referrerPolicy:"no-referrer"
+    });
+    if(!response.ok) throw new Error(`card image public URL returned ${response.status}`);
+
+    const blob=await response.blob();
+    if(!blob || !blob.size) throw new Error("card image public URL returned an empty file");
+
+    const mime=String(blob.type||"").trim().toLowerCase().replace("image/jpg","image/jpeg");
+    if(mime && !mime.startsWith("image/")) throw new Error("card image public URL is not an image");
+
+    if(typeof createImageBitmap==="function"){
+      const bitmap=await createImageBitmap(blob);
+      const valid=bitmap.width>0 && bitmap.height>0;
+      try{ bitmap.close(); }catch{}
+      if(!valid) throw new Error("card image public URL could not be decoded");
+    }else{
+      const objectUrl=URL.createObjectURL(blob);
+      try{
+        await new Promise((resolve,reject)=>{
+          const img=new Image();
+          img.onload=()=>img.naturalWidth>0 && img.naturalHeight>0
+            ? resolve()
+            : reject(new Error("card image public URL could not be decoded"));
+          img.onerror=()=>reject(new Error("card image public URL could not be decoded"));
+          img.src=objectUrl;
+        });
+      }finally{
+        URL.revokeObjectURL(objectUrl);
+      }
+    }
+    return safe;
+  }
+
+  async function verifyFreshCardStorageObject(path,publicUrl){
+    let lastError=null;
+    for(let attempt=0;attempt<5;attempt++){
+      try{
+        const {data:downloaded,error:downloadError}=await supabaseClient.storage
+          .from(CARD_IMAGE_STORAGE_BUCKET)
+          .download(path);
+        if(downloadError){
+          throw new Error(`card image Storage readback failed: ${errorText(downloadError,"unknown Storage error")}`);
+        }
+        if(!downloaded || !downloaded.size){
+          throw new Error("card image Storage readback returned an empty file");
+        }
+        const downloadedMime=String(downloaded.type||"").trim().toLowerCase().replace("image/jpg","image/jpeg");
+        if(downloadedMime && !downloadedMime.startsWith("image/")){
+          throw new Error("card image Storage readback is not an image");
+        }
+
+        await verifyPublicCardImageUrl(publicUrl);
+        return true;
+      }catch(error){
+        lastError=error;
+        if(attempt<4){
+          await new Promise(resolve=>setTimeout(resolve,350*(attempt+1)));
+        }
+      }
+    }
+    throw lastError || new Error("card image verification failed");
+  }
+
   async function uploadPendingCardImage(dataUrl,index){
     if(!requireOwner("upload card image")) throw new Error("Owner login required");
 
@@ -27665,6 +27737,21 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     if(!publicUrl){
       await supabaseClient.storage.from(CARD_IMAGE_STORAGE_BUCKET).remove([path]);
       throw new Error("card image public URL unavailable");
+    }
+
+    // Critical safety rule for both normal uploads and watermark-generated images:
+    // never let cards.images point at a newly-created Storage object until the
+    // exact object can be downloaded through Supabase AND decoded through its
+    // public URL. If verification fails, only this fresh object is removed and
+    // the original listing image remains untouched.
+    try{
+      await verifyFreshCardStorageObject(path,publicUrl);
+    }catch(verifyError){
+      console.error("Fresh card image failed readback verification:",{path,publicUrl,error:verifyError});
+      try{
+        await supabaseClient.storage.from(CARD_IMAGE_STORAGE_BUCKET).remove([path]);
+      }catch{}
+      throw new Error(`card image verification failed: ${String(verifyError?.message||verifyError).slice(0,220)}`);
     }
 
     return {url:publicUrl,path};
@@ -27825,6 +27912,9 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
     if(message.includes("too large")){
       return "Processed image is too large for card image Storage.";
+    }
+    if(message.includes("verification") || message.includes("readback") || message.includes("public url")){
+      return "The new image/watermark was uploaded but could not be read back safely from Supabase, so the original listing image was kept unchanged. Check the card-images bucket/public access and try again.";
     }
     return "Could not upload the card image to Supabase Storage. Nothing was saved.";
   }
