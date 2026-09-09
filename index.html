@@ -23241,7 +23241,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     })).filter(row=>row.image_key && row.original_url);
   }
 
-  async function saveOwnerCardImageVariants(cardId,variantRecords){
+  async function saveOwnerCardImageVariants(cardId,variantRecords,{preserveStale=false}={}){
     if(!requireOwner("save reversible image variants")){
       return {ok:false,staleUrls:[]};
     }
@@ -23284,7 +23284,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     const keepKeys=new Set(variants.map(v=>v.image_key));
     const stale=(existing||[]).filter(row=>!keepKeys.has(String(row.image_key||"")));
-    if(stale.length){
+
+    // Normal Add/Edit saves use preserveStale=true. In that mode we intentionally
+    // keep older variant rows and, critically, never expose their Storage URLs for
+    // automatic deletion. This makes watermark toggles non-destructive.
+    if(stale.length && !preserveStale){
       const staleKeys=stale.map(row=>String(row.image_key||"")).filter(Boolean);
       const {error:deleteError}=await supabaseClient
         .from("card_image_variants")
@@ -23299,7 +23303,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
     return {
       ok:true,
-      staleUrls:stale.flatMap(row=>[
+      staleUrls:preserveStale ? [] : stale.flatMap(row=>[
         safeHttpUrl(row.original_url)||"",
         safeHttpUrl(row.watermarked_url)||""
       ]).filter(Boolean)
@@ -46907,7 +46911,7 @@ function wireShimmer(container){
 
         let imageVariantsSaved=true;
         if(preparedImages.variantRecords?.length){
-          const variantResult=await saveOwnerCardImageVariants(saved.id,preparedImages.variantRecords);
+          const variantResult=await saveOwnerCardImageVariants(saved.id,preparedImages.variantRecords,{preserveStale:true});
           imageVariantsSaved=variantResult.ok;
         }
 
@@ -48602,7 +48606,7 @@ function wireShimmer(container){
         return;
       }
 
-      const variantResult=await saveOwnerCardImageVariants(id,preparedImages.variantRecords||[]);
+      const variantResult=await saveOwnerCardImageVariants(id,preparedImages.variantRecords||[],{preserveStale:true});
       const protectedVariantUrls=(preparedImages.variantRecords||[]).flatMap(v=>[
         v.original_url,
         v.watermarked_url
@@ -48614,22 +48618,10 @@ function wireShimmer(container){
       replaceCardInMemory(saved);
       invalidateOwnerReservedAgeCache();
 
-      // Do not delete the inactive original/watermarked counterpart. Both
-      // versions are intentionally preserved so the owner can switch later.
-      await cleanupRemovedCardStorageImages(
-        editFormState.originalImages || [],
-        getImages(saved),
-        protectedVariantUrls
-      );
-
-      // Variants belonging to photos removed from the card can now be cleaned.
-      if(variantResult.ok && variantResult.staleUrls?.length){
-        const protectedPaths=new Set(protectedVariantUrls.map(cardStoragePathFromUrl).filter(Boolean));
-        const stalePaths=variantResult.staleUrls
-          .map(cardStoragePathFromUrl)
-          .filter(path=>path && !protectedPaths.has(path));
-        if(stalePaths.length) await removeCardStoragePaths(stalePaths);
-      }
+      // v80 safety rule: a successful normal Add/Edit save NEVER removes any
+      // existing card-image Storage object. Watermarking may create a new copy,
+      // but the clean original, older watermark copies, and inactive variants are
+      // retained. Only explicit owner cleanup tools may delete existing objects.
 
       if(ownerPrivateSupported){
         await saveOwnerPrivateMeta(id,data._owner_tags,data._owner_notes);
