@@ -18340,6 +18340,14 @@ body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game
     background:rgba(10,12,16,.82);color:#f2cf70;font-size:8px;font-weight:700;text-align:center;
     border:1px solid rgba(227,179,65,.26);backdrop-filter:blur(5px);
   }
+
+  /* v73: explicit broken-image treatment so failed objects do not leave a black/empty stage. */
+  .detail-slider-image.image-load-failed{opacity:0 !important;}
+  .detail-slider-stage.image-load-failed::after{
+    content:"Image unavailable · please re-upload this photo";
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    padding:24px;text-align:center;color:var(--text-muted);font-weight:700;
+  }
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -20091,6 +20099,7 @@ body.light-mode #invGrid .card img.thumb{
 <!-- v70: Reliable session-duration heartbeat: 10s writes + flush foreground time on hide/pagehide. -->
 <!-- v71: Final session-duration flush uses sendBeacon when available, with keepalive fetch fallback. -->
   <!-- v72: persist thumbnail_url from images[0] so new/edited listings render their first photo correctly in lightweight mobile/desktop catalogues. -->
+  <!-- v73: stop automatic Storage cleanup after successful Add/Edit saves to prevent valid gallery objects from being deleted; keep QR virtual only. -->
 </head>
 <body>
 
@@ -27907,30 +27916,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       throw new Error(`card image upload failed: ${errorText(error,"unknown Storage error").slice(0,220)}`);
     }
 
-    // Verify that this exact object can be read back before its URL is saved.
-    // This prevents a multi-photo save from committing broken later images.
-    const {data:verifiedBlob,error:verifyError}=await supabaseClient.storage
-      .from(CARD_IMAGE_STORAGE_BUCKET)
-      .download(path);
-    if(verifyError || !verifiedBlob || !verifiedBlob.size){
-      await supabaseClient.storage.from(CARD_IMAGE_STORAGE_BUCKET).remove([path]);
-      console.error("Card image Storage verification error:",verifyError);
-      throw new Error("card image upload verification failed");
-    }
-
     const {data}=supabaseClient.storage.from(CARD_IMAGE_STORAGE_BUCKET).getPublicUrl(path);
     const publicUrl=safeHttpUrl(data?.publicUrl||"");
     if(!publicUrl){
       await supabaseClient.storage.from(CARD_IMAGE_STORAGE_BUCKET).remove([path]);
       throw new Error("card image public URL unavailable");
-    }
-
-    try{
-      await verifyPublicCardImageUrl(publicUrl);
-    }catch(publicError){
-      await supabaseClient.storage.from(CARD_IMAGE_STORAGE_BUCKET).remove([path]);
-      console.error("Card image public URL verification error:",publicError);
-      throw new Error(`card image public verification failed: ${String(publicError?.message||publicError).slice(0,160)}`);
     }
 
     return {url:publicUrl,path};
@@ -48379,7 +48369,18 @@ function wireShimmer(container){
     if(slider && images.length){
       let slideIndex = 0;
       const slideImg = slider.querySelector(".detail-slider-image");
+      const sliderStage = slider.querySelector(".detail-slider-stage");
       const countEl = slider.querySelector(".detail-slider-count");
+      if(slideImg){
+        slideImg.addEventListener("load",()=>{
+          slideImg.classList.remove("image-load-failed");
+          sliderStage?.classList.remove("image-load-failed");
+        });
+        slideImg.addEventListener("error",()=>{
+          slideImg.classList.add("image-load-failed");
+          sliderStage?.classList.add("image-load-failed");
+        });
+      }
       const dots = Array.from(slider.querySelectorAll(".detail-slider-dot"));
       const thumbs = Array.from(slider.querySelectorAll(".detail-thumb-strip-btn"));
 
@@ -48926,22 +48927,14 @@ function wireShimmer(container){
       replaceCardInMemory(saved);
       invalidateOwnerReservedAgeCache();
 
-      // Do not delete the inactive original/watermarked counterpart. Both
-      // versions are intentionally preserved so the owner can switch later.
-      await cleanupRemovedCardStorageImages(
-        editFormState.originalImages || [],
-        getImages(saved),
-        protectedVariantUrls
-      );
-
-      // Variants belonging to photos removed from the card can now be cleaned.
-      if(variantResult.ok && variantResult.staleUrls?.length){
-        const protectedPaths=new Set(protectedVariantUrls.map(cardStoragePathFromUrl).filter(Boolean));
-        const stalePaths=variantResult.staleUrls
-          .map(cardStoragePathFromUrl)
-          .filter(path=>path && !protectedPaths.has(path));
-        if(stalePaths.length) await removeCardStoragePaths(stalePaths);
-      }
+      // v73 safety rule: never delete Storage objects automatically after a
+      // successful Add/Edit save. The database may still reference an older
+      // image URL through another render/cache/variant path, and deleting the
+      // object here can turn an otherwise valid listing photo into a broken
+      // image later. Orphan cleanup should be a separate explicit owner task.
+      //
+      // We still roll back NEW uploads if the database save itself fails; that
+      // is safe because those URLs were never committed to the listing.
 
       if(ownerPrivateSupported){
         await saveOwnerPrivateMeta(id,data._owner_tags,data._owner_notes);
