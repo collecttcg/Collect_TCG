@@ -17202,6 +17202,21 @@ body.showcase-dragging-body{
 .engaged-visit-line>strong{color:var(--text);font-size:8px;text-align:right}
 .engaged-visit-day>small{color:var(--text-muted);font-size:7.5px;text-align:right}
 .insights-engaged-note{margin-top:11px}
+.insights-duration-card{margin-top:12px}
+.insights-duration-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:14px}
+.insights-duration-summary article{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2)}
+.insights-duration-summary span{display:block;color:var(--text-muted);font-size:8px}
+.insights-duration-summary strong{display:block;margin-top:3px;color:var(--text);font-size:17px}
+.insights-duration-summary small{display:block;margin-top:2px;color:var(--text-muted);font-size:7.5px}
+.insights-duration-buckets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.insights-duration-bucket{padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2)}
+.insights-duration-bucket span{display:block;color:var(--text-muted);font-size:7.5px}
+.insights-duration-bucket strong{display:block;margin-top:3px;font-size:14px;color:var(--text)}
+.insights-duration-bucket i{display:block;height:6px;margin-top:7px;border-radius:999px;background:var(--surface);overflow:hidden}
+.insights-duration-bucket i>b{display:block;height:100%;border-radius:inherit;background:var(--accent-teal)}
+@media(max-width:760px){
+  .insights-duration-summary,.insights-duration-buckets{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 @media(max-width:620px){
   .insights-engaged-summary{grid-template-columns:1fr}
   .engaged-visit-day{grid-template-columns:44px minmax(0,1fr) 40px;gap:7px}
@@ -20045,6 +20060,7 @@ body.light-mode #invGrid .card img.thumb{
   <!-- v58: Owner-only collage export now works on both Collection and Inventory, with automatic scope titles/filenames and an optional website-logo toggle. -->
   <!-- v56: Fixes the collage settings modal being hidden by the global owner-auth-only display:none rule. Owner access remains enforced before the modal can open. -->
   <!-- v50: Overview/listing thumbnails dimmed a little more for eye comfort. -->
+  <!-- v83: Built from working v62. Only Post Generator formatting, session-duration Insights (10s heartbeat + Beacon/keepalive flush), and Post Generator ZIP final Inventory QR were added. Listing/Add/Edit/watermark code remains v62. -->
 </head>
 <body>
 
@@ -24992,6 +25008,143 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
 
+  const SESSION_DURATION_HEARTBEAT_MS=10000;
+  let sessionDurationHeartbeatTimer=null;
+  let sessionDurationLastTick=0;
+  let sessionDurationBackendState="unknown";
+
+  function sessionDurationPayload(seconds){
+    const sessionId=getAnalyticsSessionId();
+    const visitorId=getVisitorId();
+    const safeSeconds=Math.max(0,Math.min(60,Math.round(Number(seconds)||0)));
+    if(!sessionId || !visitorId || safeSeconds<1) return null;
+    return {
+      p_session_id:sessionId,
+      p_visitor_id:visitorId,
+      p_active_seconds:safeSeconds
+    };
+  }
+
+  async function recordSessionActiveSeconds(seconds,{allowHidden=false}={}){
+    if(isOwnerMode() || isAnalyticsExcludedDevice() || (!allowHidden && document.hidden)) return false;
+    if(sessionDurationBackendState==="unavailable") return false;
+    const payload=sessionDurationPayload(seconds);
+    if(!payload) return false;
+    try{
+      const {error}=await supabaseClient.rpc("record_site_session_active_time",payload);
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        if(message.includes("record_site_session_active_time") || message.includes("function") || message.includes("schema cache")){
+          sessionDurationBackendState="unavailable";
+        }else{
+          console.warn("Session duration analytics unavailable:",error);
+        }
+        return false;
+      }
+      sessionDurationBackendState="available";
+      return true;
+    }catch(error){
+      console.warn("Session duration analytics unavailable:",error);
+      return false;
+    }
+  }
+
+  function beaconSessionActiveSeconds(seconds){
+    if(isOwnerMode() || isAnalyticsExcludedDevice() || sessionDurationBackendState==="unavailable") return false;
+    const payload=sessionDurationPayload(seconds);
+    if(!payload) return false;
+
+    const base=String(window.COLLECT_TCG_SUPABASE_URL||"").replace(/\/$/,"");
+    const key=String(window.COLLECT_TCG_SUPABASE_KEY||"");
+    if(!base || !key) return false;
+
+    // Supabase's API gateway accepts the publishable apikey on the request URL.
+    // That lets sendBeacon authenticate the unload-time RPC even though the
+    // Beacon API does not allow custom request headers.
+    const endpoint=`${base}/rest/v1/rpc/record_site_session_active_time?apikey=${encodeURIComponent(key)}`;
+    const body=JSON.stringify(payload);
+
+    if(typeof navigator.sendBeacon==="function"){
+      try{
+        const queued=navigator.sendBeacon(
+          endpoint,
+          new Blob([body],{type:"application/json"})
+        );
+        if(queued) return true;
+      }catch(error){
+        console.warn("Session duration beacon could not be queued:",error);
+      }
+    }
+
+    // keepalive is the fallback for browsers that reject/disable Beacon.
+    try{
+      fetch(endpoint,{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "apikey":key,
+          "Authorization":`Bearer ${key}`
+        },
+        body,
+        keepalive:true,
+        credentials:"omit"
+      }).catch(error=>console.warn("Session duration keepalive flush failed:",error));
+      return true;
+    }catch(error){
+      console.warn("Session duration final flush failed:",error);
+      return false;
+    }
+  }
+
+  function sessionDurationHeartbeatTick({flushVisibleTime=false,useBeacon=false}={}){
+    const now=Date.now();
+    if(!sessionDurationLastTick){
+      sessionDurationLastTick=now;
+      return;
+    }
+    const elapsed=Math.round((now-sessionDurationLastTick)/1000);
+    sessionDurationLastTick=now;
+    if(elapsed<=0) return;
+
+    // Normal heartbeats only count while the tab is visible. When visibility
+    // has just changed to hidden/pagehide, flushVisibleTime records the time
+    // accumulated immediately BEFORE the browser hid the page.
+    if(document.hidden && !flushVisibleTime) return;
+    const seconds=Math.min(20,elapsed);
+    if(flushVisibleTime && useBeacon){
+      beaconSessionActiveSeconds(seconds);
+    }else{
+      recordSessionActiveSeconds(seconds,{allowHidden:flushVisibleTime});
+    }
+  }
+
+  function startSessionDurationTracking(){
+    if(isOwnerMode() || isAnalyticsExcludedDevice()) return;
+    if(sessionDurationHeartbeatTimer) clearInterval(sessionDurationHeartbeatTimer);
+    sessionDurationLastTick=Date.now();
+    sessionDurationHeartbeatTimer=setInterval(sessionDurationHeartbeatTick,SESSION_DURATION_HEARTBEAT_MS);
+    document.addEventListener("visibilitychange",()=>{
+      if(document.hidden){
+        sessionDurationHeartbeatTick({flushVisibleTime:true,useBeacon:true});
+      }else{
+        sessionDurationLastTick=Date.now();
+      }
+    },{passive:true});
+    window.addEventListener("pagehide",()=>sessionDurationHeartbeatTick({flushVisibleTime:true,useBeacon:true}),{passive:true});
+  }
+
+  function formatActiveDuration(seconds){
+    const total=Math.max(0,Math.round(Number(seconds)||0));
+    const minutes=Math.floor(total/60);
+    const secs=total%60;
+    if(minutes<1) return `${secs}s`;
+    if(minutes<60) return `${minutes}m ${String(secs).padStart(2,"0")}s`;
+    const hours=Math.floor(minutes/60);
+    const rem=minutes%60;
+    return `${hours}h ${rem}m`;
+  }
+
+
   let inventorySearchAnalyticsTimer=null;
   let lastRecordedInventorySearch="";
 
@@ -25330,6 +25483,26 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       return {supported:true,row:row||null};
     }catch(error){
       console.warn("Returning visitor insights unavailable:",error);
+      return {supported:false,row:null};
+    }
+  }
+
+  async function fetchSessionDurationInsights(start,end){
+    try{
+      const {data,error}=await supabaseClient.rpc("get_site_session_duration_insights",{
+        p_start:start.toISOString(),
+        p_end:end.toISOString()
+      });
+      if(error){
+        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+        const unavailable=message.includes("get_site_session_duration_insights") || message.includes("function") || message.includes("schema cache");
+        if(!unavailable) console.warn("Session duration insights unavailable:",error);
+        return {supported:false,row:null};
+      }
+      const row=Array.isArray(data)?data[0]:data;
+      return {supported:true,row:row||null};
+    }catch(error){
+      console.warn("Session duration insights unavailable:",error);
       return {supported:false,row:null};
     }
   }
@@ -36088,6 +36261,7 @@ function wireShimmer(container){
       visitorSources:[],visitorSourceSupported:false,
       searchInsights:[],searchInsightsSupported:false,
       returningVisitorInsights:null,returningVisitorSupported:false,
+      sessionDurationInsights:null,sessionDurationSupported:false,
       engagedVisitSeries:[],engagedVisitSupported:false,
       overviewPhotoRows:[],overviewPhotoSupported:false,
       recentQualifiedViews:[],recentQualifiedViewsSupported:false,
@@ -36484,6 +36658,35 @@ function wireShimmer(container){
         </div>`;
     }
 
+    function renderSessionDurationInsights(row){
+      if(!row) return `<div class="hint">No active-duration sessions in this period yet.</div>`;
+      const total=Math.max(0,Number(row.total_sessions||0));
+      const engaged2=Math.max(0,Number(row.engaged_2m||0));
+      const engaged5=Math.max(0,Number(row.engaged_5m||0));
+      const avg=Math.max(0,Number(row.avg_active_seconds||0));
+      const longest=Math.max(0,Number(row.longest_active_seconds||0));
+      const rate2=total?engaged2/total*100:0;
+      const rate5=total?engaged5/total*100:0;
+      const buckets=[
+        {label:"Quick · <30s",value:Number(row.bucket_under_30||0)},
+        {label:"Browsing · 30s–2m",value:Number(row.bucket_30_119||0)},
+        {label:"Engaged · 2–5m",value:Number(row.bucket_120_299||0)},
+        {label:"Highly engaged · 5m+",value:Number(row.bucket_300_plus||0)}
+      ];
+      return `<div class="insights-duration-summary">
+          <article><span>2+ Minute Sessions</span><strong>${engaged2.toLocaleString()}</strong><small>${rate2.toFixed(rate2>=10?0:1)}% of tracked sessions</small></article>
+          <article><span>5+ Minute Sessions</span><strong>${engaged5.toLocaleString()}</strong><small>${rate5.toFixed(rate5>=10?0:1)}% highly engaged</small></article>
+          <article><span>Avg Active Time</span><strong>${escapeHtml(formatActiveDuration(avg))}</strong><small>Foreground time only</small></article>
+          <article><span>Longest Session</span><strong>${escapeHtml(formatActiveDuration(longest))}</strong><small>Within selected period</small></article>
+        </div>
+        <div class="insights-duration-buckets">
+          ${buckets.map(item=>{
+            const pct=total?item.value/total*100:0;
+            return `<div class="insights-duration-bucket"><span>${escapeHtml(item.label)}</span><strong>${item.value.toLocaleString()} · ${pct.toFixed(pct>=10?0:1)}%</strong><i><b style="width:${pct}%"></b></i></div>`;
+          }).join("")}
+        </div>`;
+    }
+
     function renderOverview(){
       const rows=state.visible;
       const websiteVisits=state.websiteSeries.reduce((s,r)=>s+Number(r.visits||0),0);
@@ -36544,6 +36747,19 @@ function wireShimmer(container){
                   ${renderEngagedVisitsComparison(state.websiteSeries,state.engagedVisitSeries)}
                   <div class="hint insights-engaged-note">Raw Website Visits are unchanged. Engaged Visits help separate meaningful browsing from page loads that never produce a 2+ second card view.</div>`;
                 })()}
+          </section>
+
+          <section class="insights-v4-card insights-duration-card">
+            <div class="insights-v4-card-head table-head">
+              <div>
+                <h3>Session Duration</h3>
+                <span>Active foreground time — background tabs and long idle gaps are not counted.</span>
+              </div>
+            </div>
+            ${!state.sessionDurationSupported
+              ? `<div class="hint">Run <code>insights-session-duration-migration.sql</code> in Supabase to enable active-time metrics.</div>`
+              : renderSessionDurationInsights(state.sessionDurationInsights)}
+            <div class="hint insights-engaged-note">A 2+ minute visit is a strong browsing signal; 5+ minutes is classified as highly engaged. This measures active visible-tab time rather than simply elapsed clock time. Active time is saved about every 10 seconds.</div>
           </section>
         </div>
 
@@ -37433,7 +37649,7 @@ function wireShimmer(container){
       const selectedStatus=statusSel.value;
       const selectedGame=gameSel.value;
 
-      const [views,series,siteSeries,countryResult,accessTimeResult,deviceResult,sourceResult,searchResult,returningResult,engagedVisitResult,overviewPhotoResult,recentQualifiedResult,giveawayPerformanceResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
+      const [views,series,siteSeries,countryResult,accessTimeResult,deviceResult,sourceResult,searchResult,returningResult,sessionDurationResult,engagedVisitResult,overviewPhotoResult,recentQualifiedResult,giveawayPerformanceResult,previous,engagement,saleSnapshots,filteredSeriesResult]=await Promise.all([
         fetchInsights(startDate,endDate),
         fetchViewSeries(startDate,endDate),
         fetchWebsiteVisitSeries(startDate,endDate),
@@ -37443,6 +37659,7 @@ function wireShimmer(container){
         fetchWebsiteVisitSources(startDate,endDate),
         fetchInventorySearchInsights(startDate,endDate),
         fetchReturningVisitorInsights(startDate,endDate),
+        fetchSessionDurationInsights(startDate,endDate),
         fetchEngagedVisitSeries(startDate,endDate),
         fetchOverviewPhotoInsights(startDate,endDate),
         fetchRecentQualifiedCardViews(startDate,endDate,selectedStatus,selectedGame,20),
@@ -37567,6 +37784,8 @@ function wireShimmer(container){
         searchInsightsSupported:searchResult.supported,
         returningVisitorInsights:returningResult.supported ? returningResult.row : null,
         returningVisitorSupported:returningResult.supported,
+        sessionDurationInsights:sessionDurationResult.supported ? sessionDurationResult.row : null,
+        sessionDurationSupported:sessionDurationResult.supported,
         engagedVisitSeries:engagedVisitResult.supported && Array.isArray(engagedVisitResult.rows)
           ? engagedVisitResult.rows
           : [],
@@ -40763,7 +40982,7 @@ function wireShimmer(container){
       cards.slice(0,2).forEach(card=>{
         lines.push(cardListItemLine(card),"",cardListPriceLine(card),"");
       });
-      lines.push("...","");
+      lines.push(".",".",".","");
       const lastCard=cards[cards.length-1];
       lines.push(cardListItemLine(lastCard),"",cardListPriceLine(lastCard),"");
     });
@@ -46983,18 +47202,166 @@ function wireShimmer(container){
     }
   }
 
+  async function createInventoryQrDownloadBlob(card){
+    if(typeof createCollectionCollageQrCode !== "function") throw new Error("QR generator unavailable");
+
+    const qrGraphic = await createCollectionCollageQrCode(CARD_WATERMARK_URL, 720);
+    const logo = (typeof loadWatermarkLogo === "function")
+      ? await loadWatermarkLogo().catch(()=>null)
+      : null;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 1600;
+    canvas.height = 2000;
+    const ctx = canvas.getContext("2d");
+    if(!ctx) throw new Error("Could not get canvas context");
+    ctx.imageSmoothingEnabled = true;
+    if("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
+
+    const bg = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+    bg.addColorStop(0,"#0f172a");
+    bg.addColorStop(0.5,"#101826");
+    bg.addColorStop(1,"#172235");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // Decorative accents
+    const glowA = ctx.createRadialGradient(280,240,40,280,240,420);
+    glowA.addColorStop(0,"rgba(74,203,184,0.24)");
+    glowA.addColorStop(1,"rgba(74,203,184,0)");
+    ctx.fillStyle = glowA;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    const glowB = ctx.createRadialGradient(1310,1710,50,1310,1710,460);
+    glowB.addColorStop(0,"rgba(236,192,87,0.20)");
+    glowB.addColorStop(1,"rgba(236,192,87,0)");
+    ctx.fillStyle = glowB;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.05)";
+    ctx.lineWidth = 2;
+    for(let x=110; x<canvas.width; x+=230){
+      ctx.beginPath();
+      ctx.moveTo(x,0);
+      ctx.lineTo(x,canvas.height);
+      ctx.stroke();
+    }
+    for(let y=110; y<canvas.height; y+=230){
+      ctx.beginPath();
+      ctx.moveTo(0,y);
+      ctx.lineTo(canvas.width,y);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    const panelX = 140;
+    const panelY = 140;
+    const panelW = canvas.width - panelX*2;
+    const panelH = canvas.height - 280;
+    const radius = 46;
+    const roundRect = (x,y,w,h,r)=>{
+      ctx.beginPath();
+      if(typeof ctx.roundRect === "function"){
+        ctx.roundRect(x,y,w,h,r);
+      }else{
+        ctx.moveTo(x+r,y);
+        ctx.lineTo(x+w-r,y);
+        ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+        ctx.lineTo(x+w,y+h-r);
+        ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+        ctx.lineTo(x+r,y+h);
+        ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+        ctx.lineTo(x,y+r);
+        ctx.quadraticCurveTo(x,y,x+r,y);
+        ctx.closePath();
+      }
+    };
+
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.28)";
+    ctx.shadowBlur = 38;
+    ctx.shadowOffsetY = 16;
+    roundRect(panelX,panelY,panelW,panelH,radius);
+    ctx.fillStyle = "rgba(255,255,255,0.975)";
+    ctx.fill();
+    ctx.restore();
+
+    roundRect(panelX,panelY,panelW,panelH,radius);
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "rgba(236,192,87,0.88)";
+    ctx.stroke();
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "#0f172a";
+    ctx.font = "700 92px Inter, Arial, sans-serif";
+    ctx.fillText("Scan to browse our Inventory", canvas.width/2, panelY + 84);
+
+    ctx.fillStyle = "#111827";
+    ctx.font = "800 108px Inter, Arial, sans-serif";
+    ctx.fillText("Collect TCG", canvas.width/2, panelY + 188);
+    ctx.font = "700 62px Inter, Arial, sans-serif";
+    ctx.fillStyle = "rgba(17,24,39,0.78)";
+    ctx.fillText("More cards, prices and updates on our website", canvas.width/2, panelY + 320);
+
+    if(card){
+      const line = [card.card_code, card.name].filter(Boolean).join(" • ");
+      if(line){
+        ctx.fillStyle = "rgba(17,24,39,0.62)";
+        ctx.font = "600 42px Inter, Arial, sans-serif";
+        ctx.fillText(line, canvas.width/2, panelY + 405);
+      }
+    }
+
+    const qrSize = 760;
+    const qrX = Math.round((canvas.width-qrSize)/2);
+    const qrY = panelY + 510;
+    roundRect(qrX-24, qrY-24, qrSize+48, qrSize+48, 32);
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+    ctx.drawImage(qrGraphic, qrX, qrY, qrSize, qrSize);
+
+    ctx.fillStyle = "rgba(17,24,39,0.92)";
+    ctx.font = "700 46px Inter, Arial, sans-serif";
+    ctx.fillText("Open the full website inventory", canvas.width/2, qrY + qrSize + 62);
+
+    ctx.fillStyle = "rgba(17,24,39,0.78)";
+    ctx.font = "500 33px 'JetBrains Mono', monospace";
+    ctx.fillText("collecttcg.github.io/Collect_TCG/#/inventory", canvas.width/2, qrY + qrSize + 126);
+
+    ctx.fillStyle = "rgba(17,24,39,0.58)";
+    ctx.font = "500 28px Inter, Arial, sans-serif";
+    ctx.fillText("Thank you for supporting Collect TCG", canvas.width/2, panelY + panelH - 84);
+
+    if(logo){
+      const logoSize = 152;
+      ctx.save();
+      ctx.globalAlpha = 0.96;
+      ctx.shadowColor = "rgba(0,0,0,0.18)";
+      ctx.shadowBlur = 12;
+      ctx.drawImage(logo, canvas.width - panelX - logoSize, canvas.height - panelY - logoSize, logoSize, logoSize);
+      ctx.restore();
+    }
+
+    return new Promise((resolve,reject)=>{
+      canvas.toBlob(blob=>{
+        if(blob) resolve(blob);
+        else reject(new Error("Could not encode inventory QR image"));
+      },"image/png");
+    });
+  }
+
   async function downloadSingleCardImagesZip(card, progressCallback){
     if(!card) return {added:0, failed:[]};
-
     const images = getImages(card);
     if(!images.length) return {added:0, failed:[]};
-
     const ZipCtor = await ensureJsZip();
     const zip = new ZipCtor();
     const failed = [];
     let added = 0;
     const soldWatermark = shouldApplySoldDownloadWatermark(card);
 
+    const totalItems = images.length + 1;
     for(let i=0;i<images.length;i++){
       try{
         const blob = soldWatermark
@@ -47015,8 +47382,24 @@ function wireShimmer(container){
         console.warn("Could not add single-card image to ZIP:", card?.id, i+1, err);
       }
 
-      if(progressCallback) progressCallback(i+1, images.length, added, failed.length);
+      if(progressCallback) progressCallback(i+1, totalItems, added, failed.length);
     }
+
+    try{
+      const qrBlob = await createInventoryQrDownloadBlob(card);
+      const qrIndex = images.length + 1;
+      const qrFilename = `${String(qrIndex).padStart(2,"0")} - Inventory QR.png`;
+      zip.file(qrFilename, qrBlob);
+      added++;
+    }catch(err){
+      failed.push({
+        index:images.length + 1,
+        reason:err?.message || "Inventory QR could not be created"
+      });
+      console.warn("Could not add Inventory QR image to ZIP:", card?.id, err);
+    }
+
+    if(progressCallback) progressCallback(totalItems, totalItems, added, failed.length);
 
     if(!added){
       const error = new Error(
@@ -48974,6 +49357,7 @@ function wireShimmer(container){
     // later Qualified Views can contribute to Browsing Depth.
     if(!isOwnerMode() && !isAnalyticsExcludedDevice()){
       await recordAnalyticsSession();
+      startSessionDurationTracking();
       recordWebsiteVisit();
     }
 
