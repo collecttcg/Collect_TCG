@@ -27937,6 +27937,57 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return "Could not upload the card image to Supabase Storage. Nothing was saved.";
   }
 
+  // V90: display-only recovery for buyer-facing card photos.
+  // Keep original URLs intact, including signatures; never save a fallback to a card.
+  function setupCardImageRecovery(){
+    const selector = '.listing-card-gallery img.thumb, .related-card-image-wrap img, ' +
+      '.detail-slider-image, .detail-thumb-strip img, #imageLightboxImg, .image-lightbox-thumb';
+    const states = new WeakMap();
+    const fallback = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="840" viewBox="0 0 600 840">' +
+      '<rect width="600" height="840" fill="#1A1C22"/>' +
+      '<text x="300" y="420" fill="#8C8F99" font-family="Arial,sans-serif" font-size="30" text-anchor="middle">Image unavailable</text></svg>'
+    );
+
+    document.addEventListener('error',event=>{
+      const img = event.target;
+      if(!(img instanceof HTMLImageElement) || !img.matches(selector)) return;
+      const source = img.getAttribute('src');
+      if(!source || source === fallback || !img.isConnected) return;
+
+      let state = states.get(img);
+      if(!state || state.source !== source){
+        if(state) clearTimeout(state.timer);
+        state = {source, retried:false, timer:null};
+        states.set(img,state);
+      }
+      if(state.timer !== null) return;
+
+      // Data/blob images cannot be repaired by another network request.
+      const canRetry = /^https?:/i.test(img.src);
+      if(!state.retried && canRetry){
+        state.retried = true;
+        state.timer = setTimeout(()=>{
+          state.timer = null;
+          // A slider may have moved on or its modal may have been removed.
+          if(!img.isConnected || img.getAttribute('src') !== source || states.get(img) !== state) return;
+          img.src = source;
+        },700);
+        return;
+      }
+      img.src = fallback;
+    },true);
+
+    document.addEventListener('load',event=>{
+      const img = event.target;
+      if(!(img instanceof HTMLImageElement)) return;
+      const state = states.get(img);
+      if(!state || img.getAttribute('src') === fallback) return;
+      clearTimeout(state.timer);
+      states.delete(img);
+    },true);
+  }
+
   function getImages(c){
     if(Array.isArray(c.images) && c.images.length) return c.images.filter(Boolean);
     if(c.image) return [c.image]; // backwards compatibility with older listings
@@ -49606,6 +49657,7 @@ function wireShimmer(container){
     }
   }
 
+  setupCardImageRecovery();
   setupMobileMoreMenu();
   // Restore the app's mobile pull-to-refresh gesture. The handler now performs
   // a normal document reload, so it cannot surface the old "Could not refresh
