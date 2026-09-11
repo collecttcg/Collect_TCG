@@ -18326,6 +18326,22 @@ body.collection-rearrange-mode #invGrid.collection-game-grouped .collection-game
   }
 }
 
+
+/* Manual collage picker: contained styles, independent of catalogue layouts. */
+#collageManualPanel[hidden]{display:none!important;}
+.collage-picker-list{max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:8px;margin:0;list-style:none;}
+.collage-picker-row{display:flex;gap:10px;align-items:center;padding:8px;border-bottom:1px solid var(--border);cursor:pointer;}
+.collage-picker-row input{flex:0 0 18px;width:18px;height:18px;}
+.collage-picker-row img{width:42px;height:56px;object-fit:contain;flex-shrink:0;}
+.collage-picker-row span{min-width:0;overflow-wrap:anywhere;}
+.collage-picker-row strong,.collage-picker-row small{display:block;}
+.collage-picker-row small{color:var(--muted);margin-top:4px;}
+.collage-picker-actions{display:flex;flex-wrap:wrap;gap:6px;}
+.collage-picker-actions button{min-height:38px;}
+.collage-selected-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px;border-bottom:1px solid var(--border);}
+.collage-selected-row>span{min-width:0;overflow-wrap:anywhere;flex:1;}
+.collage-selected-row .collage-picker-actions{flex-shrink:0;}
+@media(max-width:420px){.collage-selected-row{flex-wrap:wrap;}.collage-selected-row>span{flex-basis:100%;}}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -20824,16 +20840,26 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   let inventoryCardOrderSupported="unknown";
   let inventoryGameOrderSupported="unknown";
 
+  // Shared custom-order utilities. Collection and Inventory retain separate
+  // maps, permissions, RPCs, support flags, and user-facing messages.
+  function orderRpcUnavailable(error,rpcName){
+    const message=`${error.message||""} ${error.details||""}`.toLowerCase();
+    return message.includes(rpcName) || message.includes("function") || message.includes("schema cache");
+  }
+
+  function normalizeOrderGroups(groups){
+    return (groups||[]).map(group=>({
+      key:normalizeFilterValue(group?.key||"") || "__other__",
+      label:String(group?.label||"").trim() || "Other"
+    })).filter(group=>group.key);
+  }
+
+  // === Collection ordering ===
   async function loadCollectionGameOrder(){
     try{
       const {data,error}=await supabaseClient.rpc("get_collection_game_order");
       if(error){
-        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
-        if(
-          message.includes("get_collection_game_order") ||
-          message.includes("function") ||
-          message.includes("schema cache")
-        ) collectionGameOrderSupported=false;
+        if(orderRpcUnavailable(error,"get_collection_game_order")) collectionGameOrderSupported=false;
         collectionGameOrderByKey.clear();
         return false;
       }
@@ -20863,10 +20889,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   async function saveCollectionGameOrder(groups){
     if(!requireCollectionOrderOwner("save Collection game order")) return false;
 
-    const clean=(groups||[]).map(group=>({
-      key:normalizeFilterValue(group?.key||"") || "__other__",
-      label:String(group?.label||"").trim() || "Other"
-    })).filter(group=>group.key);
+    const clean=normalizeOrderGroups(groups);
 
     if(!clean.length){
       showToast("No Collection game categories to save");
@@ -20881,12 +20904,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
       if(error){
         console.error("Collection game-order save error:",error);
-        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
-        if(
-          message.includes("set_collection_game_order") ||
-          message.includes("function") ||
-          message.includes("schema cache")
-        ){
+        if(orderRpcUnavailable(error,"set_collection_game_order")){
           collectionGameOrderSupported=false;
           showToast("Run the Collection Game Order SQL migration first");
         }else{
@@ -20910,12 +20928,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     try{
       const {data,error}=await supabaseClient.rpc("get_collection_card_order");
       if(error){
-        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
-        if(
-          message.includes("get_collection_card_order") ||
-          message.includes("function") ||
-          message.includes("schema cache")
-        ) collectionCardOrderSupported=false;
+        if(orderRpcUnavailable(error,"get_collection_card_order")) collectionCardOrderSupported=false;
         collectionCardOrderById.clear();
         return false;
       }
@@ -20955,12 +20968,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       const {data,error}=await supabaseClient.rpc("set_collection_card_order",{p_card_ids:ids});
       if(error){
         console.error("Collection order save error:",error);
-        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
-        if(
-          message.includes("set_collection_card_order") ||
-          message.includes("function") ||
-          message.includes("schema cache")
-        ){
+        if(orderRpcUnavailable(error,"set_collection_card_order")){
           collectionCardOrderSupported=false;
           showToast("Run the Collection Custom Order SQL migration first");
         }else{
@@ -20980,12 +20988,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     }
   }
 
+  // === Inventory ordering ===
   async function loadInventoryGameOrder(){
     try{
       const {data,error}=await supabaseClient.rpc("get_inventory_game_order");
       if(error){
-        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
-        if(message.includes("get_inventory_game_order") || message.includes("function") || message.includes("schema cache"))
+        if(orderRpcUnavailable(error,"get_inventory_game_order"))
           inventoryGameOrderSupported=false;
         inventoryGameOrderByKey.clear();
         return false;
@@ -21014,10 +21022,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   async function saveInventoryGameOrder(groups){
     if(!requireCollectionOrderOwner("save Inventory game order")) return false;
-    const clean=(groups||[]).map(group=>({
-      key:normalizeFilterValue(group?.key||"") || "__other__",
-      label:String(group?.label||"").trim() || "Other"
-    })).filter(group=>group.key);
+    const clean=normalizeOrderGroups(groups);
     if(!clean.length){ showToast("No Inventory game categories to save"); return false; }
     try{
       const {data,error}=await supabaseClient.rpc("set_inventory_game_order",{
@@ -21026,8 +21031,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       });
       if(error){
         console.error("Inventory game-order save error:",error);
-        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
-        if(message.includes("set_inventory_game_order") || message.includes("function") || message.includes("schema cache")){
+        if(orderRpcUnavailable(error,"set_inventory_game_order")){
           inventoryGameOrderSupported=false;
           showToast("Run the Inventory Custom Order SQL migration first");
         }else showToast("Could not save Inventory game order");
@@ -21048,8 +21052,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     try{
       const {data,error}=await supabaseClient.rpc("get_inventory_card_order");
       if(error){
-        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
-        if(message.includes("get_inventory_card_order") || message.includes("function") || message.includes("schema cache"))
+        if(orderRpcUnavailable(error,"get_inventory_card_order"))
           inventoryCardOrderSupported=false;
         inventoryCardOrderById.clear();
         return false;
@@ -21084,8 +21087,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       const {data,error}=await supabaseClient.rpc("set_inventory_card_order",{p_card_ids:ids});
       if(error){
         console.error("Inventory order save error:",error);
-        const message=`${error.message||""} ${error.details||""}`.toLowerCase();
-        if(message.includes("set_inventory_card_order") || message.includes("function") || message.includes("schema cache")){
+        if(orderRpcUnavailable(error,"set_inventory_card_order")){
           inventoryCardOrderSupported=false;
           showToast("Run the Inventory Custom Order SQL migration first");
         }else showToast("Could not save Inventory card order");
@@ -21190,6 +21192,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return match ? formatCurrencyValue(match.currency, match.value) : "";
   }
 
+  // === Collage rendering and export ===
   function collectionCollageRoundedRect(ctx,x,y,w,h,r){
     const radius=Math.max(0,Math.min(r,Math.min(w,h)/2));
     ctx.beginPath();
@@ -21718,6 +21721,90 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     });
   }
 
+  // Manual collage selection is separate from catalogue filters and saved sort order.
+  let collageManualSelectedIds=[];
+  function collagePickerCards(){
+    return cards.filter(card=>["inventory","collection","sold","reserved"].some(scope=>cardMatchesListingScope(card,scope)));
+  }
+  function collageResolveSelected(ids){
+    const available=new Map(collagePickerCards().map(card=>[String(card.id),card]));
+    return [...new Set(Array.isArray(ids)?ids.map(String):[])].map(id=>available.get(id)).filter(Boolean);
+  }
+  function collageMoveSelected(ids,from,to){
+    const result=ids.slice();
+    if(from<0 || to<0 || from>=result.length || to>=result.length) return result;
+    result.splice(to,0,result.splice(from,1)[0]);
+    return result;
+  }
+  function setupCollageCardPicker(){
+    const mode=$("collageCardSource"), panel=$("collageManualPanel"), search=$("collageCardSearch"), scope=$("collagePickerScope");
+    let selected=collageResolveSelected(collageManualSelectedIds).map(card=>String(card.id));
+    let draggedId=null;
+    const candidates=collagePickerCards();
+    const matches=()=>{
+      const query=search.value.trim().toLowerCase();
+      return candidates.filter(card=>(scope.value==="all" || cardMatchesListingScope(card,scope.value)) &&
+        [card.name,card.card_code,card.game,card.series,card.year,card.language,card.format,card.condition,
+          ...(Array.isArray(card.grading)?card.grading.map(g=>`${g.company||""} ${g.grade||""}`):[])]
+          .join(" ").toLowerCase().includes(query));
+    };
+    function caption(card){
+      return [card.card_code,card.game,card.availability,cardLifecycle(card)==="draft"?"Draft":""].filter(Boolean).join(" · ");
+    }
+    function render(){
+      collageManualSelectedIds=selected.slice();
+      panel.hidden=mode.value!=="manual";
+      const count=mode.value==="manual"?selected.length:collageCardsForCurrentScope().length;
+      $("collageSelectionCount").textContent=`${count} card${count===1?"":"s"} to export`;
+      $("collectionCollageGenerateBtn").disabled=count===0;
+      if(panel.hidden) return;
+      const visible=matches(), checked=new Set(selected), list=$("collagePickerResults");
+      $("collageMatchCount").textContent=`${visible.length} matching cards`;
+      list.replaceChildren();
+      if(!visible.length) list.textContent="No matching cards. Try another search or category.";
+      visible.forEach(card=>{
+        const row=document.createElement("label");row.className="collage-picker-row";
+        const check=document.createElement("input");check.type="checkbox";check.checked=checked.has(String(card.id));
+        check.setAttribute("aria-label",`Select ${card.name||"Untitled card"}`);
+        check.addEventListener("change",()=>{
+          const id=String(card.id);selected=check.checked?[...selected,id]:selected.filter(value=>value!==id);render();
+          const replacement=list.querySelectorAll('input')[visible.indexOf(card)];replacement?.focus({preventScroll:true});
+        });
+        const src=safeHttpUrl(card.thumbnail_url||card.image||card.images?.[0]||"");
+        row.append(check);
+        if(src){const img=document.createElement("img");img.src=src;img.alt="";img.loading="lazy";row.append(img);}
+        const text=document.createElement("span"), title=document.createElement("strong"), detail=document.createElement("small");
+        title.textContent=card.name||"Untitled card";detail.textContent=caption(card);text.append(title,detail);row.append(text);list.append(row);
+      });
+      const ordered=$("collageSelectedCards");ordered.replaceChildren();
+      const selectedCards=collageResolveSelected(selected);
+      if(!selectedCards.length) ordered.textContent="Select cards above to build your collage.";
+      selectedCards.forEach((card,index)=>{
+        const row=document.createElement("li");row.className="collage-selected-row";row.draggable=true;
+        const label=document.createElement("span");label.textContent=`${index+1}. ${card.name||"Untitled card"}`;row.append(label);
+        const actions=document.createElement("div");actions.className="collage-picker-actions";
+        [["↑","Move up",index===0,()=>{selected=collageMoveSelected(selected,index,index-1);}],
+         ["↓","Move down",index===selectedCards.length-1,()=>{selected=collageMoveSelected(selected,index,index+1);}],
+         ["×","Remove",false,()=>{selected=selected.filter(id=>id!==String(card.id));}]].forEach(([text,title,disabled,action])=>{
+          const btn=document.createElement("button");btn.type="button";btn.className="btn-ghost";btn.textContent=text;
+          btn.setAttribute("aria-label",`${title}: ${card.name||"Untitled card"}`);btn.disabled=disabled;
+          btn.addEventListener("click",()=>{action();render();});actions.append(btn);
+        });
+        row.append(actions);
+        row.addEventListener("dragstart",event=>{draggedId=String(card.id);event.dataTransfer.setData("text/plain",draggedId);event.dataTransfer.effectAllowed="move";});
+        row.addEventListener("dragover",event=>{if(draggedId){event.preventDefault();event.dataTransfer.dropEffect="move";}});
+        row.addEventListener("drop",event=>{event.preventDefault();if(draggedId){selected=collageMoveSelected(selected,selected.indexOf(draggedId),selected.indexOf(String(card.id)));draggedId=null;render();}});
+        row.addEventListener("dragend",()=>{draggedId=null;});ordered.append(row);
+      });
+    }
+    mode.addEventListener("change",render);search.addEventListener("input",render);scope.addEventListener("change",render);
+    $("collageSelectMatching").addEventListener("click",()=>{selected=[...new Set([...selected,...matches().map(card=>String(card.id))])];render();});
+    $("collageUseFiltered").addEventListener("click",()=>{selected=[...new Set([...selected,...collageCardsForCurrentScope().map(card=>String(card.id))])];render();});
+    $("collageClearSelection").addEventListener("click",()=>{selected=[];render();});
+    render();
+    return ()=>mode.value==="manual"?selected.slice():null;
+  }
+
   function closeCollectionCollageSettingsModal(){
     const overlay=$("collectionCollageSettingsOverlay");
     if(overlay) overlay.remove();
@@ -21740,9 +21827,26 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     overlay.innerHTML=`
       <div class="collection-collage-modal" role="dialog" aria-modal="true" aria-labelledby="collectionCollageModalTitle">
         <h2 id="collectionCollageModalTitle">Export ${scopeLabel} Collage</h2>
-        <p class="collage-modal-sub">Choose how the high-resolution social-media image should look. Only your ${scopeLabel} listings are used.</p>
+        <p class="collage-modal-sub">Choose your cards and how the high-resolution social-media image should look.</p>
 
         <div class="collection-collage-settings-grid">
+          <div class="collection-collage-field full">
+            <label for="collageCardSource">Cards to include</label>
+            <select id="collageCardSource"><option value="filtered">Use filtered results</option><option value="manual">Choose cards manually</option></select>
+            <strong id="collageSelectionCount" role="status" aria-live="polite"></strong>
+          </div>
+          <div id="collageManualPanel" class="collection-collage-field full" hidden>
+            <label for="collageCardSearch">Search all cards</label>
+            <input id="collageCardSearch" type="text" placeholder="Name, card code, game, series or year">
+            <label for="collagePickerScope">Category</label>
+            <select id="collagePickerScope"><option value="all">All categories</option><option value="inventory">Inventory</option><option value="collection">Collection / NFS</option><option value="sold">Sold</option><option value="reserved">Reserved</option></select>
+            <div class="collage-picker-actions"><button type="button" class="btn-ghost" id="collageSelectMatching">Select matching</button><button type="button" class="btn-ghost" id="collageUseFiltered">Add current filtered results</button><button type="button" class="btn-ghost" id="collageClearSelection">Clear selection</button></div>
+            <small id="collageMatchCount" role="status"></small>
+            <div id="collagePickerResults" class="collage-picker-list" aria-label="Available collage cards"></div>
+            <strong>Selected cards — export order</strong>
+            <small>Selections stay when you search or change category. Drag to reorder, or use the arrow buttons.</small>
+            <ol id="collageSelectedCards" class="collage-picker-list"></ol>
+          </div>
           <div class="collection-collage-field full">
             <span>Title</span>
             <input id="collectionCollageTitleInput" type="text" maxlength="90" value="${escapeHtml(defaultTitle)}" placeholder="Leave blank for no title">
@@ -21799,7 +21903,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           </div>
 
           <div class="collection-collage-preview-note">
-            Export uses the first image of every card in the currently displayed ${scopeLabel} results and preserves your ${scopeLabel} custom order. If QR is enabled, the code points to your Inventory page and the cards are arranged around it.
+            Filtered mode uses the first image of each filtered ${scopeLabel} card in its existing order. Manual mode uses only your selected cards, in the order shown above. If QR is enabled, the code points to your Inventory page and the cards are arranged around it.
           </div>
         </div>
 
@@ -21818,8 +21922,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     overlay.addEventListener("click",event=>{ if(event.target===overlay) close(); });
     overlay.addEventListener("keydown",event=>{ if(event.key==="Escape") close(); });
 
+    const getManualCollageSelection=setupCollageCardPicker();
     $("collectionCollageGenerateBtn")?.addEventListener("click",async()=>{
+      const selectedCardIds=getManualCollageSelection();
+      if(selectedCardIds && !selectedCardIds.length){showToast("Choose at least one card");return;}
       const settings={
+        selectedCardIds,
         title:String($("collectionCollageTitleInput")?.value||"").trim(),
         aspect:String($("collectionCollageAspect")?.value||"portrait"),
         background:String($("collectionCollageBackground")?.value||"geometric"),
@@ -21843,9 +21951,10 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       return;
     }
 
-    const scopeLabel=collageScopeLabel();
-    const scopeSlug=listingAvailabilityScope==="inventory" ? "inventory" : "collection";
-    const items=collageCardsForCurrentScope();
+    const manual=Array.isArray(settings.selectedCardIds);
+    const scopeLabel=manual ? "Selected" : collageScopeLabel();
+    const scopeSlug=manual ? "selected" : (listingAvailabilityScope==="inventory" ? "inventory" : "collection");
+    const items=manual ? collageResolveSelected(settings.selectedCardIds) : collageCardsForCurrentScope();
     if(!items.length){
       showToast(`No ${scopeLabel} cards to export`);
       return;
@@ -22179,6 +22288,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   let cardLookupVersion=-1;
   let cardLookupMap=new Map();
 
+  // === Card lookup and owner session ===
   function ensureCardLookup(){
     if(cardLookupVersion===cards.length && cardLookupMap.size===cards.length) return cardLookupMap;
     cardLookupMap=new Map(cards.map(card=>[String(card.id),card]));
@@ -22627,6 +22737,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     clearTimeout(showToast._t);
     showToast._t = setTimeout(()=>{ toastEl.hidden = true; }, 2200);
   }
+  // === Date and price display utilities ===
   function soldDateInputValue(value){
     if(!value) return "";
     const d = new Date(value);
@@ -22657,14 +22768,18 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return Number.isFinite(n) && n > 0;
   }
 
+  // Keep the existing rounding, coercion, and locale for every currency.
+  function formatRoundedPrice(prefix,n){
+    return prefix + Math.round(Number(n || 0)).toLocaleString("en-US");
+  }
   function fmtMoney(n){
-    return "USD " + Math.round(Number(n || 0)).toLocaleString("en-US");
+    return formatRoundedPrice("USD ",n);
   }
   function fmtMYR(n){
-    return "RM " + Math.round(Number(n || 0)).toLocaleString("en-US");
+    return formatRoundedPrice("RM ",n);
   }
   function fmtSGD(n){
-    return "SGD " + Math.round(Number(n || 0)).toLocaleString("en-US");
+    return formatRoundedPrice("SGD ",n);
   }
 
   const PRICE_CURRENCY_KEY="collect_tcg_price_currency_v1";
@@ -22888,6 +23003,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   </svg>`;
 
   // ---------------- Supabase database ----------------
+  // === Database card mapping and persistence ===
   function dbToCard(row){
     return {
       id: row.id,
@@ -23649,6 +23765,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     "id,title,category,series,video_url,thumbnail_url,description,featured,sort_order,created_at";
 
   // ---------------- Supabase giveaways ----------------
+  // === Giveaways ===
   function giveawayFromDb(row){
     return {
       id: row.id,
@@ -24170,6 +24287,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
   }
 
   // ---------------- Supabase showcase videos ----------------
+  // === Showcases ===
   function showcaseFromDb(row){
     return {
       id: row.id,
@@ -43411,6 +43529,7 @@ function wireShimmer(container){
     });
   }
 
+  // === Owner inventory tools ===
   function renderInventoryToolsPage(){
     if(!requireOwner("open inventory tools")) return;
 
@@ -47015,6 +47134,7 @@ function wireShimmer(container){
   let lightboxImages = [];
   let lightboxIndex = 0;
 
+  // === Image lightbox and downloads ===
   function renderLightboxImage(index){
     if(!lightboxImages.length) return;
     lightboxIndex = (index + lightboxImages.length) % lightboxImages.length;
@@ -47439,6 +47559,7 @@ function wireShimmer(container){
     return {added, failed};
   }
 
+  // === Public sharing ===
   function getWebsiteShareUrl(){
     // Keep the deployed GitHub Pages sub-path, but exclude route/hash state.
     try{
@@ -47842,6 +47963,7 @@ function wireShimmer(container){
     }
   }
 
+  // === Card details ===
   async function openDetailsModal(card){
     if(!card) return;
 
@@ -48636,6 +48758,7 @@ function wireShimmer(container){
     submitBtn.removeAttribute("aria-busy");
   }
 
+  // === Card editing ===
   async function openEditModal(card){
     if(!requireOwner()) return;
     captureEditReturnScroll();
@@ -49020,6 +49143,7 @@ function wireShimmer(container){
   // ---------------- Theme ----------------
   const THEME_KEY = "collect-tcg-theme";
 
+  // === Theme ===
   function applyTheme(theme){
     const light = theme === "light";
     document.body.classList.toggle("light-mode", light);
@@ -49086,6 +49210,7 @@ function wireShimmer(container){
 
   loadTheme();
 
+  // === Mobile navigation ===
   function setupMobileMoreMenu(){
     const toggle = $("mobileMoreToggle");
     const menu = mobileMoreMenuEl;
@@ -49331,6 +49456,7 @@ function wireShimmer(container){
     return true;
   }
 
+  // === Application startup ===
   async function startApp(){
     renderAppLoadingState();
 
