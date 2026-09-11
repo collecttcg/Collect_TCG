@@ -30449,12 +30449,16 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
 
   function getRelatedCards(card, limit = 4, options = {}){
     if(!card) return [];
-    const availableOnly = !!options.availableOnly;
+    // Collection pages may recommend NFS pieces after available alternatives.
+    // Every other listing recommends available cards only.
+    const includeCollection = !options.availableOnly &&
+      normalizeFilterValue(card.availability || "Available") === "collection (nfs)";
 
     return cards
       .filter(c=>{
         if(!c || c.id === card.id || !isLiveLifecycle(c)) return false;
-        if(availableOnly && normalizeFilterValue(c.availability || "Available") !== "available") return false;
+        const status = normalizeFilterValue(c.availability || "Available");
+        if(status !== "available" && !(includeCollection && status === "collection (nfs)")) return false;
         return true;
       })
       .map(c=>{
@@ -30480,7 +30484,14 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         return {card:c, score};
       })
       .filter(x=>x.score > 0)
-      .sort((a,b)=>b.score - a.score || String(b.card.created_at || "").localeCompare(String(a.card.created_at || "")))
+      .sort((a,b)=>{
+        if(includeCollection){
+          const aAvailable = normalizeFilterValue(a.card.availability || "Available") === "available";
+          const bAvailable = normalizeFilterValue(b.card.availability || "Available") === "available";
+          if(aAvailable !== bAvailable) return aAvailable ? -1 : 1;
+        }
+        return b.score - a.score || String(b.card.created_at || "").localeCompare(String(a.card.created_at || ""));
+      })
       .slice(0, limit)
       .map(x=>x.card);
   }
