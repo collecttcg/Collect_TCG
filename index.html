@@ -30514,12 +30514,45 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     return list;
   }
 
+  // V92: infer name similarity from listing titles without storing character data.
+  function relatedCardNameTokens(card){
+    const tokenize=value=>String(value||"").normalize("NFKC").toLowerCase()
+      .match(/[\p{L}\p{N}]+/gu)||[];
+    const metadata=new Set([
+      ...tokenize(card.game),...tokenize(card.series),...tokenize(card.year),
+      ...tokenize(card.card_code),...tokenize(card.language),...tokenize(card.format),
+      ...tokenize(card.rarity),...tokenize(card.era),
+      "psa","bgs","cgc","sgc","graded","raw","sealed","promo","promotional",
+      "parallel","alternate","alt","art","foil","holo","holographic","rare",
+      "super","secret","special","card","cards","winner","finalist","championship",
+      "anniversary","edition","limited","the","and","with"
+    ]);
+    return new Set(tokenize(card.name).filter(token=>
+      !metadata.has(token) && !/^\d+$/.test(token) &&
+      (token.length>=3 || /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(token))
+    ));
+  }
+
+  function relatedCardNamesMatch(sourceTokens,candidate){
+    if(!sourceTokens.size) return false;
+    const candidateTokens=relatedCardNameTokens(candidate);
+    if(!candidateTokens.size) return false;
+    const shared=[...sourceTokens].filter(token=>candidateTokens.has(token)).length;
+    const union=sourceTokens.size+candidateTokens.size-shared;
+    // A shared surname alone should not match two different full names.
+    return shared>0 && shared/union>=0.5;
+  }
+
   function getRelatedCards(card, limit = 4, options = {}){
     if(!card) return [];
     // Collection pages may recommend NFS pieces after available alternatives.
     // Every other listing recommends available cards only.
     const includeCollection = !options.availableOnly &&
       normalizeFilterValue(card.availability || "Available") === "collection (nfs)";
+
+    const sourceGame=normalizeFilterValue(card.game);
+    const sourceSeries=normalizeFilterValue(card.series);
+    const sourceNameTokens=relatedCardNameTokens(card);
 
     return cards
       .filter(c=>{
@@ -30529,9 +30562,12 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         return true;
       })
       .map(c=>{
+        const sameGame=!!sourceGame && normalizeFilterValue(c.game)===sourceGame;
+        const sameSeries=sameGame && !!sourceSeries && normalizeFilterValue(c.series)===sourceSeries;
+        const sameName=sameGame && relatedCardNamesMatch(sourceNameTokens,c);
         let score = 0;
-        if(normalizeFilterValue(c.game) === normalizeFilterValue(card.game)) score += 8;
-        if(card.series && normalizeFilterValue(c.series) === normalizeFilterValue(card.series)) score += 7;
+        if(sameGame) score += 8;
+        if(sameSeries) score += 7;
         if(card.era && normalizeFilterValue(c.era) === normalizeFilterValue(card.era)) score += 4;
         if(normalizeFilterValue(effectiveFormat(c)) === normalizeFilterValue(effectiveFormat(card))) score += 3;
         if(card.language && normalizeFilterValue(c.language) === normalizeFilterValue(card.language)) score += 2;
@@ -30548,7 +30584,7 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
         if(status === "available" || status === "collection (nfs)") score += 2;
         else if(status === "reserved") score += 1;
 
-        return {card:c, score};
+        return {card:c, score, sameGame, sameSeries, sameName};
       })
       .filter(x=>x.score > 0)
       .sort((a,b)=>{
@@ -30557,7 +30593,11 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
           const bAvailable = normalizeFilterValue(b.card.availability || "Available") === "available";
           if(aAvailable !== bAvailable) return aAvailable ? -1 : 1;
         }
-        return b.score - a.score || String(b.card.created_at || "").localeCompare(String(a.card.created_at || ""));
+        // Within each availability group: same game, matching name, same series.
+        return Number(b.sameGame)-Number(a.sameGame) ||
+          Number(b.sameName)-Number(a.sameName) ||
+          Number(b.sameSeries)-Number(a.sameSeries) ||
+          b.score - a.score || String(b.card.created_at || "").localeCompare(String(a.card.created_at || ""));
       })
       .slice(0, limit)
       .map(x=>x.card);
