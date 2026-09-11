@@ -26560,9 +26560,13 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
     const safeHash=String(hash||"").slice(0,1500);
     if(!safeHash || safeHash.includes("#/card/")) return;
     try{
+      const shell=document.querySelector(".shell");
       sessionStorage.setItem(LISTING_SCROLL_STATE_KEY,JSON.stringify({
         hash:safeHash,
-        y:Math.max(0,Math.round(window.scrollY||0))
+        y:Math.max(0,Math.round(window.scrollY||0)),
+        x:Math.max(0,Math.round(window.scrollX||0)),
+        shellY:shell ? Math.max(0,Math.round(shell.scrollTop||0)) : 0,
+        shellX:shell ? Math.max(0,Math.round(shell.scrollLeft||0)) : 0
       }));
     }catch{}
   }
@@ -26574,9 +26578,20 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       const y=Number(parsed.y||0);
       if(!Number.isFinite(y) || y<0) return;
 
+      const coordinate=value=>{
+        const number=Number(value||0);
+        return Number.isFinite(number) && number>=0 ? number : 0;
+      };
       sessionStorage.removeItem(LISTING_SCROLL_STATE_KEY);
       requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        window.scrollTo({top:y,left:0,behavior:"auto"});
+        // Do not move a different page if the visitor navigated again meanwhile.
+        if(location.hash!==parsed.hash) return;
+        const shell=document.querySelector(".shell");
+        // Older saved positions contain only window coordinates.
+        if(shell && parsed.shellY!=null){
+          shell.scrollTo({top:coordinate(parsed.shellY),left:coordinate(parsed.shellX),behavior:"auto"});
+        }
+        window.scrollTo({top:y,left:coordinate(parsed.x),behavior:"auto"});
       }));
     }catch{}
   }
@@ -26861,7 +26876,8 @@ window.COLLECT_TCG_SUPABASE_KEY = "sb_publishable_BqOlV51b2YVACuQbTOf3Tg_n1mVI-A
       detailsPreservedListingHash="";
     }
 
-    if(reusePreservedListingOnReturn && !detailsOverlay.hidden){
+    // Browser Back must dismiss details on Home/Favorites as well as listings.
+    if(!isCardRoute && !detailsOverlay.hidden){
       closeDetailsModal(false);
     }
     const routedCardCandidate = isCardRoute
@@ -48026,8 +48042,12 @@ function wireShimmer(container){
   }
 
   // === Card details ===
+  let detailsOpenRequestId=0;
+
   async function openDetailsModal(card){
     if(!card) return;
+    const openRequestId=++detailsOpenRequestId;
+    const openRequestHash=location.hash;
 
     // Preserve the customer's current keyboard/focus position so closing
     // details returns them to the card they were browsing.
@@ -48038,6 +48058,8 @@ function wireShimmer(container){
     }
 
     await ensureCardImagesLoaded(card);
+    // Ignore an older image request after closing, navigating, or opening another card.
+    if(openRequestId!==detailsOpenRequestId || location.hash!==openRequestHash) return;
     if(!isOwnerMode() && !isLiveLifecycle(card)){
       showToast("Card not found");
       return;
@@ -48515,6 +48537,7 @@ function wireShimmer(container){
   }
 
   function closeDetailsModal(navigateBack = true){
+    ++detailsOpenRequestId;
     const returningToInsightsInPlace=
       !!insightsDetailsReturnState &&
       currentRoute()==="insights" &&
