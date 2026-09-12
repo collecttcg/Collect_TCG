@@ -2361,3 +2361,17 @@ body.light-mode .modal-overlay{background:rgba(54,48,40,.42) !important;}
 @media (min-width:3000px){
   :root{--site-content-max:2040px !important;}
 }
+
+
+/* ==========================================================
+   V136 PRODUCTION — MORE MENU NAVIGATION CAPITALIZATION
+   Keep social labels normal case; navigation inside More now
+   matches the uppercase treatment of the primary desktop tabs.
+   ========================================================== */
+@media (min-width:1180px){
+  .premium-more-menu > a{
+    text-transform:uppercase !important;
+    letter-spacing:.055em !important;
+    font-weight:690 !important;
+  }
+}
