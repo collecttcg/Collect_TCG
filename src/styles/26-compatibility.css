@@ -1819,3 +1819,44 @@ body.light-mode .modal-overlay{background:rgba(54,48,40,.42) !important;}
     color:#737a80 !important;
   }
 }
+
+/* ==========================================================
+   V128 PRODUCTION — FOCUSED CENTERED DESKTOP CONTENT
+   Keep the premium header full-width while constraining page
+   content on large displays for a calmer storefront hierarchy.
+   ========================================================== */
+@media (min-width:1180px){
+  :root{
+    --site-content-max:1440px;
+    --site-content-gutter:clamp(18px,2vw,30px);
+  }
+
+  .main{
+    width:100% !important;
+    max-width:none !important;
+    margin-left:0 !important;
+  }
+
+  .main > #view{
+    box-sizing:border-box !important;
+    width:min(100%,var(--site-content-max)) !important;
+    max-width:var(--site-content-max) !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+    padding-left:var(--site-content-gutter) !important;
+    padding-right:var(--site-content-gutter) !important;
+  }
+
+  .main > .page-social-footer{
+    box-sizing:border-box !important;
+    width:min(calc(100% - (var(--site-content-gutter) * 2)),calc(var(--site-content-max) - (var(--site-content-gutter) * 2))) !important;
+    max-width:calc(var(--site-content-max) - (var(--site-content-gutter) * 2)) !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+  }
+}
+
+/* Give ultrawide displays a little more intentional negative space. */
+@media (min-width:1800px){
+  :root{--site-content-max:1400px;}
+}
