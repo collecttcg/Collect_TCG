@@ -690,6 +690,10 @@ function openCollectionCollageSettingsModal(){
             <span>Title</span>
             <input id="collectionCollageTitleInput" type="text" maxlength="90" value="${appContext.escapeHtml(defaultTitle)}" placeholder="Leave blank for no title">
           </div>
+          <div class="collection-collage-field full">
+            <span>Subtitle</span>
+            <input id="collectionCollageSubtitleInput" type="text" maxlength="90" value="" placeholder="Optional second line under the title">
+          </div>
 
           <div class="collection-collage-field">
             <span>Aspect ratio</span>
@@ -768,6 +772,7 @@ function openCollectionCollageSettingsModal(){
       const settings={
         selectedCardIds,
         title:String(appContext.$("collectionCollageTitleInput")?.value||"").trim(),
+        subtitle:String(appContext.$("collectionCollageSubtitleInput")?.value||"").trim(),
         aspect:String(appContext.$("collectionCollageAspect")?.value||"portrait"),
         background:String(appContext.$("collectionCollageBackground")?.value||"geometric"),
         spacing:String(appContext.$("collectionCollageSpacing")?.value||"standard"),
@@ -800,6 +805,9 @@ async function exportCollectionCollage(settings={}){
     }
 
     const collageTitle=String(settings.title||"").trim();
+    const collageSubtitle=String(settings.subtitle||"").trim();
+    const hasHeading=!!(collageTitle || collageSubtitle);
+    const hasSubtitle=!!collageSubtitle;
 
     appContext.setCollectionCollageExportBusy(true,"Preparing…");
     appContext.showToast(`Preparing collage for ${items.length} ${scopeLabel} cards…`);
@@ -827,7 +835,9 @@ async function exportCollectionCollage(settings={}){
       const padding=Math.round(width*0.034);
       const gapRatio=settings.spacing==="tight" ? 0.0045 : (settings.spacing==="airy" ? 0.011 : 0.007);
       const gap=Math.max(12,Math.round(width*gapRatio));
-      const headerHeight=collageTitle ? Math.round(height*(settings.showLogo ? 0.105 : 0.092)) : Math.round(height*(settings.showLogo ? 0.046 : 0.022));
+      const headerHeight=hasHeading
+        ? Math.round(height*(settings.showLogo ? (hasSubtitle ? 0.145 : 0.112) : (hasSubtitle ? 0.128 : 0.098)))
+        : Math.round(height*(settings.showLogo ? 0.046 : 0.022));
       const footerHeight=settings.showWebsite ? Math.round(height*0.022) : 0;
       const cardsTop=padding+headerHeight;
       const cardsBottom=height-padding-footerHeight;
@@ -907,39 +917,108 @@ async function exportCollectionCollage(settings={}){
       }
 
       ctx.textBaseline="top";
-      if(collageTitle){
-        ctx.save();
-        ctx.shadowColor="rgba(0,0,0,0.38)";
-        ctx.shadowBlur=18;
-        ctx.shadowOffsetY=5;
-        ctx.fillStyle="#f8f8fb";
-        const titleFontSize=Math.round(width*0.045);
-        ctx.font=`700 ${titleFontSize}px Inter, system-ui, sans-serif`;
-        ctx.textAlign="center";
-        const titleY=padding-8;
-        ctx.fillText(collageTitle,width/2,titleY);
-        ctx.restore();
+      if(hasHeading){
+        const headerCenterX=width/2;
+        const titleTop=padding-8;
+        const headingMaxWidth=Math.round(width*(settings.showLogo ? 0.72 : 0.82));
 
-        const lineY=titleY+titleFontSize+Math.max(24,Math.round(width*0.012));
-        const lineGrad=ctx.createLinearGradient(width*0.32,0,width*0.68,0);
-        lineGrad.addColorStop(0,"rgba(236,192,87,0)");
-        lineGrad.addColorStop(0.22,"rgba(236,192,87,0.30)");
-        lineGrad.addColorStop(0.5,"rgba(255,255,255,0.18)");
-        lineGrad.addColorStop(0.78,"rgba(74,203,184,0.26)");
-        lineGrad.addColorStop(1,"rgba(74,203,184,0)");
-        ctx.strokeStyle=lineGrad;
-        ctx.lineWidth=4;
-        ctx.beginPath();
-        ctx.moveTo(width*0.31,lineY);
-        ctx.lineTo(width*0.69,lineY);
-        ctx.stroke();
+        const fitFont=(content,startSize,minSize,weight)=>{
+          let size=Math.max(minSize,startSize);
+          while(size>minSize){
+            ctx.font=`${weight} ${size}px Inter, system-ui, sans-serif`;
+            if(ctx.measureText(content).width<=headingMaxWidth) break;
+            size-=2;
+          }
+          return size;
+        };
+
+        const drawGoldText=(content,x,y,size,weight,{shadow='rgba(255,196,72,0.45)',shadowBlur=20,stroke='rgba(66,42,0,0.42)',lineWidth=3}={})=>{
+          const gradient=ctx.createLinearGradient(0,y,0,y+size);
+          gradient.addColorStop(0,'#fff7c8');
+          gradient.addColorStop(0.2,'#ffe895');
+          gradient.addColorStop(0.45,'#ffd24f');
+          gradient.addColorStop(0.72,'#f1b52d');
+          gradient.addColorStop(1,'#b97912');
+          ctx.save();
+          ctx.textAlign='center';
+          ctx.textBaseline='top';
+          ctx.font=`${weight} ${size}px Inter, system-ui, sans-serif`;
+          ctx.lineJoin='round';
+          ctx.shadowColor=shadow;
+          ctx.shadowBlur=shadowBlur;
+          ctx.shadowOffsetY=4;
+          ctx.lineWidth=lineWidth;
+          ctx.strokeStyle=stroke;
+          ctx.strokeText(content,x,y);
+          ctx.fillStyle=gradient;
+          ctx.fillText(content,x,y);
+          ctx.restore();
+        };
+
+        let headingBottom=titleTop;
+        if(collageTitle){
+          const titleFontSize=fitFont(collageTitle,Math.round(width*0.05),Math.round(width*0.024),900);
+          drawGoldText(collageTitle,headerCenterX,titleTop,titleFontSize,900,{shadow:'rgba(255,198,84,0.52)',shadowBlur:28,stroke:'rgba(72,44,0,0.50)',lineWidth:Math.max(3,Math.round(titleFontSize*0.038))});
+          headingBottom=titleTop+titleFontSize;
+        }
+
+        if(collageSubtitle){
+          const subtitleY=headingBottom+Math.max(18,Math.round(width*0.008));
+          const subtitleFontSize=fitFont(collageSubtitle,Math.round(width*0.026),Math.round(width*0.014),800);
+          drawGoldText(collageSubtitle,headerCenterX,subtitleY,subtitleFontSize,800,{shadow:'rgba(255,208,96,0.34)',shadowBlur:16,stroke:'rgba(72,44,0,0.34)',lineWidth:Math.max(2,Math.round(subtitleFontSize*0.034))});
+          ctx.font=`800 ${subtitleFontSize}px Inter, system-ui, sans-serif`;
+          const subtitleWidth=Math.min(headingMaxWidth*0.62,Math.max(220,ctx.measureText(collageSubtitle).width));
+          const lineY=subtitleY+subtitleFontSize*0.62;
+          const sideGap=Math.max(24,Math.round(width*0.018));
+          const lineStart=Math.max(padding+10,headerCenterX-subtitleWidth/2-sideGap-Math.round(width*0.13));
+          const leftEnd=headerCenterX-subtitleWidth/2-sideGap;
+          const rightStart=headerCenterX+subtitleWidth/2+sideGap;
+          const lineEnd=Math.min(width-padding-10,headerCenterX+subtitleWidth/2+sideGap+Math.round(width*0.13));
+          const lineGradLeft=ctx.createLinearGradient(lineStart,0,leftEnd,0);
+          lineGradLeft.addColorStop(0,'rgba(255,210,79,0)');
+          lineGradLeft.addColorStop(1,'rgba(255,210,79,0.72)');
+          const lineGradRight=ctx.createLinearGradient(rightStart,0,lineEnd,0);
+          lineGradRight.addColorStop(0,'rgba(255,210,79,0.72)');
+          lineGradRight.addColorStop(1,'rgba(255,210,79,0)');
+          ctx.save();
+          ctx.lineWidth=Math.max(3,Math.round(width*0.0012));
+          ctx.lineCap='round';
+          ctx.strokeStyle=lineGradLeft;
+          ctx.beginPath();
+          ctx.moveTo(lineStart,lineY);
+          ctx.lineTo(leftEnd,lineY);
+          ctx.stroke();
+          ctx.strokeStyle=lineGradRight;
+          ctx.beginPath();
+          ctx.moveTo(rightStart,lineY);
+          ctx.lineTo(lineEnd,lineY);
+          ctx.stroke();
+          ctx.restore();
+        }else if(collageTitle){
+          const lineY=headingBottom+Math.max(24,Math.round(width*0.012));
+          const lineGrad=ctx.createLinearGradient(width*0.28,0,width*0.72,0);
+          lineGrad.addColorStop(0,'rgba(255,210,79,0)');
+          lineGrad.addColorStop(0.18,'rgba(255,210,79,0.32)');
+          lineGrad.addColorStop(0.50,'rgba(255,247,200,0.22)');
+          lineGrad.addColorStop(0.82,'rgba(255,210,79,0.32)');
+          lineGrad.addColorStop(1,'rgba(255,210,79,0)');
+          ctx.save();
+          ctx.strokeStyle=lineGrad;
+          ctx.lineWidth=4;
+          ctx.lineCap='round';
+          ctx.beginPath();
+          ctx.moveTo(width*0.30,lineY);
+          ctx.lineTo(width*0.70,lineY);
+          ctx.stroke();
+          ctx.restore();
+        }
       }
 
       if(settings.showDate){
         ctx.textAlign="right";
         ctx.fillStyle="rgba(247,248,251,0.62)";
         ctx.font=`500 ${Math.max(20,Math.round(width*0.0078))}px Inter, system-ui, sans-serif`;
-        ctx.fillText(new Date().toLocaleDateString(),width-padding,padding+(collageTitle ? Math.round(width*.005) : 8));
+        ctx.fillText(new Date().toLocaleDateString(),width-padding,padding+(hasHeading ? Math.round(width*.005) : 8));
         ctx.textAlign="left";
       }
 
