@@ -708,3 +708,334 @@ body.light-mode .modal-overlay{background:rgba(54,48,40,.42) !important;}
     color:#2b3035 !important;
   }
 }
+
+/* =========================================================
+   V112 — STOREFRONT CONSOLIDATION + OWNER/BUYER PREVIEW
+   Final visual layer. Dark mode behavior stays intact unless
+   explicitly scoped below; light mode receives matching tokens.
+   ========================================================= */
+
+/* ---------- Owner mode: visibly administrative, never mixed with buyer UI ---------- */
+.owner-buyer-preview-toggle{
+  position:fixed;
+  right:22px;
+  bottom:22px;
+  z-index:140;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:42px;
+  padding:0 15px;
+  border:1px solid rgba(227,179,65,.42);
+  border-radius:999px;
+  background:rgba(18,19,23,.94);
+  color:var(--accent-gold-soft,#f3d488);
+  box-shadow:0 12px 32px rgba(0,0,0,.34);
+  backdrop-filter:blur(14px);
+  font:700 11px/1 'Inter',sans-serif;
+  letter-spacing:.35px;
+  cursor:pointer;
+  transition:transform .15s ease,border-color .15s ease,background .15s ease,color .15s ease;
+}
+.owner-buyer-preview-toggle[hidden]{display:none !important;}
+.owner-buyer-preview-toggle:hover{
+  transform:translateY(-2px);
+  border-color:rgba(227,179,65,.78);
+  background:#1f2025;
+  color:#ffe49a;
+}
+.owner-buyer-preview-toggle.is-previewing{
+  border-color:rgba(95,212,196,.62);
+  background:rgba(18,30,30,.96);
+  color:#8de6da;
+}
+body.owner-buyer-preview::after{
+  content:"BUYER PREVIEW";
+  position:fixed;
+  right:22px;
+  bottom:72px;
+  z-index:139;
+  padding:7px 10px;
+  border:1px solid rgba(95,212,196,.30);
+  border-radius:8px;
+  background:rgba(12,19,20,.90);
+  color:#7bded1;
+  font:800 9px/1 'JetBrains Mono',monospace;
+  letter-spacing:1.2px;
+  pointer-events:none;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+}
+
+@media(min-width:801px){
+  body.owner-mode .owner-only:not(.card-actions),
+  body.owner-mode .desktop-more-owner{
+    --owner-admin-border:rgba(227,179,65,.25);
+  }
+  body.owner-mode nav.mainnav a.owner-only,
+  body.owner-mode nav.mainnav a.desktop-more-owner{
+    border:1px solid transparent;
+  }
+  body.owner-mode nav.mainnav a.owner-only:hover,
+  body.owner-mode nav.mainnav a.desktop-more-owner:hover{
+    border-color:var(--owner-admin-border);
+    background:rgba(227,179,65,.055);
+  }
+  body.owner-mode .card-actions.owner-only,
+  body.owner-mode .showcase-owner-actions,
+  body.owner-mode .giveaway-owner-actions{
+    outline:1px solid rgba(227,179,65,.12);
+    outline-offset:1px;
+  }
+}
+
+/* ---------- Home: cleaner premium storefront hierarchy ---------- */
+@media(min-width:801px){
+  .home-hero{
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:22px;
+    padding:34px 36px;
+    background:
+      radial-gradient(circle at 82% 12%,rgba(227,179,65,.12),transparent 34%),
+      linear-gradient(145deg,rgba(255,255,255,.035),rgba(255,255,255,.012));
+    box-shadow:0 18px 46px rgba(0,0,0,.16);
+  }
+  .home-hero h1,.home-hero h2{letter-spacing:.2px;}
+  .home-hero-actions{gap:10px;margin-top:20px;}
+  .home-section{margin-top:34px;}
+  .home-section-head{
+    padding-bottom:10px;
+    margin-bottom:16px;
+    border-bottom:1px solid rgba(255,255,255,.065);
+  }
+  .home-section-head h2,.home-section-head h3{font-size:22px;}
+  .home-section-link{font-weight:700;color:var(--accent-teal);}
+  .home-collection-stats{gap:10px;}
+  .home-stat-card{
+    border:1px solid rgba(255,255,255,.075);
+    background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.018));
+    box-shadow:none;
+    transition:transform .15s ease,border-color .15s ease,background .15s ease;
+  }
+  .home-stat-card:hover{
+    transform:translateY(-2px);
+    border-color:rgba(227,179,65,.35);
+    background:rgba(227,179,65,.045);
+  }
+  .home-feature{
+    border-color:rgba(255,255,255,.075);
+    background:linear-gradient(180deg,rgba(255,255,255,.028),rgba(255,255,255,.012));
+  }
+  .home-feature:hover{border-color:rgba(227,179,65,.34);}
+  .home-shipping{
+    margin-top:34px;
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:16px;
+    overflow:hidden;
+    background:rgba(255,255,255,.018);
+  }
+  .home-shipping-item{padding:18px 20px;}
+}
+
+/* ---------- About / contact: less utilitarian, more storefront ---------- */
+.about-panel{
+  border-color:rgba(255,255,255,.075) !important;
+  border-radius:18px !important;
+  box-shadow:0 14px 34px rgba(0,0,0,.12);
+}
+.about-copy p{max-width:72ch;}
+.about-subhead{
+  padding-top:20px;
+  border-top:1px solid rgba(255,255,255,.06);
+}
+.about-link,.contact-link{
+  transition:transform .15s ease,border-color .15s ease,background .15s ease;
+}
+.about-link:hover,.contact-link:hover{
+  transform:translateY(-2px);
+  background:rgba(227,179,65,.04);
+}
+
+/* ---------- Empty / zero-result states ---------- */
+.empty-state{
+  min-height:260px;
+  justify-content:center;
+  border-color:rgba(255,255,255,.10);
+  background:
+    radial-gradient(circle at 50% 22%,rgba(227,179,65,.055),transparent 34%),
+    rgba(255,255,255,.012);
+}
+.empty-state h2{font-size:26px;letter-spacing:.1px;}
+.empty-state p{line-height:1.6;max-width:440px;}
+.inventory-no-results{margin-top:8px;}
+
+/* ---------- Card details: finish the lower half ---------- */
+@media(min-width:981px){
+  .modal.card-details-modal .detail-section,
+  .modal.card-details-modal .detail-notes,
+  .modal.card-details-modal .detail-slab-list,
+  .modal.card-details-modal .details-buyer-confidence,
+  .modal.card-details-modal .details-desktop-contact-socials{
+    border-radius:14px;
+  }
+  .modal.card-details-modal .detail-section{
+    border-color:rgba(255,255,255,.065);
+    background:rgba(255,255,255,.018);
+  }
+  .modal.card-details-modal .detail-section h3,
+  .modal.card-details-modal .detail-info-section-title{
+    letter-spacing:.7px;
+  }
+  .modal.card-details-modal .detail-grid{
+    gap:9px;
+  }
+  .modal.card-details-modal .detail-item{
+    border-color:rgba(255,255,255,.065);
+    background:rgba(255,255,255,.018);
+  }
+  .modal.card-details-modal .detail-label{
+    font-size:9px;
+    letter-spacing:.85px;
+    color:#858a94;
+  }
+  .modal.card-details-modal .detail-value{
+    color:#ececf0;
+  }
+  .modal.card-details-modal .grade-entry{
+    border-bottom-color:rgba(255,255,255,.055);
+  }
+  .modal.card-details-modal .detail-notes{
+    padding:14px 15px;
+    border:1px solid rgba(255,255,255,.065);
+    background:rgba(255,255,255,.015);
+  }
+}
+
+/* ---------- Focus visibility / accessibility polish ---------- */
+@media(min-width:801px){
+  .btn-primary:focus-visible,
+  .btn-ghost:focus-visible,
+  .icon-btn:focus-visible,
+  .quick-filter:focus-visible,
+  .home-feature:focus-visible,
+  .home-stat-card:focus-visible,
+  .about-link:focus-visible,
+  .contact-link:focus-visible,
+  .owner-buyer-preview-toggle:focus-visible{
+    outline:2px solid var(--accent-gold);
+    outline-offset:3px;
+  }
+}
+
+/* ---------- V112 final light-mode harmonization ---------- */
+body.light-mode{
+  --bg:#f3f1ec;
+  --sidebar:#fbfaf7;
+  --surface:#ffffff;
+  --surface-2:#f7f5f0;
+  --surface-3:#ece9e2;
+  --border:#c9c5bc;
+  --border-soft:#dedad2;
+  --text:#20262c;
+  --text-muted:#5d656d;
+  --text-dim:#737b82;
+  --accent-gold:#946b18;
+  --accent-gold-soft:#b88728;
+  --accent-teal:#176f68;
+  --success:#2d7d59;
+  color-scheme:light;
+}
+body.light-mode .owner-buyer-preview-toggle{
+  border-color:rgba(148,107,24,.34);
+  background:rgba(255,255,255,.96);
+  color:#745313;
+  box-shadow:0 10px 28px rgba(58,49,33,.15);
+}
+body.light-mode .owner-buyer-preview-toggle:hover{
+  border-color:rgba(148,107,24,.58);
+  background:#fbf4e4;
+  color:#65470e;
+}
+body.light-mode .owner-buyer-preview-toggle.is-previewing{
+  border-color:rgba(23,111,104,.34);
+  background:#eaf5f2;
+  color:#176f68;
+}
+body.light-mode.owner-buyer-preview::after{
+  border-color:rgba(23,111,104,.24);
+  background:rgba(239,248,246,.96);
+  color:#176f68;
+  box-shadow:0 8px 22px rgba(58,49,33,.10);
+}
+
+@media(min-width:801px){
+  body.light-mode .home-hero{
+    border-color:#d5d0c7;
+    background:
+      radial-gradient(circle at 82% 12%,rgba(148,107,24,.10),transparent 34%),
+      linear-gradient(145deg,#ffffff,#f7f4ee);
+    box-shadow:0 14px 34px rgba(58,49,33,.08);
+  }
+  body.light-mode .home-section-head{border-bottom-color:#ddd8cf;}
+  body.light-mode .home-stat-card,
+  body.light-mode .home-feature{
+    border-color:#d7d1c7;
+    background:linear-gradient(180deg,#fff,#faf8f3);
+    color:#252b30;
+  }
+  body.light-mode .home-stat-card:hover,
+  body.light-mode .home-feature:hover{
+    border-color:rgba(148,107,24,.36);
+    background:#fbf5e7;
+  }
+  body.light-mode .home-stat-label,
+  body.light-mode .home-feature p{color:#626a72;}
+  body.light-mode .home-section-link{color:#176f68;}
+  body.light-mode .home-shipping{
+    border-color:#d7d1c7;
+    background:#faf8f3;
+  }
+  body.light-mode .home-shipping-item{color:#30363b;}
+}
+body.light-mode .about-panel{
+  border-color:#d3cec5 !important;
+  background:#fff !important;
+  color:#252b30 !important;
+  box-shadow:0 12px 30px rgba(58,49,33,.08) !important;
+}
+body.light-mode .about-subhead{border-top-color:#ded9d0;}
+body.light-mode .about-link,
+body.light-mode .contact-link{
+  border-color:#d6d0c6 !important;
+  background:#faf8f3 !important;
+  color:#2e3439 !important;
+}
+body.light-mode .about-link:hover,
+body.light-mode .contact-link:hover{
+  border-color:rgba(148,107,24,.40) !important;
+  background:#fbf3df !important;
+}
+body.light-mode .empty-state{
+  border-color:#d1cbc1 !important;
+  background:
+    radial-gradient(circle at 50% 22%,rgba(148,107,24,.07),transparent 34%),
+    #faf8f3 !important;
+  color:#5f676e !important;
+}
+body.light-mode .empty-state h2{color:#252b30 !important;}
+
+@media(min-width:981px){
+  body.light-mode .modal.card-details-modal .detail-section,
+  body.light-mode .modal.card-details-modal .detail-item,
+  body.light-mode .modal.card-details-modal .detail-notes{
+    border-color:#d8d2c8 !important;
+    background:#faf8f4 !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-label{color:#6d747a !important;}
+  body.light-mode .modal.card-details-modal .detail-value{color:#2a3035 !important;}
+  body.light-mode .modal.card-details-modal .grade-entry{border-bottom-color:#dfdad1 !important;}
+}
+
+@media(max-width:800px){
+  .owner-buyer-preview-toggle{display:none !important;}
+  body.owner-buyer-preview::after{display:none !important;}
+}
