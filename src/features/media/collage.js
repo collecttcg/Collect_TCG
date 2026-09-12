@@ -435,9 +435,11 @@ function chooseCollectionCollageGrid(count,areaW,areaH,gap){
   }
 
 function chooseCollectionCollageGridWithCenterGap(count,areaW,areaH,gap){
-    const desiredAspect=0.704;
+    const desiredCardAspect=0.704;
+    const desiredQrAspect=0.92;
     let best=null;
     const maxCols=Math.min(14,Math.max(4,count+2));
+
     for(let cols=2; cols<=maxCols; cols++){
       const minRows=Math.max(2,Math.ceil(count/cols));
       const maxRows=Math.min(18,Math.ceil((count+6)/cols)+4);
@@ -446,51 +448,71 @@ function chooseCollectionCollageGridWithCenterGap(count,areaW,areaH,gap){
         const cellH=(areaH-gap*(rows-1))/rows;
         if(cellW<=20 || cellH<=20) continue;
 
-        // Keep the reserved QR gap centered on the grid's true midpoint.
-        // A 2-column gap inside an odd-column grid is inherently off-center,
-        // so match the gap parity to the grid parity.
-        const reserveCols = (cols % 2 === 0) ? 2 : 1;
-        const reserveRows = (rows % 2 === 0) ? 2 : 1;
-        const startCol = Math.max(0,Math.floor((cols-reserveCols)/2));
-        const startRow = Math.max(0,Math.floor((rows-reserveRows)/2));
-        const capacity = cols*rows - reserveCols*reserveRows;
-        if(capacity < count) continue;
+        // Try compact centre-gap shapes instead of forcing parity-based 1x2 / 2x2 gaps.
+        // Portrait card cells make a 1-column x 2-row gap excessively tall, so score
+        // candidate shapes by how close the resulting QR panel is to square.
+        const reserveShapes=[[1,1],[2,1],[1,2],[2,2]];
+        for(const [reserveCols,reserveRows] of reserveShapes){
+          if(reserveCols>cols || reserveRows>rows) continue;
 
-        const qrW = reserveCols*cellW + gap*(reserveCols-1);
-        const qrH = reserveRows*cellH + gap*(reserveRows-1);
-        const qrSize = Math.min(qrW,qrH);
-        if(qrSize < 120) continue;
+          const startCol=Math.max(0,Math.floor((cols-reserveCols)/2));
+          const startRow=Math.max(0,Math.floor((rows-reserveRows)/2));
+          const capacity=cols*rows-reserveCols*reserveRows;
+          if(capacity<count) continue;
 
-        const area=cellW*cellH;
-        const cellAspect=cellW/cellH;
-        const aspectPenalty=Math.abs(Math.log(Math.max(.01,cellAspect/desiredAspect)));
-        const unused=capacity-count;
-        const qrBonus=Math.log(Math.max(1,qrSize))*1.4;
-        const score=Math.log(Math.max(1,area))*5-aspectPenalty*2-unused*.03+qrBonus;
+          const qrW=reserveCols*cellW+gap*(reserveCols-1);
+          const qrH=reserveRows*cellH+gap*(reserveRows-1);
+          const qrSize=Math.min(qrW,qrH);
+          if(qrSize<120) continue;
 
-        if(!best || score>best.score){
-          const positions=[];
-          for(let r=0;r<rows;r++){
-            for(let c=0;c<cols;c++){
-              const inGap = c>=startCol && c<startCol+reserveCols && r>=startRow && r<startRow+reserveRows;
-              if(inGap) continue;
-              positions.push({x:c*(cellW+gap),y:r*(cellH+gap),col:c,row:r});
+          const area=cellW*cellH;
+          const cardAspect=cellW/cellH;
+          const cardAspectPenalty=Math.abs(Math.log(Math.max(.01,cardAspect/desiredCardAspect)));
+          const qrAspect=qrW/qrH;
+          const qrAspectPenalty=Math.abs(Math.log(Math.max(.01,qrAspect/desiredQrAspect)));
+          const unused=capacity-count;
+
+          // Slight preference for truly centred gaps, but never at the expense of
+          // creating the very tall QR block seen in portrait collages.
+          const gapCenterCol=startCol+(reserveCols-1)/2;
+          const gapCenterRow=startRow+(reserveRows-1)/2;
+          const gridCenterCol=(cols-1)/2;
+          const gridCenterRow=(rows-1)/2;
+          const centerPenalty=Math.abs(gapCenterCol-gridCenterCol)+Math.abs(gapCenterRow-gridCenterRow);
+
+          const qrBonus=Math.log(Math.max(1,qrSize))*1.25;
+          const score=
+            Math.log(Math.max(1,area))*5
+            -cardAspectPenalty*2
+            -qrAspectPenalty*5.5
+            -unused*.03
+            -centerPenalty*.18
+            +qrBonus;
+
+          if(!best || score>best.score){
+            const positions=[];
+            for(let r=0;r<rows;r++){
+              for(let c=0;c<cols;c++){
+                const inGap=c>=startCol && c<startCol+reserveCols && r>=startRow && r<startRow+reserveRows;
+                if(inGap) continue;
+                positions.push({x:c*(cellW+gap),y:r*(cellH+gap),col:c,row:r});
+              }
             }
+            best={
+              cols,rows,cellW,cellH,score,
+              positions,
+              qrBox:{
+                x:startCol*(cellW+gap),
+                y:startRow*(cellH+gap),
+                w:qrW,
+                h:qrH,
+                reserveCols,
+                reserveRows,
+                startCol,
+                startRow
+              }
+            };
           }
-          best={
-            cols,rows,cellW,cellH,score,
-            positions,
-            qrBox:{
-              x:startCol*(cellW+gap),
-              y:startRow*(cellH+gap),
-              w:qrW,
-              h:qrH,
-              reserveCols,
-              reserveRows,
-              startCol,
-              startRow
-            }
-          };
         }
       }
     }
@@ -1046,10 +1068,13 @@ async function exportCollectionCollage(settings={}){
       }
 
       if(collageQr && qrBox){
-        const panelW=qrBox.w;
-        const panelH=qrBox.h;
-        const panelX=Math.round(gridOffsetX+qrBox.x);
-        const panelY=Math.round(gridOffsetY+qrBox.y);
+        // Keep the QR card compact even if the reserved grid slot is taller than wide.
+        const maxPanelH=Math.min(qrBox.h,qrBox.w*1.28);
+        const maxPanelW=Math.min(qrBox.w,maxPanelH*1.02);
+        const panelW=Math.round(maxPanelW);
+        const panelH=Math.round(maxPanelH);
+        const panelX=Math.round(gridOffsetX+qrBox.x+(qrBox.w-panelW)/2);
+        const panelY=Math.round(gridOffsetY+qrBox.y+(qrBox.h-panelH)/2);
         const panelRadius=settings.corners==="square" ? 8 : Math.max(20,Math.round(Math.min(panelW,panelH)*0.09));
         const panelBg=ctx.createLinearGradient(panelX,panelY,panelX,panelY+panelH);
         panelBg.addColorStop(0,"rgba(255,255,255,0.13)");
