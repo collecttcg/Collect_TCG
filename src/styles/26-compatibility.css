@@ -1860,3 +1860,201 @@ body.light-mode .modal-overlay{background:rgba(54,48,40,.42) !important;}
 @media (min-width:1800px){
   :root{--site-content-max:1400px;}
 }
+
+/* ==========================================================
+   V127 BETA — MOBILE PARITY / BUYER FLOW
+   Bring the desktop purchase hierarchy to mobile without copying
+   the desktop layout literally. Desktop rules remain unchanged.
+   ========================================================== */
+.mobile-buy-sticky,
+.mobile-buy-backdrop,
+.mobile-buy-close{display:none;}
+
+@media (max-width:899px){
+  .modal.card-details-modal #detailsMount{padding-bottom:92px !important;}
+
+  .modal.card-details-modal .detail-purchase-panel{
+    margin:12px 0 6px !important;padding:10px !important;display:grid !important;
+    grid-template-columns:1fr !important;gap:8px !important;
+    border:1px solid rgba(227,179,65,.20) !important;border-radius:14px !important;
+    background:linear-gradient(145deg,rgba(227,179,65,.055),rgba(255,255,255,.018)) !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.022) !important;
+  }
+  .modal.card-details-modal .detail-purchase-location{
+    min-width:0 !important;padding:9px 10px !important;display:flex !important;align-items:center !important;gap:9px !important;
+    border:1px solid rgba(255,255,255,.065) !important;border-radius:11px !important;background:rgba(255,255,255,.022) !important;
+  }
+  .modal.card-details-modal .detail-purchase-location-icon{
+    width:30px !important;height:30px !important;flex:0 0 30px !important;display:grid !important;place-items:center !important;
+    border:1px solid rgba(227,179,65,.20) !important;border-radius:9px !important;background:rgba(227,179,65,.05) !important;font-size:14px !important;
+  }
+  .modal.card-details-modal .detail-purchase-location > span:last-child{min-width:0 !important;display:grid !important;gap:2px !important;}
+  .modal.card-details-modal .detail-purchase-location strong{color:#f3efe7 !important;font-size:12px !important;font-weight:780 !important;line-height:1.2 !important;}
+  .modal.card-details-modal .detail-purchase-location small{color:#969aa3 !important;font-size:9px !important;font-weight:590 !important;line-height:1.35 !important;letter-spacing:0 !important;text-transform:none !important;}
+
+  .modal.card-details-modal .detail-buy-cta{min-width:0 !important;position:relative !important;}
+  .modal.card-details-modal .detail-buy-cta > summary{
+    min-height:48px !important;padding:9px 12px !important;display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;gap:2px !important;
+    cursor:pointer !important;list-style:none !important;border:1px solid #d5a735 !important;border-radius:11px !important;
+    background:linear-gradient(180deg,#e9bc4f,#dca632) !important;color:#181611 !important;
+    box-shadow:0 7px 18px rgba(218,164,48,.16),inset 0 1px 0 rgba(255,255,255,.34) !important;text-align:center !important;
+  }
+  .modal.card-details-modal .detail-buy-cta > summary::-webkit-details-marker{display:none !important;}
+  .modal.card-details-modal .detail-buy-cta > summary > span{font-size:12px !important;font-weight:820 !important;}
+  .modal.card-details-modal .detail-buy-cta > summary > small{color:rgba(24,22,17,.68) !important;font-size:9px !important;font-weight:650 !important;}
+
+  .modal.card-details-modal .detail-buy-cta[open] .mobile-buy-backdrop{
+    position:fixed !important;inset:0 !important;z-index:918 !important;display:block !important;width:100vw !important;height:100vh !important;padding:0 !important;border:0 !important;
+    background:rgba(0,0,0,.56) !important;backdrop-filter:blur(2px) !important;-webkit-backdrop-filter:blur(2px) !important;
+  }
+  .modal.card-details-modal .detail-buy-chooser{
+    position:fixed !important;left:10px !important;right:10px !important;bottom:max(10px,env(safe-area-inset-bottom)) !important;top:auto !important;z-index:919 !important;width:auto !important;
+    max-height:min(72vh,520px) !important;padding:17px 14px 14px !important;display:grid !important;gap:12px !important;overflow:auto !important;
+    border:1px solid rgba(227,179,65,.22) !important;border-radius:18px !important;background:rgba(18,20,24,.99) !important;
+    box-shadow:0 24px 70px rgba(0,0,0,.54),inset 0 1px 0 rgba(255,255,255,.025) !important;backdrop-filter:blur(20px) saturate(120%) !important;-webkit-backdrop-filter:blur(20px) saturate(120%) !important;
+  }
+  .modal.card-details-modal .mobile-buy-close{
+    position:absolute !important;top:8px !important;right:9px !important;z-index:2 !important;width:32px !important;height:32px !important;padding:0 !important;display:grid !important;place-items:center !important;
+    border:1px solid rgba(255,255,255,.08) !important;border-radius:50% !important;background:rgba(255,255,255,.035) !important;color:#b9bdc5 !important;font-size:20px !important;line-height:1 !important;
+  }
+  .modal.card-details-modal .detail-buy-chooser > div:first-of-type{padding-right:34px !important;display:grid !important;gap:4px !important;}
+  .modal.card-details-modal .detail-buy-chooser > div:first-of-type strong{color:#f2efe8 !important;font-size:13px !important;}
+  .modal.card-details-modal .detail-buy-chooser > div:first-of-type span{color:#9297a0 !important;font-size:10.5px !important;line-height:1.45 !important;}
+  .modal.card-details-modal .details-buy-social-links,
+  .modal.card-details-modal .detail-buy-chooser .social-links,
+  .modal.card-details-modal .detail-buy-chooser [class*="social-links"]{display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:8px !important;}
+  .modal.card-details-modal .detail-buy-chooser a{min-height:46px !important;justify-content:center !important;border-color:rgba(227,179,65,.18) !important;background:rgba(227,179,65,.035) !important;}
+
+  .modal.card-details-modal .mobile-buy-sticky{
+    position:fixed !important;left:8px !important;right:8px !important;bottom:max(8px,env(safe-area-inset-bottom)) !important;z-index:912 !important;min-height:62px !important;padding:8px 8px 8px 11px !important;
+    display:grid !important;grid-template-columns:minmax(0,1fr) auto !important;align-items:center !important;gap:10px !important;
+    border:1px solid rgba(227,179,65,.22) !important;border-radius:15px !important;background:rgba(17,19,23,.96) !important;
+    box-shadow:0 16px 45px rgba(0,0,0,.46),inset 0 1px 0 rgba(255,255,255,.025) !important;backdrop-filter:blur(18px) saturate(120%) !important;-webkit-backdrop-filter:blur(18px) saturate(120%) !important;
+  }
+  .modal.card-details-modal .mobile-buy-sticky-copy{min-width:0 !important;display:grid !important;gap:2px !important;}
+  .modal.card-details-modal .mobile-buy-sticky-copy > span{color:#55cbbd !important;font-size:8.5px !important;font-weight:800 !important;letter-spacing:.08em !important;text-transform:uppercase !important;}
+  .modal.card-details-modal .mobile-buy-sticky-price{min-width:0 !important;}
+  .modal.card-details-modal .mobile-buy-sticky-price .detail-price-primary{margin:0 !important;color:#f0c65b !important;font-size:15px !important;font-weight:820 !important;line-height:1.05 !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important;}
+  .modal.card-details-modal .mobile-buy-sticky-price .detail-price-secondary{display:none !important;}
+  .modal.card-details-modal .mobile-buy-sticky-button{
+    min-height:44px !important;padding:0 14px !important;border:1px solid #d5a735 !important;border-radius:11px !important;background:linear-gradient(180deg,#e9bc4f,#dca632) !important;color:#181611 !important;
+    box-shadow:0 7px 18px rgba(218,164,48,.17),inset 0 1px 0 rgba(255,255,255,.34) !important;font-size:11px !important;font-weight:840 !important;white-space:nowrap !important;
+  }
+
+  .modal.card-details-modal .related-cards-grid{display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:8px !important;overflow:visible !important;padding-bottom:0 !important;scroll-snap-type:none !important;}
+  .modal.card-details-modal .related-cards-grid > *{min-width:0 !important;width:auto !important;flex:none !important;}
+  .modal.card-details-modal .related-card{min-width:0 !important;border-radius:11px !important;}
+  .modal.card-details-modal .related-card-image-wrap{height:clamp(145px,43vw,205px) !important;min-height:0 !important;}
+  .modal.card-details-modal .related-card-image-wrap img{width:100% !important;height:100% !important;object-fit:contain !important;}
+  .modal.card-details-modal .related-card-info{padding:8px !important;}
+  .modal.card-details-modal .related-card-name{min-height:0 !important;display:-webkit-box !important;-webkit-line-clamp:2 !important;-webkit-box-orient:vertical !important;overflow:hidden !important;font-size:9.5px !important;line-height:1.25 !important;}
+  .modal.card-details-modal .related-card-code{margin-top:5px !important;font-size:8.5px !important;}
+  .modal.card-details-modal .related-card-meta{margin-top:5px !important;gap:4px !important;}
+  .modal.card-details-modal .related-card-meta span{padding:2px 5px !important;font-size:7.5px !important;}
+
+  .modal.card-details-modal .details-desktop-contact-socials{display:none !important;}
+
+  body.light-mode .modal.card-details-modal .detail-purchase-panel{border-color:rgba(148,107,24,.22) !important;background:linear-gradient(145deg,#fbf7ed,#fff) !important;}
+  body.light-mode .modal.card-details-modal .detail-purchase-location{border-color:#ddd6ca !important;background:#fff !important;}
+  body.light-mode .modal.card-details-modal .detail-purchase-location-icon{border-color:rgba(148,107,24,.20) !important;background:#f7f0df !important;}
+  body.light-mode .modal.card-details-modal .detail-purchase-location strong{color:#292e33 !important;}
+  body.light-mode .modal.card-details-modal .detail-purchase-location small{color:#737a80 !important;}
+  body.light-mode .modal.card-details-modal .detail-buy-chooser{border-color:rgba(148,107,24,.22) !important;background:rgba(255,255,255,.995) !important;box-shadow:0 22px 54px rgba(61,50,30,.22) !important;}
+  body.light-mode .modal.card-details-modal .mobile-buy-close{border-color:#ded8ce !important;background:#f6f2ea !important;color:#61676d !important;}
+  body.light-mode .modal.card-details-modal .detail-buy-chooser > div:first-of-type strong{color:#292e33 !important;}
+  body.light-mode .modal.card-details-modal .detail-buy-chooser > div:first-of-type span{color:#697078 !important;}
+  body.light-mode .modal.card-details-modal .detail-buy-chooser a{border-color:rgba(148,107,24,.18) !important;background:#fbf7ee !important;}
+  body.light-mode .modal.card-details-modal .mobile-buy-sticky{border-color:rgba(148,107,24,.22) !important;background:rgba(255,255,255,.965) !important;box-shadow:0 15px 38px rgba(61,50,30,.18),inset 0 1px 0 rgba(255,255,255,.8) !important;}
+  body.light-mode .modal.card-details-modal .mobile-buy-sticky-copy > span{color:#176f68 !important;}
+  body.light-mode .modal.card-details-modal .mobile-buy-sticky-price .detail-price-primary{color:#8b6416 !important;}
+}
+
+@media (max-width:420px){
+  .modal.card-details-modal .mobile-buy-sticky{left:6px !important;right:6px !important;grid-template-columns:minmax(0,1fr) auto !important;}
+  .modal.card-details-modal .mobile-buy-sticky-button{padding-left:11px !important;padding-right:11px !important;font-size:10.5px !important;}
+}
+
+/* ==========================================================
+   V129 BETA — MOBILE CONTACT CTA RELIABILITY FIX
+   Keep the contact sheet visible for both native summary taps and
+   the sticky Contact to Buy action. Desktop remains unchanged.
+   ========================================================== */
+@media (max-width:899px){
+  .modal.card-details-modal .detail-buy-cta.mobile-buy-force-open > .mobile-buy-backdrop{
+    position:fixed !important;
+    inset:0 !important;
+    z-index:918 !important;
+    display:block !important;
+    width:100vw !important;
+    height:100vh !important;
+    padding:0 !important;
+    border:0 !important;
+    background:rgba(0,0,0,.56) !important;
+    backdrop-filter:blur(2px) !important;
+    -webkit-backdrop-filter:blur(2px) !important;
+  }
+
+  .modal.card-details-modal .detail-buy-cta.mobile-buy-force-open > .detail-buy-chooser{
+    display:grid !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    pointer-events:auto !important;
+  }
+
+  .modal.card-details-modal .mobile-buy-sticky-button{
+    cursor:pointer !important;
+    pointer-events:auto !important;
+    touch-action:manipulation !important;
+  }
+}
+
+
+/* ==========================================================
+   V131 BETA — SINGLE MOBILE CONTACT FLOW
+   The fixed footer and inline purchase CTA both open one global
+   contact sheet owned by enhancement-2.js. No competing handlers.
+   ========================================================== */
+@media (max-width:800px){
+  #mobileDetailCta{
+    pointer-events:auto !important;
+    z-index:1600 !important;
+  }
+
+  #mobileDetailCta .mobile-detail-cta-action{
+    pointer-events:auto !important;
+    touch-action:manipulation !important;
+    -webkit-tap-highlight-color:transparent !important;
+    background:linear-gradient(180deg,#e9bc4f,#dca632) !important;
+    border:1px solid #d5a735 !important;
+    color:#181611 !important;
+    font-weight:820 !important;
+    box-shadow:0 7px 18px rgba(218,164,48,.17),inset 0 1px 0 rgba(255,255,255,.34) !important;
+  }
+
+  #mobileDetailCta .mobile-detail-cta-action:active{
+    transform:translateY(1px) !important;
+  }
+
+  /* The inline summary is another trigger, not a second mobile chooser. */
+  .modal.card-details-modal .detail-buy-cta > .detail-buy-chooser,
+  .modal.card-details-modal .detail-buy-cta > .mobile-buy-backdrop,
+  .modal.card-details-modal .detail-buy-cta > .mobile-buy-close{
+    display:none !important;
+  }
+
+  .interest-contact-overlay{
+    pointer-events:auto !important;
+    z-index:2200 !important;
+  }
+  .interest-contact-overlay[hidden]{display:none !important;}
+  .interest-contact-sheet,
+  .interest-contact-option,
+  .interest-contact-close{
+    pointer-events:auto !important;
+  }
+
+  body.light-mode #mobileDetailCta .mobile-detail-cta-action{
+    background:linear-gradient(180deg,#e5b84a,#d7a130) !important;
+    color:#181611 !important;
+  }
+}

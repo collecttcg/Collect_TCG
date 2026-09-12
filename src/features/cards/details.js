@@ -1126,11 +1126,13 @@ async function openDetailsModal(card){
                 </span>
               </div>
               <details class="detail-buy-cta">
-                <summary>
+                <summary data-contact-buy-trigger aria-label="Contact to Buy">
                   <span>Contact to Buy</span>
                   <small>Choose contact method</small>
                 </summary>
+                <button type="button" class="mobile-buy-backdrop" data-mobile-buy-close aria-label="Close contact options"></button>
                 <div class="detail-buy-chooser">
+                  <button type="button" class="mobile-buy-close" data-mobile-buy-close aria-label="Close contact options">×</button>
                   <div>
                     <strong>Choose how to contact us</strong>
                     <span>Confirm availability, payment and delivery / meetup options before payment.</span>
@@ -1190,7 +1192,7 @@ async function openDetailsModal(card){
           ${!isNfsListing && !isSoldListing && appContext.normalizeFilterValue(card.availability||"Available")==="available" ? `
             <div class="details-desktop-contact-socials">
               <div class="details-contact-copy">
-                <strong>Interested in this card?</strong>
+                <strong>Contact to Buy</strong>
                 <span class="details-contact-description">Contact us to confirm current availability, transaction method and delivery / meetup options before payment.</span>
                 <span class="details-contact-location">📍 Malaysia &amp; Singapore</span>
               </div>
@@ -1285,6 +1287,9 @@ async function openDetailsModal(card){
       appContext.goToRoute("contact");
       appContext.closeDetailsModal(false);
     }));
+
+    // Mobile purchase/contact triggers are delegated globally by enhancement-2.js.
+    // This avoids per-render handlers competing with the fixed mobile footer CTA.
 
     if(appContext.isOwnerMode() && appContext.ownerPrivateSupported){
       appContext.fetchOwnerPrivateMeta(card.id).then(meta=>{
