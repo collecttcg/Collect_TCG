@@ -1185,7 +1185,7 @@ async function openDetailsModal(card){
       })()}
 
       ${(()=>{
-        const related = appContext.getRelatedCards(card, 6, {availableOnly:isSoldListing});
+        const related = appContext.getRelatedCards(card, 8, {availableOnly:isSoldListing});
         return related.length ? `
           <section class="related-cards-section ${isSoldListing ? "sold-alternatives-section" : ""}">
             <div class="related-cards-head">

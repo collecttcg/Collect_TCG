@@ -523,3 +523,188 @@ body.light-mode .toast{
   box-shadow:0 12px 28px rgba(52,44,31,.16) !important;
 }
 body.light-mode .modal-overlay{background:rgba(54,48,40,.42) !important;}
+
+
+/* =========================================================
+   V111 — LIGHT MODE INVENTORY CONTRAST + CONSISTENCY
+   Targets the newer clean-card desktop classes directly.
+   Dark mode remains unchanged.
+   ========================================================= */
+@media(min-width:801px){
+  /* Group headers / listing shell */
+  body.light-mode .game-group-head,
+  body.light-mode .listing-group-head,
+  body.light-mode .inventory-section-head{
+    border-color:#d4cec3 !important;
+    background:linear-gradient(180deg,#fff,#faf8f3) !important;
+    color:#242a2f !important;
+    box-shadow:0 4px 14px rgba(58,49,33,.045) !important;
+  }
+  body.light-mode .game-group-head h3,
+  body.light-mode .listing-group-head h3,
+  body.light-mode .inventory-section-head h3{
+    color:#242a2f !important;
+  }
+  body.light-mode .game-group-head .count,
+  body.light-mode .listing-group-head .count{
+    color:#626a72 !important;
+  }
+
+  /* Exact V105 card surface selectors */
+  body.light-mode #invGrid.grid:not(.compact-list) .card{
+    border-color:#cdc7bc !important;
+    background:linear-gradient(180deg,#ffffff 0%,#fbfaf7 100%) !important;
+    box-shadow:0 8px 20px rgba(62,52,36,.075) !important;
+  }
+  body.light-mode #invGrid.grid:not(.compact-list) .card:hover,
+  body.light-mode #invGrid.grid:not(.compact-list) .card:focus-visible,
+  body.light-mode #invGrid.grid:not(.compact-list) .card:focus-within{
+    border-color:rgba(148,107,24,.46) !important;
+    background:#fffdf8 !important;
+    box-shadow:0 14px 30px rgba(62,52,36,.12),0 0 0 1px rgba(148,107,24,.045) inset !important;
+  }
+
+  body.light-mode #invGrid.grid:not(.compact-list) .card > .thumb-wrap,
+  body.light-mode #invGrid.grid:not(.compact-list) .card > .thumb-placeholder{
+    border-bottom-color:#d7d1c7 !important;
+    background:#e8e5de !important;
+  }
+  body.light-mode #invGrid.grid:not(.compact-list) .card > .thumb-wrap .thumb{
+    filter:brightness(.965) saturate(.96) contrast(.985) !important;
+  }
+  body.light-mode #invGrid.grid:not(.compact-list) .card:hover > .thumb-wrap .thumb,
+  body.light-mode #invGrid.grid:not(.compact-list) .card:focus-within > .thumb-wrap .thumb{
+    filter:brightness(.99) saturate(.985) contrast(1) !important;
+  }
+
+  /* Readable titles and references — fixes the white-on-white issue. */
+  body.light-mode #invGrid.grid:not(.compact-list) .card .clean-card-name{
+    color:#252b30 !important;
+    text-shadow:none !important;
+  }
+  body.light-mode #invGrid.grid:not(.compact-list) .card .clean-card-reference{
+    color:#687078 !important;
+  }
+  body.light-mode #invGrid.grid:not(.compact-list) .card .clean-card-reference-dot{
+    color:#9a9184 !important;
+  }
+
+  /* Details toggle / card action controls */
+  body.light-mode #invGrid.grid:not(.compact-list) .card .card-overview-pill-toggle,
+  body.light-mode #invGrid.grid:not(.compact-list) .card .clean-details-toggle,
+  body.light-mode #invGrid.grid:not(.compact-list) .card .compare-btn,
+  body.light-mode #invGrid.grid:not(.compact-list) .card .favorite-btn{
+    border-color:#d2ccc1 !important;
+    background:#fff !important;
+    color:#606870 !important;
+  }
+  body.light-mode #invGrid.grid:not(.compact-list) .card .card-overview-pill-toggle:hover,
+  body.light-mode #invGrid.grid:not(.compact-list) .card .card-overview-pill-toggle[aria-expanded="true"],
+  body.light-mode #invGrid.grid:not(.compact-list) .card .clean-details-toggle:hover,
+  body.light-mode #invGrid.grid:not(.compact-list) .card .compare-btn:hover,
+  body.light-mode #invGrid.grid:not(.compact-list) .card .favorite-btn:hover{
+    border-color:rgba(148,107,24,.40) !important;
+    background:#f8f1df !important;
+    color:#745313 !important;
+  }
+
+  /* Price block */
+  body.light-mode #invGrid.grid:not(.compact-list) .card .clean-price-block{
+    border-top-color:#ddd7cd !important;
+  }
+  body.light-mode #invGrid.grid:not(.compact-list) .card .clean-price-primary{
+    color:#936a18 !important;
+    text-shadow:none !important;
+  }
+  body.light-mode #invGrid.grid:not(.compact-list) .card .clean-price-secondary{
+    color:#656d75 !important;
+  }
+  body.light-mode #invGrid.grid:not(.compact-list) .card .clean-price-secondary span{
+    color:#a0988b !important;
+  }
+  body.light-mode #invGrid.grid:not(.compact-list) .card .price-terms,
+  body.light-mode #invGrid.grid:not(.compact-list) .card .clean-price-terms{
+    color:#6b7279 !important;
+  }
+
+  /* All collapsed metadata pills */
+  body.light-mode #invGrid.grid:not(.compact-list) .card .clean-all-pills .clean-meta-pill,
+  body.light-mode #invGrid.grid:not(.compact-list) .card .clean-all-pills .clean-grade-badge{
+    border-color:#d5cfc4 !important;
+    background:#f7f4ee !important;
+    color:#596168 !important;
+  }
+  body.light-mode #invGrid.grid:not(.compact-list) .card .clean-all-pills .clean-grade-badge{
+    border-color:rgba(23,111,104,.25) !important;
+    background:#eaf4f2 !important;
+    color:#176f68 !important;
+  }
+  body.light-mode #invGrid.grid:not(.compact-list) .card .clean-all-pills .clean-availability-pill{
+    border-color:rgba(148,107,24,.25) !important;
+    background:#f7edd7 !important;
+    color:#745313 !important;
+  }
+  body.light-mode #invGrid.grid:not(.compact-list) .card .filter-pill-btn.pill-selected{
+    border-color:rgba(148,107,24,.50) !important;
+    background:#eee0bf !important;
+    color:#62450f !important;
+  }
+
+  /* Grade / NEW overlays remain strong but coordinated in light mode. */
+  body.light-mode #invGrid .grade-overlay,
+  body.light-mode #invGrid .card-grade-overlay{
+    border-color:#d6d0c5 !important;
+    background:rgba(255,255,255,.94) !important;
+    color:#252b30 !important;
+    box-shadow:0 4px 14px rgba(50,44,34,.12) !important;
+  }
+  body.light-mode #invGrid .new-badge,
+  body.light-mode #invGrid .card-new-badge{
+    border-color:rgba(23,111,104,.28) !important;
+    background:#dff2ef !important;
+    color:#115f59 !important;
+  }
+
+  /* High-value / lifecycle notes */
+  body.light-mode #invGrid .high-value-note,
+  body.light-mode #invGrid .high-value-listing,
+  body.light-mode #invGrid .listing-warning{
+    border-color:rgba(148,107,24,.32) !important;
+    background:#fbf4e3 !important;
+    color:#755313 !important;
+  }
+
+  /* Owner three-dot control should not look like a dark floating block. */
+  body.light-mode #invGrid.grid:not(.compact-list) .card .card-actions.owner-only,
+  body.light-mode #invGrid.grid:not(.compact-list) .card .owner-card-menu{
+    border-color:#d1cbc0 !important;
+    background:rgba(255,255,255,.96) !important;
+    box-shadow:0 6px 16px rgba(58,49,33,.11) !important;
+  }
+}
+
+/* Light-mode card details: slightly warmer gallery and stronger readable secondary text. */
+@media(min-width:981px){
+  body.light-mode .modal.card-details-modal .detail-layout{
+    color:#252b30 !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-info-section-title{
+    color:#697078 !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-confidence-item strong{
+    color:#30363b !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-confidence-item small{
+    color:#666e75 !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-confidence-icon{
+    border-color:rgba(23,111,104,.20) !important;
+    background:#edf6f4 !important;
+    color:#176f68 !important;
+  }
+  body.light-mode .modal.card-details-modal .details-desktop-contact-socials{
+    border-color:#d4cec4 !important;
+    background:linear-gradient(135deg,#fff,#f8f5ee) !important;
+    color:#2b3035 !important;
+  }
+}
