@@ -4052,3 +4052,219 @@ body.light-mode .listing-filter-tools .listing-per-page-control select{
   border-color:#d8d2c7 !important;
   color:#2c3136 !important;
 }
+
+
+/* ==========================================================
+   V153 PRODUCTION — DESKTOP TOOLBAR CONSISTENCY PASS
+   One visual system for listing toolbar controls across
+   Inventory / Sold / Reserved / Collection.
+   Category pills remain intentionally smaller.
+   ========================================================== */
+@media (min-width:1180px){
+  :root{
+    --listing-toolbar-h:clamp(42px,2.75vw,50px);
+    --listing-toolbar-radius:clamp(12px,.9vw,16px);
+    --listing-toolbar-font:clamp(10px,.67vw,13px);
+    --listing-toolbar-gap:clamp(6px,.45vw,9px);
+    --listing-toolbar-pad:clamp(10px,.72vw,16px);
+  }
+
+  /* ---------- Top context/action row ---------- */
+  .listing-filter-tools .inventory-toolbar-context,
+  .listing-filter-tools .inventory-display-tools{
+    gap:var(--listing-toolbar-gap) !important;
+    align-items:center !important;
+  }
+
+  .listing-filter-tools .inventory-result-count,
+  .listing-filter-tools .inventory-recent-link,
+  .listing-filter-tools .listing-per-page-control,
+  .listing-filter-tools .desktop-compact-view-toggle,
+  .listing-filter-tools .collection-rearrange-btn,
+  .listing-filter-tools .collection-export-collage-btn,
+  .listing-filter-tools .copy-filter-link-btn{
+    min-height:var(--listing-toolbar-h) !important;
+    height:var(--listing-toolbar-h) !important;
+    border-radius:var(--listing-toolbar-radius) !important;
+    padding:0 var(--listing-toolbar-pad) !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    box-sizing:border-box !important;
+    font-size:var(--listing-toolbar-font) !important;
+    font-weight:700 !important;
+    letter-spacing:.04em !important;
+    line-height:1 !important;
+    text-transform:uppercase !important;
+    white-space:nowrap !important;
+  }
+
+  .listing-filter-tools .inventory-result-count{
+    min-width:0 !important;
+    gap:6px !important;
+  }
+
+  .listing-filter-tools .inventory-result-count strong{
+    font-size:inherit !important;
+    line-height:1 !important;
+  }
+
+  /* Show-per-page now behaves like a normal toolbar control,
+     not a larger panel. */
+  .listing-filter-tools .listing-per-page-control{
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+    gap:8px !important;
+    padding-left:var(--listing-toolbar-pad) !important;
+    padding-right:6px !important;
+  }
+
+  .listing-filter-tools .listing-per-page-control > span{
+    font-size:inherit !important;
+    font-weight:700 !important;
+    letter-spacing:.04em !important;
+    line-height:1 !important;
+    text-transform:uppercase !important;
+    color:inherit !important;
+  }
+
+  .listing-filter-tools .listing-per-page-control select{
+    width:clamp(66px,4.7vw,78px) !important;
+    min-width:clamp(66px,4.7vw,78px) !important;
+    height:calc(var(--listing-toolbar-h) - 10px) !important;
+    min-height:calc(var(--listing-toolbar-h) - 10px) !important;
+    padding:0 27px 0 9px !important;
+    border-radius:calc(var(--listing-toolbar-radius) - 3px) !important;
+    font-size:inherit !important;
+    font-weight:800 !important;
+    letter-spacing:.02em !important;
+    text-transform:none !important;
+  }
+
+  /* Common action icons should not visually change the button height. */
+  .listing-filter-tools .desktop-compact-view-toggle,
+  .listing-filter-tools .collection-rearrange-btn,
+  .listing-filter-tools .collection-export-collage-btn{
+    gap:7px !important;
+  }
+
+  /* ---------- Search / Filters / Currency / Add Card row ---------- */
+  .desktop-filter-toggle-row{
+    gap:var(--listing-toolbar-gap) !important;
+  }
+
+  .desktop-filter-toggle-actions{
+    gap:var(--listing-toolbar-gap) !important;
+  }
+
+  .desktop-inline-search input,
+  .desktop-filter-toggle-btn,
+  .desktop-listing-currency-control,
+  .desktop-filter-add-card{
+    min-height:var(--listing-toolbar-h) !important;
+    height:var(--listing-toolbar-h) !important;
+    border-radius:var(--listing-toolbar-radius) !important;
+    box-sizing:border-box !important;
+    font-size:var(--listing-toolbar-font) !important;
+    font-weight:700 !important;
+    letter-spacing:.04em !important;
+    line-height:1 !important;
+  }
+
+  .desktop-inline-search input{
+    padding-left:var(--listing-toolbar-pad) !important;
+    padding-right:42px !important;
+  }
+
+  .desktop-inline-search input::placeholder{
+    font-size:inherit !important;
+    font-weight:700 !important;
+    letter-spacing:.04em !important;
+    text-transform:uppercase !important;
+  }
+
+  .desktop-filter-toggle-btn{
+    padding:0 var(--listing-toolbar-pad) !important;
+    gap:7px !important;
+    text-transform:uppercase !important;
+  }
+
+  .desktop-filter-toggle-summary{
+    font-size:clamp(8.5px,.55vw,10.5px) !important;
+    font-weight:650 !important;
+    letter-spacing:.035em !important;
+    text-transform:uppercase !important;
+  }
+
+  .desktop-listing-currency-control{
+    padding:0 6px 0 var(--listing-toolbar-pad) !important;
+    gap:8px !important;
+  }
+
+  .desktop-listing-currency-control > span{
+    font-size:inherit !important;
+    font-weight:700 !important;
+    letter-spacing:.04em !important;
+    text-transform:uppercase !important;
+  }
+
+  .desktop-listing-currency-control select{
+    width:clamp(68px,4.8vw,80px) !important;
+    min-width:clamp(68px,4.8vw,80px) !important;
+    height:calc(var(--listing-toolbar-h) - 10px) !important;
+    min-height:calc(var(--listing-toolbar-h) - 10px) !important;
+    padding:0 28px 0 10px !important;
+    border-radius:calc(var(--listing-toolbar-radius) - 3px) !important;
+    font-size:inherit !important;
+    font-weight:800 !important;
+    text-transform:none !important;
+  }
+
+  .desktop-filter-add-card{
+    padding:0 var(--listing-toolbar-pad) !important;
+    text-transform:uppercase !important;
+  }
+}
+
+/* Common 1440-ish desktop: slightly compact but still one coherent system. */
+@media (min-width:1180px) and (max-width:1499px){
+  :root{
+    --listing-toolbar-h:40px;
+    --listing-toolbar-radius:12px;
+    --listing-toolbar-font:9.5px;
+    --listing-toolbar-gap:5px;
+    --listing-toolbar-pad:8px;
+  }
+
+  .listing-filter-tools .listing-per-page-control select,
+  .desktop-listing-currency-control select{
+    height:32px !important;
+    min-height:32px !important;
+  }
+}
+
+/* QHD / 2K: grow everything together, not individual controls. */
+@media (min-width:2200px){
+  :root{
+    --listing-toolbar-h:50px;
+    --listing-toolbar-radius:16px;
+    --listing-toolbar-font:13px;
+    --listing-toolbar-gap:9px;
+    --listing-toolbar-pad:16px;
+  }
+
+  .listing-filter-tools .listing-per-page-control select,
+  .desktop-listing-currency-control select{
+    height:40px !important;
+    min-height:40px !important;
+  }
+}
+
+/* Light-mode parity for embedded toolbar selects. */
+body.light-mode .listing-filter-tools .listing-per-page-control select,
+body.light-mode .desktop-listing-currency-control select{
+  background:#fff !important;
+  border-color:#d8d2c7 !important;
+  color:#2c3136 !important;
+}
