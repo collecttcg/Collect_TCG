@@ -92,3 +92,434 @@ body.light-mode #invGrid .card img.thumb{
 
 .collection-export-collage-btn{white-space:nowrap;}
 .collection-collage-progress{font-variant-numeric:tabular-nums;}
+
+/* =========================================================
+   V110 — LIGHT MODE HARMONIZATION
+   Final theme override layer. Dark mode is intentionally untouched.
+   ========================================================= */
+body.light-mode{
+  --bg:#f3f1ec;
+  --sidebar:#fbfaf7;
+  --surface:#ffffff;
+  --surface-2:#f7f5f0;
+  --surface-3:#ece9e2;
+  --border:#c9c5bc;
+  --border-soft:#dedad2;
+  --text:#20262c;
+  --text-muted:#59616a;
+  --text-dim:#737a82;
+  --accent-gold:#946b18;
+  --accent-gold-soft:#c99b42;
+  --accent-teal:#176f68;
+  --danger:#a94458;
+  --success:#2f7d50;
+  color-scheme:light;
+}
+
+body.light-mode{
+  background-color:var(--bg) !important;
+  color:var(--text) !important;
+}
+body.light-mode::before{opacity:.012 !important;}
+body.light-mode .sidebar{
+  background:rgba(251,250,247,.98) !important;
+  border-color:var(--border) !important;
+  box-shadow:1px 0 0 rgba(70,58,35,.04) !important;
+}
+body.light-mode .main,
+body.light-mode #view{color:var(--text);}
+body.light-mode .page-head h2,
+body.light-mode .card-name,
+body.light-mode .detail-title h2,
+body.light-mode .modal h2,
+body.light-mode .panel h3{color:var(--text) !important;}
+body.light-mode .page-head p,
+body.light-mode .tagline,
+body.light-mode .detail-meta,
+body.light-mode .notes,
+body.light-mode .condition-tag,
+body.light-mode .hint{color:var(--text-muted) !important;}
+body.light-mode .eyebrow{color:var(--accent-teal) !important;}
+
+/* Shared controls */
+body.light-mode .btn-ghost,
+body.light-mode .theme-toggle,
+body.light-mode .owner-toggle,
+body.light-mode .icon-btn{
+  border-color:var(--border) !important;
+  background:rgba(255,255,255,.72) !important;
+  color:var(--text-muted) !important;
+}
+body.light-mode .btn-ghost:hover,
+body.light-mode .btn-ghost:focus-visible,
+body.light-mode .theme-toggle:hover,
+body.light-mode .owner-toggle:hover,
+body.light-mode .icon-btn:hover,
+body.light-mode .icon-btn:focus-visible{
+  border-color:rgba(148,107,24,.42) !important;
+  background:#faf6eb !important;
+  color:#6f5117 !important;
+}
+body.light-mode .btn-primary{
+  background:linear-gradient(135deg,#b98727,#d7b35f) !important;
+  color:#251a06 !important;
+  box-shadow:0 5px 14px rgba(116,82,17,.12) !important;
+}
+body.light-mode .btn-primary:hover,
+body.light-mode .btn-primary:focus-visible{
+  background:linear-gradient(135deg,#a87820,#cfa64e) !important;
+  color:#211805 !important;
+}
+
+/* Inputs, selects and custom menus */
+body.light-mode input,
+body.light-mode textarea,
+body.light-mode select,
+body.light-mode .overview-select-btn,
+body.light-mode .combo input{
+  border-color:var(--border) !important;
+  background-color:#fff !important;
+  color:var(--text) !important;
+}
+body.light-mode input::placeholder,
+body.light-mode textarea::placeholder{color:#7a8087 !important;opacity:1 !important;}
+body.light-mode input:focus,
+body.light-mode textarea:focus,
+body.light-mode select:focus,
+body.light-mode .overview-select-btn:focus{
+  border-color:rgba(23,111,104,.62) !important;
+  outline-color:rgba(23,111,104,.28) !important;
+  box-shadow:0 0 0 3px rgba(23,111,104,.08) !important;
+}
+body.light-mode .overview-select-menu,
+body.light-mode .combo-menu{
+  border-color:var(--border) !important;
+  background:#fff !important;
+  box-shadow:0 14px 30px rgba(53,45,31,.14) !important;
+}
+body.light-mode .overview-select-option,
+body.light-mode .combo-option{color:var(--text) !important;}
+body.light-mode .overview-select-option:hover,
+body.light-mode .overview-select-option:focus,
+body.light-mode .combo-option:hover,
+body.light-mode .combo-option:focus{
+  background:#f3efe5 !important;
+  color:#543e15 !important;
+}
+
+/* Inventory/listing cards */
+@media(min-width:801px){
+  body.light-mode #invGrid .card{
+    border-color:#d1ccc2 !important;
+    background:linear-gradient(180deg,#fff,#fbfaf7) !important;
+    box-shadow:0 7px 18px rgba(58,49,33,.07) !important;
+  }
+  body.light-mode #invGrid .card:hover,
+  body.light-mode #invGrid .card:focus-within{
+    border-color:rgba(148,107,24,.42) !important;
+    background:#fff !important;
+    box-shadow:0 13px 28px rgba(58,49,33,.12),0 0 0 1px rgba(148,107,24,.05) !important;
+  }
+  body.light-mode #invGrid .card .card-name{color:#252a2f !important;}
+  body.light-mode #invGrid .card .card-meta,
+  body.light-mode #invGrid .card .condition-tag,
+  body.light-mode #invGrid .card .qty{color:#6b7178 !important;}
+  body.light-mode #invGrid .card .price{color:#8a6315 !important;}
+  body.light-mode #invGrid .card .grade-summary{
+    border-color:rgba(23,111,104,.22) !important;
+    background:#edf6f4 !important;
+    color:#176f68 !important;
+  }
+  body.light-mode #invGrid .card .badge,
+  body.light-mode #invGrid .card .card-meta-one-line span,
+  body.light-mode #invGrid .card .overview-pill{
+    border-color:#d7d2c8 !important;
+    background:#f7f5f0 !important;
+    color:#616970 !important;
+  }
+  body.light-mode #invGrid .card .card-actions.owner-only{
+    border-color:#d7d2c8 !important;
+    background:rgba(255,255,255,.94) !important;
+    box-shadow:0 5px 14px rgba(58,49,33,.10) !important;
+  }
+}
+
+/* Desktop search + advanced filters */
+@media(min-width:801px){
+  body.light-mode .desktop-inline-search input{
+    border-color:#cbc6bc !important;
+    background:linear-gradient(180deg,#fff,#faf9f5) !important;
+    color:#262c31 !important;
+    box-shadow:0 5px 16px rgba(58,49,33,.06) !important;
+  }
+  body.light-mode .desktop-inline-search input::placeholder{color:#757c83 !important;}
+  body.light-mode .desktop-inline-search input:hover{border-color:rgba(148,107,24,.36) !important;}
+  body.light-mode .desktop-inline-search input:focus{
+    border-color:rgba(148,107,24,.55) !important;
+    background:#fffdf8 !important;
+    box-shadow:0 0 0 3px rgba(148,107,24,.08),0 8px 20px rgba(58,49,33,.08) !important;
+  }
+  body.light-mode .desktop-inline-search-clear{color:#70777e !important;}
+  body.light-mode .desktop-inline-search-clear:hover,
+  body.light-mode .desktop-inline-search-clear:focus-visible{
+    background:#f5ecd8 !important;
+    color:#805c16 !important;
+  }
+  body.light-mode .desktop-filter-toggle-btn,
+  body.light-mode .listing-filter-tools .desktop-quick-filters-toggle{
+    border-color:#cbc6bc !important;
+    background:#fff !important;
+    color:#525a62 !important;
+  }
+  body.light-mode .desktop-filter-toggle-btn:hover,
+  body.light-mode .desktop-filter-toggle-btn:focus-visible,
+  body.light-mode .desktop-filter-toggle-btn[aria-expanded="true"],
+  body.light-mode .listing-filter-tools .desktop-quick-filters-toggle:hover,
+  body.light-mode .listing-filter-tools .desktop-quick-filters-toggle.is-expanded{
+    border-color:rgba(148,107,24,.40) !important;
+    background:#faf5e9 !important;
+    color:#725216 !important;
+  }
+  body.light-mode .desktop-filter-toggle-icon,
+  body.light-mode .desktop-quick-filters-active{color:#805c16 !important;}
+  body.light-mode .desktop-filter-toggle-summary,
+  body.light-mode .desktop-filter-toggle-chevron,
+  body.light-mode .desktop-quick-filters-chevron{color:#737a81 !important;}
+  body.light-mode .desktop-filter-toggle-btn .filter-count-badge,
+  body.light-mode .desktop-quick-filters-active{
+    border-color:rgba(148,107,24,.25) !important;
+    background:#f5ecd8 !important;
+    color:#755415 !important;
+  }
+  body.light-mode .filter-drawer-shell:not(.desktop-collapsed){
+    border-color:#cec9bf !important;
+    background:linear-gradient(180deg,#fff,#faf9f6) !important;
+    box-shadow:0 9px 24px rgba(58,49,33,.07) !important;
+  }
+  body.light-mode .filter-drawer-shell:not(.desktop-collapsed) > .filter-drawer-head{
+    border-bottom-color:#e2ddd4 !important;
+  }
+  body.light-mode .filter-drawer-shell:not(.desktop-collapsed) .filter-row input,
+  body.light-mode .filter-drawer-shell:not(.desktop-collapsed) .filter-row select{
+    border-color:#d1ccc2 !important;
+    background-color:#fff !important;
+    color:#4c545b !important;
+  }
+  body.light-mode .listing-filter-tools .desktop-quick-filters-collapsible .quick-filter{
+    border-color:#d1ccc2 !important;
+    background:#fff !important;
+    color:#626970 !important;
+  }
+  body.light-mode .listing-filter-tools .desktop-quick-filters-collapsible .quick-filter:hover{
+    border-color:rgba(148,107,24,.32) !important;
+    background:#faf5e9 !important;
+    color:#715217 !important;
+  }
+  body.light-mode .listing-filter-tools .desktop-quick-filters-collapsible .quick-filter.active{
+    border-color:rgba(148,107,24,.48) !important;
+    background:#f2e5c8 !important;
+    color:#66470f !important;
+    box-shadow:none !important;
+  }
+}
+
+/* Card details — desktop premium layout */
+@media(min-width:981px){
+  body.light-mode .modal.card-details-modal{
+    border-color:#c7c1b6 !important;
+    background:
+      radial-gradient(circle at 18% 0%,rgba(148,107,24,.055),transparent 32%),
+      linear-gradient(180deg,#ffffff 0%,#f7f5f0 100%) !important;
+    box-shadow:0 28px 70px rgba(52,44,31,.18),0 0 0 1px rgba(148,107,24,.035) inset !important;
+    color:var(--text) !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-action-bar{
+    border-bottom-color:#ded9cf !important;
+    background:rgba(255,255,255,.93) !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-action-left{
+    border-left-color:#ddd8cf !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-action-bar .btn-ghost,
+  body.light-mode .modal.card-details-modal .detail-action-bar .detail-share-btn,
+  body.light-mode .modal.card-details-modal .detail-action-bar .detail-more-btn{
+    border-color:#d0cbc1 !important;
+    background:#fff !important;
+    color:#535b62 !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-action-bar .btn-ghost:hover,
+  body.light-mode .modal.card-details-modal .detail-action-bar .detail-share-btn:hover,
+  body.light-mode .modal.card-details-modal .detail-action-bar .detail-more-btn:hover{
+    border-color:rgba(148,107,24,.43) !important;
+    background:#faf4e5 !important;
+    color:#6d4d11 !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-action-bar .detail-back-btn{
+    border-color:rgba(148,107,24,.48) !important;
+    background:#fbf5e7 !important;
+    color:#755515 !important;
+    outline-color:rgba(148,107,24,.16) !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-action-bar .detail-back-btn:hover,
+  body.light-mode .modal.card-details-modal .detail-action-bar .detail-back-btn:focus-visible{
+    border-color:rgba(148,107,24,.68) !important;
+    background:#f4e8cc !important;
+    color:#5f430e !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-gallery,
+  body.light-mode .modal.card-details-modal .detail-slider,
+  body.light-mode .modal.card-details-modal .detail-slider-stage{
+    border-color:#d6d0c6 !important;
+    background:#ece9e2 !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-slider-stage{
+    background:linear-gradient(180deg,#efede8,#e5e1d8) !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-thumb-strip{
+    border-top-color:#ddd8ce !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-thumb-strip-btn{
+    border-color:#cec9bf !important;
+    background:#f4f1eb !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-thumb-strip-btn.active{
+    border-color:rgba(148,107,24,.62) !important;
+    box-shadow:0 0 0 1px rgba(148,107,24,.20),0 6px 14px rgba(58,49,33,.10) !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-header-desktop .eyebrow{color:#80601c !important;}
+  body.light-mode .modal.card-details-modal .detail-header-desktop h2{color:#23292e !important;}
+  body.light-mode .modal.card-details-modal .detail-header-desktop .detail-meta{color:#626970 !important;}
+  body.light-mode .modal.card-details-modal .detail-summary-card,
+  body.light-mode .modal.card-details-modal .detail-item,
+  body.light-mode .modal.card-details-modal .detail-section,
+  body.light-mode .modal.card-details-modal .buyer-confidence-card,
+  body.light-mode .modal.card-details-modal .detail-contact-box{
+    border-color:#d5d0c6 !important;
+    background:#fff !important;
+    color:#252b30 !important;
+    box-shadow:none !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-summary-card.price-card{
+    border-color:rgba(148,107,24,.32) !important;
+    background:linear-gradient(135deg,#fbf4e4,#fff) !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-label,
+  body.light-mode .modal.card-details-modal .detail-summary-label,
+  body.light-mode .modal.card-details-modal .buyer-confidence-card small{
+    color:#697178 !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-value,
+  body.light-mode .modal.card-details-modal .detail-summary-value,
+  body.light-mode .modal.card-details-modal .buyer-confidence-card strong{
+    color:#292f34 !important;
+  }
+  body.light-mode .modal.card-details-modal .detail-summary-card.price-card .detail-summary-value,
+  body.light-mode .modal.card-details-modal .detail-price-primary{color:#8a6315 !important;}
+  body.light-mode .modal.card-details-modal .detail-price-secondary,
+  body.light-mode .modal.card-details-modal .detail-secondary{color:#697078 !important;}
+  body.light-mode .modal.card-details-modal .availability-available{color:#176f68 !important;}
+  body.light-mode .modal.card-details-modal .availability-reserved{color:#896616 !important;}
+  body.light-mode .modal.card-details-modal .availability-sold{color:#9b4857 !important;}
+
+  /* Same-series and recommendation area */
+  body.light-mode .modal.card-details-modal .same-series-nav{
+    border-color:#d5d0c6 !important;
+    background:linear-gradient(135deg,#fff,#f8f6f1) !important;
+  }
+  body.light-mode .modal.card-details-modal .same-series-nav > div:first-child strong{color:#2b3035 !important;}
+  body.light-mode .modal.card-details-modal .same-series-nav > div:first-child > span{color:#70777e !important;}
+  body.light-mode .modal.card-details-modal .same-series-actions .btn-ghost{
+    border-color:#d1ccc2 !important;
+    background:#fff !important;
+    color:#596168 !important;
+  }
+  body.light-mode .modal.card-details-modal .same-series-actions .btn-ghost:hover:not(:disabled),
+  body.light-mode .modal.card-details-modal .same-series-actions .btn-ghost:focus-visible:not(:disabled){
+    border-color:rgba(148,107,24,.40) !important;
+    background:#faf5e9 !important;
+    color:#6d4f14 !important;
+  }
+  body.light-mode .modal.card-details-modal .related-cards-section{border-top-color:#ddd8cf !important;}
+  body.light-mode .modal.card-details-modal .related-cards-head .eyebrow{color:#80601d !important;}
+  body.light-mode .modal.card-details-modal .related-cards-head h3{color:#252b30 !important;}
+  body.light-mode .modal.card-details-modal .related-card{
+    border-color:#d4cfc5 !important;
+    background:linear-gradient(180deg,#fff,#faf9f6) !important;
+    box-shadow:0 8px 20px rgba(58,49,33,.07) !important;
+  }
+  body.light-mode .modal.card-details-modal .related-card:hover,
+  body.light-mode .modal.card-details-modal .related-card:focus-visible{
+    border-color:rgba(148,107,24,.42) !important;
+    background:#fffdf8 !important;
+    box-shadow:0 12px 24px rgba(58,49,33,.11),0 0 0 1px rgba(148,107,24,.04) !important;
+  }
+  body.light-mode .modal.card-details-modal .related-card-image-wrap{
+    border-bottom-color:#ddd8cf !important;
+    background:#ebe8e1 !important;
+  }
+  body.light-mode .modal.card-details-modal .related-card-name{color:#2b3035 !important;}
+  body.light-mode .modal.card-details-modal .related-card-code{color:#846019 !important;}
+  body.light-mode .modal.card-details-modal .related-card-meta span{
+    border-color:#d8d3c9 !important;
+    background:#f6f3ed !important;
+    color:#626970 !important;
+  }
+  body.light-mode .modal.card-details-modal .sold-alternatives-section{
+    border-color:rgba(148,107,24,.24) !important;
+    background:linear-gradient(135deg,#fbf5e8,#fff) !important;
+  }
+  body.light-mode .modal.card-details-modal .sold-alternatives-section .related-cards-head .eyebrow{color:#805d18 !important;}
+  body.light-mode .modal.card-details-modal .sold-alternatives-section .related-cards-head h3{color:#493612 !important;}
+}
+
+/* Owner surfaces */
+body.light-mode .owner-status{color:#176f68 !important;}
+body.light-mode .owner-view-count{color:#805d18 !important;}
+body.light-mode .panel,
+body.light-mode .form-card,
+body.light-mode .insights-panel,
+body.light-mode .insights-stat{
+  border-color:var(--border) !important;
+  background:#fff !important;
+  color:var(--text) !important;
+}
+
+/* Collage settings modal */
+body.light-mode .collection-collage-modal-overlay{
+  background:rgba(50,45,37,.48) !important;
+}
+body.light-mode .collection-collage-modal{
+  border-color:#c8c2b7 !important;
+  background:#fff !important;
+  color:#23292e !important;
+  box-shadow:0 30px 80px rgba(52,44,31,.20) !important;
+}
+body.light-mode .collection-collage-modal .collage-modal-sub,
+body.light-mode .collection-collage-field label,
+body.light-mode .collection-collage-field>span,
+body.light-mode .collection-collage-preview-note{color:#646b72 !important;}
+body.light-mode .collection-collage-field input[type="text"],
+body.light-mode .collection-collage-field select{
+  border-color:#cec8bd !important;
+  background:#fff !important;
+  color:#252b30 !important;
+}
+body.light-mode .collection-collage-check{
+  border-color:#d6d0c6 !important;
+  background:#faf8f3 !important;
+  color:#41484e !important;
+}
+body.light-mode .collection-collage-preview-note{
+  border-color:rgba(148,107,24,.22) !important;
+  background:#faf3e2 !important;
+}
+body.light-mode .collection-collage-modal-actions{border-top-color:#ddd8cf !important;}
+
+/* Toasts and overlays */
+body.light-mode .toast{
+  border-color:#c9c4ba !important;
+  background:#fff !important;
+  color:#252b30 !important;
+  box-shadow:0 12px 28px rgba(52,44,31,.16) !important;
+}
+body.light-mode .modal-overlay{background:rgba(54,48,40,.42) !important;}
