@@ -6,8 +6,30 @@ function routeBase(route){
 
 function shouldHighlightMore(route){
     const base=appContext.routeBase(route);
+    const premiumDesktop=window.matchMedia("(min-width:1180px)").matches;
 
-    // Routes that genuinely live under More on both desktop and mobile.
+    // V118 premium desktop has a deliberately small primary navigation.
+    // Highlight More only for destinations that really live there at this width.
+    if(premiumDesktop){
+      return new Set([
+        "reserved",
+        "showcase",
+        "favorites",
+        "reviews",
+        "about",
+        "recent",
+        "contact",
+        "by-game",
+        "insights",
+        "fb-tools",
+        "quality",
+        "inventory-tools",
+        "export",
+        "add"
+      ]).has(base);
+    }
+
+    // Routes that genuinely live under More on the standard desktop/mobile header.
     const alwaysMore=new Set([
       "recent",
       "about",
@@ -23,7 +45,6 @@ function shouldHighlightMore(route){
 
     if(alwaysMore.has(base)) return true;
 
-    // These are direct tabs on PC, but are inside More on mobile.
     if(
       window.matchMedia("(max-width:800px)").matches &&
       ["reserved","showcase","giveaway","favorites"].includes(base)
@@ -76,4 +97,15 @@ function isOwnerOnlyRoute(route){
 /** State and event initialization; called in preserved startup order. */
 export function initialize(appContext,runtime){
   appContext.OWNER_POST_HANDOFF_MESSAGE = "collect-tcg-beta-owner-post-handoff-v93";
+  const premiumMore=document.getElementById("premiumDesktopMore");
+  const premiumMoreMenu=document.getElementById("premiumDesktopMoreMenu");
+  if(premiumMore && premiumMoreMenu){
+    premiumMoreMenu.addEventListener("click",event=>{
+      if(event.target.closest("a")) premiumMore.removeAttribute("open");
+    });
+    document.addEventListener("click",event=>{
+      if(premiumMore.open && !premiumMore.contains(event.target)) premiumMore.removeAttribute("open");
+    });
+  }
+
 }

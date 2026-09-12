@@ -155,6 +155,69 @@
 
 
     </div>
+
+    <!-- V118 beta: dedicated premium desktop navigation.
+         The original #mainnav remains the responsive/mobile source of truth and fallback. -->
+    <nav class="premium-desktop-nav" id="premiumDesktopNav" aria-label="Primary desktop navigation">
+      <div class="premium-nav-side premium-nav-left">
+        <a href="#/inventory" data-route="inventory">Inventory</a>
+        <a href="#/collection" data-route="collection">Collection</a>
+      </div>
+      <a href="#/home" data-route="home" class="premium-nav-home" aria-label="Collect TCG home">
+        <img src="./assets/shop-logo.png" alt="Collect TCG MY &amp; SG">
+      </a>
+      <div class="premium-nav-side premium-nav-right">
+        <a href="#/sold" data-route="sold">Sold</a>
+        <a href="#/giveaway" data-route="giveaway">Giveaway</a>
+      </div>
+    </nav>
+
+    <!-- Production: independent wide-desktop utility navigation.
+         #mainnav is hidden at premium desktop widths so legacy links cannot leak into the header. -->
+    <div class="premium-desktop-utilities" id="premiumDesktopUtilities">
+      <details class="premium-more" id="premiumDesktopMore">
+        <summary class="premium-more-toggle" aria-label="Open additional navigation">
+          <span class="premium-more-dots" aria-hidden="true">•••</span>
+          <span>More</span>
+          <span class="premium-more-caret" aria-hidden="true">⌄</span>
+        </summary>
+        <div class="premium-more-menu" id="premiumDesktopMoreMenu">
+          <a href="#/reserved" data-route="reserved"><span class="ic">◷</span><span>Reserved</span></a>
+          <a href="#/showcase" data-route="showcase"><span class="ic">▶</span><span>Showcase</span></a>
+          <a href="#/favorites" data-route="favorites"><span class="ic">♡</span><span>Favorite</span></a>
+          <div class="premium-more-divider" aria-hidden="true"></div>
+          <a href="#/reviews" data-route="reviews"><span class="ic">☆</span><span>Reviews</span></a>
+          <a href="#/about" data-route="about"><span class="ic">◎</span><span>About Us</span></a>
+          <a href="#/contact" data-route="contact"><span class="ic">✉</span><span>Contact</span></a>
+          <a href="#/recent" data-route="recent"><span class="ic">↻</span><span>Recently Viewed</span></a>
+          <div class="premium-more-divider owner-only" aria-hidden="true"></div>
+          <a href="#/insights" data-route="insights" class="owner-only"><span class="ic">◔</span><span>Insights</span></a>
+          <a href="#/fb-tools" data-route="fb-tools" class="owner-only"><span class="ic">ƒ</span><span>Post Generator Tools</span></a>
+          <a href="#/quality" data-route="quality" class="owner-only"><span class="ic">✓</span><span>Data Quality</span></a>
+          <a href="#/inventory-tools" data-route="inventory-tools" class="owner-only"><span class="ic">≡</span><span>Inventory Tools</span></a>
+          <a href="#/export" data-route="export" class="owner-only"><span class="ic">⇩</span><span>Export</span></a>
+          <a href="#/add" data-route="add" class="owner-only"><span class="ic">+</span><span>Add Card</span></a>
+        </div>
+      </details>
+    </div>
+
+    <!-- Production: secondary social strip beneath the premium desktop navigation. -->
+    <div class="premium-social-strip" aria-label="Follow Collect TCG">
+      <span class="premium-social-label">Follow</span>
+      <a href="https://www.instagram.com/collecttcg.mysg/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">
+        <span class="premium-social-mark" aria-hidden="true">◎</span><span>Instagram</span>
+      </a>
+      <a href="https://www.facebook.com/profile.php?id=61590041416102" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook">
+        <span class="premium-social-mark premium-social-mark-facebook" aria-hidden="true">f</span><span>Facebook</span>
+      </a>
+      <a href="https://www.carousell.com.my/u/collect_tcg_my_sg/" target="_blank" rel="noopener noreferrer" aria-label="Carousell Malaysia" title="Carousell Malaysia">
+        <span class="premium-social-mark" aria-hidden="true">C</span><span>Carousell MY</span>
+      </a>
+      <a href="https://www.carousell.sg/u/collect_tcg_sg/" target="_blank" rel="noopener noreferrer" aria-label="Carousell Singapore" title="Carousell Singapore">
+        <span class="premium-social-mark" aria-hidden="true">C</span><span>Carousell SG</span>
+      </a>
+    </div>
+
     <nav class="mainnav" id="mainnav">
       <a href="#/home" data-route="home"><span class="ic">⌂</span> Home</a>
       <a href="#/inventory" data-route="inventory"><span class="ic">▦</span> <span>Inventory</span><span class="nav-count" id="inventoryNavCount">0</span></a>
