@@ -1120,7 +1120,10 @@ async function openDetailsModal(card){
             <div class="detail-purchase-panel" aria-label="Purchase options">
               <div class="detail-purchase-location">
                 <span class="detail-purchase-location-icon" aria-hidden="true">📍</span>
-                <span><small>Transaction locations</small><strong>Malaysia &amp; Singapore</strong></span>
+                <span>
+                  <strong>Malaysia &amp; Singapore</strong>
+                  <small>Negotiable • Shipping / COD options available</small>
+                </span>
               </div>
               <details class="detail-buy-cta">
                 <summary>

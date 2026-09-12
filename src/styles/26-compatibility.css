@@ -1781,3 +1781,41 @@ body.light-mode .modal-overlay{background:rgba(54,48,40,.42) !important;}
     background:#fbf7ee !important;
   }
 }
+
+
+/* ==========================================================
+   V126 PRODUCTION — BUYER LOCATION COPY REFINEMENT
+   Lead with the actual transaction locations and surface the
+   useful buying terms underneath instead of a generic heading.
+   ========================================================== */
+@media (min-width:900px){
+  .modal.card-details-modal .detail-purchase-location > span:last-child{
+    gap:4px !important;
+  }
+
+  .modal.card-details-modal .detail-purchase-location strong{
+    order:1 !important;
+    color:#f3efe7 !important;
+    font-size:13px !important;
+    font-weight:780 !important;
+    line-height:1.2 !important;
+  }
+
+  .modal.card-details-modal .detail-purchase-location small{
+    order:2 !important;
+    color:#969aa3 !important;
+    font-size:9.5px !important;
+    font-weight:590 !important;
+    letter-spacing:0 !important;
+    line-height:1.35 !important;
+    text-transform:none !important;
+  }
+
+  body.light-mode .modal.card-details-modal .detail-purchase-location strong{
+    color:#292e33 !important;
+  }
+
+  body.light-mode .modal.card-details-modal .detail-purchase-location small{
+    color:#737a80 !important;
+  }
+}
