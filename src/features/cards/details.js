@@ -701,6 +701,18 @@ function publicContactSellerMessage(card){
     ].filter(line=>line!=="").join("\n");
   }
 
+function detailsContactSocialLinksHtml(extraClass=""){
+    const messengerUrl = appContext.COLLECT_TCG_FACEBOOK_MESSENGER_URL || "https://m.me/61590041416102";
+    return `
+      <div class="collect-social-links ${appContext.escapeHtml(extraClass)}" aria-label="Collect TCG contact links">
+        <a href="${appContext.COLLECT_SOCIAL_LINKS.instagram}" target="_blank" rel="noopener noreferrer" class="collect-social-icon" aria-label="Instagram" title="Instagram"><span aria-hidden="true">◎</span><small>IG</small></a>
+        <a href="${messengerUrl}" target="_blank" rel="noopener noreferrer" class="collect-social-icon" aria-label="Message us on Facebook Messenger" title="Message us on Facebook Messenger"><span aria-hidden="true">f</span><small>FB</small></a>
+        <a href="${appContext.COLLECT_SOCIAL_LINKS.carousellMY}" target="_blank" rel="noopener noreferrer" class="collect-social-icon" aria-label="Carousell Malaysia" title="Carousell Malaysia"><span aria-hidden="true">C</span><small>MY</small></a>
+        <a href="${appContext.COLLECT_SOCIAL_LINKS.carousellSG}" target="_blank" rel="noopener noreferrer" class="collect-social-icon" aria-label="Carousell Singapore" title="Carousell Singapore"><span aria-hidden="true">C</span><small>SG</small></a>
+      </div>
+    `;
+  }
+
 async function messageSellerOnFacebook(){
     const card = appContext.getDetailsCard();
     if(!card || (!appContext.isOwnerMode() && !appContext.isLiveLifecycle(card))) return;
@@ -1120,7 +1132,7 @@ async function openDetailsModal(card){
                     <strong>Choose how to contact us</strong>
                     <span>Confirm availability, payment and delivery / meetup options before payment.</span>
                   </div>
-                  ${appContext.collectSocialLinksHtml("details-buy-social-links")}
+                  ${detailsContactSocialLinksHtml("details-buy-social-links")}
                 </div>
               </details>
             </div>
@@ -1181,7 +1193,7 @@ async function openDetailsModal(card){
               </div>
               <div class="details-contact-actions">
                 <span class="details-contact-via-label">Contact via</span>
-                ${appContext.collectSocialLinksHtml("details-social-links")}
+                ${detailsContactSocialLinksHtml("details-social-links")}
               </div>
             </div>
           ` : ""}
