@@ -428,3 +428,56 @@
     opacity:.86;
   }
 }
+
+
+/* =========================================================
+   V103 — LONG TITLE + RETURN ACTION POLISH
+   ========================================================= */
+@media (min-width:801px){
+  /* Preserve the premium scale for normal titles, but avoid oversized
+     multi-line blocks for unusually long listing names. */
+  .modal.card-details-modal .detail-header-desktop .detail-title h2.detail-title-long{
+    font-size:clamp(24px,1.85vw,32px) !important;
+    line-height:1.04 !important;
+    letter-spacing:0 !important;
+    text-wrap:pretty;
+  }
+
+  .modal.card-details-modal .detail-header-desktop .detail-title h2.detail-title-extra-long{
+    font-size:clamp(21px,1.58vw,28px) !important;
+    line-height:1.08 !important;
+    letter-spacing:0 !important;
+    text-wrap:pretty;
+  }
+
+  /* Back is navigation, not a destructive action. Keep its visual language
+     neutral/gold and remove the conflicting teal/red focus treatment. */
+  .modal.card-details-modal .details-primary-actions #detailsCloseBtn.is-return-action{
+    border-color:rgba(227,179,65,.32) !important;
+    background:rgba(227,179,65,.055) !important;
+    color:#e8d39a !important;
+    outline:none !important;
+    box-shadow:none !important;
+  }
+
+  .modal.card-details-modal .details-primary-actions #detailsCloseBtn.is-return-action:hover,
+  .modal.card-details-modal .details-primary-actions #detailsCloseBtn.is-return-action:focus-visible{
+    border-color:rgba(227,179,65,.68) !important;
+    background:rgba(227,179,65,.11) !important;
+    color:#fff0bd !important;
+    outline:2px solid rgba(227,179,65,.28) !important;
+    outline-offset:2px !important;
+    box-shadow:0 0 0 3px rgba(227,179,65,.06) !important;
+  }
+
+  /* Keep red semantics only when this control is actually Close. */
+  .modal.card-details-modal .details-primary-actions #detailsCloseBtn.is-close-action:hover,
+  .modal.card-details-modal .details-primary-actions #detailsCloseBtn.is-close-action:focus-visible{
+    border-color:rgba(248,113,113,.48) !important;
+    background:rgba(248,113,113,.08) !important;
+    color:#ffc0c0 !important;
+    outline:2px solid rgba(248,113,113,.20) !important;
+    outline-offset:2px !important;
+    box-shadow:none !important;
+  }
+}

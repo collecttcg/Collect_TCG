@@ -990,6 +990,8 @@ async function openDetailsModal(card){
       const returnRoute=appContext.routeBase(String(appContext.detailsReturnHash||"").replace(/^#\/?/,""));
       const returningHome=returnRoute==="home";
       const returningInsights=returnRoute==="insights" && !!appContext.insightsDetailsReturnState;
+      detailsCloseButton.classList.toggle("is-return-action",returningToPage);
+      detailsCloseButton.classList.toggle("is-close-action",!returningToPage);
       detailsCloseButton.innerHTML=returningToPage
         ? `<span aria-hidden="true">←</span> ${returningHome ? "Back to home" : (returningInsights ? "Back to insights" : "Back to results")}`
         : `<span aria-hidden="true">×</span> Close`;
@@ -1070,7 +1072,7 @@ async function openDetailsModal(card){
           <div class="detail-header detail-header-desktop">
             <div class="detail-title">
               <div class="eyebrow">Card details</div>
-              <h2 id="detailsTitleDesktop">${appContext.escapeHtml(card.name)}</h2>
+              <h2 id="detailsTitleDesktop" class="${String(card.name||"").length>88?"detail-title-extra-long":(String(card.name||"").length>52?"detail-title-long":"")}">${appContext.escapeHtml(card.name)}</h2>
               <div class="detail-meta">${appContext.escapeHtml(card.game || "—")}${card.set ? " · " + appContext.escapeHtml(card.set) : ""}</div>
             </div>
             ${!isNfsListing ? `
