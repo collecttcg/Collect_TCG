@@ -3971,3 +3971,84 @@ body.owner-buyer-preview #inventoryMobileCollageBtn{
     gap:12px !important;
   }
 }
+
+/* ==========================================================
+   V152 PRODUCTION — SHOW PER PAGE CONTROL STANDARDIZATION
+   Keep the sold/reserved desktop page-size control visually in the
+   same premium button family as the rest of the action row.
+   ========================================================== */
+@media (min-width:1180px){
+  .listing-filter-tools .listing-per-page-control{
+    width:clamp(220px,15vw,248px) !important;
+    min-width:clamp(220px,15vw,248px) !important;
+    max-width:clamp(220px,15vw,248px) !important;
+    min-height:56px !important;
+    padding:0 12px 0 18px !important;
+    gap:10px !important;
+    justify-content:space-between !important;
+  }
+
+  .listing-filter-tools .listing-per-page-control > span{
+    font-size:clamp(13px,.82vw,15px) !important;
+    font-weight:700 !important;
+    letter-spacing:.04em !important;
+    line-height:1 !important;
+    color:inherit !important;
+  }
+
+  .listing-filter-tools .listing-per-page-control > span:first-child,
+  .listing-filter-tools .listing-per-page-control > span:last-child{
+    flex:0 0 auto !important;
+  }
+
+  .listing-filter-tools .listing-per-page-control select{
+    flex:0 0 auto !important;
+    width:88px !important;
+    min-width:88px !important;
+    height:40px !important;
+    min-height:40px !important;
+    padding:0 32px 0 12px !important;
+    border-radius:12px !important;
+    font-size:clamp(13px,.82vw,15px) !important;
+    font-weight:800 !important;
+    text-align:center !important;
+  }
+}
+
+@media (min-width:1700px){
+  .listing-filter-tools .listing-per-page-control{
+    width:252px !important;
+    min-width:252px !important;
+    max-width:252px !important;
+    min-height:60px !important;
+  }
+
+  .listing-filter-tools .listing-per-page-control select{
+    height:42px !important;
+    min-height:42px !important;
+    width:92px !important;
+    min-width:92px !important;
+  }
+}
+
+@media (min-width:2300px){
+  .listing-filter-tools .listing-per-page-control{
+    width:264px !important;
+    min-width:264px !important;
+    max-width:264px !important;
+    min-height:64px !important;
+  }
+
+  .listing-filter-tools .listing-per-page-control select{
+    height:44px !important;
+    min-height:44px !important;
+    width:96px !important;
+    min-width:96px !important;
+  }
+}
+
+body.light-mode .listing-filter-tools .listing-per-page-control select{
+  background:#fff !important;
+  border-color:#d8d2c7 !important;
+  color:#2c3136 !important;
+}
