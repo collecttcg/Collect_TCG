@@ -2375,3 +2375,101 @@ body.light-mode .modal-overlay{background:rgba(54,48,40,.42) !important;}
     font-weight:690 !important;
   }
 }
+
+/* ==========================================================
+   V137 PRODUCTION — ZOOM-SAFE PREMIUM HEADER GEOMETRY
+   Prevent the enlarged center logo from intruding into the
+   social strip when browser zoom changes trigger larger desktop
+   breakpoints. Each breakpoint now reserves enough row height
+   for its logo size.
+   ========================================================== */
+@media (min-width:1180px){
+  .premium-desktop-nav{
+    top:0 !important;
+    align-items:center !important;
+  }
+
+  .premium-nav-home{
+    align-self:center !important;
+    max-height:calc(var(--premium-main-row-h) - 8px) !important;
+  }
+
+  .premium-nav-home img{
+    max-width:calc(var(--premium-main-row-h) - 12px) !important;
+    max-height:calc(var(--premium-main-row-h) - 12px) !important;
+  }
+
+  .premium-social-strip{
+    top:var(--premium-main-row-h) !important;
+    bottom:auto !important;
+  }
+}
+
+/* Large desktop / browser zoom-out can enter this breakpoint.
+   Reserve a true 112px logo row + separate 36px social row. */
+@media (min-width:1800px) and (max-width:2299px){
+  :root{
+    --premium-main-row-h:112px !important;
+    --premium-social-row-h:36px !important;
+    --premium-header-h:148px !important;
+  }
+
+  .sidebar{
+    height:var(--premium-header-h) !important;
+    min-height:var(--premium-header-h) !important;
+  }
+
+  .premium-desktop-nav,
+  .premium-desktop-utilities,
+  .sidebar-footer{
+    height:var(--premium-main-row-h) !important;
+  }
+
+  .premium-nav-home{
+    width:104px !important;
+    height:104px !important;
+    min-height:104px !important;
+    max-height:104px !important;
+  }
+
+  .premium-nav-home img{
+    width:100px !important;
+    height:100px !important;
+    max-width:100px !important;
+    max-height:100px !important;
+  }
+}
+
+/* QHD / 2K: the 112px logo gets its own 124px row. */
+@media (min-width:2300px){
+  :root{
+    --premium-main-row-h:124px !important;
+    --premium-social-row-h:40px !important;
+    --premium-header-h:164px !important;
+  }
+
+  .sidebar{
+    height:var(--premium-header-h) !important;
+    min-height:var(--premium-header-h) !important;
+  }
+
+  .premium-desktop-nav,
+  .premium-desktop-utilities,
+  .sidebar-footer{
+    height:var(--premium-main-row-h) !important;
+  }
+
+  .premium-nav-home{
+    width:116px !important;
+    height:116px !important;
+    min-height:116px !important;
+    max-height:116px !important;
+  }
+
+  .premium-nav-home img{
+    width:112px !important;
+    height:112px !important;
+    max-width:112px !important;
+    max-height:112px !important;
+  }
+}
