@@ -659,7 +659,7 @@ function openCollectionCollageSettingsModal(){
     appContext.closeCollectionCollageSettingsModal();
 
     const scopeLabel=appContext.collageScopeLabel();
-    const defaultTitle=`Collect TCG ${scopeLabel}`;
+    const defaultTitle="Collect TCG MY & SG Inventory";
     const overlay=document.createElement("div");
     overlay.id="collectionCollageSettingsOverlay";
     overlay.className="collection-collage-modal-overlay";
@@ -827,7 +827,7 @@ async function exportCollectionCollage(settings={}){
       const padding=Math.round(width*0.034);
       const gapRatio=settings.spacing==="tight" ? 0.0045 : (settings.spacing==="airy" ? 0.011 : 0.007);
       const gap=Math.max(12,Math.round(width*gapRatio));
-      const headerHeight=collageTitle ? Math.round(height*(settings.showLogo ? 0.064 : 0.055)) : Math.round(height*(settings.showLogo ? 0.046 : 0.022));
+      const headerHeight=collageTitle ? Math.round(height*(settings.showLogo ? 0.105 : 0.092)) : Math.round(height*(settings.showLogo ? 0.046 : 0.022));
       const footerHeight=settings.showWebsite ? Math.round(height*0.022) : 0;
       const cardsTop=padding+headerHeight;
       const cardsBottom=height-padding-footerHeight;
@@ -913,14 +913,14 @@ async function exportCollectionCollage(settings={}){
         ctx.shadowBlur=18;
         ctx.shadowOffsetY=5;
         ctx.fillStyle="#f8f8fb";
-        const titleFontSize=Math.round(width*0.021);
+        const titleFontSize=Math.round(width*0.045);
         ctx.font=`700 ${titleFontSize}px Inter, system-ui, sans-serif`;
         ctx.textAlign="center";
         const titleY=padding-8;
         ctx.fillText(collageTitle,width/2,titleY);
         ctx.restore();
 
-        const lineY=padding+Math.max(90,Math.round(width*0.025));
+        const lineY=titleY+titleFontSize+Math.max(24,Math.round(width*0.012));
         const lineGrad=ctx.createLinearGradient(width*0.32,0,width*0.68,0);
         lineGrad.addColorStop(0,"rgba(236,192,87,0)");
         lineGrad.addColorStop(0.22,"rgba(236,192,87,0.30)");

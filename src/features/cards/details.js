@@ -639,8 +639,8 @@ async function shareCurrentCard(){
           linkCopied=true;
           appContext.showToast("Link copied — choose an app to share");
           appContext.recordCardEngagement(card.id,"share","Copy Link").catch(()=>{});
-          // Give the confirmation a moment to render before the OS share sheet covers the page.
-          await new Promise(resolve=>setTimeout(resolve,300));
+          // Keep the confirmation visible long enough to notice before the OS share sheet covers the page.
+          await new Promise(resolve=>setTimeout(resolve,900));
         }
       }catch(error){
         console.warn("Could not pre-copy card link",error);
