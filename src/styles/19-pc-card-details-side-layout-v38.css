@@ -596,3 +596,248 @@
     grid-column:3 !important;
   }
 }
+
+/* =========================================================
+   V105 — PREMIUM DESKTOP INVENTORY GRID
+   Visual-only refinement. Inventory/collection/reserved/sold
+   desktop tiles only; compact mode and mobile remain untouched.
+   ========================================================= */
+@media (min-width:801px){
+  #invGrid.grid:not(.compact-list){
+    gap:20px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card{
+    position:relative !important;
+    overflow:hidden !important;
+    border:1px solid rgba(255,255,255,.065) !important;
+    border-radius:16px !important;
+    background:
+      linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.008)),
+      var(--surface) !important;
+    box-shadow:0 10px 28px rgba(0,0,0,.16) !important;
+    transform:translateY(0) !important;
+    transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card::before{
+    width:3px !important;
+    opacity:.72 !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card:hover,
+  #invGrid.grid:not(.compact-list) .card:focus-visible{
+    transform:translateY(-4px) !important;
+    border-color:rgba(227,179,65,.24) !important;
+    background:
+      linear-gradient(180deg,rgba(227,179,65,.028),rgba(255,255,255,.008)),
+      var(--surface) !important;
+    box-shadow:0 18px 42px rgba(0,0,0,.28),0 0 0 1px rgba(227,179,65,.04) inset !important;
+    outline:none !important;
+  }
+
+  /* Image remains dominant, but receives a cleaner storefront frame. */
+  #invGrid.grid:not(.compact-list) .card > .thumb-wrap,
+  #invGrid.grid:not(.compact-list) .card > .thumb-placeholder{
+    overflow:hidden !important;
+    border-bottom:1px solid rgba(255,255,255,.055) !important;
+    background:#101217 !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card > .thumb-wrap .thumb{
+    transform:scale(1) !important;
+    transition:transform .28s cubic-bezier(.2,.7,.2,1),filter .2s ease !important;
+    filter:saturate(.98) contrast(1.015) !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card:hover > .thumb-wrap .thumb,
+  #invGrid.grid:not(.compact-list) .card:focus-visible > .thumb-wrap .thumb{
+    transform:scale(1.018) !important;
+    filter:saturate(1.02) contrast(1.025) !important;
+  }
+
+  /* More deliberate information hierarchy. */
+  #invGrid.grid:not(.compact-list) .card .clean-card-body{
+    padding:13px 14px 14px !important;
+    gap:10px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .clean-card-main{
+    gap:6px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .clean-card-title-row{
+    align-items:flex-start !important;
+    gap:8px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .clean-card-name{
+    min-width:0 !important;
+    min-height:39px !important;
+    margin:0 !important;
+    color:#f2f1ed !important;
+    font-family:'Barlow Condensed',sans-serif !important;
+    font-size:17px !important;
+    font-weight:750 !important;
+    line-height:1.14 !important;
+    letter-spacing:.01em !important;
+    white-space:normal !important;
+    overflow:hidden !important;
+    text-overflow:clip !important;
+    display:-webkit-box !important;
+    -webkit-line-clamp:2 !important;
+    -webkit-box-orient:vertical !important;
+    overflow-wrap:anywhere !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .clean-card-reference-toggle-row{
+    min-height:25px !important;
+    gap:8px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .clean-card-reference{
+    color:#777b86 !important;
+    font-size:9.5px !important;
+    letter-spacing:.035em !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .card-overview-pill-toggle{
+    min-height:24px !important;
+    padding:3px 7px !important;
+    border-color:rgba(255,255,255,.065) !important;
+    border-radius:7px !important;
+    background:rgba(255,255,255,.018) !important;
+    color:#777b85 !important;
+    font-size:8.5px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .card-overview-pill-toggle:hover,
+  #invGrid.grid:not(.compact-list) .card .card-overview-pill-toggle[aria-expanded="true"]{
+    border-color:rgba(227,179,65,.25) !important;
+    background:rgba(227,179,65,.055) !important;
+    color:#d9bd73 !important;
+  }
+
+  /* Price should be the second-strongest element after the card name. */
+  #invGrid.grid:not(.compact-list) .card .clean-price-block{
+    margin-top:1px !important;
+    padding-top:10px !important;
+    border-top:1px solid rgba(255,255,255,.055) !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .clean-price-primary{
+    color:#e9bd4f !important;
+    font-size:18px !important;
+    font-weight:800 !important;
+    line-height:1.08 !important;
+    letter-spacing:-.025em !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .clean-price-secondary{
+    margin-top:5px !important;
+    color:#787c86 !important;
+    font-size:9.5px !important;
+    font-weight:550 !important;
+    line-height:1.3 !important;
+  }
+
+  /* Metadata becomes quieter and more consistent. */
+  #invGrid.grid:not(.compact-list) .card .clean-all-pills{
+    gap:5px !important;
+    margin-top:2px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .clean-all-pills .clean-meta-pill,
+  #invGrid.grid:not(.compact-list) .card .clean-all-pills .clean-grade-badge{
+    min-height:22px !important;
+    padding:3px 7px !important;
+    border-color:rgba(255,255,255,.07) !important;
+    border-radius:999px !important;
+    background:rgba(255,255,255,.025) !important;
+    color:#a2a6af !important;
+    font-size:8.5px !important;
+    font-weight:650 !important;
+    letter-spacing:.02em !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .clean-all-pills .clean-grade-badge{
+    border-color:rgba(95,212,196,.18) !important;
+    background:rgba(95,212,196,.045) !important;
+    color:#87d9ce !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .clean-all-pills .clean-availability-pill{
+    border-color:rgba(227,179,65,.16) !important;
+    background:rgba(227,179,65,.04) !important;
+    color:#d3b66c !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .clean-notes{
+    margin-top:0 !important;
+    color:#737781 !important;
+    font-size:9.5px !important;
+    line-height:1.35 !important;
+    -webkit-line-clamp:2 !important;
+  }
+
+  /* Compare/favorite should support the title rather than compete with it. */
+  #invGrid.grid:not(.compact-list) .card .card-title-actions{
+    flex:0 0 auto !important;
+    gap:4px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .compare-card-btn{
+    min-height:25px !important;
+    padding:3px 7px !important;
+    border-color:rgba(255,255,255,.065) !important;
+    background:rgba(255,255,255,.018) !important;
+    color:#7d818b !important;
+    font-size:8px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .compare-card-btn:hover,
+  #invGrid.grid:not(.compact-list) .card .compare-card-btn.active{
+    border-color:rgba(227,179,65,.30) !important;
+    background:rgba(227,179,65,.06) !important;
+    color:#dfc176 !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .title-favorite-btn{
+    width:27px !important;
+    height:27px !important;
+    border-color:rgba(255,255,255,.065) !important;
+    background:rgba(255,255,255,.018) !important;
+    color:#8c9099 !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .title-favorite-btn:hover,
+  #invGrid.grid:not(.compact-list) .card .title-favorite-btn.active{
+    border-color:rgba(227,179,65,.32) !important;
+    background:rgba(227,179,65,.065) !important;
+    color:#edc85f !important;
+  }
+
+  /* Owner controls stay compact and visually separate from the storefront. */
+  body.owner-mode #invGrid.grid:not(.compact-list) .card .quick-card-actions{
+    top:8px !important;
+    right:8px !important;
+    padding:3px !important;
+    border:1px solid rgba(255,255,255,.09) !important;
+    border-radius:9px !important;
+    background:rgba(9,11,15,.82) !important;
+    backdrop-filter:blur(10px) !important;
+    box-shadow:0 7px 18px rgba(0,0,0,.25) !important;
+  }
+
+  body.owner-mode #invGrid.grid:not(.compact-list) .card .quick-card-actions .quick-card-menu-toggle{
+    width:27px !important;
+    height:27px !important;
+    border-color:rgba(227,179,65,.18) !important;
+    color:#d7bc75 !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card .clean-owner-views{
+    color:#666b75 !important;
+    font-size:8.5px !important;
+  }
+}
