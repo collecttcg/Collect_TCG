@@ -1040,3 +1040,97 @@
     color:#f3e3b1 !important;
   }
 }
+
+
+/* =========================================================
+   V109 — COMPACT RELATED-CARD RECOMMENDATIONS
+   Desktop only. Keep related cards secondary to the main listing.
+   ========================================================= */
+@media (min-width:981px){
+  .modal.card-details-modal .related-cards-section{
+    margin-top:24px !important;
+    padding-top:18px !important;
+  }
+
+  .modal.card-details-modal .related-cards-head{
+    margin-bottom:10px !important;
+  }
+
+  .modal.card-details-modal .related-cards-head h3{
+    font-size:19px !important;
+  }
+
+  .modal.card-details-modal .related-cards-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:10px !important;
+  }
+
+  .modal.card-details-modal .related-card{
+    border-radius:11px !important;
+    box-shadow:0 7px 18px rgba(0,0,0,.12) !important;
+  }
+
+  .modal.card-details-modal .related-card:hover,
+  .modal.card-details-modal .related-card:focus-visible{
+    transform:translateY(-2px) !important;
+    box-shadow:0 11px 24px rgba(0,0,0,.18),0 0 0 1px rgba(227,179,65,.035) !important;
+  }
+
+  .modal.card-details-modal .related-card-image-wrap{
+    height:clamp(185px,16vw,245px) !important;
+    aspect-ratio:auto !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    padding:6px !important;
+    background:#0b0d11 !important;
+  }
+
+  .modal.card-details-modal .related-card-image-wrap img{
+    width:100% !important;
+    height:100% !important;
+    object-fit:contain !important;
+  }
+
+  .modal.card-details-modal .related-card-info{
+    padding:8px 9px 9px !important;
+  }
+
+  .modal.card-details-modal .related-card-name{
+    min-height:27px !important;
+    display:-webkit-box !important;
+    -webkit-box-orient:vertical !important;
+    -webkit-line-clamp:2 !important;
+    overflow:hidden !important;
+    font-size:12px !important;
+    line-height:1.10 !important;
+  }
+
+  .modal.card-details-modal .related-card-code{
+    margin-top:4px !important;
+    font-size:8px !important;
+  }
+
+  .modal.card-details-modal .related-card-meta{
+    margin-top:5px !important;
+    gap:3px !important;
+    max-height:22px !important;
+    overflow:hidden !important;
+  }
+
+  .modal.card-details-modal .related-card-meta span{
+    padding:2px 5px !important;
+    font-size:7px !important;
+  }
+
+  .modal.card-details-modal .sold-alternatives-section{
+    margin-top:26px !important;
+    padding:16px 15px 14px !important;
+  }
+}
+
+@media (min-width:981px) and (max-width:1180px){
+  .modal.card-details-modal .related-cards-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  }
+}
