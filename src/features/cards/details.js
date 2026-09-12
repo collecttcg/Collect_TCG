@@ -1104,6 +1104,28 @@ async function openDetailsModal(card){
 
           ${detailSlabBreakdown}
 
+          ${!isNfsListing && !isSoldListing && appContext.normalizeFilterValue(card.availability||"Available")==="available" ? `
+            <div class="detail-purchase-panel" aria-label="Purchase options">
+              <div class="detail-purchase-location">
+                <span class="detail-purchase-location-icon" aria-hidden="true">📍</span>
+                <span><small>Transaction locations</small><strong>Malaysia &amp; Singapore</strong></span>
+              </div>
+              <details class="detail-buy-cta">
+                <summary>
+                  <span>Contact to Buy</span>
+                  <small>Choose contact method</small>
+                </summary>
+                <div class="detail-buy-chooser">
+                  <div>
+                    <strong>Choose how to contact us</strong>
+                    <span>Confirm availability, payment and delivery / meetup options before payment.</span>
+                  </div>
+                  ${appContext.collectSocialLinksHtml("details-buy-social-links")}
+                </div>
+              </details>
+            </div>
+          ` : ""}
+
           ${!isNfsListing ? `
             <div class="detail-buyer-confidence" aria-label="Buyer information">
               <div class="detail-confidence-item">
