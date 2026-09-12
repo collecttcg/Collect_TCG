@@ -1067,6 +1067,23 @@ async function openDetailsModal(card){
       <div class="detail-layout">
         <div>${imageHTML}</div>
         <div class="detail-info">
+          <div class="detail-header detail-header-desktop">
+            <div class="detail-title">
+              <div class="eyebrow">Card details</div>
+              <h2 id="detailsTitleDesktop">${appContext.escapeHtml(card.name)}</h2>
+              <div class="detail-meta">${appContext.escapeHtml(card.game || "—")}${card.set ? " · " + appContext.escapeHtml(card.set) : ""}</div>
+            </div>
+            ${!isNfsListing ? `
+              <label class="global-currency-control detail-currency-control" title="Your preferred currency is saved on this device.">
+                <span>Currency</span>
+                <select id="detailsCurrencyPreference" aria-label="Preferred display currency">
+                  <option value="USD" ${appContext.getPriceCurrencyPreference()==="USD"?"selected":""}>USD</option>
+                  <option value="MYR" ${appContext.getPriceCurrencyPreference()==="MYR"?"selected":""}>MYR</option>
+                  <option value="SGD" ${appContext.getPriceCurrencyPreference()==="SGD"?"selected":""}>SGD</option>
+                </select>
+              </label>
+            ` : ""}
+          </div>
           <div class="detail-summary-strip">
             <div class="detail-summary-card detail-summary-price">
               <span>Price</span>
