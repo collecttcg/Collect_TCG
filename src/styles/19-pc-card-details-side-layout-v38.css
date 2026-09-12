@@ -481,3 +481,118 @@
     box-shadow:none !important;
   }
 }
+
+/* =========================================================
+   V104 — DESKTOP CARD DETAIL ACTION BAR REORGANIZATION
+   Navigation left · buyer actions right · owner edit isolated
+   ========================================================= */
+@media (min-width:801px){
+  .modal.card-details-modal .details-top-actions{
+    display:grid !important;
+    grid-template-columns:auto minmax(24px,1fr) auto auto !important;
+    align-items:center !important;
+    column-gap:10px !important;
+    min-height:54px !important;
+    padding:8px 14px !important;
+  }
+
+  /* Flatten the wrapper so Back/Close and Edit can occupy opposite sides. */
+  .modal.card-details-modal .details-primary-actions{
+    display:contents !important;
+    padding:0 !important;
+    border:0 !important;
+  }
+
+  /* Navigation belongs at the far left. */
+  .modal.card-details-modal #detailsCloseBtn{
+    grid-column:1 !important;
+    grid-row:1 !important;
+    justify-self:start !important;
+    min-width:0 !important;
+    padding-inline:13px !important;
+  }
+
+  /* Buyer utilities are a compact cluster on the right. */
+  .modal.card-details-modal .details-secondary-actions{
+    grid-column:3 !important;
+    grid-row:1 !important;
+    justify-self:end !important;
+    display:flex !important;
+    align-items:center !important;
+    gap:5px !important;
+    padding:3px !important;
+    border:1px solid rgba(255,255,255,.055) !important;
+    border-radius:12px !important;
+    background:rgba(255,255,255,.018) !important;
+  }
+
+  .modal.card-details-modal .details-secondary-actions > button,
+  .modal.card-details-modal .details-secondary-actions .details-more-wrap > button{
+    min-height:34px !important;
+    padding:0 10px !important;
+    border:1px solid transparent !important;
+    border-radius:8px !important;
+    background:transparent !important;
+    color:#aaaeb8 !important;
+    box-shadow:none !important;
+  }
+
+  .modal.card-details-modal .details-secondary-actions > button:hover,
+  .modal.card-details-modal .details-secondary-actions > button:focus-visible,
+  .modal.card-details-modal .details-secondary-actions .details-more-wrap > button:hover,
+  .modal.card-details-modal .details-secondary-actions .details-more-wrap > button:focus-visible{
+    border-color:rgba(227,179,65,.28) !important;
+    background:rgba(227,179,65,.07) !important;
+    color:#f0ddb0 !important;
+    outline:none !important;
+    transform:none !important;
+  }
+
+  /* Remove the old teal-only Share treatment so the action group is cohesive. */
+  .modal.card-details-modal #detailsShareBtn,
+  .modal.card-details-modal #detailsShareBtn:hover,
+  .modal.card-details-modal #detailsShareBtn:focus-visible{
+    border-color:transparent !important;
+  }
+
+  .modal.card-details-modal #detailsShareBtn:hover,
+  .modal.card-details-modal #detailsShareBtn:focus-visible{
+    border-color:rgba(227,179,65,.28) !important;
+    background:rgba(227,179,65,.07) !important;
+    color:#f0ddb0 !important;
+  }
+
+  /* Owner action stays visually distinct without joining buyer utilities. */
+  .modal.card-details-modal #detailsEditBtn{
+    grid-column:4 !important;
+    grid-row:1 !important;
+    justify-self:end !important;
+    min-height:38px !important;
+    padding:0 15px !important;
+    border:1px solid rgba(227,179,65,.58) !important;
+    border-radius:10px !important;
+    background:linear-gradient(135deg,#e3b341,#f3d488) !important;
+    color:#171309 !important;
+    font-weight:800 !important;
+    box-shadow:0 5px 15px rgba(227,179,65,.10) !important;
+  }
+
+  .modal.card-details-modal #detailsEditBtn:hover,
+  .modal.card-details-modal #detailsEditBtn:focus-visible{
+    border-color:#f4d98e !important;
+    background:linear-gradient(135deg,#edc25a,#f7dfa0) !important;
+    color:#171309 !important;
+    outline:2px solid rgba(227,179,65,.22) !important;
+    outline-offset:2px !important;
+    transform:translateY(-1px) !important;
+  }
+
+  /* When not in owner mode, no phantom space should remain after buyer actions. */
+  body:not(.owner-mode) .modal.card-details-modal .details-top-actions{
+    grid-template-columns:auto minmax(24px,1fr) auto !important;
+  }
+
+  body:not(.owner-mode) .modal.card-details-modal .details-secondary-actions{
+    grid-column:3 !important;
+  }
+}
