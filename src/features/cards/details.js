@@ -632,6 +632,20 @@ async function shareCurrentCard(){
     const preview=appContext.publicCardSharePreview(card);
 
     if(navigator.share){
+      let linkCopied=false;
+      try{
+        if(navigator.clipboard?.writeText){
+          await navigator.clipboard.writeText(url);
+          linkCopied=true;
+          appContext.showToast("Link copied — choose an app to share");
+          appContext.recordCardEngagement(card.id,"share","Copy Link").catch(()=>{});
+          // Give the confirmation a moment to render before the OS share sheet covers the page.
+          await new Promise(resolve=>setTimeout(resolve,300));
+        }
+      }catch(error){
+        console.warn("Could not pre-copy card link",error);
+      }
+
       try{
         await navigator.share({
           title:card.name||"Collect TCG MY & SG",
@@ -641,7 +655,15 @@ async function shareCurrentCard(){
         appContext.recordCardEngagement(card.id,"share","Native Share").catch(()=>{});
         return;
       }catch(error){
-        if(error?.name==="AbortError") return;
+        if(error?.name==="AbortError"){
+          if(linkCopied) appContext.showToast("Link copied to clipboard");
+          return;
+        }
+      }
+
+      if(linkCopied){
+        appContext.showToast("Link copied to clipboard");
+        return;
       }
     }
 
