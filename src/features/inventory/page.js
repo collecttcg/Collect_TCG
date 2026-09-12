@@ -107,7 +107,7 @@ function inventoryPageHTML(scopeMeta,scope){
               ⇅ Rearrange Cards
             </button>
             <button type="button"
-                    class="btn-ghost collection-export-collage-btn"
+                    class="btn-ghost collection-export-collage-btn owner-only"
                     id="collectionExportCollageBtn"
                     title="Download a high-resolution collage using the first image of each Collection card">
               ⬇ Export Collage
@@ -121,7 +121,7 @@ function inventoryPageHTML(scopeMeta,scope){
               ⇅ Rearrange Inventory
             </button>
             <button type="button"
-                    class="btn-ghost collection-export-collage-btn"
+                    class="btn-ghost collection-export-collage-btn owner-only"
                     id="inventoryExportCollageBtn"
                     title="Download a high-resolution collage using Inventory listing cover images">
               ⬇ Export Collage
@@ -162,6 +162,17 @@ function inventoryPageHTML(scopeMeta,scope){
             <span class="desktop-filter-toggle-summary" id="desktopFilterSummary">No active filters</span>
             <span class="desktop-filter-toggle-chevron" aria-hidden="true">⌄</span>
           </button>
+
+          ${!isCollection ? `
+            <label class="desktop-listing-currency-control" title="Choose which stored currency is shown first. No currency conversion is performed.">
+              <span>Currency</span>
+              <select id="currencyPreference" aria-label="Preferred display currency">
+                <option value="USD" ${appContext.getPriceCurrencyPreference()==="USD"?"selected":""}>USD</option>
+                <option value="MYR" ${appContext.getPriceCurrencyPreference()==="MYR"?"selected":""}>MYR</option>
+                <option value="SGD" ${appContext.getPriceCurrencyPreference()==="SGD"?"selected":""}>SGD</option>
+              </select>
+            </label>
+          ` : ""}
         </div>
         <a href="#/add" class="btn-primary owner-only desktop-filter-add-card">+ Add card</a>
       </div>
@@ -2179,6 +2190,16 @@ function renderInventoryPage(scope = "inventory"){
         draw();
       });
     });
+
+    appContext.$("currencyPreference")?.addEventListener("change",e=>{
+      const currency=appContext.setPriceCurrencyPreference(e.target.value);
+      appContext.syncCurrencyEverywhere(currency);
+      const priceLabel=document.querySelector(".price-range-label");
+      if(priceLabel) priceLabel.textContent=`Price (${currency})`;
+      appContext.updateListingUrlFromControls();
+      draw();
+      appContext.showToast(`${currency} prices shown first`);
+    },{signal:inventorySignal});
 
     const desktopQuickFiltersToggle=appContext.$("desktopQuickFiltersToggle");
     const desktopQuickFilters=appContext.$("quickFilters");
