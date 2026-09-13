@@ -8019,3 +8019,89 @@ body.light-mode .desktop-listing-currency-control select{
     color:#7b570f !important;
   }
 }
+
+
+/* ==========================================================
+   V171 BETA — iOS MOBILE FORM FOCUS / AUTO-ZOOM HOTFIX
+   iOS Safari automatically zooms focused form controls whose computed
+   font-size is below 16px. Keep the existing compact control dimensions,
+   but use a Safari-safe 16px font size for focusable text fields/selects.
+   Pinch-to-zoom remains enabled; viewport accessibility is unchanged.
+   ========================================================== */
+@media (max-width:800px){
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]):not([type="color"]),
+  textarea,
+  select{
+    font-size:16px !important;
+  }
+
+  /* Keep the compact search placeholder appearance from the current UI.
+     Safari's focus zoom decision uses the input's 16px computed size. */
+  .mobile-search-filter-row > .mobile-inventory-search input[type="search"]::placeholder,
+  .mobile-inventory-search input[type="search"]::placeholder{
+    font-size:11px !important;
+  }
+}
+
+/* ==========================================================
+   V172 BETA — TRENDING QUICK FILTER + MOBILE CHAMP LABEL
+   ========================================================== */
+.quick-filter-label-mobile{
+  display:none;
+}
+
+@media (max-width:800px){
+  .listing-filter-tools #quickFilters,
+  .listing-filter-tools .quick-filters,
+  .listing-filter-tools .desktop-quick-filters-collapsible{
+    grid-template-columns:repeat(7,minmax(0,1fr)) !important;
+    grid-template-rows:34px !important;
+    grid-auto-flow:column !important;
+    gap:3px !important;
+    overflow:hidden !important;
+  }
+
+  .quick-filter-label-desktop{
+    display:none !important;
+  }
+
+  .quick-filter-label-mobile{
+    display:inline !important;
+  }
+
+  .listing-filter-tools #quickFilters .quick-filter,
+  .listing-filter-tools .quick-filters .quick-filter,
+  .listing-filter-tools .desktop-quick-filters-collapsible .quick-filter{
+    min-width:0 !important;
+    padding-inline:1px !important;
+    font-size:clamp(5.7px,1.62vw,7.2px) !important;
+    letter-spacing:-.02em !important;
+    overflow:hidden !important;
+    text-overflow:clip !important;
+  }
+
+  .listing-filter-tools #quickFilters .quick-filter[data-quick="trending"],
+  .listing-filter-tools #quickFilters .quick-filter[data-quick="championship"]{
+    font-size:clamp(5.5px,1.55vw,7px) !important;
+  }
+}
+
+@media (max-width:360px){
+  .listing-filter-tools #quickFilters,
+  .listing-filter-tools .quick-filters,
+  .listing-filter-tools .desktop-quick-filters-collapsible{
+    gap:2px !important;
+  }
+
+  .listing-filter-tools #quickFilters .quick-filter,
+  .listing-filter-tools .quick-filters .quick-filter,
+  .listing-filter-tools .desktop-quick-filters-collapsible .quick-filter{
+    font-size:5.55px !important;
+    letter-spacing:-.035em !important;
+  }
+
+  .listing-filter-tools #quickFilters .quick-filter[data-quick="trending"],
+  .listing-filter-tools #quickFilters .quick-filter[data-quick="championship"]{
+    font-size:5.35px !important;
+  }
+}
