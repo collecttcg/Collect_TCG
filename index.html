@@ -102,7 +102,7 @@
 <link rel="stylesheet" href="./src/styles/24-card-overview-pill-toggle-inline-v44.css" id="card-overview-pill-toggle-inline-v44">
 
 <link rel="stylesheet" href="./src/styles/25-compatibility.css">
-<link rel="stylesheet" href="./src/styles/26-compatibility.css">
+<link rel="stylesheet" href="./src/styles/26-compatibility.css?v=170">
 
 <!-- V47: Home Recently Added now uses the shared home-storefront-grid layout (same as High Value / Vintage / Recently Sold). -->
   <!-- v49: Inventory grouped catalogue uses no per-page selector or pagination. -->
@@ -150,7 +150,7 @@
     <a href="https://www.carousell.com.my/u/collect_tcg_my_sg/" target="_blank" rel="noopener noreferrer" class="collect-social-icon" aria-label="Carousell Malaysia" title="Carousell Malaysia"><span aria-hidden="true">C</span><small>MY</small></a>
     <a href="https://www.carousell.sg/u/collect_tcg_sg/" target="_blank" rel="noopener noreferrer" class="collect-social-icon" aria-label="Carousell Singapore" title="Carousell Singapore"><span aria-hidden="true">C</span><small>SG</small></a>
   </div>
-  <button class="mobile-header-theme-toggle" id="mobileHeaderThemeToggle" type="button" aria-label="Switch to light mode" title="Light mode">☀</button>
+  
 </div>
 
 
@@ -160,7 +160,7 @@
          The original #mainnav remains the responsive/mobile source of truth and fallback. -->
     <nav class="premium-desktop-nav" id="premiumDesktopNav" aria-label="Primary desktop navigation">
       <div class="premium-nav-side premium-nav-left">
-        <a href="#/inventory" data-route="inventory">Inventory</a>
+        <a href="#/inventory" data-route="inventory" class="mobile-primary-nav">Inventory</a>
         <a href="#/collection" data-route="collection">Collection</a>
       </div>
       <a href="#/home" data-route="home" class="premium-nav-home" aria-label="Collect TCG home">
@@ -218,34 +218,35 @@
     </div>
 
     <nav class="mainnav" id="mainnav">
-      <a href="#/home" data-route="home"><span class="ic">⌂</span> Home</a>
-      <a href="#/inventory" data-route="inventory"><span class="ic">▦</span> <span>Inventory</span><span class="nav-count" id="inventoryNavCount">0</span></a>
-      <a href="#/sold" data-route="sold" class="status-primary-nav"><span class="ic">✓</span> <span>Sold</span><span class="nav-count" id="soldNavCount">0</span></a>
-      <a href="#/collection" data-route="collection" class="collection-primary-nav"><span class="ic">◆</span> <span>Collection</span><span class="nav-count collection-nav-count" id="collectionNavCount">0</span></a>
+      <a href="#/inventory" data-route="inventory" class="mobile-primary-nav"><span class="ic">▦</span> <span>Inventory</span><span class="nav-count" id="inventoryNavCount">0</span></a>
+      <a href="#/collection" data-route="collection" class="collection-primary-nav mobile-primary-nav"><span class="ic">◆</span> <span>Collection</span><span class="nav-count collection-nav-count" id="collectionNavCount">0</span></a>
+      <a href="#/home" class="mobile-nav-logo" aria-label="Collect TCG Home"><img src="./assets/shop-logo.png" alt="Collect TCG MY &amp; SG"></a>
+      <a href="#/sold" data-route="sold" class="status-primary-nav mobile-primary-nav"><span class="ic">✓</span> <span>Sold</span><span class="nav-count" id="soldNavCount">0</span></a>
       <a href="#/reserved" data-route="reserved" class="status-primary-nav desktop-primary-mobile-hidden"><span class="ic">◷</span> <span>Reserved</span><span class="nav-count" id="reservedNavCount">0</span></a>
       <a href="#/showcase" data-route="showcase" class="desktop-primary-mobile-hidden"><span class="ic">▶</span> Showcase</a>
       <a href="#/giveaway" data-route="giveaway" class="desktop-primary-mobile-hidden"><span class="ic">★</span> Giveaway</a>
       <a href="#/favorites" data-route="favorites" class="desktop-primary-mobile-hidden"><span class="ic">♡</span> Favorite</a>
-      <button type="button" class="mobile-more-toggle" id="mobileMoreToggle" aria-expanded="false">
+      <button type="button" class="mobile-more-toggle mobile-primary-nav" id="mobileMoreToggle" aria-expanded="false">
         <span class="ic">⋯</span> More <span class="mobile-more-caret">⌄</span>
       </button>
       <div class="mobile-more-menu" id="mobileMoreMenu" hidden>
-        
-        <a href="#/reserved" data-route="reserved"><span class="ic">◷</span> Reserved</a>
-        <a href="#/showcase" data-route="showcase"><span class="ic">▶</span> Showcase</a>
-        <a href="#/giveaway" data-route="giveaway"><span class="ic">★</span> Giveaway</a>
-        <a href="#/favorites" data-route="favorites"><span class="ic">♡</span> Favorite</a>
-        <a href="#/reviews" data-route="reviews" class="reviews-more-nav"><span class="ic">☆</span> Reviews</a>
-        <a href="#/about" data-route="about"><span class="ic">◎</span> About Us</a>
-        <a href="#/contact" data-route="contact"><span class="ic">✉</span> Contact</a>
-        <a href="#/recent" data-route="recent"><span class="ic">↻</span> Recently Viewed</a>
-        <a href="#/insights" data-route="insights" class="owner-only desktop-more-owner"><span class="ic">◔</span> Insights</a>
-        <a href="#/fb-tools" data-route="fb-tools" class="owner-only desktop-more-owner"><span class="ic">ƒ</span> Post Generator Tools</a>
-        <a href="#/quality" data-route="quality" class="owner-only desktop-more-owner"><span class="ic">✓</span> Data Quality</a>
-        <a href="#/inventory-tools" data-route="inventory-tools" class="owner-only desktop-more-owner"><span class="ic">≡</span> Inventory Tools</a>
-        <a href="#/export" data-route="export" class="owner-only desktop-more-owner"><span class="ic">⇩</span> Export</a>
-        <a href="#/add" data-route="add" class="owner-only desktop-more-owner"><span class="ic">+</span> Add Card</a>
-      
+        <div class="mobile-more-links">
+          <a href="#/reserved" data-route="reserved"><span class="ic">◷</span> Reserved</a>
+          <a href="#/showcase" data-route="showcase"><span class="ic">▶</span> Showcase</a>
+          <a href="#/giveaway" data-route="giveaway"><span class="ic">★</span> Giveaway</a>
+          <a href="#/favorites" data-route="favorites"><span class="ic">♡</span> Favorite</a>
+          <a href="#/reviews" data-route="reviews" class="reviews-more-nav"><span class="ic">☆</span> Reviews</a>
+          <a href="#/about" data-route="about"><span class="ic">◎</span> About Us</a>
+          <a href="#/contact" data-route="contact"><span class="ic">✉</span> Contact</a>
+          <a href="#/recent" data-route="recent" class="mobile-more-recent"><span class="ic">↻</span> Recently Viewed</a>
+          <a href="#/insights" data-route="insights" class="owner-only desktop-more-owner"><span class="ic">◔</span> Insights</a>
+          <a href="#/fb-tools" data-route="fb-tools" class="owner-only desktop-more-owner"><span class="ic">ƒ</span> Post Generator Tools</a>
+          <a href="#/quality" data-route="quality" class="owner-only desktop-more-owner"><span class="ic">✓</span> Data Quality</a>
+          <a href="#/inventory-tools" data-route="inventory-tools" class="owner-only desktop-more-owner"><span class="ic">≡</span> Inventory Tools</a>
+          <a href="#/export" data-route="export" class="owner-only desktop-more-owner"><span class="ic">⇩</span> Export</a>
+          <a href="#/add" data-route="add" class="owner-only desktop-more-owner"><span class="ic">+</span> Add Card</a>
+          <button class="mobile-header-theme-toggle mobile-more-theme-toggle" id="mobileHeaderThemeToggle" type="button" aria-label="Switch to light mode" title="Light mode"><span class="ic" aria-hidden="true">☀</span><span class="mobile-theme-label">Light mode</span></button>
+        </div>
       </div>
       <a href="#/reviews" data-route="reviews" class="reviews-desktop-nav"><span class="ic">☆</span> Reviews</a>
       <a href="#/insights" data-route="insights" class="owner-only"><span class="ic">◔</span> Insights</a>
@@ -811,6 +812,6 @@
 
 
 <!-- V48: Recently Added uses the exact same storefront row structure/count as High Value/Vintage/Recently Sold. -->
-<script type="module" src="./src/main.js"></script>
+<script type="module" src="./src/main.js?v=170"></script>
 </body>
 </html>
