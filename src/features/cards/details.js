@@ -964,28 +964,51 @@ async function openDetailsModal(card){
       ? appContext.gradingSummaryLabel(card)
       : condition;
     const detailPop = detailGrades.length===1 ? appContext.gradePopDetailLabel(detailGrades[0]) : "";
+    const detailSlabRows = detailGrades.length>1
+      ? detailGrades.map((g,i)=>{
+          const gradeLabel=`${String(g.company||"").trim().toUpperCase()} ${String(g.grade||"").trim()}`.trim();
+          const popLabel=appContext.gradePopDetailLabel(g);
+          const cert=String(g.cert||"").trim();
+          return `<div class="detail-slab-row">
+            <div>
+              <span class="detail-slab-number">Slab ${i+1}</span>
+              <strong>${appContext.escapeHtml(gradeLabel)}</strong>
+            </div>
+            <div class="detail-slab-meta">
+              ${popLabel ? `<span class="detail-slab-pop">${appContext.escapeHtml(popLabel)}</span>` : ""}
+              ${appContext.isOwnerMode() && cert ? `<span class="detail-slab-cert">Cert ${appContext.escapeHtml(cert)}</span>` : ""}
+            </div>
+          </div>`;
+        }).join("")
+      : "";
+
     const detailSlabBreakdown = detailGrades.length>1
-      ? `<div class="detail-slab-list">
+      ? `<div class="detail-slab-list detail-slab-list-desktop">
           <div class="detail-slab-list-head">
             <strong>Slabs in this listing</strong>
             <span>${detailGrades.length} graded copies</span>
           </div>
-          ${detailGrades.map((g,i)=>{
-            const gradeLabel=`${String(g.company||"").trim().toUpperCase()} ${String(g.grade||"").trim()}`.trim();
-            const popLabel=appContext.gradePopDetailLabel(g);
-            const cert=String(g.cert||"").trim();
-            return `<div class="detail-slab-row">
-              <div>
-                <span class="detail-slab-number">Slab ${i+1}</span>
-                <strong>${appContext.escapeHtml(gradeLabel)}</strong>
-              </div>
-              <div class="detail-slab-meta">
-                ${popLabel ? `<span class="detail-slab-pop">${appContext.escapeHtml(popLabel)}</span>` : ""}
-                ${appContext.isOwnerMode() && cert ? `<span class="detail-slab-cert">Cert ${appContext.escapeHtml(cert)}</span>` : ""}
-              </div>
-            </div>`;
-          }).join("")}
+          ${detailSlabRows}
         </div>`
+      : "";
+
+    const detailSlabBreakdownMobile = detailGrades.length>1
+      ? `<details class="detail-slab-mobile">
+          <summary>
+            <span class="detail-slab-mobile-copy">
+              <strong>${detailGrades.length} graded copies</strong>
+              <small>${appContext.escapeHtml(detailCondition)}</small>
+            </span>
+            <span class="detail-slab-mobile-action">
+              <span class="detail-slab-mobile-closed">View slab details</span>
+              <span class="detail-slab-mobile-open">Hide slab details</span>
+              <span class="detail-slab-mobile-chevron" aria-hidden="true">⌄</span>
+            </span>
+          </summary>
+          <div class="detail-slab-mobile-body">
+            ${detailSlabRows}
+          </div>
+        </details>`
       : "";
     const cost = card.cost == null ? "—" : appContext.fmtMoney(card.cost);
     const isSoldListing = appContext.normalizeFilterValue(card.availability || "") === "sold";
@@ -1142,6 +1165,8 @@ async function openDetailsModal(card){
               </details>
             </div>
           ` : ""}
+
+          ${detailSlabBreakdownMobile}
 
           ${!isNfsListing ? `
             <div class="detail-buyer-confidence" aria-label="Buyer information">

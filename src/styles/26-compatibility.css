@@ -4268,3 +4268,3754 @@ body.light-mode .desktop-listing-currency-control select{
   border-color:#d8d2c7 !important;
   color:#2c3136 !important;
 }
+
+/* ==========================================================
+   V154 BETA — COMPREHENSIVE MOBILE PARITY / POLISH PASS
+   Mobile-only. Desktop remains exactly V153 production.
+   Goals:
+   - cleaner compact navigation
+   - search/filter hierarchy with no duplicate search
+   - larger touch targets and readable controls
+   - 2-column card marketplace layout on normal phones
+   - tighter Card Details hierarchy + contact flow
+   - related-card and light-mode parity
+   ========================================================== */
+
+@media (max-width:800px){
+  /* ---------- Compact premium mobile header ---------- */
+  .sidebar{
+    padding:8px 10px 9px !important;
+    gap:8px !important;
+  }
+
+  .shop-brand{
+    position:relative !important;
+    min-height:52px !important;
+    justify-content:center !important;
+    align-items:center !important;
+    padding:0 48px !important;
+  }
+
+  .shop-brand-text,
+  .mobile-header-social-links{
+    display:none !important;
+  }
+
+  .logo-click-target .shop-logo{
+    width:52px !important;
+    height:52px !important;
+    flex:0 0 52px !important;
+  }
+
+  .mobile-header-theme-toggle{
+    position:absolute !important;
+    right:0 !important;
+    top:50% !important;
+    transform:translateY(-50%) !important;
+    width:40px !important;
+    height:40px !important;
+    min-width:40px !important;
+    min-height:40px !important;
+    border-radius:12px !important;
+  }
+
+  /* Logo is Home on mobile. Keep four useful primary destinations. */
+  nav.mainnav{
+    display:grid !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:5px !important;
+    width:100% !important;
+    padding:0 !important;
+    overflow:visible !important;
+  }
+
+  nav.mainnav > a[data-route="home"],
+  nav.mainnav > a[data-route="reserved"],
+  nav.mainnav > a[data-route="showcase"],
+  nav.mainnav > a[data-route="giveaway"],
+  nav.mainnav > a[data-route="favorites"],
+  nav.mainnav > a[data-route="reviews"],
+  nav.mainnav > a[data-route="about"],
+  nav.mainnav > a[data-route="contact"],
+  nav.mainnav > a[data-route="recent"],
+  nav.mainnav > a[data-route="by-game"],
+  nav.mainnav > a.owner-only{
+    display:none !important;
+  }
+
+  nav.mainnav > a[data-route="inventory"],
+  nav.mainnav > a[data-route="collection"],
+  nav.mainnav > a[data-route="sold"],
+  nav.mainnav > .mobile-more-toggle{
+    display:flex !important;
+    grid-column:auto !important;
+    order:initial !important;
+    min-width:0 !important;
+    width:100% !important;
+    min-height:44px !important;
+    height:44px !important;
+    padding:0 5px !important;
+    justify-content:center !important;
+    align-items:center !important;
+    gap:4px !important;
+    border-radius:11px !important;
+    font-size:10px !important;
+    font-weight:760 !important;
+    letter-spacing:.045em !important;
+    text-transform:uppercase !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+  }
+
+  nav.mainnav > a[data-route="inventory"] .nav-count,
+  nav.mainnav > a[data-route="collection"] .nav-count,
+  nav.mainnav > a[data-route="sold"] .nav-count{
+    display:none !important;
+  }
+
+  nav.mainnav > .mobile-more-menu{
+    order:5 !important;
+    grid-column:1 / -1 !important;
+    width:100% !important;
+    margin-top:2px !important;
+    padding:7px !important;
+    border-radius:13px !important;
+  }
+
+  nav.mainnav > .mobile-more-menu > a{
+    min-height:44px !important;
+    padding:9px 11px !important;
+    border-radius:9px !important;
+    font-size:12px !important;
+  }
+
+  nav.mainnav > .mobile-more-menu > a[data-route="collection"]{
+    display:none !important;
+  }
+  nav.mainnav > .mobile-more-menu > a[data-route="favorites"]{
+    display:flex !important;
+  }
+
+  /* Header footer is utility-only on phones; avoid duplicated social rows. */
+  .sidebar-footer .header-social-links,
+  .sidebar-footer > div:nth-child(2){
+    display:none !important;
+  }
+
+  /* ---------- Mobile page hierarchy ---------- */
+  .main{
+    padding-left:10px !important;
+    padding-right:10px !important;
+  }
+
+  .listing-page-head{
+    margin:0 0 8px !important;
+    align-items:center !important;
+    gap:8px !important;
+  }
+
+  .listing-page-head .eyebrow,
+  .listing-page-head p{
+    display:none !important;
+  }
+
+  .listing-page-head h2{
+    margin:0 !important;
+    font-size:20px !important;
+    line-height:1.05 !important;
+  }
+
+  .listing-page-head .mobile-page-currency-control{
+    min-height:40px !important;
+    height:40px !important;
+    padding:4px 5px 4px 8px !important;
+    border-radius:11px !important;
+    gap:6px !important;
+  }
+
+  .listing-page-head .mobile-page-currency-control > span:not(.sr-only){
+    font-size:9px !important;
+    font-weight:700 !important;
+    text-transform:uppercase !important;
+  }
+
+  .listing-page-head .mobile-page-currency-control select{
+    min-height:31px !important;
+    height:31px !important;
+    padding:3px 22px 3px 7px !important;
+    font-size:10px !important;
+    font-weight:800 !important;
+  }
+
+  /* ---------- Quick category filters ---------- */
+  .listing-filter-tools .quick-filters,
+  .listing-filter-tools .desktop-quick-filters-collapsible{
+    display:flex !important;
+    flex-wrap:nowrap !important;
+    gap:6px !important;
+    width:100% !important;
+    margin:0 0 8px !important;
+    padding:0 0 2px !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    scrollbar-width:none !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+
+  .listing-filter-tools .quick-filters::-webkit-scrollbar,
+  .listing-filter-tools .desktop-quick-filters-collapsible::-webkit-scrollbar{
+    display:none !important;
+  }
+
+  .listing-filter-tools .quick-filter{
+    flex:0 0 auto !important;
+    min-height:38px !important;
+    padding:0 12px !important;
+    border-radius:999px !important;
+    font-size:10px !important;
+    font-weight:720 !important;
+    letter-spacing:.035em !important;
+    text-transform:uppercase !important;
+    white-space:nowrap !important;
+  }
+
+  /* ---------- Search + Filters: one clear row ---------- */
+  .mobile-search-filter-row{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 92px !important;
+    gap:7px !important;
+    width:100% !important;
+    margin:0 0 8px !important;
+  }
+
+  .mobile-search-filter-row .mobile-inventory-search{
+    grid-column:1 !important;
+    min-width:0 !important;
+    width:100% !important;
+    margin:0 !important;
+  }
+
+  .mobile-search-filter-row .mobile-inventory-search input[type="search"]{
+    width:100% !important;
+    min-width:0 !important;
+    min-height:48px !important;
+    height:48px !important;
+    padding-left:36px !important;
+    padding-right:38px !important;
+    border-radius:12px !important;
+    font-size:13px !important;
+  }
+
+  .mobile-search-filter-row .mobile-inventory-search input[type="search"]::placeholder{
+    font-size:11.5px !important;
+  }
+
+  .mobile-search-filter-row .mobile-search-filter-btn{
+    grid-column:2 !important;
+    min-width:0 !important;
+    width:100% !important;
+    max-width:none !important;
+    min-height:48px !important;
+    height:48px !important;
+    padding:0 10px !important;
+    border-radius:12px !important;
+    font-size:11px !important;
+    font-weight:760 !important;
+    letter-spacing:.04em !important;
+    text-transform:uppercase !important;
+  }
+
+  /* Main search already exists above the drawer; never duplicate it inside Filters. */
+  #filterDrawerShell .filter-row > .inventory-search-wrap{
+    display:none !important;
+  }
+
+  /* ---------- Filter drawer: proper mobile bottom sheet ---------- */
+  #filterDrawerShell{
+    border-radius:20px 20px 0 0 !important;
+  }
+
+  #filterDrawerShell.mobile-open,
+  #filterDrawerShell:not(.desktop-collapsed){
+    max-height:min(84dvh,760px) !important;
+  }
+
+  #filterDrawerShell .filter-drawer-head{
+    padding:14px 14px 11px !important;
+  }
+
+  #filterDrawerShell .filter-drawer-head strong{
+    font-size:16px !important;
+    font-weight:800 !important;
+  }
+
+  #filterDrawerShell .filter-drawer-head span{
+    font-size:10px !important;
+  }
+
+  #filterDrawerShell .filter-row{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:9px !important;
+    padding:12px 14px !important;
+  }
+
+  #filterDrawerShell .overview-select,
+  #filterDrawerShell .price-range-filter,
+  #filterDrawerShell .mobile-cards-per-page-control{
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  #filterDrawerShell .overview-select-btn{
+    width:100% !important;
+    min-height:48px !important;
+    padding:0 13px !important;
+    border-radius:11px !important;
+    font-size:12px !important;
+    font-weight:680 !important;
+  }
+
+  #filterDrawerShell .overview-select-menu button{
+    min-height:44px !important;
+    padding:9px 12px !important;
+    font-size:12px !important;
+  }
+
+  #filterDrawerShell .price-range-filter{
+    min-height:50px !important;
+    padding:7px 9px !important;
+    border-radius:11px !important;
+  }
+
+  #filterDrawerShell .price-range-label{
+    font-size:10px !important;
+    font-weight:720 !important;
+  }
+
+  #filterDrawerShell .price-range-filter input{
+    min-width:0 !important;
+    min-height:36px !important;
+    font-size:12px !important;
+  }
+
+  #filterDrawerShell .mobile-cards-per-page-control{
+    min-height:52px !important;
+    padding:8px 10px !important;
+    border-radius:11px !important;
+  }
+
+  #filterDrawerShell .mobile-cards-per-page-control strong{
+    font-size:11px !important;
+  }
+
+  #filterDrawerShell .mobile-cards-per-page-control small{
+    font-size:8.5px !important;
+  }
+
+  #filterDrawerShell .mobile-cards-per-page-control select{
+    min-width:70px !important;
+    min-height:36px !important;
+    font-size:12px !important;
+    font-weight:800 !important;
+  }
+
+  #filterDrawerShell .grade-shortcuts{
+    padding:0 14px 12px !important;
+    gap:6px !important;
+  }
+
+  #filterDrawerShell .grade-shortcuts button{
+    min-height:38px !important;
+    padding:6px 10px !important;
+    font-size:10px !important;
+  }
+
+  #filterDrawerShell .filter-drawer-footer{
+    position:sticky !important;
+    bottom:0 !important;
+    padding:10px 14px calc(10px + env(safe-area-inset-bottom)) !important;
+    background:rgba(16,18,22,.98) !important;
+    backdrop-filter:blur(14px) !important;
+    -webkit-backdrop-filter:blur(14px) !important;
+  }
+
+  #filterDrawerShell .filter-drawer-apply{
+    min-height:44px !important;
+    border-radius:11px !important;
+    font-size:11px !important;
+    font-weight:800 !important;
+  }
+
+  /* ---------- Mobile cards: marketplace-style 2-column layout ---------- */
+  #invGrid.grid:not(.compact-list),
+  .inventory-grid:not(.compact-list){
+    gap:9px !important;
+  }
+
+  #invGrid .clean-notes,
+  #invGrid .clean-era-pill,
+  #invGrid .clean-series-pill{
+    display:none !important;
+  }
+
+  /* Keep bottom result controls readable and consistent. */
+  .sticky-mobile-results-bar{
+    min-height:58px !important;
+    padding:7px 8px calc(7px + env(safe-area-inset-bottom)) !important;
+    gap:6px !important;
+    border-top-color:rgba(255,255,255,.10) !important;
+  }
+
+  .sticky-mobile-results-action{
+    min-height:44px !important;
+    border-radius:10px !important;
+  }
+
+  .sticky-mobile-results-action > span{
+    font-size:9px !important;
+    font-weight:800 !important;
+    text-transform:uppercase !important;
+  }
+
+  .sticky-mobile-results-action > small{
+    font-size:8px !important;
+  }
+
+  /* ---------- Card Details mobile hierarchy ---------- */
+  .modal.card-details-modal{
+    border-radius:0 !important;
+  }
+
+  .modal.card-details-modal #detailsMount{
+    padding-bottom:calc(92px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .modal.card-details-modal .detail-header-mobile{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    align-items:start !important;
+    gap:9px !important;
+    margin-bottom:10px !important;
+  }
+
+  .modal.card-details-modal .detail-header-mobile .eyebrow{
+    font-size:8px !important;
+    letter-spacing:.12em !important;
+  }
+
+  .modal.card-details-modal .detail-header-mobile h2{
+    margin:3px 0 4px !important;
+    font-size:clamp(21px,6.3vw,28px) !important;
+    line-height:.98 !important;
+  }
+
+  .modal.card-details-modal .detail-header-mobile .detail-meta{
+    font-size:10px !important;
+  }
+
+  .modal.card-details-modal .detail-currency-control{
+    min-height:38px !important;
+    padding:4px 5px 4px 7px !important;
+    border-radius:10px !important;
+  }
+
+  .modal.card-details-modal .detail-currency-control > span{
+    display:none !important;
+  }
+
+  .modal.card-details-modal .detail-currency-control select{
+    min-height:29px !important;
+    height:29px !important;
+    font-size:10px !important;
+    font-weight:800 !important;
+  }
+
+  .modal.card-details-modal .filtered-result-nav{
+    min-height:48px !important;
+    margin-bottom:10px !important;
+    padding:5px !important;
+    gap:5px !important;
+    border-radius:12px !important;
+  }
+
+  .modal.card-details-modal .filtered-result-nav-btn{
+    min-height:38px !important;
+    padding:6px 9px !important;
+    font-size:9px !important;
+  }
+
+  .modal.card-details-modal .filtered-result-position span{
+    font-size:7px !important;
+  }
+
+  .modal.card-details-modal .filtered-result-position strong{
+    font-size:10px !important;
+  }
+
+  .modal.card-details-modal .detail-summary-strip{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:7px !important;
+    margin-bottom:10px !important;
+  }
+
+  .modal.card-details-modal .detail-summary-price{
+    grid-column:1 / -1 !important;
+  }
+
+  .modal.card-details-modal .detail-summary-card{
+    padding:9px 10px !important;
+    border-radius:11px !important;
+  }
+
+  .modal.card-details-modal .detail-summary-card span{
+    font-size:8px !important;
+  }
+
+  .modal.card-details-modal .detail-summary-card strong{
+    font-size:12.5px !important;
+  }
+
+  .modal.card-details-modal .detail-purchase-panel{
+    margin:10px 0 !important;
+    padding:9px !important;
+    gap:7px !important;
+  }
+
+  .modal.card-details-modal .detail-buy-cta > summary{
+    min-height:50px !important;
+  }
+
+  .modal.card-details-modal .detail-buyer-confidence{
+    gap:6px !important;
+    margin-bottom:12px !important;
+  }
+
+  .modal.card-details-modal .detail-confidence-item{
+    min-height:0 !important;
+    padding:8px 9px !important;
+  }
+
+  .modal.card-details-modal .detail-confidence-item strong{
+    font-size:10px !important;
+  }
+
+  .modal.card-details-modal .detail-confidence-item small{
+    font-size:8.5px !important;
+  }
+
+  .modal.card-details-modal .details-info-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:7px !important;
+  }
+
+  .modal.card-details-modal .details-info-grid .detail-item{
+    padding:10px 11px !important;
+    border-radius:10px !important;
+  }
+
+  .modal.card-details-modal .details-info-grid .detail-label{
+    margin-bottom:4px !important;
+    font-size:8px !important;
+  }
+
+  .modal.card-details-modal .details-info-grid .detail-value{
+    font-size:12px !important;
+  }
+
+  .modal.card-details-modal .related-cards-section{
+    margin-top:20px !important;
+    padding-top:14px !important;
+  }
+
+  .modal.card-details-modal .related-cards-head h3{
+    font-size:18px !important;
+  }
+
+  .modal.card-details-modal .related-cards-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:8px !important;
+  }
+
+  /* The existing global fixed Contact-to-Buy bar is the single mobile CTA. */
+  #mobileDetailCta{
+    min-height:66px !important;
+    padding:8px 10px calc(8px + env(safe-area-inset-bottom)) !important;
+    gap:9px !important;
+  }
+
+  #mobileDetailCta .mobile-detail-cta-price small{
+    font-size:8px !important;
+  }
+
+  #mobileDetailCta .mobile-detail-cta-price strong{
+    font-size:18px !important;
+  }
+
+  #mobileDetailCta .mobile-detail-cta-action{
+    min-height:46px !important;
+    padding:0 15px !important;
+    border-radius:12px !important;
+    font-size:11.5px !important;
+    text-transform:none !important;
+  }
+
+  /* ---------- Mobile light-mode parity ---------- */
+  body.light-mode #filterDrawerShell .filter-drawer-footer{
+    background:rgba(255,255,255,.98) !important;
+    border-top-color:#ddd7cc !important;
+  }
+
+  body.light-mode .mobile-search-filter-row .mobile-search-filter-btn,
+  body.light-mode #filterDrawerShell .overview-select-btn,
+  body.light-mode #filterDrawerShell .mobile-cards-per-page-control{
+    background:#fff !important;
+    border-color:#d5d0c6 !important;
+    color:#343a40 !important;
+  }
+
+  body.light-mode .sticky-mobile-results-bar{
+    background:rgba(250,249,246,.97) !important;
+    border-top-color:#d7d2c8 !important;
+  }
+
+  body.light-mode nav.mainnav > a[data-route="inventory"],
+  body.light-mode nav.mainnav > a[data-route="collection"],
+  body.light-mode nav.mainnav > a[data-route="sold"],
+  body.light-mode nav.mainnav > .mobile-more-toggle{
+    color:#5e656c !important;
+  }
+}
+
+/* Normal phones: two cards per row, vertical image-first cards. */
+@media (min-width:360px) and (max-width:800px){
+  #invGrid.grid:not(.compact-list),
+  .inventory-grid:not(.compact-list){
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card{
+    display:flex !important;
+    flex-direction:column !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    height:auto !important;
+    max-height:none !important;
+    overflow:hidden !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card > .thumb-wrap,
+  #invGrid.grid:not(.compact-list) .card > .thumb-placeholder{
+    position:relative !important;
+    display:block !important;
+    width:100% !important;
+    min-height:0 !important;
+    height:auto !important;
+    aspect-ratio:3 / 4.35 !important;
+    overflow:hidden !important;
+    flex:0 0 auto !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card > .thumb-wrap .thumb{
+    position:absolute !important;
+    inset:0 !important;
+    width:100% !important;
+    height:100% !important;
+    min-height:0 !important;
+    object-fit:cover !important;
+    object-position:center !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-card-body{
+    display:flex !important;
+    flex-direction:column !important;
+    grid-column:auto !important;
+    grid-row:auto !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    height:auto !important;
+    padding:9px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-card-name{
+    font-size:11px !important;
+    line-height:1.15 !important;
+    min-height:25px !important;
+    -webkit-line-clamp:2 !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-card-reference{
+    font-size:8.5px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-price-block{
+    margin-top:7px !important;
+    padding-top:7px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-price-primary{
+    font-size:14px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-price-secondary{
+    font-size:8px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-all-pills{
+    gap:4px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-all-pills .clean-grade-badge,
+  #invGrid.grid:not(.compact-list) .clean-all-pills .clean-meta-pill{
+    padding:3px 5px !important;
+    font-size:7.5px !important;
+  }
+}
+
+/* Very narrow phones keep the proven single-card horizontal layout. */
+@media (max-width:359px){
+  #invGrid.grid:not(.compact-list),
+  .inventory-grid:not(.compact-list){
+    grid-template-columns:1fr !important;
+  }
+
+  .modal.card-details-modal .details-info-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  nav.mainnav{
+    gap:3px !important;
+  }
+
+  nav.mainnav > a[data-route="inventory"],
+  nav.mainnav > a[data-route="collection"],
+  nav.mainnav > a[data-route="sold"],
+  nav.mainnav > .mobile-more-toggle{
+    font-size:9px !important;
+    padding:0 2px !important;
+  }
+}
+
+
+/* ==========================================================
+   V155 BETA — MOBILE COMPOSITION RESET
+   Fix the inherited stacked-header / floating-currency layout.
+   Desktop remains V153/V154 production-compatible.
+   ========================================================== */
+@media (max-width:800px){
+  /* ---------- Header: compact brand row + exactly one nav row ---------- */
+  .sidebar{
+    padding:6px 12px 8px !important;
+    gap:6px !important;
+    min-height:0 !important;
+    height:auto !important;
+  }
+
+  .shop-brand{
+    min-height:58px !important;
+    height:58px !important;
+    padding:0 44px !important;
+    margin:0 !important;
+  }
+
+  .logo-click-target,
+  .logo-click-target .shop-logo{
+    width:50px !important;
+    height:50px !important;
+    min-width:50px !important;
+    flex-basis:50px !important;
+  }
+
+  .mobile-header-theme-toggle{
+    right:0 !important;
+    width:38px !important;
+    height:38px !important;
+    min-width:38px !important;
+    min-height:38px !important;
+    border-radius:11px !important;
+  }
+
+  #mainnav,
+  nav.mainnav{
+    position:relative !important;
+    display:grid !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    grid-template-rows:44px !important;
+    grid-auto-rows:0 !important;
+    align-items:stretch !important;
+    width:100% !important;
+    min-height:44px !important;
+    height:44px !important;
+    padding:0 !important;
+    margin:0 !important;
+    gap:5px !important;
+    overflow:visible !important;
+  }
+
+  /* Logo is Home. Hard-hide every legacy primary item except the four below. */
+  #mainnav > a,
+  #mainnav > .reviews-desktop-nav,
+  #mainnav > .mobile-secondary-nav{
+    display:none !important;
+  }
+
+  #mainnav > a[href="#/home"],
+  #mainnav > a[data-route="home"]{
+    display:none !important;
+  }
+
+  #mainnav > a[data-route="inventory"],
+  #mainnav > a[data-route="collection"],
+  #mainnav > a[data-route="sold"],
+  #mainnav > .mobile-more-toggle{
+    display:flex !important;
+    position:relative !important;
+    min-width:0 !important;
+    width:100% !important;
+    height:44px !important;
+    min-height:44px !important;
+    padding:0 4px !important;
+    margin:0 !important;
+    align-items:center !important;
+    justify-content:center !important;
+    border-radius:10px !important;
+    font-size:10.5px !important;
+    font-weight:760 !important;
+    letter-spacing:.045em !important;
+    text-transform:uppercase !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+  }
+
+  #mainnav > a[data-route="inventory"]{order:1 !important;grid-column:1 !important;}
+  #mainnav > a[data-route="collection"]{order:2 !important;grid-column:2 !important;}
+  #mainnav > a[data-route="sold"]{order:3 !important;grid-column:3 !important;}
+  #mainnav > .mobile-more-toggle{order:4 !important;grid-column:4 !important;}
+
+  #mainnav > a[data-route="inventory"] .ic,
+  #mainnav > a[data-route="collection"] .ic,
+  #mainnav > a[data-route="sold"] .ic{
+    display:none !important;
+  }
+
+  #mainnav > .mobile-more-toggle .ic{
+    font-size:14px !important;
+    width:auto !important;
+    min-width:0 !important;
+  }
+
+  #mainnav > a.active{
+    background:rgba(227,179,65,.075) !important;
+    border-color:rgba(227,179,65,.26) !important;
+    color:#f0c45c !important;
+  }
+
+  #mainnav > a.active::before{
+    left:15% !important;
+    right:15% !important;
+    top:auto !important;
+    bottom:2px !important;
+    width:auto !important;
+    height:2px !important;
+  }
+
+  /* More is a floating menu; opening it must not make the header two rows tall. */
+  #mainnav > .mobile-more-menu:not([hidden]){
+    position:absolute !important;
+    top:50px !important;
+    left:0 !important;
+    right:0 !important;
+    z-index:980 !important;
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:5px !important;
+    width:100% !important;
+    max-height:min(66dvh,520px) !important;
+    overflow-y:auto !important;
+    margin:0 !important;
+    padding:8px !important;
+    border-radius:14px !important;
+    box-shadow:0 20px 48px rgba(0,0,0,.48) !important;
+  }
+
+  #mainnav > .mobile-more-menu > a{
+    min-height:42px !important;
+    padding:8px 9px !important;
+    font-size:10.5px !important;
+  }
+
+  /* ---------- Listing hierarchy: remove redundant title / floating currency ---------- */
+  #view > .listing-page-head,
+  .listing-page-head{
+    display:none !important;
+  }
+
+  .main{
+    padding-top:10px !important;
+    padding-left:10px !important;
+    padding-right:10px !important;
+  }
+
+  /* Categories sit immediately below the header. */
+  .listing-filter-tools{
+    margin-top:0 !important;
+    margin-bottom:8px !important;
+  }
+
+  .listing-filter-tools .desktop-category-filter-block{
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  .listing-filter-tools .desktop-quick-filters-collapsible{
+    display:flex !important;
+    width:100% !important;
+    gap:7px !important;
+    padding:2px 1px 4px !important;
+    margin:0 !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    scrollbar-width:none !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+
+  .listing-filter-tools .desktop-quick-filters-collapsible::-webkit-scrollbar{display:none !important;}
+
+  .listing-filter-tools .desktop-quick-filters-collapsible .quick-filter{
+    flex:0 0 auto !important;
+    min-height:38px !important;
+    padding:0 13px !important;
+    border-radius:999px !important;
+    font-size:10px !important;
+    font-weight:750 !important;
+  }
+
+  /* Hide desktop-only context/actions from the mobile composition. */
+  .listing-filter-tools > .inventory-toolbar-context,
+  .listing-filter-tools > .inventory-display-tools,
+  .desktop-quick-filters-toggle{
+    display:none !important;
+  }
+
+  /* Search + Filters are a single balanced row. */
+  .mobile-search-filter-row{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 88px !important;
+    gap:7px !important;
+    width:100% !important;
+    margin:0 0 7px !important;
+  }
+
+  .mobile-search-filter-row .mobile-inventory-search,
+  .mobile-search-filter-row .mobile-search-filter-btn{
+    margin:0 !important;
+  }
+
+  .mobile-search-filter-row .mobile-inventory-search input[type="search"],
+  .mobile-search-filter-row .mobile-search-filter-btn{
+    height:46px !important;
+    min-height:46px !important;
+    border-radius:11px !important;
+  }
+
+  .mobile-search-filter-row .mobile-inventory-search input[type="search"]{
+    padding-left:36px !important;
+    padding-right:36px !important;
+    font-size:12px !important;
+  }
+
+  .mobile-search-filter-row .mobile-search-filter-btn{
+    width:88px !important;
+    min-width:88px !important;
+    padding:0 8px !important;
+    font-size:10.5px !important;
+  }
+
+  /* Result count + currency become one quiet utility row. */
+  .inventory-mobile-compact-result{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:10px !important;
+    width:100% !important;
+    min-height:38px !important;
+    margin:0 0 7px !important;
+    padding:0 1px !important;
+    color:var(--text-muted) !important;
+    font-size:10px !important;
+  }
+
+  .inventory-mobile-compact-result .mobile-result-count-copy{
+    display:inline-flex !important;
+    align-items:baseline !important;
+    gap:4px !important;
+    white-space:nowrap !important;
+  }
+
+  .inventory-mobile-compact-result .mobile-result-count-copy strong{
+    color:var(--text) !important;
+    font-size:12px !important;
+  }
+
+  .inventory-mobile-compact-result .mobile-results-currency{
+    min-height:34px !important;
+    height:34px !important;
+    padding:3px 4px 3px 8px !important;
+    margin:0 !important;
+    border-radius:10px !important;
+    gap:5px !important;
+  }
+
+  .inventory-mobile-compact-result .mobile-results-currency > span:not(.sr-only){
+    font-size:8px !important;
+    font-weight:730 !important;
+    text-transform:uppercase !important;
+  }
+
+  .inventory-mobile-compact-result .mobile-results-currency select{
+    min-height:26px !important;
+    height:26px !important;
+    padding:2px 20px 2px 6px !important;
+    font-size:9.5px !important;
+    font-weight:800 !important;
+  }
+
+  /* ---------- Card grid: keep 2 columns but reduce vertical heaviness ---------- */
+  #invGrid.grid:not(.compact-list),
+  .inventory-grid:not(.compact-list){
+    gap:8px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card{
+    border-radius:12px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card > .thumb-wrap,
+  #invGrid.grid:not(.compact-list) .card > .thumb-placeholder{
+    aspect-ratio:4 / 5.2 !important;
+    background:#090b0e !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card > .thumb-wrap .thumb{
+    object-fit:contain !important;
+    object-position:center !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-card-body{
+    padding:8px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-card-name{
+    font-size:10.5px !important;
+    line-height:1.14 !important;
+    min-height:24px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-price-primary{
+    font-size:13.5px !important;
+  }
+
+  /* Gallery navigation should not dominate a small card image. */
+  .listing-gallery-arrow{
+    width:27px !important;
+    height:27px !important;
+    border-radius:50% !important;
+    border-color:rgba(255,255,255,.16) !important;
+    background:rgba(6,8,11,.62) !important;
+    font-size:18px !important;
+    opacity:.68 !important;
+  }
+
+  .listing-gallery-arrow-prev{left:5px !important;}
+  .listing-gallery-arrow-next{right:5px !important;}
+
+  .listing-gallery-counter{
+    right:5px !important;
+    bottom:5px !important;
+    padding:2px 5px !important;
+    font-size:6.5px !important;
+  }
+
+  /* Light-mode parity for the new utility row. */
+  body.light-mode .inventory-mobile-compact-result .mobile-results-currency{
+    background:#fff !important;
+    border-color:#d5d0c6 !important;
+  }
+}
+
+@media (min-width:360px) and (max-width:800px){
+  #invGrid.grid:not(.compact-list),
+  .inventory-grid:not(.compact-list){
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
+@media (max-width:359px){
+  #invGrid.grid:not(.compact-list),
+  .inventory-grid:not(.compact-list){
+    grid-template-columns:1fr !important;
+  }
+
+  #mainnav > a[data-route="inventory"],
+  #mainnav > a[data-route="collection"],
+  #mainnav > a[data-route="sold"],
+  #mainnav > .mobile-more-toggle{
+    font-size:9.5px !important;
+  }
+}
+
+
+/* ==========================================================
+   V156 BETA — MOBILE MULTI-SLAB DETAILS
+   Keep purchase information high on the page. Multi-slab
+   breakdown is collapsed by default on phones and expands on demand.
+   Desktop keeps the existing full slab table.
+   ========================================================== */
+.detail-slab-mobile{
+  display:none;
+}
+
+@media (max-width:800px){
+  .modal.card-details-modal .detail-slab-list-desktop{
+    display:none !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile{
+    display:block !important;
+    width:100% !important;
+    margin:8px 0 10px !important;
+    border:1px solid rgba(255,255,255,.075) !important;
+    border-radius:12px !important;
+    overflow:hidden !important;
+    background:rgba(255,255,255,.018) !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile > summary{
+    min-height:54px !important;
+    padding:9px 11px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:10px !important;
+    list-style:none !important;
+    cursor:pointer !important;
+    user-select:none !important;
+    -webkit-tap-highlight-color:transparent !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile > summary::-webkit-details-marker{
+    display:none !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile-copy{
+    min-width:0 !important;
+    display:grid !important;
+    gap:3px !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile-copy strong{
+    color:var(--text) !important;
+    font-size:11px !important;
+    font-weight:760 !important;
+    line-height:1.15 !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile-copy small{
+    color:var(--text-muted) !important;
+    font-size:9px !important;
+    font-weight:650 !important;
+    line-height:1.2 !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile-action{
+    flex:0 0 auto !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    gap:5px !important;
+    color:#e3b341 !important;
+    font-size:9px !important;
+    font-weight:760 !important;
+    white-space:nowrap !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile-open{
+    display:none !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile[open] .detail-slab-mobile-closed{
+    display:none !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile[open] .detail-slab-mobile-open{
+    display:inline !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile-chevron{
+    font-size:12px !important;
+    transition:transform .18s ease !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile[open] .detail-slab-mobile-chevron{
+    transform:rotate(180deg) !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile-body{
+    border-top:1px solid rgba(255,255,255,.065) !important;
+    background:rgba(0,0,0,.08) !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile .detail-slab-row{
+    min-height:44px !important;
+    padding:8px 11px !important;
+    display:flex !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:8px !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile .detail-slab-row + .detail-slab-row{
+    border-top:1px solid rgba(255,255,255,.055) !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile .detail-slab-row > div:first-child{
+    min-width:0 !important;
+    display:flex !important;
+    align-items:baseline !important;
+    gap:7px !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile .detail-slab-number{
+    color:var(--text-muted) !important;
+    font-size:8.5px !important;
+    white-space:nowrap !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile .detail-slab-row strong{
+    color:var(--text) !important;
+    font-size:10.5px !important;
+  }
+
+  .modal.card-details-modal .detail-slab-mobile .detail-slab-meta{
+    width:auto !important;
+    flex:0 0 auto !important;
+    display:flex !important;
+    justify-content:flex-end !important;
+    gap:5px !important;
+    color:var(--text-muted) !important;
+    font-size:8px !important;
+  }
+
+  /*
+    Purchase CTA now visually precedes the optional slab details.
+    The fixed bottom Contact-to-Buy remains the persistent mobile action.
+  */
+  .modal.card-details-modal .detail-purchase-panel{
+    margin-bottom:8px !important;
+  }
+
+  body.light-mode .modal.card-details-modal .detail-slab-mobile{
+    border-color:#d6d0c7 !important;
+    background:#fff !important;
+  }
+
+  body.light-mode .modal.card-details-modal .detail-slab-mobile-body{
+    border-color:#e1dcd3 !important;
+    background:#faf8f4 !important;
+  }
+
+  body.light-mode .modal.card-details-modal .detail-slab-mobile .detail-slab-row + .detail-slab-row{
+    border-color:#e6e1d8 !important;
+  }
+
+  body.light-mode .modal.card-details-modal .detail-slab-mobile-action{
+    color:#8b6416 !important;
+  }
+}
+
+/* ==========================================================
+   V158 BETA — MOBILE NAVIGATION HARD RESET
+   Explicit four-item mobile nav. Prevent legacy mobile rules from
+   reintroducing Home, wrapping Collection, or expanding More inline.
+   ========================================================== */
+@media (max-width:800px){
+  .sidebar{
+    overflow:visible !important;
+  }
+
+  /* Brand stays on its own compact row. */
+  .shop-brand{
+    min-height:58px !important;
+    height:58px !important;
+    margin:0 !important;
+  }
+
+  /* Exactly four visible primary items, always one row. */
+  #mainnav{
+    position:relative !important;
+    display:grid !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    grid-template-rows:44px !important;
+    grid-auto-flow:column !important;
+    gap:5px !important;
+    width:100% !important;
+    min-width:0 !important;
+    height:44px !important;
+    min-height:44px !important;
+    max-height:44px !important;
+    padding:0 !important;
+    margin:0 !important;
+    overflow:visible !important;
+  }
+
+  /* Hard reset all legacy direct nav links first. */
+  #mainnav > a,
+  #mainnav > .reviews-desktop-nav,
+  #mainnav > .mobile-secondary-nav{
+    display:none !important;
+  }
+
+  #mainnav > .mobile-home-nav,
+  #mainnav > a[data-route="home"]{
+    display:none !important;
+  }
+
+  #mainnav > .mobile-primary-nav:not(.mobile-more-toggle),
+  #mainnav > .mobile-more-toggle{
+    display:flex !important;
+    position:relative !important;
+    grid-column:auto !important;
+    grid-row:1 !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    height:44px !important;
+    min-height:44px !important;
+    max-height:44px !important;
+    margin:0 !important;
+    padding:0 3px !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:4px !important;
+    border-radius:10px !important;
+    box-sizing:border-box !important;
+    font-size:clamp(9.5px,2.65vw,11px) !important;
+    font-weight:760 !important;
+    letter-spacing:.025em !important;
+    line-height:1 !important;
+    text-transform:uppercase !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:clip !important;
+  }
+
+  #mainnav > a[data-route="inventory"]{order:1 !important;}
+  #mainnav > a[data-route="collection"]{order:2 !important;}
+  #mainnav > a[data-route="sold"]{order:3 !important;}
+  #mainnav > .mobile-more-toggle{order:4 !important;}
+
+  #mainnav > .mobile-primary-nav .nav-count,
+  #mainnav > .mobile-primary-nav:not(.mobile-more-toggle) .ic{
+    display:none !important;
+  }
+
+  #mainnav > .mobile-more-toggle .ic{
+    display:inline !important;
+    flex:0 0 auto !important;
+    width:auto !important;
+    min-width:0 !important;
+    font-size:12px !important;
+  }
+
+  #mainnav > .mobile-more-toggle .mobile-more-caret{
+    flex:0 0 auto !important;
+    font-size:8px !important;
+  }
+
+  /* More is a real popover anchored to the right, never a grid row. */
+  #mainnav > .mobile-more-menu,
+  #mainnav > .mobile-more-menu:not([hidden]){
+    position:absolute !important;
+    grid-column:auto !important;
+    grid-row:auto !important;
+    top:calc(100% + 8px) !important;
+    right:0 !important;
+    left:auto !important;
+    width:min(360px,calc(100vw - 24px)) !important;
+    max-width:calc(100vw - 24px) !important;
+    height:auto !important;
+    max-height:min(58dvh,460px) !important;
+    margin:0 !important;
+    padding:8px !important;
+    border:1px solid var(--border) !important;
+    border-radius:14px !important;
+    background:var(--panel) !important;
+    box-shadow:0 20px 46px rgba(0,0,0,.50) !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    z-index:3000 !important;
+  }
+
+  #mainnav > .mobile-more-menu[hidden]{
+    display:none !important;
+  }
+
+  #mainnav > .mobile-more-menu:not([hidden]){
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:6px !important;
+  }
+
+  #mainnav > .mobile-more-menu > a{
+    display:flex !important;
+    min-width:0 !important;
+    min-height:42px !important;
+    padding:8px 9px !important;
+    margin:0 !important;
+    align-items:center !important;
+    gap:7px !important;
+    border-radius:9px !important;
+    font-size:10px !important;
+    line-height:1.2 !important;
+    white-space:normal !important;
+  }
+
+  /* Remove collection duplication if any older markup/runtime adds it to More. */
+  #mainnav > .mobile-more-menu > a[data-route="collection"],
+  #mainnav > .mobile-more-menu > a[data-route="inventory"],
+  #mainnav > .mobile-more-menu > a[data-route="sold"]{
+    display:none !important;
+  }
+
+  body.light-mode #mainnav > .mobile-more-menu,
+  body.light-mode #mainnav > .mobile-more-menu:not([hidden]){
+    background:#fffdf8 !important;
+    border-color:#d8d2c7 !important;
+    box-shadow:0 18px 42px rgba(50,43,32,.16) !important;
+  }
+}
+
+@media (max-width:380px){
+  #mainnav{
+    gap:3px !important;
+  }
+
+  #mainnav > .mobile-primary-nav:not(.mobile-more-toggle),
+  #mainnav > .mobile-more-toggle{
+    padding:0 2px !important;
+    font-size:9px !important;
+    letter-spacing:0 !important;
+  }
+
+  #mainnav > .mobile-more-menu:not([hidden]){
+    width:calc(100vw - 16px) !important;
+    max-width:calc(100vw - 16px) !important;
+    grid-template-columns:1fr 1fr !important;
+  }
+}
+
+
+/* ==========================================================
+   V159 BETA — MOBILE HEADER: NAV AROUND CENTER LOGO
+   Layout: Inventory / Collection | Logo | Sold / More
+   Logo is Home. Theme lives inside More. More is fully opaque.
+   ========================================================== */
+@media (max-width:800px){
+  .sidebar{
+    position:relative !important;
+    min-height:76px !important;
+    height:76px !important;
+    padding:6px 10px !important;
+    overflow:visible !important;
+    box-sizing:border-box !important;
+    z-index:1200 !important;
+  }
+
+  .sidebar > div:first-child{
+    position:relative !important;
+    height:64px !important;
+    min-height:64px !important;
+    margin:0 !important;
+    padding:0 !important;
+    z-index:1210 !important;
+    pointer-events:none !important;
+  }
+
+  .shop-brand{
+    position:relative !important;
+    width:100% !important;
+    height:64px !important;
+    min-height:64px !important;
+    margin:0 !important;
+    padding:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    pointer-events:none !important;
+  }
+
+  .shop-brand .logo-click-target{
+    position:relative !important;
+    z-index:1230 !important;
+    width:58px !important;
+    height:58px !important;
+    min-width:58px !important;
+    flex:0 0 58px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    pointer-events:auto !important;
+  }
+
+  .shop-brand .shop-logo{
+    width:58px !important;
+    height:58px !important;
+    min-width:58px !important;
+    max-width:58px !important;
+    object-fit:contain !important;
+  }
+
+  .shop-brand .text-click-target,
+  .shop-brand-text,
+  .mobile-header-social-links{
+    display:none !important;
+  }
+
+  #mainnav{
+    position:absolute !important;
+    top:6px !important;
+    left:10px !important;
+    right:10px !important;
+    width:auto !important;
+    height:64px !important;
+    min-height:64px !important;
+    max-height:64px !important;
+    margin:0 !important;
+    padding:0 !important;
+    display:grid !important;
+    grid-template-columns:
+      minmax(0,1.08fr)
+      minmax(0,1.14fr)
+      64px
+      minmax(0,.72fr)
+      minmax(0,.86fr) !important;
+    grid-template-rows:64px !important;
+    gap:4px !important;
+    align-items:center !important;
+    overflow:visible !important;
+    z-index:1220 !important;
+    pointer-events:none !important;
+  }
+
+  #mainnav > a,
+  #mainnav > .reviews-desktop-nav,
+  #mainnav > .mobile-secondary-nav{
+    display:none !important;
+  }
+
+  #mainnav > a[data-route="home"],
+  #mainnav > .mobile-home-nav{
+    display:none !important;
+  }
+
+  #mainnav > a[data-route="inventory"],
+  #mainnav > a[data-route="collection"],
+  #mainnav > a[data-route="sold"],
+  #mainnav > .mobile-more-toggle{
+    display:flex !important;
+    position:relative !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    height:44px !important;
+    min-height:44px !important;
+    max-height:44px !important;
+    margin:0 !important;
+    padding:0 4px !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:3px !important;
+    box-sizing:border-box !important;
+    border-radius:11px !important;
+    font-size:clamp(8.7px,2.35vw,10.5px) !important;
+    font-weight:760 !important;
+    letter-spacing:.015em !important;
+    line-height:1 !important;
+    text-transform:uppercase !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    pointer-events:auto !important;
+  }
+
+  #mainnav > a[data-route="inventory"]{
+    grid-column:1 !important;
+    grid-row:1 !important;
+    order:initial !important;
+  }
+  #mainnav > a[data-route="collection"]{
+    grid-column:2 !important;
+    grid-row:1 !important;
+    order:initial !important;
+  }
+  #mainnav > a[data-route="sold"]{
+    grid-column:4 !important;
+    grid-row:1 !important;
+    order:initial !important;
+  }
+  #mainnav > .mobile-more-toggle{
+    grid-column:5 !important;
+    grid-row:1 !important;
+    order:initial !important;
+  }
+
+  #mainnav > a[data-route="inventory"] .ic,
+  #mainnav > a[data-route="collection"] .ic,
+  #mainnav > a[data-route="sold"] .ic,
+  #mainnav > a[data-route="inventory"] .nav-count,
+  #mainnav > a[data-route="collection"] .nav-count,
+  #mainnav > a[data-route="sold"] .nav-count,
+  #mainnav > .mobile-more-toggle .ic{
+    display:none !important;
+  }
+
+  #mainnav > .mobile-more-toggle .mobile-more-caret{
+    display:inline !important;
+    flex:0 0 auto !important;
+    font-size:7px !important;
+  }
+
+  #mainnav > a.active{
+    border-color:rgba(222,170,53,.50) !important;
+    background:rgba(222,170,53,.09) !important;
+    color:#f0bd43 !important;
+    box-shadow:inset 0 -2px 0 rgba(222,170,53,.70) !important;
+  }
+
+  #mainnav > a.active::before,
+  #mainnav > a.active::after{
+    display:none !important;
+    content:none !important;
+  }
+
+  #mainnav > .mobile-more-menu,
+  #mainnav > .mobile-more-menu:not([hidden]){
+    position:absolute !important;
+    top:calc(100% + 8px) !important;
+    right:0 !important;
+    left:auto !important;
+    grid-column:auto !important;
+    grid-row:auto !important;
+    width:min(342px,calc(100vw - 20px)) !important;
+    max-width:calc(100vw - 20px) !important;
+    max-height:min(62dvh,500px) !important;
+    height:auto !important;
+    margin:0 !important;
+    padding:9px !important;
+    border:1px solid #343941 !important;
+    border-radius:15px !important;
+    background:#171a20 !important;
+    background-color:#171a20 !important;
+    background-image:none !important;
+    opacity:1 !important;
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+    box-shadow:0 22px 55px rgba(0,0,0,.72) !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    z-index:5000 !important;
+    pointer-events:auto !important;
+  }
+
+  #mainnav > .mobile-more-menu[hidden]{
+    display:none !important;
+  }
+
+  #mainnav > .mobile-more-menu:not([hidden]){
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:6px !important;
+  }
+
+  #mainnav > .mobile-more-menu > a{
+    display:flex !important;
+    min-width:0 !important;
+    min-height:44px !important;
+    padding:9px 10px !important;
+    align-items:center !important;
+    gap:7px !important;
+    border:1px solid transparent !important;
+    border-radius:10px !important;
+    background:#1d2128 !important;
+    color:#d7dbe1 !important;
+    font-size:10px !important;
+    font-weight:650 !important;
+    line-height:1.2 !important;
+    white-space:normal !important;
+    opacity:1 !important;
+  }
+
+  #mainnav > .mobile-more-menu > a:hover,
+  #mainnav > .mobile-more-menu > a:focus-visible,
+  #mainnav > .mobile-more-menu > a.active{
+    border-color:rgba(222,170,53,.35) !important;
+    background:#242832 !important;
+    color:#f2c253 !important;
+  }
+
+  #mainnav > .mobile-more-menu > a[data-route="inventory"],
+  #mainnav > .mobile-more-menu > a[data-route="collection"],
+  #mainnav > .mobile-more-menu > a[data-route="sold"]{
+    display:none !important;
+  }
+
+  #mainnav > .mobile-more-menu .mobile-more-theme-toggle{
+    grid-column:1 / -1 !important;
+    width:100% !important;
+    min-height:44px !important;
+    margin:2px 0 0 !important;
+    padding:9px 12px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
+    gap:9px !important;
+    border:1px solid #343941 !important;
+    border-radius:10px !important;
+    background:#1d2128 !important;
+    color:#d7dbe1 !important;
+    font-size:13px !important;
+    font-weight:700 !important;
+    pointer-events:auto !important;
+  }
+
+  #mainnav > .mobile-more-menu .mobile-more-theme-toggle::after{
+    content:"Light mode" !important;
+    font-size:10px !important;
+    letter-spacing:.02em !important;
+    text-transform:uppercase !important;
+  }
+
+  body.light-mode #mainnav > .mobile-more-menu,
+  body.light-mode #mainnav > .mobile-more-menu:not([hidden]){
+    border-color:#d7d0c5 !important;
+    background:#fffdf8 !important;
+    background-color:#fffdf8 !important;
+    box-shadow:0 20px 46px rgba(42,35,24,.22) !important;
+  }
+
+  body.light-mode #mainnav > .mobile-more-menu > a,
+  body.light-mode #mainnav > .mobile-more-menu .mobile-more-theme-toggle{
+    border-color:#e4ded4 !important;
+    background:#f7f4ee !important;
+    color:#4b5158 !important;
+  }
+
+  body.light-mode #mainnav > .mobile-more-menu .mobile-more-theme-toggle::after{
+    content:"Dark mode" !important;
+  }
+
+  .premium-desktop-nav,
+  .premium-desktop-utilities,
+  .premium-social-strip{
+    display:none !important;
+  }
+}
+
+@media (max-width:380px){
+  #mainnav{
+    left:7px !important;
+    right:7px !important;
+    grid-template-columns:
+      minmax(0,1.08fr)
+      minmax(0,1.13fr)
+      58px
+      minmax(0,.70fr)
+      minmax(0,.82fr) !important;
+    gap:2px !important;
+  }
+
+  .shop-brand .logo-click-target,
+  .shop-brand .shop-logo{
+    width:54px !important;
+    height:54px !important;
+    min-width:54px !important;
+    max-width:54px !important;
+  }
+
+  #mainnav > a[data-route="inventory"],
+  #mainnav > a[data-route="collection"],
+  #mainnav > a[data-route="sold"],
+  #mainnav > .mobile-more-toggle{
+    padding:0 2px !important;
+    font-size:8.2px !important;
+    letter-spacing:0 !important;
+  }
+
+  #mainnav > .mobile-more-menu:not([hidden]){
+    width:calc(100vw - 14px) !important;
+    max-width:calc(100vw - 14px) !important;
+  }
+}
+
+/* ==========================================================
+   V160 BETA — CLEAN MOBILE HEADER + MORE PANEL
+   Structural mobile reset. The center logo owns a real column;
+   navigation no longer overlays it. More is a solid compact panel.
+   ========================================================== */
+@media (max-width:800px){
+  /* Retire the separate brand row on phones. The logo now lives inside nav. */
+  body .shell .sidebar > div:first-child{
+    display:none !important;
+  }
+
+  body .shell .sidebar{
+    position:relative !important;
+    min-height:72px !important;
+    height:72px !important;
+    padding:0 10px !important;
+    overflow:visible !important;
+    box-sizing:border-box !important;
+    border-bottom:1px solid rgba(255,255,255,.07) !important;
+    background:#111319 !important;
+    z-index:1200 !important;
+  }
+
+  /* One real five-column row: Inventory / Collection / Logo / Sold / More. */
+  body .shell .sidebar nav#mainnav{
+    position:relative !important;
+    inset:auto !important;
+    width:100% !important;
+    height:72px !important;
+    min-height:72px !important;
+    max-height:72px !important;
+    margin:0 !important;
+    padding:0 !important;
+    display:grid !important;
+    grid-template-columns:minmax(0,1.05fr) minmax(0,1.18fr) 58px minmax(0,.72fr) minmax(0,.82fr) !important;
+    grid-template-rows:72px !important;
+    gap:4px !important;
+    align-items:center !important;
+    overflow:visible !important;
+    pointer-events:auto !important;
+    z-index:1210 !important;
+  }
+
+  /* Hide all legacy mobile/desktop links first. */
+  body .shell .sidebar nav#mainnav > a,
+  body .shell .sidebar nav#mainnav > button,
+  body .shell .sidebar nav#mainnav > .reviews-desktop-nav,
+  body .shell .sidebar nav#mainnav > .mobile-secondary-nav{
+    display:none !important;
+  }
+
+  body .shell .sidebar nav#mainnav > a[data-route="inventory"],
+  body .shell .sidebar nav#mainnav > a[data-route="collection"],
+  body .shell .sidebar nav#mainnav > a.mobile-nav-logo,
+  body .shell .sidebar nav#mainnav > a[data-route="sold"],
+  body .shell .sidebar nav#mainnav > #mobileMoreToggle{
+    display:flex !important;
+    position:relative !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    height:42px !important;
+    min-height:42px !important;
+    max-height:42px !important;
+    margin:0 !important;
+    padding:0 3px !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:3px !important;
+    border:0 !important;
+    border-radius:10px !important;
+    background:transparent !important;
+    color:#9ea4ae !important;
+    box-shadow:none !important;
+    box-sizing:border-box !important;
+    font-size:clamp(8.4px,2.3vw,10px) !important;
+    font-weight:760 !important;
+    letter-spacing:.018em !important;
+    line-height:1 !important;
+    text-transform:uppercase !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    order:initial !important;
+    grid-column:auto !important;
+    grid-row:1 !important;
+  }
+
+  body .shell .sidebar nav#mainnav > a[data-route="inventory"]{ grid-column:1 !important; }
+  body .shell .sidebar nav#mainnav > a[data-route="collection"]{ grid-column:2 !important; }
+  body .shell .sidebar nav#mainnav > a.mobile-nav-logo{ grid-column:3 !important; }
+  body .shell .sidebar nav#mainnav > a[data-route="sold"]{ grid-column:4 !important; }
+  body .shell .sidebar nav#mainnav > #mobileMoreToggle{ grid-column:5 !important; }
+
+  /* The logo is its own grid cell, so labels can never sit underneath it. */
+  body .shell .sidebar nav#mainnav > a.mobile-nav-logo{
+    width:58px !important;
+    height:58px !important;
+    min-width:58px !important;
+    min-height:58px !important;
+    max-width:58px !important;
+    max-height:58px !important;
+    padding:0 !important;
+    border-radius:50% !important;
+    overflow:visible !important;
+    z-index:3 !important;
+  }
+
+  body .shell .sidebar nav#mainnav > a.mobile-nav-logo img{
+    display:block !important;
+    width:58px !important;
+    height:58px !important;
+    max-width:58px !important;
+    object-fit:contain !important;
+    filter:drop-shadow(0 3px 10px rgba(222,170,53,.18)) !important;
+  }
+
+  /* Keep the primary row text-only and compact. */
+  body .shell .sidebar nav#mainnav > a[data-route="inventory"] .ic,
+  body .shell .sidebar nav#mainnav > a[data-route="collection"] .ic,
+  body .shell .sidebar nav#mainnav > a[data-route="sold"] .ic,
+  body .shell .sidebar nav#mainnav > a[data-route="inventory"] .nav-count,
+  body .shell .sidebar nav#mainnav > a[data-route="collection"] .nav-count,
+  body .shell .sidebar nav#mainnav > a[data-route="sold"] .nav-count,
+  body .shell .sidebar nav#mainnav > #mobileMoreToggle .ic{
+    display:none !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreToggle .mobile-more-caret{
+    display:inline !important;
+    flex:0 0 auto !important;
+    font-size:7px !important;
+    opacity:.75 !important;
+  }
+
+  /* Premium active state: text + underline, no large filled box. */
+  body .shell .sidebar nav#mainnav > a[data-route].active{
+    background:transparent !important;
+    border:0 !important;
+    color:#f0bd43 !important;
+    box-shadow:inset 0 -2px 0 rgba(240,189,67,.85) !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreToggle.active,
+  body .shell .sidebar nav#mainnav > #mobileMoreToggle.open{
+    background:#1b1e25 !important;
+    color:#f0bd43 !important;
+    box-shadow:inset 0 -2px 0 rgba(240,189,67,.70) !important;
+  }
+
+  body .shell .sidebar nav#mainnav > a.active::before,
+  body .shell .sidebar nav#mainnav > a.active::after{
+    display:none !important;
+    content:none !important;
+  }
+
+  /* Solid compact More panel. Two columns on normal phones. */
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu:not([hidden]){
+    position:absolute !important;
+    top:calc(100% + 8px) !important;
+    left:0 !important;
+    right:0 !important;
+    width:100% !important;
+    max-width:none !important;
+    height:auto !important;
+    max-height:min(62dvh,430px) !important;
+    margin:0 !important;
+    padding:8px !important;
+    border:1px solid #30353e !important;
+    border-radius:14px !important;
+    background:#15181e !important;
+    background-color:#15181e !important;
+    background-image:none !important;
+    opacity:1 !important;
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+    box-shadow:0 22px 55px rgba(0,0,0,.70) !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    z-index:5000 !important;
+    grid-column:1 / -1 !important;
+    grid-row:auto !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu[hidden]{
+    display:none !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu:not([hidden]){
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:6px !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > a,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle{
+    display:flex !important;
+    position:static !important;
+    min-width:0 !important;
+    width:100% !important;
+    min-height:46px !important;
+    height:auto !important;
+    margin:0 !important;
+    padding:9px 10px !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
+    gap:8px !important;
+    border:1px solid #292e36 !important;
+    border-radius:10px !important;
+    background:#1d2128 !important;
+    color:#d6dae1 !important;
+    box-shadow:none !important;
+    box-sizing:border-box !important;
+    font-size:10px !important;
+    font-weight:670 !important;
+    line-height:1.2 !important;
+    letter-spacing:0 !important;
+    text-transform:none !important;
+    white-space:normal !important;
+    overflow:visible !important;
+    opacity:1 !important;
+    grid-column:auto !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > a .ic,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle .ic{
+    display:inline-flex !important;
+    width:16px !important;
+    min-width:16px !important;
+    align-items:center !important;
+    justify-content:center !important;
+    color:#aab0ba !important;
+    font-size:12px !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > a:hover,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > a:focus-visible,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > a.active,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle:focus-visible{
+    border-color:rgba(222,170,53,.40) !important;
+    background:#242933 !important;
+    color:#f0bd43 !important;
+  }
+
+  /* Hide routes already exposed in the primary row. */
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > a[data-route="inventory"],
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > a[data-route="collection"],
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > a[data-route="sold"]{
+    display:none !important;
+  }
+
+  /* Theme is a normal tile now — no overlay/floating row. */
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle{
+    transform:none !important;
+    top:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    left:auto !important;
+  }
+
+  /* Light mode parity. */
+  body.light-mode .shell .sidebar{
+    background:#fffdf8 !important;
+    border-bottom-color:#e5dfd5 !important;
+  }
+
+  body.light-mode .shell .sidebar nav#mainnav > a[data-route="inventory"],
+  body.light-mode .shell .sidebar nav#mainnav > a[data-route="collection"],
+  body.light-mode .shell .sidebar nav#mainnav > a[data-route="sold"],
+  body.light-mode .shell .sidebar nav#mainnav > #mobileMoreToggle{
+    color:#636a72 !important;
+  }
+
+  body.light-mode .shell .sidebar nav#mainnav > a[data-route].active,
+  body.light-mode .shell .sidebar nav#mainnav > #mobileMoreToggle.active,
+  body.light-mode .shell .sidebar nav#mainnav > #mobileMoreToggle.open{
+    color:#8d6515 !important;
+  }
+
+  body.light-mode .shell .sidebar nav#mainnav > #mobileMoreMenu,
+  body.light-mode .shell .sidebar nav#mainnav > #mobileMoreMenu:not([hidden]){
+    border-color:#d8d1c6 !important;
+    background:#fffdf9 !important;
+    background-color:#fffdf9 !important;
+    box-shadow:0 20px 46px rgba(42,35,24,.20) !important;
+  }
+
+  body.light-mode .shell .sidebar nav#mainnav > #mobileMoreMenu > a,
+  body.light-mode .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle{
+    border-color:#e2dcd2 !important;
+    background:#f7f4ee !important;
+    color:#4c535b !important;
+  }
+
+  /* Desktop layers never participate in the phone header. */
+  .premium-desktop-nav,
+  .premium-desktop-utilities,
+  .premium-social-strip{
+    display:none !important;
+  }
+}
+
+@media (max-width:380px){
+  body .shell .sidebar{
+    padding-inline:7px !important;
+  }
+
+  body .shell .sidebar nav#mainnav{
+    grid-template-columns:minmax(0,1fr) minmax(0,1.12fr) 54px minmax(0,.68fr) minmax(0,.78fr) !important;
+    gap:2px !important;
+  }
+
+  body .shell .sidebar nav#mainnav > a.mobile-nav-logo,
+  body .shell .sidebar nav#mainnav > a.mobile-nav-logo img{
+    width:54px !important;
+    height:54px !important;
+    min-width:54px !important;
+    min-height:54px !important;
+    max-width:54px !important;
+    max-height:54px !important;
+  }
+
+  body .shell .sidebar nav#mainnav > a[data-route="inventory"],
+  body .shell .sidebar nav#mainnav > a[data-route="collection"],
+  body .shell .sidebar nav#mainnav > a[data-route="sold"],
+  body .shell .sidebar nav#mainnav > #mobileMoreToggle{
+    padding-inline:1px !important;
+    font-size:8px !important;
+    letter-spacing:0 !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu:not([hidden]){
+    grid-template-columns:1fr 1fr !important;
+    gap:5px !important;
+    padding:7px !important;
+  }
+}
+
+
+/* ==========================================================
+   V161 BETA — MOBILE HEADER CENTERING + COMPACT MORE
+   Exact symmetric header around the centered logo.
+   More menu shrink-wraps content with no dead vertical space.
+   ========================================================== */
+@media (max-width:800px){
+
+  /* True geometric center: equal-width navigation columns on both sides. */
+  body .shell .sidebar nav#mainnav{
+    grid-template-columns:
+      minmax(0,1fr)
+      minmax(0,1fr)
+      60px
+      minmax(0,1fr)
+      minmax(0,1fr) !important;
+    gap:4px !important;
+  }
+
+  body .shell .sidebar nav#mainnav > a.mobile-nav-logo{
+    width:56px !important;
+    height:56px !important;
+    min-width:56px !important;
+    min-height:56px !important;
+    max-width:56px !important;
+    max-height:56px !important;
+    justify-self:center !important;
+    align-self:center !important;
+  }
+
+  body .shell .sidebar nav#mainnav > a.mobile-nav-logo img{
+    width:56px !important;
+    height:56px !important;
+    min-width:56px !important;
+    max-width:56px !important;
+  }
+
+  /* Keep labels compact enough that Collection never pushes the center. */
+  body .shell .sidebar nav#mainnav > a[data-route="inventory"],
+  body .shell .sidebar nav#mainnav > a[data-route="collection"],
+  body .shell .sidebar nav#mainnav > a[data-route="sold"],
+  body .shell .sidebar nav#mainnav > #mobileMoreToggle{
+    padding-inline:2px !important;
+    font-size:clamp(8.2px,2.25vw,9.7px) !important;
+    letter-spacing:0 !important;
+    overflow:visible !important;
+  }
+
+  /* Cleaner active state: no large outlined/fill boxes. */
+  body .shell .sidebar nav#mainnav > a[data-route].active{
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:inset 0 -2px 0 rgba(240,189,67,.82) !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreToggle.open,
+  body .shell .sidebar nav#mainnav > #mobileMoreToggle.active{
+    background:rgba(240,189,67,.055) !important;
+    border:0 !important;
+    box-shadow:inset 0 -2px 0 rgba(240,189,67,.72) !important;
+  }
+
+  /*
+    Hard shrink-wrap for More. Explicit row sizing prevents any inherited
+    mobile rule from stretching the menu or pushing Theme to the bottom.
+  */
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu:not([hidden]){
+    top:calc(100% + 6px) !important;
+    height:max-content !important;
+    min-height:0 !important;
+    max-height:min(68dvh,390px) !important;
+    align-self:start !important;
+    align-content:start !important;
+    justify-content:stretch !important;
+    grid-auto-flow:row !important;
+    grid-auto-rows:minmax(44px,auto) !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:6px !important;
+    padding:8px !important;
+    overflow-y:auto !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu:not([hidden]){
+    display:grid !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > a,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle{
+    min-height:44px !important;
+    height:44px !important;
+    max-height:44px !important;
+    padding:8px 10px !important;
+    margin:0 !important;
+    align-self:start !important;
+    grid-column:auto !important;
+    transform:none !important;
+  }
+
+  /* Theme is just another normal tile, immediately after the other items. */
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle{
+    order:initial !important;
+    position:static !important;
+  }
+
+  /* Kill the older generated duplicate "LIGHT MODE / DARK MODE" text. */
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle::before,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle::after{
+    content:none !important;
+    display:none !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle .mobile-theme-label{
+    display:inline !important;
+    font-size:10px !important;
+    font-weight:670 !important;
+    line-height:1.2 !important;
+    text-transform:none !important;
+    letter-spacing:0 !important;
+  }
+}
+
+@media (max-width:380px){
+  body .shell .sidebar nav#mainnav{
+    grid-template-columns:
+      minmax(0,1fr)
+      minmax(0,1fr)
+      56px
+      minmax(0,1fr)
+      minmax(0,1fr) !important;
+    gap:2px !important;
+  }
+
+  body .shell .sidebar nav#mainnav > a.mobile-nav-logo,
+  body .shell .sidebar nav#mainnav > a.mobile-nav-logo img{
+    width:52px !important;
+    height:52px !important;
+    min-width:52px !important;
+    min-height:52px !important;
+    max-width:52px !important;
+    max-height:52px !important;
+  }
+
+  body .shell .sidebar nav#mainnav > a[data-route="inventory"],
+  body .shell .sidebar nav#mainnav > a[data-route="collection"],
+  body .shell .sidebar nav#mainnav > a[data-route="sold"],
+  body .shell .sidebar nav#mainnav > #mobileMoreToggle{
+    font-size:7.8px !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu:not([hidden]){
+    gap:5px !important;
+    padding:7px !important;
+    grid-auto-rows:minmax(42px,auto) !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > a,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle{
+    min-height:42px !important;
+    height:42px !important;
+    max-height:42px !important;
+  }
+}
+
+
+/* ==========================================================
+   V162 BETA — MOBILE MORE + SEARCH/FILTER FINAL CLEANUP
+   - More uses flex-wrap so it shrink-wraps real content
+   - Theme follows menu items immediately with no dead space
+   - Search + Filters are forced into one non-wrapping row
+   ========================================================== */
+@media (max-width:800px){
+
+  /* ---------- More: content-height only, no stretched grid ---------- */
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu:not([hidden]){
+    display:flex !important;
+    flex-wrap:wrap !important;
+    align-items:stretch !important;
+    align-content:flex-start !important;
+    justify-content:flex-start !important;
+
+    height:auto !important;
+    min-height:0 !important;
+    max-height:min(70dvh,420px) !important;
+
+    grid-template-columns:none !important;
+    grid-template-rows:none !important;
+    grid-auto-columns:auto !important;
+    grid-auto-rows:auto !important;
+    grid-auto-flow:initial !important;
+
+    gap:6px !important;
+    padding:8px !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > a,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle{
+    flex:0 0 calc(50% - 3px) !important;
+    width:calc(50% - 3px) !important;
+    min-width:0 !important;
+    max-width:calc(50% - 3px) !important;
+
+    height:44px !important;
+    min-height:44px !important;
+    max-height:44px !important;
+
+    margin:0 !important;
+    padding:8px 10px !important;
+    box-sizing:border-box !important;
+
+    position:static !important;
+    inset:auto !important;
+    transform:none !important;
+    order:initial !important;
+  }
+
+  /* Theme is simply the next menu tile, never a footer. */
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle{
+    margin-top:0 !important;
+    margin-bottom:0 !important;
+    align-self:stretch !important;
+  }
+
+  /* ---------- Search + Filters: one guaranteed row ---------- */
+  .listing-filter-tools .mobile-search-filter-row{
+    display:flex !important;
+    flex-direction:row !important;
+    flex-wrap:nowrap !important;
+    align-items:stretch !important;
+    justify-content:stretch !important;
+
+    width:100% !important;
+    min-width:0 !important;
+    gap:7px !important;
+    margin:0 0 8px !important;
+  }
+
+  .listing-filter-tools .mobile-search-filter-row .mobile-inventory-search{
+    display:block !important;
+    position:relative !important;
+
+    flex:1 1 auto !important;
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+
+    grid-column:auto !important;
+    grid-row:auto !important;
+    order:1 !important;
+    margin:0 !important;
+  }
+
+  .listing-filter-tools .mobile-search-filter-row .mobile-inventory-search input[type="search"]{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+
+    height:46px !important;
+    min-height:46px !important;
+    max-height:46px !important;
+
+    margin:0 !important;
+    border-radius:11px !important;
+    box-sizing:border-box !important;
+  }
+
+  .listing-filter-tools .mobile-search-filter-row .mobile-search-filter-btn{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+
+    flex:0 0 92px !important;
+    width:92px !important;
+    min-width:92px !important;
+    max-width:92px !important;
+
+    height:46px !important;
+    min-height:46px !important;
+    max-height:46px !important;
+
+    grid-column:auto !important;
+    grid-row:auto !important;
+    order:2 !important;
+
+    margin:0 !important;
+    padding:0 10px !important;
+    border-radius:11px !important;
+    box-sizing:border-box !important;
+    white-space:nowrap !important;
+  }
+}
+
+@media (max-width:390px){
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu:not([hidden]){
+    gap:5px !important;
+    padding:7px !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > a,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle{
+    flex-basis:calc(50% - 2.5px) !important;
+    width:calc(50% - 2.5px) !important;
+    max-width:calc(50% - 2.5px) !important;
+    height:42px !important;
+    min-height:42px !important;
+    max-height:42px !important;
+    padding-inline:8px !important;
+  }
+
+  .listing-filter-tools .mobile-search-filter-row{
+    gap:6px !important;
+  }
+
+  .listing-filter-tools .mobile-search-filter-row .mobile-inventory-search input[type="search"],
+  .listing-filter-tools .mobile-search-filter-row .mobile-search-filter-btn{
+    height:44px !important;
+    min-height:44px !important;
+    max-height:44px !important;
+  }
+
+  .listing-filter-tools .mobile-search-filter-row .mobile-search-filter-btn{
+    flex-basis:84px !important;
+    width:84px !important;
+    min-width:84px !important;
+    max-width:84px !important;
+    padding-inline:8px !important;
+  }
+}
+
+
+/* ==========================================================
+   V163 BETA — MOBILE RESPONSIVE CONTROL LAYOUT
+   Fix the ACTUAL rendered Search/Filters row, remove horizontal
+   category scrolling, and balance the More menu footer.
+   ========================================================== */
+@media (max-width:800px){
+
+  /* ---------- Category pills: all visible, no horizontal scrolling ---------- */
+  .listing-filter-tools .desktop-category-filter-block{
+    width:100% !important;
+    min-width:0 !important;
+    overflow:visible !important;
+  }
+
+  .listing-filter-tools #quickFilters,
+  .listing-filter-tools .quick-filters,
+  .listing-filter-tools .desktop-quick-filters-collapsible{
+    display:grid !important;
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    grid-auto-flow:row !important;
+    width:100% !important;
+    min-width:0 !important;
+    gap:6px !important;
+    margin:0 0 8px !important;
+    padding:0 !important;
+
+    overflow:visible !important;
+    overflow-x:visible !important;
+    overflow-y:visible !important;
+    scroll-snap-type:none !important;
+    -webkit-overflow-scrolling:auto !important;
+  }
+
+  .listing-filter-tools #quickFilters .quick-filter,
+  .listing-filter-tools .quick-filters .quick-filter,
+  .listing-filter-tools .desktop-quick-filters-collapsible .quick-filter{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    min-height:38px !important;
+    height:38px !important;
+
+    margin:0 !important;
+    padding:0 5px !important;
+
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+
+    flex:none !important;
+    border-radius:999px !important;
+    box-sizing:border-box !important;
+
+    font-size:clamp(8.6px,2.35vw,10px) !important;
+    font-weight:740 !important;
+    letter-spacing:.015em !important;
+    line-height:1 !important;
+    text-align:center !important;
+    white-space:nowrap !important;
+
+    scroll-snap-align:none !important;
+  }
+
+  /* ---------- Search + Filters: target the actual sibling row ---------- */
+  .mobile-search-filter-row{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) clamp(82px,23vw,96px) !important;
+    grid-template-rows:46px !important;
+
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+
+    gap:7px !important;
+    margin:0 0 8px !important;
+    padding:0 !important;
+
+    align-items:stretch !important;
+    justify-items:stretch !important;
+
+    position:relative !important;
+    float:none !important;
+    clear:both !important;
+    overflow:visible !important;
+    box-sizing:border-box !important;
+  }
+
+  .mobile-search-filter-row > .mobile-inventory-search{
+    grid-column:1 !important;
+    grid-row:1 !important;
+
+    display:block !important;
+    position:relative !important;
+
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+
+    height:46px !important;
+    min-height:46px !important;
+    max-height:46px !important;
+
+    margin:0 !important;
+    padding:0 !important;
+
+    float:none !important;
+    transform:none !important;
+    box-sizing:border-box !important;
+  }
+
+  .mobile-search-filter-row > .mobile-inventory-search input[type="search"]{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+
+    height:46px !important;
+    min-height:46px !important;
+    max-height:46px !important;
+
+    margin:0 !important;
+    padding:0 36px !important;
+
+    border-radius:11px !important;
+    box-sizing:border-box !important;
+    font-size:12px !important;
+    line-height:1 !important;
+  }
+
+  .mobile-search-filter-row > .mobile-inventory-search input[type="search"]::placeholder{
+    font-size:11px !important;
+  }
+
+  .mobile-search-filter-row > .mobile-search-filter-btn{
+    grid-column:2 !important;
+    grid-row:1 !important;
+
+    display:flex !important;
+    position:static !important;
+
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+
+    height:46px !important;
+    min-height:46px !important;
+    max-height:46px !important;
+
+    margin:0 !important;
+    padding:0 8px !important;
+
+    align-items:center !important;
+    justify-content:center !important;
+
+    float:none !important;
+    transform:none !important;
+    box-sizing:border-box !important;
+
+    border-radius:11px !important;
+    font-size:10px !important;
+    font-weight:760 !important;
+    line-height:1 !important;
+    letter-spacing:.025em !important;
+    text-transform:uppercase !important;
+    white-space:nowrap !important;
+  }
+
+  /* ---------- More: 8 nav tiles + one balanced full-width theme row ---------- */
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle{
+    flex:0 0 100% !important;
+    width:100% !important;
+    min-width:100% !important;
+    max-width:100% !important;
+
+    height:44px !important;
+    min-height:44px !important;
+    max-height:44px !important;
+
+    margin:0 !important;
+    justify-content:center !important;
+    text-align:center !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle .mobile-theme-label{
+    text-align:center !important;
+  }
+}
+
+/* Common compact phones: keep three category columns but tighten controls. */
+@media (max-width:390px){
+  .listing-filter-tools #quickFilters,
+  .listing-filter-tools .quick-filters,
+  .listing-filter-tools .desktop-quick-filters-collapsible{
+    gap:5px !important;
+  }
+
+  .listing-filter-tools #quickFilters .quick-filter,
+  .listing-filter-tools .quick-filters .quick-filter,
+  .listing-filter-tools .desktop-quick-filters-collapsible .quick-filter{
+    min-height:36px !important;
+    height:36px !important;
+    padding-inline:3px !important;
+    font-size:clamp(8px,2.3vw,9.2px) !important;
+  }
+
+  .mobile-search-filter-row{
+    grid-template-columns:minmax(0,1fr) clamp(78px,22vw,86px) !important;
+    grid-template-rows:44px !important;
+    gap:6px !important;
+  }
+
+  .mobile-search-filter-row > .mobile-inventory-search,
+  .mobile-search-filter-row > .mobile-inventory-search input[type="search"],
+  .mobile-search-filter-row > .mobile-search-filter-btn{
+    height:44px !important;
+    min-height:44px !important;
+    max-height:44px !important;
+  }
+
+  .mobile-search-filter-row > .mobile-search-filter-btn{
+    padding-inline:5px !important;
+    font-size:9.3px !important;
+  }
+}
+
+/* Very narrow phones: use two category columns so text never clips. */
+@media (max-width:340px){
+  .listing-filter-tools #quickFilters,
+  .listing-filter-tools .quick-filters,
+  .listing-filter-tools .desktop-quick-filters-collapsible{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+
+  .listing-filter-tools #quickFilters .quick-filter,
+  .listing-filter-tools .quick-filters .quick-filter,
+  .listing-filter-tools .desktop-quick-filters-collapsible .quick-filter{
+    font-size:8.5px !important;
+  }
+
+  .mobile-search-filter-row{
+    grid-template-columns:minmax(0,1fr) 76px !important;
+    gap:5px !important;
+  }
+
+  .mobile-search-filter-row > .mobile-search-filter-btn{
+    font-size:8.8px !important;
+    padding-inline:4px !important;
+  }
+}
+
+
+/* ==========================================================
+   V164 BETA — BALANCED MOBILE MORE + REMOVE PAGE RESULT COUNT
+   Buyer: 4 left / 4 right + full-width theme row.
+   Owner: 7 left / 7 right + full-width theme row.
+   Visible "N listings" line removed from mobile pages.
+   ========================================================== */
+@media (max-width:800px){
+
+  /* ---------- More menu: hard 2-column grid, no inherited flex direction ---------- */
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu:not([hidden]){
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    grid-auto-flow:row !important;
+    grid-auto-rows:44px !important;
+
+    flex-direction:initial !important;
+    flex-wrap:initial !important;
+    align-content:start !important;
+    align-items:stretch !important;
+    justify-content:stretch !important;
+
+    width:min(342px,calc(100vw - 20px)) !important;
+    height:auto !important;
+    min-height:0 !important;
+    max-height:min(70dvh,430px) !important;
+
+    gap:6px !important;
+    padding:8px !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    box-sizing:border-box !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu[hidden]{
+    display:none !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > a{
+    display:flex !important;
+
+    grid-column:auto !important;
+    grid-row:auto !important;
+
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+
+    height:44px !important;
+    min-height:44px !important;
+    max-height:44px !important;
+
+    flex:none !important;
+    margin:0 !important;
+    padding:8px 10px !important;
+
+    align-items:center !important;
+    justify-content:flex-start !important;
+    align-self:stretch !important;
+
+    position:static !important;
+    inset:auto !important;
+    transform:none !important;
+    box-sizing:border-box !important;
+  }
+
+  /*
+    There are 8 buyer links (14 in owner mode). This final shared theme row
+    spans BOTH columns, so the left/right button count remains perfectly even.
+  */
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle{
+    display:flex !important;
+
+    grid-column:1 / -1 !important;
+    grid-row:auto !important;
+
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+
+    height:44px !important;
+    min-height:44px !important;
+    max-height:44px !important;
+
+    flex:none !important;
+    margin:0 !important;
+    padding:8px 12px !important;
+
+    align-items:center !important;
+    justify-content:center !important;
+    align-self:stretch !important;
+
+    position:static !important;
+    inset:auto !important;
+    transform:none !important;
+    box-sizing:border-box !important;
+  }
+
+  /* ---------- Remove visible mobile page result-count line ---------- */
+  .mobile-result-count-copy{
+    display:none !important;
+  }
+
+  .inventory-mobile-compact-result.inventory-mobile-currency-only{
+    min-height:0 !important;
+    height:auto !important;
+    margin:0 0 7px !important;
+    padding:0 !important;
+
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+
+    border:0 !important;
+    background:transparent !important;
+  }
+
+  /* Collection has no currency control, so it now has no compact-result row at all. */
+}
+
+/* Compact phones */
+@media (max-width:390px){
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu:not([hidden]){
+    grid-auto-rows:42px !important;
+    gap:5px !important;
+    padding:7px !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > a,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-theme-toggle{
+    height:42px !important;
+    min-height:42px !important;
+    max-height:42px !important;
+  }
+}
+
+
+/* ==========================================================
+   V165 BETA — STRUCTURAL MOBILE MORE + FRESH INVENTORY MODULE
+   Old foundation rules target direct children of #mobileMoreMenu.
+   The menu links now live inside .mobile-more-links, insulating the
+   balanced grid from those legacy rules.
+   ========================================================== */
+@media (max-width:800px){
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu:not([hidden]){
+    display:block !important;
+    width:min(342px,calc(100vw - 20px)) !important;
+    height:auto !important;
+    min-height:0 !important;
+    max-height:min(72dvh,430px) !important;
+    padding:8px !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    box-sizing:border-box !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu[hidden]{
+    display:none !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-links{
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    grid-auto-flow:row !important;
+    grid-auto-rows:44px !important;
+    gap:6px !important;
+    width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    box-sizing:border-box !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-links > a,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-links > .mobile-more-theme-toggle{
+    display:flex !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    height:44px !important;
+    min-height:44px !important;
+    max-height:44px !important;
+    margin:0 !important;
+    padding:8px 10px !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
+    box-sizing:border-box !important;
+    border:1px solid #343941 !important;
+    border-radius:10px !important;
+    background:#1d2128 !important;
+    color:#d7dbe1 !important;
+    font-size:10px !important;
+    font-weight:650 !important;
+    line-height:1.15 !important;
+    white-space:normal !important;
+    overflow:hidden !important;
+    position:static !important;
+    inset:auto !important;
+    transform:none !important;
+    flex:none !important;
+    order:initial !important;
+  }
+
+  /* Exact balance including Theme: hide the least-essential Recent tile on
+     mobile. Buyer = 7 links + Theme = 8 (4x2). Owner = 13 links + Theme = 14. */
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-links > .mobile-more-recent{
+    display:none !important;
+  }
+
+  body:not(.owner-mode) .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-links > .owner-only{
+    display:none !important;
+  }
+
+  body.owner-mode .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-links > .owner-only:not([hidden]){
+    display:flex !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-links > .mobile-more-theme-toggle{
+    justify-content:flex-start !important;
+  }
+
+  body.light-mode .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-links > a,
+  body.light-mode .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-links > .mobile-more-theme-toggle{
+    border-color:#e4ded4 !important;
+    background:#f7f4ee !important;
+    color:#4b5158 !important;
+  }
+
+  /* Never show a mobile result-count line; its hidden counter remains only
+     as a JS update target. */
+  #inventoryMobileCompactResultCount,
+  .mobile-result-count-copy{
+    display:none !important;
+  }
+}
+
+@media (max-width:390px){
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu:not([hidden]){
+    padding:7px !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-links{
+    grid-auto-rows:42px !important;
+    gap:5px !important;
+  }
+
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-links > a,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-links > .mobile-more-theme-toggle{
+    height:42px !important;
+    min-height:42px !important;
+    max-height:42px !important;
+    padding-inline:8px !important;
+    font-size:9.5px !important;
+  }
+}
+
+/* V165 verification hotfix: Theme is a normal grid cell, not a full-width row. */
+@media (max-width:800px){
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-links > .mobile-more-theme-toggle{
+    grid-column:auto !important;
+    grid-row:auto !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    margin:0 !important;
+  }
+}
+@media (max-width:800px){
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-links > .mobile-more-theme-toggle::before,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu > .mobile-more-links > .mobile-more-theme-toggle::after{
+    content:none !important;
+    display:none !important;
+  }
+}
+
+
+/* ==========================================================
+   V167 BETA — VERIFIED MOBILE LAYOUT CONSOLIDATION
+   Fixes remaining iPhone conflicts using final source-order overrides.
+   ========================================================== */
+@media (max-width:800px){
+  /* Filter sheet is a true foreground sheet and cannot sit under header. */
+  #mobileFilterBackdrop:not([hidden]){
+    display:block !important;
+    position:fixed !important;
+    inset:0 !important;
+    z-index:11990 !important;
+    background:rgba(0,0,0,.58) !important;
+  }
+
+  #filterDrawerShell{
+    z-index:12000 !important;
+  }
+
+  #filterDrawerShell.open{
+    position:fixed !important;
+    inset:0 !important;
+    width:100% !important;
+    max-width:none !important;
+    height:100dvh !important;
+    max-height:100dvh !important;
+    padding:calc(8px + env(safe-area-inset-top)) 12px calc(8px + env(safe-area-inset-bottom)) !important;
+    border-radius:0 !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    transform:none !important;
+    background:var(--bg) !important;
+  }
+
+  #filterDrawerShell.open .filter-drawer-head{
+    display:flex !important;
+    position:sticky !important;
+    top:0 !important;
+    z-index:4 !important;
+    min-height:48px !important;
+    margin:0 0 9px !important;
+    padding:8px 2px 9px !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    background:var(--bg) !important;
+    box-shadow:0 1px 0 var(--border) !important;
+  }
+
+  #filterDrawerShell.open .filter-drawer-head .mobile-filter-close-btn{
+    display:inline-flex !important;
+  }
+
+  /* More menu: preserve balanced inner grid but anchor panel right. */
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu,
+  body .shell .sidebar nav#mainnav > #mobileMoreMenu:not([hidden]){
+    position:absolute !important;
+    top:calc(100% + 6px) !important;
+    right:0 !important;
+    left:auto !important;
+    width:min(342px,calc(100vw - 20px)) !important;
+    max-width:calc(100vw - 20px) !important;
+  }
+
+  /* All six category filters in one row, no horizontal scrolling. */
+  .listing-filter-tools #quickFilters,
+  .listing-filter-tools .quick-filters,
+  .listing-filter-tools .desktop-quick-filters-collapsible{
+    display:grid !important;
+    grid-template-columns:repeat(6,minmax(0,1fr)) !important;
+    grid-template-rows:34px !important;
+    grid-auto-flow:column !important;
+    width:100% !important;
+    max-width:100% !important;
+    gap:3px !important;
+    margin:0 0 7px !important;
+    padding:0 !important;
+    overflow:hidden !important;
+  }
+
+  .listing-filter-tools #quickFilters .quick-filter,
+  .listing-filter-tools .quick-filters .quick-filter,
+  .listing-filter-tools .desktop-quick-filters-collapsible .quick-filter{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    height:34px !important;
+    min-height:34px !important;
+    padding:0 1px !important;
+    border-radius:999px !important;
+    font-size:clamp(5.9px,1.79vw,7.7px) !important;
+    font-weight:760 !important;
+    letter-spacing:-.01em !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
+    text-align:center !important;
+    overflow:hidden !important;
+  }
+
+  /* Search, Filters and Currency occupy one responsive row. */
+  .mobile-search-filter-row{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) clamp(76px,20vw,88px) !important;
+    grid-template-rows:46px !important;
+    gap:6px !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-height:46px !important;
+    height:46px !important;
+    margin:0 0 8px !important;
+    padding:0 !important;
+    align-items:stretch !important;
+    box-sizing:border-box !important;
+  }
+
+  .mobile-search-filter-row.has-mobile-currency{
+    grid-template-columns:minmax(0,1fr) clamp(72px,19vw,84px) clamp(88px,24vw,104px) !important;
+  }
+
+  .mobile-search-filter-row > .mobile-inventory-search{
+    grid-column:1 !important;
+    grid-row:1 !important;
+    width:100% !important;
+    min-width:0 !important;
+    height:46px !important;
+    margin:0 !important;
+  }
+
+  .mobile-search-filter-row > .mobile-inventory-search input[type="search"]{
+    width:100% !important;
+    min-width:0 !important;
+    height:46px !important;
+    min-height:46px !important;
+    padding-left:34px !important;
+    padding-right:34px !important;
+    border-radius:11px !important;
+    font-size:clamp(10px,2.75vw,12px) !important;
+    box-sizing:border-box !important;
+  }
+
+  .mobile-search-filter-row > .mobile-search-filter-btn{
+    grid-column:2 !important;
+    grid-row:1 !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    height:46px !important;
+    min-height:46px !important;
+    padding:0 5px !important;
+    margin:0 !important;
+    border-radius:11px !important;
+    font-size:clamp(8.2px,2.3vw,10px) !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
+    box-sizing:border-box !important;
+  }
+
+  .mobile-search-filter-row > .mobile-inline-currency{
+    grid-column:3 !important;
+    grid-row:1 !important;
+    display:flex !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    height:46px !important;
+    min-height:46px !important;
+    margin:0 !important;
+    padding:4px !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:3px !important;
+    border:1px solid var(--border) !important;
+    border-radius:11px !important;
+    background:var(--surface-1) !important;
+    box-sizing:border-box !important;
+    overflow:hidden !important;
+  }
+
+  .mobile-search-filter-row > .mobile-inline-currency > span{
+    flex:1 1 auto !important;
+    min-width:0 !important;
+    color:var(--text-muted) !important;
+    font-size:clamp(6.8px,1.9vw,8.2px) !important;
+    font-weight:700 !important;
+    text-transform:uppercase !important;
+    white-space:nowrap !important;
+  }
+
+  .mobile-search-filter-row > .mobile-inline-currency select{
+    flex:0 0 auto !important;
+    width:48px !important;
+    min-width:48px !important;
+    height:36px !important;
+    min-height:36px !important;
+    padding:0 18px 0 6px !important;
+    border-radius:8px !important;
+    font-size:10px !important;
+    font-weight:760 !important;
+  }
+
+  .inventory-mobile-compact-result.inventory-mobile-currency-only{
+    display:none !important;
+  }
+
+  /* Grade shortcuts wrap inside the sheet instead of clipping horizontally. */
+  #filterDrawerShell .grade-shortcuts{
+    display:grid !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:6px !important;
+    width:100% !important;
+    padding:8px 0 4px !important;
+    overflow:visible !important;
+  }
+
+  #filterDrawerShell .grade-shortcuts-label{
+    grid-column:1 / -1 !important;
+    margin:0 0 2px !important;
+  }
+
+  #filterDrawerShell .grade-shortcuts button{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    min-height:34px !important;
+    margin:0 !important;
+    padding:4px 3px !important;
+    font-size:clamp(7.5px,2.1vw,9px) !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  /* Remove result counts from mobile filter/sticky control bars. */
+  #filterDrawerShell .filter-drawer-footer{
+    display:block !important;
+    padding:8px 12px calc(10px + env(safe-area-inset-bottom)) !important;
+  }
+
+  #filterDrawerShell .filter-drawer-footer-copy,
+  .sticky-mobile-results-count{
+    display:none !important;
+  }
+
+  #filterDrawerShell .filter-drawer-apply{
+    width:100% !important;
+    min-height:46px !important;
+    margin:0 !important;
+  }
+
+  .sticky-mobile-results-bar.is-visible{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
+@media (max-width:360px){
+  .listing-filter-tools #quickFilters .quick-filter,
+  .listing-filter-tools .quick-filters .quick-filter,
+  .listing-filter-tools .desktop-quick-filters-collapsible .quick-filter{
+    font-size:5.9px !important;
+    letter-spacing:-.03em !important;
+  }
+
+  .mobile-search-filter-row.has-mobile-currency{
+    grid-template-columns:minmax(0,1fr) 70px 70px !important;
+    gap:5px !important;
+  }
+
+  .mobile-search-filter-row > .mobile-inline-currency > span{
+    display:none !important;
+  }
+
+  .mobile-search-filter-row > .mobile-inline-currency{
+    justify-content:center !important;
+  }
+
+  .mobile-search-filter-row > .mobile-inline-currency select{
+    width:60px !important;
+    min-width:60px !important;
+  }
+
+  #filterDrawerShell .grade-shortcuts{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  }
+}
+
+/* ==========================================================
+   V168 BETA — MOBILE CARD GRID POLISH
+   Buyer-first two-column cards: less metadata noise, shorter cards,
+   aligned pricing, smaller utility controls and quieter gallery UI.
+   Desktop remains unchanged.
+   ========================================================== */
+@media (max-width:800px){
+  /* Card metadata filters already exist above the grid. Repeating every
+     metadata pill inside each 2-column card adds noise and vertical height. */
+  #invGrid.grid:not(.compact-list) .card-overview-collapsible-pills,
+  #invGrid.grid:not(.compact-list) .card-overview-collapsible-pills[hidden],
+  #invGrid.grid:not(.compact-list) .clean-all-pills,
+  #invGrid.grid:not(.compact-list) .card-overview-pill-toggle{
+    display:none !important;
+  }
+
+  #invGrid.grid:not(.compact-list),
+  .inventory-grid:not(.compact-list){
+    gap:clamp(6px,1.8vw,9px) !important;
+    align-items:stretch !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card{
+    display:flex !important;
+    flex-direction:column !important;
+    min-width:0 !important;
+    height:100% !important;
+    border-radius:11px !important;
+    overflow:hidden !important;
+  }
+
+  /* Shorter, consistent image stage. Contain protects slab/collage artwork. */
+  #invGrid.grid:not(.compact-list) .card > .thumb-wrap,
+  #invGrid.grid:not(.compact-list) .card > .thumb-placeholder{
+    width:100% !important;
+    aspect-ratio:3 / 4 !important;
+    height:auto !important;
+    min-height:0 !important;
+    flex:0 0 auto !important;
+    border-radius:10px 10px 0 0 !important;
+    background:#090b0e !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card > .thumb-wrap .thumb{
+    width:100% !important;
+    height:100% !important;
+    object-fit:contain !important;
+    object-position:center !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-card-body{
+    display:flex !important;
+    flex:1 1 auto !important;
+    flex-direction:column !important;
+    min-width:0 !important;
+    height:auto !important;
+    padding:7px !important;
+    gap:0 !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-card-main{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:4px !important;
+    min-width:0 !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-card-title-row{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    align-items:start !important;
+    gap:5px !important;
+    min-width:0 !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-card-name{
+    min-width:0 !important;
+    min-height:25px !important;
+    max-height:25px !important;
+    margin:0 !important;
+    overflow:hidden !important;
+    display:-webkit-box !important;
+    -webkit-box-orient:vertical !important;
+    -webkit-line-clamp:2 !important;
+    font-size:clamp(9.2px,2.55vw,10.6px) !important;
+    font-weight:780 !important;
+    line-height:1.18 !important;
+    letter-spacing:.01em !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .card-title-actions{
+    display:flex !important;
+    align-items:center !important;
+    gap:3px !important;
+    flex:0 0 auto !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .compare-card-btn,
+  #invGrid.grid:not(.compact-list) .title-favorite-btn{
+    width:30px !important;
+    min-width:30px !important;
+    max-width:30px !important;
+    height:30px !important;
+    min-height:30px !important;
+    max-height:30px !important;
+    padding:0 !important;
+    border-radius:9px !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    font-size:15px !important;
+    line-height:1 !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .compare-card-btn span{
+    display:none !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-card-reference-toggle-row{
+    min-height:17px !important;
+    margin-top:1px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-card-reference{
+    margin:0 !important;
+    font-size:clamp(7.5px,2.05vw,8.5px) !important;
+    line-height:1.15 !important;
+    color:var(--text-muted) !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .sold-archive-date{
+    margin-top:2px !important;
+    font-size:8px !important;
+    line-height:1.2 !important;
+  }
+
+  /* Grid is a scan surface, not the detail page. Keep notes out of the cards. */
+  #invGrid.grid:not(.compact-list) .clean-notes{
+    display:none !important;
+  }
+
+  /* Push pricing toward the bottom of equal-height cards for easier comparison. */
+  #invGrid.grid:not(.compact-list) .clean-price-block{
+    margin-top:auto !important;
+    padding-top:7px !important;
+    border-top:1px solid rgba(255,255,255,.055) !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-price-primary{
+    font-size:clamp(12px,3.45vw,14px) !important;
+    line-height:1.05 !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-price-secondary{
+    margin-top:3px !important;
+    font-size:clamp(6.7px,1.85vw,7.8px) !important;
+    line-height:1.15 !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  /* Important, but no longer allowed to turn one grid card into a tall outlier. */
+  #invGrid.grid:not(.compact-list) .high-value-contact-alert.compact{
+    margin:6px 0 0 !important;
+    padding:5px 6px !important;
+    border-radius:8px !important;
+    min-height:0 !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .high-value-contact-alert.compact strong{
+    display:-webkit-box !important;
+    overflow:hidden !important;
+    -webkit-box-orient:vertical !important;
+    -webkit-line-clamp:2 !important;
+    font-size:7px !important;
+    line-height:1.18 !important;
+  }
+
+  /* Keep gallery controls secondary to the artwork. */
+  #invGrid.grid:not(.compact-list) .listing-gallery-arrow{
+    width:25px !important;
+    min-width:25px !important;
+    height:25px !important;
+    min-height:25px !important;
+    border-radius:50% !important;
+    background:rgba(5,7,10,.58) !important;
+    border-color:rgba(255,255,255,.15) !important;
+    font-size:16px !important;
+    opacity:.62 !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .listing-gallery-arrow-prev{left:4px !important;}
+  #invGrid.grid:not(.compact-list) .listing-gallery-arrow-next{right:4px !important;}
+
+  #invGrid.grid:not(.compact-list) .listing-gallery-counter{
+    right:4px !important;
+    bottom:4px !important;
+    padding:2px 5px !important;
+    font-size:6px !important;
+    line-height:1 !important;
+    opacity:.9 !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .image-count-badge{
+    padding:2px 4px !important;
+    font-size:6px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .overview-grade-overlay{
+    min-width:0 !important;
+    padding:5px 7px !important;
+    border-radius:9px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .overview-grade-overlay strong{
+    font-size:8.5px !important;
+    line-height:1 !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .overview-grade-overlay small{
+    margin-top:2px !important;
+    font-size:5.7px !important;
+    line-height:1 !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .new-card-badge{
+    min-height:0 !important;
+    padding:4px 7px !important;
+    border-radius:7px !important;
+    font-size:7px !important;
+  }
+
+  /* Owner controls stay available but visually secondary. */
+  #invGrid.grid:not(.compact-list) .quick-card-actions{
+    top:5px !important;
+    right:5px !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .quick-card-menu-toggle{
+    width:28px !important;
+    height:28px !important;
+    min-width:28px !important;
+    min-height:28px !important;
+    border-radius:8px !important;
+  }
+
+  body.light-mode #invGrid.grid:not(.compact-list) .clean-price-block{
+    border-top-color:#e1ddd5 !important;
+  }
+}
+
+/* Keep two columns on normal compact phones; only extremely narrow screens fall back. */
+@media (min-width:340px) and (max-width:800px){
+  #invGrid.grid:not(.compact-list),
+  .inventory-grid:not(.compact-list){
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
+@media (max-width:339px){
+  #invGrid.grid:not(.compact-list),
+  .inventory-grid:not(.compact-list){
+    grid-template-columns:1fr !important;
+  }
+
+  #invGrid.grid:not(.compact-list) .clean-card-name{
+    font-size:11px !important;
+    min-height:auto !important;
+    max-height:none !important;
+  }
+}
+
+/* V168 follow-up: neutralize legacy <=359px card-body minimums once the
+   two-column layout is active, and use three columns on small tablets. */
+@media (min-width:340px) and (max-width:599px){
+  #invGrid.grid:not(.compact-list) .clean-card-body{
+    min-height:0 !important;
+  }
+}
+
+@media (min-width:600px) and (max-width:800px){
+  #invGrid.grid:not(.compact-list),
+  .inventory-grid:not(.compact-list){
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  }
+  #invGrid.grid:not(.compact-list) .clean-card-body{
+    min-height:0 !important;
+  }
+}
+
+
+/* ==========================================================
+   V169 BETA — DEDICATED MOBILE SORT SHEET
+   Sticky SORT and FILTERS are now genuinely separate actions.
+   ========================================================== */
+.mobile-sort-backdrop,
+.mobile-sort-sheet{
+  display:none;
+}
+
+@media (max-width:800px){
+  /* Sort is no longer duplicated inside the full mobile Filters sheet. */
+  #filterDrawerShell #sortByWrap{
+    display:none !important;
+  }
+
+  .mobile-sort-backdrop:not([hidden]){
+    display:block !important;
+    position:fixed !important;
+    inset:0 !important;
+    z-index:12090 !important;
+    background:rgba(0,0,0,.58) !important;
+    backdrop-filter:blur(2px) !important;
+    -webkit-backdrop-filter:blur(2px) !important;
+  }
+
+  .mobile-sort-sheet:not([hidden]){
+    display:block !important;
+    position:fixed !important;
+    left:8px !important;
+    right:8px !important;
+    bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+    z-index:12100 !important;
+    width:auto !important;
+    max-width:520px !important;
+    max-height:min(72dvh,560px) !important;
+    margin:0 auto !important;
+    padding:8px 10px 10px !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    border:1px solid rgba(255,255,255,.10) !important;
+    border-radius:18px !important;
+    background:#15181d !important;
+    color:var(--text) !important;
+    box-shadow:0 24px 70px rgba(0,0,0,.65) !important;
+    box-sizing:border-box !important;
+  }
+
+  .mobile-sort-sheet-handle{
+    width:40px !important;
+    height:4px !important;
+    margin:1px auto 8px !important;
+    border-radius:99px !important;
+    background:rgba(255,255,255,.22) !important;
+  }
+
+  .mobile-sort-sheet-head{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:12px !important;
+    padding:4px 2px 10px !important;
+    border-bottom:1px solid rgba(255,255,255,.08) !important;
+  }
+
+  .mobile-sort-sheet-head > div:first-child{
+    min-width:0 !important;
+    display:grid !important;
+    gap:2px !important;
+  }
+
+  .mobile-sort-sheet-head strong{
+    font-size:15px !important;
+    font-weight:820 !important;
+    line-height:1.15 !important;
+  }
+
+  .mobile-sort-sheet-head span{
+    color:var(--text-muted) !important;
+    font-size:10px !important;
+    line-height:1.25 !important;
+  }
+
+  .mobile-sort-close-btn{
+    flex:0 0 auto !important;
+    min-height:38px !important;
+    padding:0 12px !important;
+    border-radius:10px !important;
+    font-size:10px !important;
+    font-weight:760 !important;
+  }
+
+  .mobile-sort-options{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:5px !important;
+    padding-top:8px !important;
+  }
+
+  .mobile-sort-option{
+    width:100% !important;
+    min-height:44px !important;
+    margin:0 !important;
+    padding:9px 11px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:10px !important;
+    border:1px solid transparent !important;
+    border-radius:11px !important;
+    background:#1c2026 !important;
+    color:#d9dde3 !important;
+    font:inherit !important;
+    font-size:11px !important;
+    font-weight:690 !important;
+    line-height:1.2 !important;
+    text-align:left !important;
+    box-sizing:border-box !important;
+  }
+
+  .mobile-sort-option.active{
+    border-color:rgba(227,179,65,.46) !important;
+    background:rgba(227,179,65,.10) !important;
+    color:#f1c557 !important;
+  }
+
+  .mobile-sort-check{
+    flex:0 0 20px !important;
+    width:20px !important;
+    height:20px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    border-radius:99px !important;
+    background:rgba(255,255,255,.06) !important;
+    color:transparent !important;
+    font-size:11px !important;
+    font-weight:900 !important;
+  }
+
+  .mobile-sort-option.active .mobile-sort-check{
+    background:#d9a933 !important;
+    color:#17191d !important;
+  }
+
+  body.mobile-sort-open{
+    overflow:hidden !important;
+  }
+
+  /* Sticky actions read as two equal peer controls. */
+  .sticky-mobile-results-bar.is-visible{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+
+  #stickyMobileSortBtn,
+  #stickyMobileFilterBtn{
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  body.light-mode .mobile-sort-sheet:not([hidden]){
+    border-color:#d8d2c7 !important;
+    background:#fffdf8 !important;
+    color:#2e3338 !important;
+    box-shadow:0 22px 60px rgba(42,35,24,.25) !important;
+  }
+
+  body.light-mode .mobile-sort-sheet-handle{
+    background:#d3ccc0 !important;
+  }
+
+  body.light-mode .mobile-sort-sheet-head{
+    border-bottom-color:#e2ddd4 !important;
+  }
+
+  body.light-mode .mobile-sort-option{
+    background:#f7f4ee !important;
+    color:#454b52 !important;
+  }
+
+  body.light-mode .mobile-sort-option.active{
+    border-color:#bd8e29 !important;
+    background:#fff5d7 !important;
+    color:#7b570f !important;
+  }
+}
