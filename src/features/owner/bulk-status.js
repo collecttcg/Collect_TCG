@@ -511,11 +511,14 @@ function renderBulkPsaPopPage(){
     if(!appContext.requireOwner("open PSA POP bulk updater")) return;
 
     const entries=appContext.psaPopEntries();
-    const due=entries.filter(appContext.psaPopEntryIsDue);
+    const normalDue=entries.filter(appContext.psaPopEntryIsDue);
     const withPop=entries.filter(entry=>entry.pop!=null && entry.pop!=="");
     const never=entries.filter(entry=>entry.pop==null || entry.pop==="");
-    const uniqueCertCount=new Set(entries.map(entry=>appContext.normalizePsaCertInput(entry.cert)).filter(Boolean)).size;
-    const dueUniqueCertCount=new Set(due.map(entry=>appContext.normalizePsaCertInput(entry.cert)).filter(Boolean)).size;
+
+    // Recovery queue is deliberately separate from the normal Due calculation.
+    // It tracks failures/remaining work from the most recent bulk run even when
+    // those cards already had POP values before the run.
+    const retryResult=appContext.readPsaBulkRetryResult?.()||null;
 
     let previousResult=null;
     try{
@@ -523,6 +526,41 @@ function renderBulkPsaPopPage(){
     }catch{}
 
     const activeState=appContext.readPsaBulkState();
+
+    const recoveryCertQueue=activeState
+      ? activeState.certs.slice(Math.max(0,Number(activeState.index||0)))
+      : (Array.isArray(retryResult?.failed)
+          ? retryResult.failed.map(item=>appContext.normalizePsaCertInput(item?.cert||"")).filter(Boolean)
+          : []);
+
+    // Preserve repeated cert occurrences so V186's "every listing" behavior is
+    // also respected when retrying failed/remaining work.
+    const entryPools=new Map();
+    entries.forEach(entry=>{
+      const cert=appContext.normalizePsaCertInput(entry?.cert||"");
+      if(!cert) return;
+      if(!entryPools.has(cert)) entryPools.set(cert,[]);
+      entryPools.get(cert).push(entry);
+    });
+    const poolIndexes=new Map();
+    const recoveryEntries=recoveryCertQueue.map(cert=>{
+      const normalized=appContext.normalizePsaCertInput(cert||"");
+      const pool=entryPools.get(normalized)||[];
+      if(!pool.length) return null;
+      const index=Number(poolIndexes.get(normalized)||0);
+      const entry=pool[Math.min(index,pool.length-1)];
+      poolIndexes.set(normalized,index+1);
+      return entry;
+    }).filter(Boolean);
+
+    // V188: one Due collection is the single source of truth for the count,
+    // visible Due state, and the Update Due action. It includes normal due/stale
+    // listings plus failed/interrupted items from the latest bulk run.
+    const due=[...normalDue];
+    recoveryEntries.forEach(entry=>{
+      if(entry && !due.includes(entry)) due.push(entry);
+    });
+    const dueSet=new Set(due);
 
     appContext.view.innerHTML=`
       <div class="page-head">
@@ -541,8 +579,8 @@ function renderBulkPsaPopPage(){
       ` : ""}
 
       <div class="psa-bulk-stats">
-        <article><span>PSA listings</span><strong>${entries.length.toLocaleString()}</strong><small>${uniqueCertCount.toLocaleString()} unique PSA cert${uniqueCertCount===1?"":"s"}</small></article>
-        <article><span>Due today</span><strong>${due.length.toLocaleString()}</strong><small>${dueUniqueCertCount.toLocaleString()} unique cert${dueUniqueCertCount===1?"":"s"} to look up</small></article>
+        <article><span>PSA listings</span><strong>${entries.length.toLocaleString()}</strong><small>Every eligible listing will be processed</small></article>
+        <article><span>Due now</span><strong>${due.length.toLocaleString()}</strong><small>${due.length.toLocaleString()} listing${due.length===1?"":"s"} to process</small></article>
         <article><span>With POP</span><strong>${withPop.length.toLocaleString()}</strong><small>Current saved population</small></article>
         <article><span>Never synced</span><strong>${never.length.toLocaleString()}</strong><small>No POP saved yet</small></article>
       </div>
@@ -558,8 +596,8 @@ function renderBulkPsaPopPage(){
         </div>
 
         <div class="psa-bulk-note">
-          <strong>Daily workflow</strong>
-          <span><b>Update Due PSA POPs</b> counts each due listing separately. If multiple listings share the same cert, PSA is still opened only once for that cert and the returned POP is applied to every matching listing.</span>
+          <strong>PSA refresh workflow</strong>
+          <span><b>Update Due PSA POPs</b> includes listings whose POP refresh is 3+ days old, plus failed or interrupted items from the latest bulk run, so you can resume after PSA rate limits.</span>
         </div>
 
         ${activeState ? `
@@ -571,8 +609,9 @@ function renderBulkPsaPopPage(){
 
         <div class="psa-bulk-list">
           ${entries.length ? entries.map((entry,index)=>{
-            const dueNow=appContext.psaPopEntryIsDue(entry);
-            const updated=entry.updatedAt ? new Date(entry.updatedAt).toLocaleString() : "Never";
+            const dueNow=dueSet.has(entry);
+            const updatedMs=appContext.psaPopEntryUpdatedMs(entry);
+            const updated=updatedMs ? new Date(updatedMs).toLocaleString() : "Never";
             const pop=entry.pop!=null && entry.pop!=="" && Number.isFinite(Number(entry.pop))
               ? Number(entry.pop).toLocaleString()
               : "—";
@@ -647,12 +686,12 @@ function renderBulkPsaPopPage(){
 
         const ok=confirm(
           `Update ${due.length} due listing${due.length===1?"":"s"} now?\n\n` +
-          `${dueUniqueCertCount} unique PSA cert${dueUniqueCertCount===1?"":"s"} will be looked up. Shared certs are queried once and applied to every matching listing.`
+          `${due.length} PSA listing${due.length===1?"":"s"} will be processed. This includes due/stale listings plus failed or interrupted items from the latest bulk run.`
         );
         if(!ok) return;
 
         button.disabled=true;
-        appContext.showToast(`Starting PSA POP refresh · ${due.length} listing${due.length===1?"":"s"} · ${dueUniqueCertCount} unique cert${dueUniqueCertCount===1?"":"s"}…`);
+        appContext.showToast(`Starting PSA POP refresh · ${due.length} listing${due.length===1?"":"s"}…`);
 
         requestAnimationFrame(()=>{
           appContext.startBulkPsaPopSync(due,"Daily PSA POP");
