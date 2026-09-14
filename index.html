@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- V180 PRODUCTION — promoted from V179 premium contact assurance patch -->
 <!-- V95 PRODUCTION: latest V4 image-safety fixes merged -->
 <!-- UX PHASE 2: consolidated overrides and storefront polish -->
 <!-- UX PHASE 3: mobile browsing clarity and conversion polish -->
@@ -102,7 +103,7 @@
 <link rel="stylesheet" href="./src/styles/24-card-overview-pill-toggle-inline-v44.css" id="card-overview-pill-toggle-inline-v44">
 
 <link rel="stylesheet" href="./src/styles/25-compatibility.css">
-<link rel="stylesheet" href="./src/styles/26-compatibility.css?v=176">
+<link rel="stylesheet" href="./src/styles/26-compatibility.css?v=180">
 
 <!-- V47: Home Recently Added now uses the shared home-storefront-grid layout (same as High Value / Vintage / Recently Sold). -->
   <!-- v49: Inventory grouped catalogue uses no per-page selector or pagination. -->
@@ -705,7 +706,7 @@
 
 <div class="mobile-detail-cta" id="mobileDetailCta" hidden aria-label="Purchase contact" aria-live="polite">
   <div class="mobile-detail-cta-price">
-    <small>Price</small>
+    <small>Malaysia &amp; Singapore</small>
     <strong id="mobileDetailCtaPrice">—</strong>
   </div>
   <button type="button" class="mobile-detail-cta-action" id="mobileDetailCtaAction" data-contact-buy-trigger aria-label="Contact to Buy">Contact to Buy</button>
@@ -731,6 +732,18 @@
     <div class="interest-contact-card">
       <strong id="interestContactCardName">Card enquiry</strong>
       <span id="interestContactCardRef"></span>
+    </div>
+    <div class="interest-contact-assurance">
+      <span class="interest-contact-assurance-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+          <path d="M12 21s6-5.4 6-12a6 6 0 1 0-12 0c0 6.6 6 12 6 12Z"></path>
+          <circle cx="12" cy="9" r="2.25"></circle>
+        </svg>
+      </span>
+      <span class="interest-contact-assurance-copy">
+        <strong>Malaysia &amp; Singapore</strong>
+        <span>Shipping available · COD / meetup on selected cards</span>
+      </span>
     </div>
 
     <div class="interest-contact-options">
@@ -812,6 +825,6 @@
 
 
 <!-- V48: Recently Added uses the exact same storefront row structure/count as High Value/Vintage/Recently Sold. -->
-<script type="module" src="./src/main.js?v=176"></script>
+<script type="module" src="./src/main.js?v=178"></script>
 </body>
 </html>
