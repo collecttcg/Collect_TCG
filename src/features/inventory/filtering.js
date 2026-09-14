@@ -74,6 +74,87 @@ function normalizeFilterValue(value){
     return String(value ?? "").trim().toLowerCase();
   }
 
+
+function normalizeSearchText(value){
+    return appContext.normalizeFilterValue(value)
+      .replace(/[\u2013\u2014_\-\/\\·•(),.:;]+/g," ")
+      .replace(/\s+/g," ")
+      .trim();
+  }
+
+function smartSearchTokens(query){
+    return appContext.normalizeSearchText(query)
+      .split(/\s+/)
+      .map(token=>token.trim())
+      .filter(Boolean);
+  }
+
+function cardSearchValues(card){
+    const grades=(Array.isArray(card?.grading)?card.grading:[])
+      .filter(g=>g && g.company)
+      .map(g=>`${g.company} ${g.grade ?? ""}`.trim());
+    const format=appContext.effectiveFormat(card||{});
+    const condition=format==="Raw"
+      ? (appContext.CONDITION_LABEL?.[card?.condition] || card?.condition || "")
+      : (format==="Sealed" ? "Sealed" : "");
+    return [
+      card?.name, card?.card_code, card?.year, card?.series, card?.game,
+      card?.set, card?.language, card?.era, card?.availability, format, condition,
+      ...grades
+    ].filter(v=>v!==null && v!==undefined && String(v).trim()!=="");
+  }
+
+function cardSearchDocument(card){
+    const text=appContext.normalizeSearchText(appContext.cardSearchValues(card).join(" "));
+    const compact=text.replace(/\s+/g,"");
+    return {text,compact};
+  }
+
+function cardMatchesSmartSearch(card,query){
+    const tokens=appContext.smartSearchTokens(query);
+    if(!tokens.length) return true;
+    const doc=appContext.cardSearchDocument(card);
+    return tokens.every(token=>{
+      if(doc.text.includes(token)) return true;
+      const compactToken=token.replace(/\s+/g,"");
+      return compactToken.length>=2 && doc.compact.includes(compactToken);
+    });
+  }
+
+function cardSearchScore(card,query){
+    const q=appContext.normalizeSearchText(query);
+    const tokens=appContext.smartSearchTokens(query);
+    if(!q || !tokens.length) return 0;
+
+    const name=appContext.normalizeSearchText(card?.name||"");
+    const code=appContext.normalizeSearchText(card?.card_code||"");
+    const series=appContext.normalizeSearchText(card?.series||"");
+    const game=appContext.normalizeSearchText(card?.game||"");
+    const grade=appContext.normalizeSearchText((Array.isArray(card?.grading)?card.grading:[])
+      .filter(g=>g&&g.company).map(g=>`${g.company} ${g.grade??""}`).join(" "));
+    const compactQ=q.replace(/\s+/g,"");
+    const compactCode=code.replace(/\s+/g,"");
+    const compactName=name.replace(/\s+/g,"");
+
+    let score=0;
+    if(code && (code===q || compactCode===compactQ)) score+=220;
+    if(name===q || compactName===compactQ) score+=200;
+    if(code && (code.startsWith(q) || compactCode.startsWith(compactQ))) score+=160;
+    if(name.startsWith(q)) score+=145;
+    if(name.includes(q)) score+=110;
+    if(series.includes(q)) score+=80;
+    if(grade.includes(q)) score+=75;
+    if(game.includes(q)) score+=45;
+
+    tokens.forEach(token=>{
+      if(code.includes(token) || compactCode.includes(token)) score+=35;
+      if(name.includes(token) || compactName.includes(token)) score+=28;
+      if(grade.includes(token)) score+=20;
+      if(series.includes(token)) score+=18;
+    });
+    return score;
+  }
+
 function titleCaseWords(value){
     return String(value ?? "")
       .trim()
@@ -280,7 +361,6 @@ function getFiltered(){
     let list = appContext.cards.filter(c=>{
       if(!appContext.cardMatchesListingScope(c)) return false;
       const format = appContext.effectiveFormat(c);
-      const haystack = [c.name,c.card_code,c.year,c.series,c.game,c.availability].filter(v=>v !== null && v !== undefined && v !== "").join(" ").toLowerCase();
       if(gameF && appContext.normalizeFilterValue(c.game) !== appContext.normalizeFilterValue(gameF)) return false;
       if(gradeF){
         const hasGrade = Array.isArray(c.grading) && c.grading.some(g=>{
@@ -339,7 +419,7 @@ function getFiltered(){
       if(appContext.pillFilterState.era.size && !appContext.selectedSetMatches(appContext.pillFilterState.era, c.era || "")) return false;
       if(appContext.pillFilterState.availability.size && !appContext.selectedSetMatches(appContext.pillFilterState.availability, c.availability || "Available")) return false;
       if(appContext.pillFilterState.series.size && !appContext.selectedSetMatches(appContext.pillFilterState.series, c.series || "")) return false;
-      if(q && !haystack.includes(q)) return false;
+      if(q && !appContext.cardMatchesSmartSearch(c,q)) return false;
       if(appContext.activeQuickFilter === "graded" && format !== "Graded") return false;
       if(appContext.activeQuickFilter === "raw" && format !== "Raw") return false;
       if(appContext.activeQuickFilter === "sealed" && format !== "Sealed") return false;
@@ -412,7 +492,7 @@ function getFiltered(){
     return list;
   }
 
-  Object.assign(appContext,{isNewCard,cardLifecycle,isLiveLifecycle,cardMatchesListingScope,listingScopeMeta,normalizeFilterValue,titleCaseWords,giveawayDisplayTitle,normalizeStoredLabel,canonicalAvailability,selectedSetMatches,effectiveFormat,isChampionshipSeries,cardGradeSortScore,trendingSevenDayRange,trendingCardViews,trendingCardUniqueViews,trendingCardScore,refreshTrending7dPerformance,compareNullableNumber,getFiltered});
+  Object.assign(appContext,{isNewCard,cardLifecycle,isLiveLifecycle,cardMatchesListingScope,listingScopeMeta,normalizeFilterValue,normalizeSearchText,smartSearchTokens,cardSearchValues,cardSearchDocument,cardMatchesSmartSearch,cardSearchScore,titleCaseWords,giveawayDisplayTitle,normalizeStoredLabel,canonicalAvailability,selectedSetMatches,effectiveFormat,isChampionshipSeries,cardGradeSortScore,trendingSevenDayRange,trendingCardViews,trendingCardUniqueViews,trendingCardScore,refreshTrending7dPerformance,compareNullableNumber,getFiltered});
 }
 
 /** State and event initialization; called in preserved startup order. */

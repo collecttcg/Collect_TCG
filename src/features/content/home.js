@@ -190,208 +190,188 @@ function renderAnalyticsExclusionPairingPage(){
   }
 
 function renderHomePage(){
-    const recent = appContext.cards
-      .filter(c=>appContext.cardMatchesListingScope(c, "inventory"))
-      .slice()
-      .sort((a,b)=>String(b.created_at || "").localeCompare(String(a.created_at || "")))
-      .slice(0,4);
+    const liveInventory=appContext.cards
+      .filter(c=>appContext.cardMatchesListingScope(c,"inventory"))
+      .slice();
 
-    appContext.view.innerHTML = `
-      <div class="home-hero">
-        <div class="eyebrow">Collect TCG MY &amp; SG</div>
-        <h2>Curated cards from our collection.</h2>
-        <p>We specialize in modern, vintage, championship and graded One Piece cards.</p>
-        <div class="home-hero-actions">
-          <a href="#/inventory" class="btn-primary" style="display:inline-flex;align-items:center;">Browse Cards</a>
-          <a href="#/giveaway" class="btn-ghost" style="display:inline-flex;align-items:center;text-decoration:none;">View Giveaways</a>
-          <label class="global-currency-control" title="Your preferred currency is saved on this device.">
-            <span>Currency</span>
-            <select id="homeCurrencyPreference" aria-label="Preferred display currency">
-              <option value="USD" ${appContext.getPriceCurrencyPreference()==="USD"?"selected":""}>USD</option>
-              <option value="MYR" ${appContext.getPriceCurrencyPreference()==="MYR"?"selected":""}>MYR</option>
-              <option value="SGD" ${appContext.getPriceCurrencyPreference()==="SGD"?"selected":""}>SGD</option>
-            </select>
-          </label>
+    const byNewest=(a,b)=>String(b.created_at||"").localeCompare(String(a.created_at||""));
+    const byValue=(a,b)=>(appContext.cardUsdListedPrice(b)||0)-(appContext.cardUsdListedPrice(a)||0) || byNewest(a,b);
+
+    const newest=liveInventory.slice().sort(byNewest).slice(0,4);
+    const championship=liveInventory
+      .filter(c=>appContext.isChampionshipSeries(c.series))
+      .sort(byValue);
+    const vintage=liveInventory
+      .filter(c=>
+        appContext.normalizeFilterValue(c.era)==="vintage" ||
+        appContext.normalizeFilterValue(c.game)==="vintages" ||
+        appContext.normalizeFilterValue(c.series).includes("vintage")
+      )
+      .sort(byValue);
+    const sealed=liveInventory
+      .filter(c=>appContext.effectiveFormat(c)==="Sealed")
+      .sort(byValue);
+
+    const featured=liveInventory.slice().sort(byValue)[0] || newest[0] || null;
+
+    const firstImage=card=>appContext.getImages(card||{})[0] || "";
+    const primaryPrice=card=>{
+      if(!card) return "";
+      if(appContext.normalizeFilterValue(card.availability)==="collection (nfs)") return "NOT FOR SALE";
+      const entry=appContext.orderedCardPrices(card)[0];
+      return entry ? appContext.formatCurrencyValue(entry.currency,entry.value) : "Contact for price";
+    };
+    const compactGrade=card=>{
+      if(!card) return "";
+      const grades=appContext.validGradingEntries(card);
+      if(grades.length) return appContext.gradingSummaryLabel(card);
+      if(appContext.effectiveFormat(card)==="Sealed") return "Sealed";
+      return appContext.rawConditionShortLabel(card.condition) || "";
+    };
+    const referenceText=card=>[card?.card_code,card?.year].filter(Boolean).join(" · ");
+
+    const premiumCard=(card,{trending=false,isNew=false}={})=>{
+      if(!card) return "";
+      const image=firstImage(card);
+      const grade=compactGrade(card);
+      const views=trending ? Number(appContext.trendingCardViews(card)||0) : 0;
+      return `
+        <article class="card home-premium-card" data-card-id="${appContext.escapeHtml(card.id)}" tabindex="0" role="button" aria-label="View ${appContext.escapeHtml(card.name)}">
+          <div class="home-premium-card-media">
+            ${image
+              ? `<img src="${appContext.escapeHtml(image)}" alt="${appContext.escapeHtml(card.name)}" loading="lazy" decoding="async">`
+              : `<div class="home-premium-card-no-image">No image</div>`}
+            <div class="home-premium-card-badges">
+              ${grade ? `<span class="home-premium-grade">${appContext.escapeHtml(grade)}</span>` : ""}
+              ${isNew ? `<span class="home-premium-new">NEW</span>` : ""}
+              ${trending ? `<span class="home-premium-trending">TRENDING</span>` : ""}
+            </div>
+            <button type="button"
+                    class="favorite-btn home-premium-favorite ${appContext.isFavorite(card.id)?"active":""}"
+                    data-favorite-id="${appContext.escapeHtml(card.id)}"
+                    title="${appContext.isFavorite(card.id)?"Remove from favorites":"Add to favorites"}"
+                    aria-label="${appContext.isFavorite(card.id)?"Remove from favorites":"Add to favorites"}">${appContext.isFavorite(card.id)?"♥":"♡"}</button>
+          </div>
+          <div class="home-premium-card-copy">
+            <div class="home-premium-card-name">${appContext.escapeHtml(card.name)}</div>
+            <div class="home-premium-card-reference">${appContext.escapeHtml(referenceText(card) || card.series || "Collectible listing")}</div>
+            ${trending && views>0 ? `<div class="home-premium-interest">🔥 ${views.toLocaleString()} view${views===1?"":"s"} this week</div>` : ""}
+            <div class="home-premium-card-price">${appContext.escapeHtml(primaryPrice(card))}</div>
+          </div>
+        </article>`;
+    };
+
+    const premiumShelf=(title,description,list,href,{eyebrow="Discover",trending=false,isNew=false}={})=>list.length ? `
+      <section class="home-premium-section">
+        <div class="home-premium-section-head">
+          <div>
+            <div class="eyebrow">${appContext.escapeHtml(eyebrow)}</div>
+            <h3>${appContext.escapeHtml(title)}</h3>
+            <p>${appContext.escapeHtml(description)}</p>
+          </div>
+          <a href="${appContext.escapeHtml(href)}" class="home-section-link home-premium-view-all">View all</a>
         </div>
+        <div class="home-premium-grid">
+          ${list.slice(0,4).map(card=>premiumCard(card,{trending,isNew})).join("")}
+        </div>
+      </section>` : "";
+
+    const categoryTile=(title,subtitle,card,href)=>{
+      const image=firstImage(card);
+      return `
+        <a class="home-curated-tile" href="${appContext.escapeHtml(href)}">
+          ${image ? `<img src="${appContext.escapeHtml(image)}" alt="" loading="lazy" decoding="async">` : `<div class="home-curated-tile-placeholder"></div>`}
+          <span class="home-curated-tile-shade"></span>
+          <span class="home-curated-tile-copy">
+            <small>${appContext.escapeHtml(subtitle)}</small>
+            <strong>${appContext.escapeHtml(title)}</strong>
+            <em>Explore collection →</em>
+          </span>
+        </a>`;
+    };
+
+    const featuredImage=firstImage(featured);
+    const featuredGrade=compactGrade(featured);
+    const featuredReference=referenceText(featured);
+
+    appContext.view.innerHTML=`
+      <section class="home-premium-hero">
+        <div class="home-premium-hero-copy">
+          <div class="eyebrow">Collect TCG MY &amp; SG · Featured</div>
+          <h2>${featured ? appContext.escapeHtml(featured.name) : "Rare cards. Curated with intent."}</h2>
+          <p>${featured
+            ? "A highlighted piece from our current catalogue. Explore rare vintage, tournament and modern grails selected from our MY & SG collection."
+            : "Explore rare vintage, tournament and modern grails selected from our MY & SG collection."}</p>
+          ${featured ? `
+            <div class="home-premium-hero-meta">
+              ${featuredGrade ? `<span>${appContext.escapeHtml(featuredGrade)}</span>` : ""}
+              ${featuredReference ? `<span>${appContext.escapeHtml(featuredReference)}</span>` : ""}
+              <strong>${appContext.escapeHtml(primaryPrice(featured))}</strong>
+            </div>` : ""}
+          <div class="home-premium-hero-actions">
+            ${featured ? `<a href="#/card/${encodeURIComponent(featured.id)}" class="btn-primary">View Featured Listing</a>` : ""}
+            <a href="#/inventory" class="btn-ghost">Browse Inventory</a>
+            <label class="global-currency-control home-premium-currency" title="Your preferred currency is saved on this device.">
+              <span>Currency</span>
+              <select id="homeCurrencyPreference" aria-label="Preferred display currency">
+                <option value="USD" ${appContext.getPriceCurrencyPreference()==="USD"?"selected":""}>USD</option>
+                <option value="MYR" ${appContext.getPriceCurrencyPreference()==="MYR"?"selected":""}>MYR</option>
+                <option value="SGD" ${appContext.getPriceCurrencyPreference()==="SGD"?"selected":""}>SGD</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <a class="home-premium-hero-visual" href="${featured?`#/card/${encodeURIComponent(featured.id)}`:"#/inventory"}" aria-label="${featured?`View ${appContext.escapeHtml(featured.name)}`:"Browse inventory"}">
+          ${featuredImage
+            ? `<img src="${appContext.escapeHtml(featuredImage)}" alt="${featured?appContext.escapeHtml(featured.name):"Featured collectible"}" decoding="async">`
+            : `<div class="home-premium-hero-placeholder"><span>COLLECT</span><strong>TCG</strong></div>`}
+          <span class="home-premium-hero-glow"></span>
+        </a>
+      </section>
+
+      <section class="home-premium-curated">
+        <div class="home-premium-section-head home-premium-curated-head">
+          <div>
+            <div class="eyebrow">Curated Collections</div>
+            <h3>Explore by collecting style</h3>
+            <p>Three focused entrances into the catalogue—without turning Home into another inventory page.</p>
+          </div>
+        </div>
+        <div class="home-curated-tiles">
+          ${categoryTile("Vintage","Classic releases",vintage[0],"#/inventory?quick=vintage")}
+          ${categoryTile("Championship","Tournament & finalist cards",championship[0],"#/inventory?quick=championship")}
+          ${categoryTile("Sealed","Unopened collectibles",sealed[0],"#/inventory?quick=sealed")}
+        </div>
+      </section>
+
+      <div id="homeTrendingShelf">
+        <section class="home-premium-section home-premium-trending-loading">
+          <div class="home-premium-section-head">
+            <div><div class="eyebrow">Last 7 Days</div><h3>Trending This Week</h3><p>Loading current collector interest…</p></div>
+          </div>
+        </section>
       </div>
 
-      ${(()=>{
-        const stats = appContext.getCollectionStats();
-        return `
-          <section class="home-section home-collection-stats-section">
-            <div class="home-section-head">
-              <div>
-                <div class="eyebrow">Collection Overview</div>
-                <h3>Our Collection at a Glance</h3>
-                <p>Live counts from our current catalogue.</p>
-              </div>
-            </div>
+      ${premiumShelf("Recently Added","The newest available pieces to enter the catalogue.",newest,"#/inventory?sort=newest",{eyebrow:"New Arrivals",isNew:true})}
 
-            <div class="home-collection-stats">
-              <a href="#/inventory" class="home-stat-card" data-home-top-route="inventory">
-                <span class="home-stat-value">${stats.inventory.toLocaleString()}</span>
-                <span class="home-stat-label">Inventory</span>
-              </a>
-              <a href="#/sold" class="home-stat-card" data-home-top-route="sold">
-                <span class="home-stat-value">${stats.sold.toLocaleString()}</span>
-                <span class="home-stat-label">Sold</span>
-              </a>
-              <a href="#/collection" class="home-stat-card home-stat-card-collection" data-home-top-route="collection">
-                <span class="home-stat-value">${stats.collection.toLocaleString()}</span>
-                <span class="home-stat-label">Collection / NFS</span>
-              </a>
-              <a href="#/reserved" class="home-stat-card" data-home-top-route="reserved">
-                <span class="home-stat-value">${stats.reserved.toLocaleString()}</span>
-                <span class="home-stat-label">Reserved</span>
-              </a>
-              <!-- These three links must use filters understood by restoreListingFiltersFromUrl(). -->
-              <a href="#/inventory?quick=graded" class="home-stat-card" data-home-top-route="inventory?quick=graded">
-  <span class="home-stat-value">${stats.graded.toLocaleString()}</span>
-  <span class="home-stat-label">Graded</span>
-</a>
-              <a href="#/inventory?quick=vintage" class="home-stat-card" data-home-top-route="inventory?quick=vintage">
-  <span class="home-stat-value">${stats.vintage.toLocaleString()}</span>
-  <span class="home-stat-label">Vintage</span>
-</a>
-              <a href="#/inventory?quick=sealed" class="home-stat-card" data-home-top-route="inventory?quick=sealed">
-  <span class="home-stat-value">${stats.sealed.toLocaleString()}</span>
-  <span class="home-stat-label">Sealed</span>
-</a>
-            </div>
-          </section>
-        `;
-      })()}
-
-      ${(()=>{
-        const recent=appContext.getRecentlyViewedCards().slice(0,4);
-        return recent.length?`
-          <section class="home-section home-recent-section home-recently-added-priority">
-            <div class="home-section-head">
-              <div><h3>Recently Viewed</h3><p>Continue browsing where you left off.</p></div>
-              <a href="#/recent" class="home-section-link">View All</a>
-            </div>
-            <div class="home-recent-grid">${recent.map(appContext.cardTileHTML).join("")}</div>
-          </section>`:"";
-      })()}
-
-      <section class="home-section">
-        <div class="home-section-head">
-          <div>
-            <h3>Featured Collections</h3>
-            <p>Quick ways to jump into the most common browsing categories.</p>
-          </div>
+      <section class="home-premium-trust">
+        <div class="home-premium-trust-copy">
+          <div class="eyebrow">Collect with confidence</div>
+          <h3>Rare collectibles · Malaysia &amp; Singapore</h3>
+          <p>Secure packing, tracked shipping and direct communication for serious collectors. High-value transactions can be arranged by COD or meetup where appropriate.</p>
         </div>
-
-        <div class="home-feature-grid">
-          <button type="button" class="home-feature" data-home-filter="championship">
-            <div class="kicker">Tournament</div>
-            <div class="title">Championship</div>
-            <div class="desc">Champion, Championship, Treasure Cup, 3on3 Cup, 2on2 Cup and similar tournament series.</div>
-          </button>
-
-          <button type="button" class="home-feature" data-home-filter="vintage">
-            <div class="kicker">Classic</div>
-            <div class="title">Vintage</div>
-            <div class="desc">Older collectible cards and releases from past eras, including classic and hard-to-find series.</div>
-          </button>
-
-          <button type="button" class="home-feature" data-home-filter="graded">
-            <div class="kicker">Slabs</div>
-            <div class="title">Graded</div>
-            <div class="desc">PSA, BGS, CGC and other professionally graded cards.</div>
-          </button>
-
-          <button type="button" class="home-feature" data-home-filter="sealed">
-            <div class="kicker">Unopened</div>
-            <div class="title">Sealed</div>
-            <div class="desc">Sealed products and unopened collectibles from the collection.</div>
-          </button>
+        <div class="home-premium-trust-points">
+          <span><strong>Secure Packing</strong><small>Packing video available</small></span>
+          <span><strong>Tracked Shipping</strong><small>International options available</small></span>
+          <span><strong>High-Value COD</strong><small>MY / SG where applicable</small></span>
         </div>
-      </section>
-
-      <section class="home-section home-storefront-section">
-        <div class="home-section-head">
-          <div>
-            <h3>Recently Added</h3>
-            <p>Newest listings in our inventory.</p>
-          </div>
-          <a href="#/inventory" class="home-section-link">View All</a>
-        </div>
-
-        <div class="home-storefront-grid" id="homeRecentlyAddedGrid">
-          ${recent.length
-            ? recent.map(appContext.cardTileHTML).join("")
-            : `<div class="hint">No listings yet.</div>`}
-        </div>
-      </section>
-
-      ${(()=>{
-        const liveInventory=appContext.cards.filter(c=>appContext.cardMatchesListingScope(c,"inventory")).slice();
-
-        const highValue=liveInventory
-          .filter(appContext.isHighValueDirectContactCard)
-          .sort((a,b)=>(appContext.cardUsdListedPrice(b)||0)-(appContext.cardUsdListedPrice(a)||0))
-          .slice(0,4);
-
-        const vintage=liveInventory
-          .filter(c=>appContext.normalizeFilterValue(c.era)==="vintage")
-          .sort((a,b)=>String(b.created_at||"").localeCompare(String(a.created_at||"")))
-          .slice(0,4);
-
-        const recentlySold=appContext.cards
-          .filter(c=>appContext.cardMatchesListingScope(c,"sold"))
-          .slice()
-          .sort((a,b)=>String(b.sold_at||b.updated_at||"").localeCompare(String(a.sold_at||a.updated_at||"")))
-          .slice(0,4);
-
-        const storefrontRow=(title,description,list,href)=>list.length ? `
-          <section class="home-section home-storefront-section">
-            <div class="home-section-head">
-              <div>
-                <h3>${appContext.escapeHtml(title)}</h3>
-                <p>${appContext.escapeHtml(description)}</p>
-              </div>
-              <a href="${appContext.escapeHtml(href)}" class="home-section-link">View All</a>
-            </div>
-            <div class="home-storefront-grid">
-              ${list.map(appContext.cardTileHTML).join("")}
-            </div>
-          </section>
-        ` : "";
-
-        return [
-          /* High Value View All mirrors the Home threshold: USD 6,000+. */
-          storefrontRow("High Value","Premium listings above USD 6,000.",highValue,"#/inventory?pc=USD&pmin=6000"),
-          storefrontRow("Vintage","Older collectibles.",vintage,"#/inventory?quick=vintage"),
-          storefrontRow("Recently Sold","Recently sold cards from the archive.",recentlySold,"#/sold")
-        ].join("");
-      })()}
-
-      <section class="home-shipping">
-        <div class="home-shipping-item home-shipping-international">
-          <strong>🌏 Buying &amp; Shipping</strong>
-          <span class="shipping-summary-grid">
-            <span><b>International Shipping</b><small>Available for orders below USD 6,000.</small></span>
-            <span><b>High-Value Cards</b><small>For cards priced above USD 6,000, Cash on Delivery (COD) in Malaysia or Singapore is preferred, depending on the specific card.</small></span>
-            <span><b>Insurance</b><small>Optional and borne by the buyer; recommended for higher-value shipments.</small></span>
-          </span>
-        </div>
-        <div class="home-shipping-item">
-          <strong>📦 Secure Packing</strong>
-          <span>Cards will be packed securely, and a video of the packing process will be provided for buyer's peace of mind.</span>
-        </div>
-        <div class="home-shipping-item">
-          <strong>🔎 Tracking Available</strong>
-          <span>A tracking number will be provided once your package has been shipped.</span>
+        <div class="home-premium-trust-links">
+          <a href="#/reviews">Reviews</a>
+          <a href="#/about">About</a>
+          <a href="#/contact">Contact</a>
         </div>
       </section>
     `;
-
-    const recentGrid = appContext.$("homeRecentlyAddedGrid");
-    if(recentGrid && recent.length){
-      appContext.wireShimmer(recentGrid);
-    }
-    appContext.view.querySelectorAll(".home-storefront-grid").forEach(grid=>appContext.wireShimmer(grid));
 
     appContext.$("homeCurrencyPreference")?.addEventListener("change",e=>{
       const currency=appContext.setPriceCurrencyPreference(e.target.value);
@@ -400,48 +380,36 @@ function renderHomePage(){
       appContext.showToast(`Primary price set to ${appContext.getPriceCurrencyPreference()}`);
     });
 
-    appContext.view.querySelectorAll(".home-section-link").forEach(link=>{
+    appContext.view.querySelectorAll(".home-section-link,.home-curated-tile").forEach(link=>{
       link.addEventListener("click",()=>{
         try{ appContext.sessionStorage.setItem("collect_tcg_scroll_listing_header_once","1"); }catch{}
       });
     });
 
-    appContext.view.querySelectorAll("[data-home-filter]").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        const filter=String(btn.dataset.homeFilter||"all");
-        if(!["championship","vintage","graded","sealed"].includes(filter)) return;
-
-        try{ appContext.sessionStorage.removeItem(appContext.LISTING_SCROLL_STATE_KEY); }catch{}
-        location.hash=`#/inventory?quick=${encodeURIComponent(filter)}`;
-
-        // After the destination has rendered, force both possible scroll
-        // containers to the very top.
-        requestAnimationFrame(()=>requestAnimationFrame(()=>{
-          window.scrollTo({top:0,left:0,behavior:"auto"});
-          const shell=document.querySelector(".shell");
-          if(shell) shell.scrollTo({top:0,left:0,behavior:"auto"});
-        }));
+    Promise.resolve(appContext.refreshTrending7dPerformance?.())
+      .then(()=>{
+        const mount=appContext.$("homeTrendingShelf");
+        if(!mount || !appContext.view.contains(mount)) return;
+        if(appContext.trending7dBackendState!=="available"){
+          mount.innerHTML="";
+          return;
+        }
+        const trending=liveInventory
+          .filter(card=>appContext.trendingCardViews(card)>0)
+          .sort((a,b)=>
+            appContext.trendingCardViews(b)-appContext.trendingCardViews(a) ||
+            appContext.trendingCardUniqueViews(b)-appContext.trendingCardUniqueViews(a) ||
+            String(a.name||"").localeCompare(String(b.name||""))
+          )
+          .slice(0,4);
+        mount.innerHTML=trending.length
+          ? premiumShelf("Trending This Week","The cards receiving the most qualified attention over the rolling last 7 days.",trending,"#/inventory?quick=trending",{eyebrow:"Collector Interest",trending:true})
+          : "";
+      })
+      .catch(()=>{
+        const mount=appContext.$("homeTrendingShelf");
+        if(mount) mount.innerHTML="";
       });
-
-    appContext.view.querySelectorAll("[data-home-top-route]").forEach(link=>{
-      link.addEventListener("click",event=>{
-        const route=String(link.dataset.homeTopRoute||"").trim();
-        if(![
-          "inventory",
-          "sold",
-          "collection",
-          "reserved",
-          "inventory?quick=graded",
-          "inventory?quick=vintage",
-          "inventory?quick=sealed"
-        ].includes(route)) return;
-
-        event.preventDefault();
-        appContext.goToRouteFromHomeTop(route);
-      });
-    });
-
-    });
   }
 
   Object.assign(appContext,{renderRecentlyViewedPage,renderFavoritesPage,renderAnalyticsExclusionPairingPage,renderHomePage});

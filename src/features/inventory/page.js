@@ -1822,34 +1822,78 @@ function renderInventoryPage(scope = "inventory"){
     const searchSuggestions=appContext.$("searchSuggestions");
     let suggestionIndex=-1;
 
+    const RECENT_SEARCHES_KEY="collect_tcg_recent_inventory_searches_v1";
+
+    function getRecentSearches(){
+      try{
+        const parsed=JSON.parse(appContext.localStorage.getItem(RECENT_SEARCHES_KEY)||"[]");
+        return Array.isArray(parsed) ? parsed.filter(Boolean).slice(0,5) : [];
+      }catch{ return []; }
+    }
+
+    function rememberSearchQuery(value){
+      const clean=String(value||"").trim().replace(/\s+/g," ").slice(0,100);
+      if(clean.length<2) return;
+      const normalized=appContext.normalizeSearchText(clean);
+      const next=[clean,...getRecentSearches().filter(item=>appContext.normalizeSearchText(item)!==normalized)].slice(0,5);
+      try{ appContext.localStorage.setItem(RECENT_SEARCHES_KEY,JSON.stringify(next)); }catch{}
+    }
+
     function getSearchSuggestions(query){
-      const q=appContext.normalizeFilterValue(query);
-      if(!q) return [];
+      const raw=String(query||"").trim();
+      const q=appContext.normalizeSearchText(raw);
+
+      if(!q){
+        return getRecentSearches().map(text=>({text,type:"Recent search",query:text}));
+      }
 
       const options=[];
       const seen=new Set();
-      const add=(value,type)=>{
-        const text=String(value||"").trim();
-        if(!text || !appContext.normalizeFilterValue(text).includes(q)) return;
-        const key=appContext.normalizeFilterValue(text);
+      const add=(text,type,queryValue=text,score=0)=>{
+        const label=String(text||"").trim();
+        const value=String(queryValue||label).trim();
+        if(!label || !value) return;
+        const key=`${type}:${appContext.normalizeSearchText(label)}`;
         if(seen.has(key)) return;
         seen.add(key);
-        options.push({text,type});
+        options.push({text:label,type,query:value,score});
+      };
+
+      const matchedCards=scopedCards
+        .filter(card=>appContext.cardMatchesSmartSearch(card,raw))
+        .map(card=>({card,score:appContext.cardSearchScore(card,raw)}))
+        .sort((a,b)=>b.score-a.score || String(a.card.name||"").localeCompare(String(b.card.name||"")))
+        .slice(0,5);
+
+      matchedCards.forEach(({card,score})=>{
+        const ref=[card.card_code,card.year].filter(Boolean).join(" · ");
+        add(card.name,ref ? `Card · ${ref}` : "Card",card.card_code||card.name,1000+score);
+      });
+
+      const tokens=appContext.smartSearchTokens(raw);
+      const valueMatches=value=>{
+        const normalized=appContext.normalizeSearchText(value);
+        const compact=normalized.replace(/\s+/g,"");
+        return tokens.every(token=>normalized.includes(token) || compact.includes(token.replace(/\s+/g,"")));
       };
 
       scopedCards.forEach(card=>{
-        add(card.card_code,"Card code");
-        add(card.name,"Card");
-        add(card.series,"Series");
-        add(card.game,"Game");
-        add(card.year,"Year");
-        const grades=Array.isArray(card.grading)?card.grading:[];
-        grades.forEach(g=>{
-          if(g?.company) add(`${g.company} ${g.grade||""}`.trim(),"Grade");
+        const entities=[
+          [card.card_code,"Card code"],
+          [card.series,"Series"],
+          [card.game,"Game"],
+          [card.year,"Year"],
+          [card.language,"Language"]
+        ];
+        (Array.isArray(card.grading)?card.grading:[]).forEach(g=>{
+          if(g?.company) entities.push([`${g.company} ${g.grade||""}`.trim(),"Grade"]);
+        });
+        entities.forEach(([value,type])=>{
+          if(value && valueMatches(value)) add(value,type,value,100);
         });
       });
 
-      return options.slice(0,10);
+      return options.sort((a,b)=>b.score-a.score).slice(0,10);
     }
 
     const mobileSearch=appContext.$("mobileInventorySearch");
@@ -1867,7 +1911,7 @@ function renderInventoryPage(scope = "inventory"){
       const suggestions=getSearchSuggestions(mobileSearch.value);
       mobileSearchSuggestions.hidden=suggestions.length===0;
       mobileSearchSuggestions.innerHTML=suggestions.map(item=>`
-        <button type="button" role="option" data-mobile-search-suggestion="${appContext.escapeHtml(item.text)}">
+        <button type="button" role="option" data-mobile-search-suggestion="${appContext.escapeHtml(item.query||item.text)}">
           <span>${appContext.escapeHtml(item.text)}</span>
           <small>${appContext.escapeHtml(item.type)}</small>
         </button>
@@ -1880,6 +1924,7 @@ function renderInventoryPage(scope = "inventory"){
           mobileSearch.value=value;
           if(appContext.$("search")) appContext.$("search").value=value;
           mobileSearchSuggestions.hidden=true;
+          rememberSearchQuery(value);
           if(mobileSearchClear) mobileSearchClear.hidden=!value;
           appContext.$("search")?.dispatchEvent(new Event("input",{bubbles:true}));
         });
@@ -1916,6 +1961,7 @@ function renderInventoryPage(scope = "inventory"){
     // not always arrive as a normal Enter keydown. The native "search" event
     // on <input type="search"> covers that keyboard action.
     mobileSearch?.addEventListener("search",()=>{
+      rememberSearchQuery(mobileSearch.value);
       dismissMobileSearchSuggestions();
       mobileSearch.blur();
     });
@@ -1942,7 +1988,7 @@ function renderInventoryPage(scope = "inventory"){
       suggestionIndex=-1;
       searchSuggestions.hidden=suggestions.length===0;
       searchSuggestions.innerHTML=suggestions.map((item,i)=>`
-        <button type="button" role="option" data-search-suggestion="${appContext.escapeHtml(item.text)}" data-suggestion-index="${i}">
+        <button type="button" role="option" data-search-suggestion="${appContext.escapeHtml(item.query||item.text)}" data-suggestion-index="${i}">
           <span>${appContext.escapeHtml(item.text)}</span>
           <small>${appContext.escapeHtml(item.type)}</small>
         </button>
@@ -1953,6 +1999,7 @@ function renderInventoryPage(scope = "inventory"){
         btn.addEventListener("click",()=>{
           appContext.$("search").value=String(btn.dataset.searchSuggestion||"").slice(0,100);
           searchSuggestions.hidden=true;
+          rememberSearchQuery(appContext.$("search").value);
           appContext.$("search").dispatchEvent(new Event("input",{bubbles:true}));
         });
       });
@@ -1981,6 +2028,7 @@ function renderInventoryPage(scope = "inventory"){
         // dismisses the dropdown so the results are unobstructed.
         if(searchSuggestions) searchSuggestions.hidden=true;
         suggestionIndex=-1;
+        rememberSearchQuery(appContext.$("search").value);
         appContext.$("search").blur();
         return;
       }
