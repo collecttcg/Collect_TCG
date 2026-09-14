@@ -103,7 +103,7 @@
 <link rel="stylesheet" href="./src/styles/24-card-overview-pill-toggle-inline-v44.css" id="card-overview-pill-toggle-inline-v44">
 
 <link rel="stylesheet" href="./src/styles/25-compatibility.css">
-<link rel="stylesheet" href="./src/styles/26-compatibility.css?v=197">
+<link rel="stylesheet" href="./src/styles/26-compatibility.css?v=205">
 
 <!-- V47: Home Recently Added now uses the shared home-storefront-grid layout (same as High Value / Vintage / Recently Sold). -->
   <!-- v49: Inventory grouped catalogue uses no per-page selector or pagination. -->
@@ -331,7 +331,6 @@
           <div class="details-more-menu" id="detailsMoreMenu" role="menu" hidden>
             <button type="button" id="detailsWhatsAppBtn" role="menuitem">Share on WhatsApp</button>
             <button type="button" id="detailsDownloadBtn" role="menuitem">Download current image</button>
-            <button type="button" id="detailsSharePreviewBtn" role="menuitem">Download share preview</button>
             <button type="button" class="owner-only" id="detailsCloneBtn" role="menuitem" hidden>Clone card</button>
             <button type="button" class="owner-only details-delete-listing-btn" id="detailsDeleteBtn" role="menuitem" hidden>Delete listing permanently</button>
           </div>
@@ -746,6 +745,16 @@
       </span>
     </div>
 
+    <div class="interest-contact-intents" aria-label="What would you like to ask?">
+      <span>What would you like to ask?</span>
+      <div>
+        <button type="button" class="active" data-inquiry-intent="availability">Availability</button>
+        <button type="button" data-inquiry-intent="offer">Make an offer</button>
+        <button type="button" data-inquiry-intent="photos">More photos / video</button>
+        <button type="button" data-inquiry-intent="cod">COD / meetup</button>
+      </div>
+    </div>
+
     <div class="interest-contact-options">
       <a class="interest-contact-option"
          href="https://www.instagram.com/collecttcg.mysg/"
@@ -825,6 +834,6 @@
 
 
 <!-- V48: Recently Added uses the exact same storefront row structure/count as High Value/Vintage/Recently Sold. -->
-<script type="module" src="./src/main.js?v=197"></script>
+<script type="module" src="./src/main.js?v=205"></script>
 </body>
 </html>

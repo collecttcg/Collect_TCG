@@ -17,6 +17,7 @@ export function setup(appContext){
   if(!bar || !priceEl || !action || !contactOverlay || !contactSheet) return;
 
   let lastInterestFocus=null;
+  let selectedInquiryIntent=typeof appContext.contactInquiryIntent==="function" ? appContext.contactInquiryIntent() : "availability";
   const mobileMedia=window.matchMedia("(max-width:800px)");
 
   function currentCardContext(){
@@ -60,9 +61,13 @@ export function setup(appContext){
   }
 
   function inquiryText(){
+    const detailsCard=typeof appContext.getDetailsCard==="function" ? appContext.getDetailsCard() : null;
+    if(detailsCard && typeof appContext.contactInquiryMessage==="function"){
+      return appContext.contactInquiryMessage(detailsCard,selectedInquiryIntent);
+    }
     const ctx=currentCardContext();
     const ref=ctx.reference ? ` (${ctx.reference})` : "";
-    return `Hi, I'm interested in this card: ${ctx.name}${ref}\n${ctx.url}`;
+    return `Hi, is this still available? I'm interested in: ${ctx.name}${ref}\n${ctx.url}`;
   }
 
   async function copyInquiry(trackEngagement=true){
@@ -268,6 +273,21 @@ export function setup(appContext){
 
   contactOverlay.addEventListener("click",e=>{
     if(e.target===contactOverlay) closeContactChooser(true);
+  });
+
+  contactSheet.querySelectorAll("[data-inquiry-intent]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      selectedInquiryIntent=String(btn.dataset.inquiryIntent||"availability");
+      if(typeof appContext.setContactInquiryIntent==="function"){
+        selectedInquiryIntent=appContext.setContactInquiryIntent(selectedInquiryIntent);
+      }
+      contactSheet.querySelectorAll("[data-inquiry-intent]").forEach(other=>other.classList.toggle("active",other===btn));
+      const copySmall=copyInquiryBtn?.querySelector("small");
+      if(copySmall){
+        const labels={availability:"Copy an availability inquiry",offer:"Copy an offer message",photos:"Copy a photo / video request",cod:"Copy a COD / meetup inquiry"};
+        copySmall.textContent=labels[selectedInquiryIntent]||"Copy the card name and listing link";
+      }
+    });
   });
 
   copyInquiryBtn?.addEventListener("click",copyInquiry);
