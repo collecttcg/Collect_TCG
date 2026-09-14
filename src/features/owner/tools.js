@@ -22,7 +22,7 @@ function currentInventoryToolSubmode(mode){
       activity:["recent","history"],
       quality:["audit","images","duplicates","reprocess"],
       lifecycle:["lifecycle"],
-      storage:["health","migration","backup"]
+      storage:["health","storage-audit","storage-optimizer","migration","backup"]
     };
     if(allowed[mode]?.includes(requested)) return requested;
 
@@ -38,7 +38,7 @@ function inventoryToolsSwitcher(mode,submode){
       ["activity","Activity","Recent · history","recent"],
       ["quality","Quality","Audit · images · duplicates · reprocess","audit"],
       ["lifecycle","Lifecycle","Drafts · archive","lifecycle"],
-      ["storage","Storage","Capacity · migration · backup","health"]
+      ["storage","Storage","Capacity · audit · optimizer · migration · backup","health"]
     ];
 
     const subtabs={
@@ -46,7 +46,7 @@ function inventoryToolsSwitcher(mode,submode){
       activity:[["recent","Recently Edited"],["history","Edit History"]],
       quality:[["audit","Catalogue Audit"],["images","Image Health"],["duplicates","Duplicates"],["reprocess","Reprocess Images"]],
       lifecycle:[["lifecycle","Drafts & Archive"]],
-      storage:[["health","Database & Storage"],["migration","Image Migration"],["backup","Backup"]]
+      storage:[["health","Database & Storage"],["storage-audit","Storage Audit"],["storage-optimizer","Storage Optimizer"],["migration","Image Migration"],["backup","Backup"]]
     };
 
     return `
@@ -438,6 +438,985 @@ function ownerAlertsDashboardHTML(){
     `;
   }
 
+
+function storageAuditFileSize(item){
+    const metadata=item?.metadata||{};
+    const candidates=[
+      metadata.size,
+      metadata.contentLength,
+      metadata.content_length,
+      metadata["content-length"],
+      item?.size
+    ];
+    for(const value of candidates){
+      const n=Number(value);
+      if(Number.isFinite(n) && n>=0) return n;
+    }
+    return null;
+  }
+
+async function storageAuditResolveFileSize(file){
+    const current=Number(file?.size);
+    if(Number.isFinite(current) && current>0) return current;
+
+    try{
+      const {data}=appContext.supabaseClient.storage
+        .from(appContext.CARD_IMAGE_STORAGE_BUCKET)
+        .getPublicUrl(file.path);
+      const url=appContext.safeHttpUrl(data?.publicUrl||"");
+      if(!url) return null;
+
+      // HEAD is cheap and avoids downloading image bodies. Some embedded
+      // browsers/storage CDNs may block HEAD, so fall back to a one-byte range.
+      try{
+        const response=await appContext.fetch(url,{method:"HEAD",cache:"no-store"});
+        const length=Number(response.headers.get("content-length"));
+        if(response.ok && Number.isFinite(length) && length>0) return length;
+      }catch{}
+
+      try{
+        const response=await appContext.fetch(url,{
+          method:"GET",
+          headers:{Range:"bytes=0-0"},
+          cache:"no-store"
+        });
+        const range=String(response.headers.get("content-range")||"");
+        const match=range.match(/\/(\d+)$/);
+        if(match){
+          const total=Number(match[1]);
+          if(Number.isFinite(total) && total>0) return total;
+        }
+        const length=Number(response.headers.get("content-length"));
+        if(Number.isFinite(length) && length>1) return length;
+      }catch{}
+    }catch{}
+
+    return null;
+  }
+
+function storageAuditFileEtag(item){
+    const metadata=item?.metadata||{};
+    return String(
+      metadata.eTag ||
+      metadata.etag ||
+      metadata.md5 ||
+      metadata.hash ||
+      ""
+    ).replace(/^W\//,"").replace(/^["']|["']$/g,"").trim();
+  }
+
+async function listOwnerCardStorageObjects(){
+    if(!appContext.requireOwner("audit card image Storage")) return [];
+
+    const ownerId=String(appContext.ownerSession?.user?.id||"");
+    if(!ownerId) throw new Error("Owner session unavailable");
+
+    const bucket=appContext.supabaseClient.storage.from(appContext.CARD_IMAGE_STORAGE_BUCKET);
+    const files=[];
+    const visited=new Set();
+
+    const walk=async(relativeFolder="")=>{
+      const folder=relativeFolder ? `${ownerId}/${relativeFolder}` : ownerId;
+      if(visited.has(folder)) return;
+      visited.add(folder);
+
+      const pageSize=100;
+      for(let offset=0;;offset+=pageSize){
+        const {data,error}=await bucket.list(folder,{
+          limit:pageSize,
+          offset,
+          sortBy:{column:"name",order:"asc"}
+        });
+        if(error) throw error;
+        const rows=Array.isArray(data)?data:[];
+        for(const item of rows){
+          const name=String(item?.name||"").trim();
+          if(!name) continue;
+
+          // Supabase returns folders without normal file metadata/id.
+          const looksLikeFolder=!item?.id && !item?.metadata;
+          if(looksLikeFolder){
+            const child=relativeFolder ? `${relativeFolder}/${name}` : name;
+            await walk(child);
+            continue;
+          }
+
+          const path=`${folder}/${name}`;
+          files.push({
+            path,
+            name,
+            size:appContext.storageAuditFileSize(item),
+            etag:appContext.storageAuditFileEtag(item),
+            mime:String(item?.metadata?.mimetype||item?.metadata?.contentType||""),
+            updatedAt:String(item?.updated_at||item?.updatedAt||item?.metadata?.lastModified||"")
+          });
+        }
+        if(rows.length<pageSize) break;
+      }
+    };
+
+    await walk("");
+
+    // Some Supabase Storage responses omit per-file size metadata. Resolve only
+    // unknown sizes from the public object headers so the audit never silently
+    // counts an unknown file as 0 bytes.
+    const unknown=files.filter(file=>!Number.isFinite(Number(file.size)) || Number(file.size)<=0);
+    const concurrency=6;
+    let cursor=0;
+    const worker=async()=>{
+      while(cursor<unknown.length){
+        const index=cursor++;
+        const file=unknown[index];
+        const size=await appContext.storageAuditResolveFileSize(file);
+        file.size=Number.isFinite(Number(size)) && Number(size)>0 ? Number(size) : null;
+      }
+    };
+    await Promise.all(Array.from({length:Math.min(concurrency,unknown.length)},worker));
+
+    return files;
+  }
+
+async function ownerCardStorageReferencePaths(){
+    if(!appContext.requireOwner("audit card image references")) return new Set();
+
+    const referenced=new Set();
+    const protect=url=>{
+      const path=appContext.cardStoragePathFromUrl(url);
+      if(path) referenced.add(path);
+    };
+
+    const scan=async(table,columns,order,visit)=>{
+      const pageSize=500;
+      for(let offset=0;;offset+=pageSize){
+        const {data,error}=await appContext.supabaseClient
+          .from(table)
+          .select(columns)
+          .order(order,{ascending:true})
+          .range(offset,offset+pageSize-1);
+        if(error) throw error;
+        const rows=Array.isArray(data)?data:[];
+        rows.forEach(visit);
+        if(rows.length<pageSize) break;
+      }
+    };
+
+    await scan(
+      "cards",
+      appContext.thumbnailUrlSupported ? "id,images,thumbnail_url" : "id,images",
+      "id",
+      row=>{
+        (Array.isArray(row.images)?row.images:[]).forEach(protect);
+        if(row.thumbnail_url) protect(row.thumbnail_url);
+      }
+    );
+
+    if(appContext.cardImageVariantsSupported){
+      await scan(
+        "card_image_variants",
+        "image_key,original_url,watermarked_url",
+        "image_key",
+        row=>{
+          protect(row.original_url);
+          protect(row.watermarked_url);
+        }
+      );
+    }
+
+    return referenced;
+  }
+
+function storageAuditDuplicateGroups(files){
+    const exact=new Map();
+    const sizeOnly=new Map();
+
+    files.forEach(file=>{
+      if(file.etag){
+        const key=`${file.size}:${file.etag}`;
+        if(!exact.has(key)) exact.set(key,[]);
+        exact.get(key).push(file);
+      }else if(file.size>0){
+        const key=String(file.size);
+        if(!sizeOnly.has(key)) sizeOnly.set(key,[]);
+        sizeOnly.get(key).push(file);
+      }
+    });
+
+    const exactGroups=[...exact.values()].filter(group=>group.length>1);
+    const possibleGroups=[...sizeOnly.values()].filter(group=>group.length>1);
+    return {exactGroups,possibleGroups};
+  }
+
+async function buildOwnerStorageAudit(){
+    const [files,referenced,usage]=await Promise.all([
+      appContext.listOwnerCardStorageObjects(),
+      appContext.ownerCardStorageReferencePaths(),
+      appContext.fetchSupabaseCapacityUsage()
+    ]);
+
+    const rows=files.map(file=>({
+      ...file,
+      referenced:referenced.has(file.path),
+      oversized:Number.isFinite(Number(file.size)) && Number(file.size)>=3*1024*1024
+    }));
+
+    const orphans=rows.filter(file=>!file.referenced);
+    const oversized=rows.filter(file=>file.oversized).sort((a,b)=>b.size-a.size);
+    const largest=rows.slice().sort((a,b)=>b.size-a.size).slice(0,50);
+    const duplicates=appContext.storageAuditDuplicateGroups(rows);
+    const orphanBytes=orphans.reduce((sum,file)=>sum+(Number.isFinite(Number(file.size))?Number(file.size):0),0);
+    const ownerFolderBytes=rows.reduce((sum,file)=>sum+(Number.isFinite(Number(file.size))?Number(file.size):0),0);
+    const unknownSizeCount=rows.filter(file=>!Number.isFinite(Number(file.size)) || Number(file.size)<=0).length;
+
+    return {
+      files:rows,
+      orphans:orphans.sort((a,b)=>b.size-a.size),
+      oversized,
+      largest,
+      exactDuplicateGroups:duplicates.exactGroups,
+      possibleDuplicateGroups:duplicates.possibleGroups,
+      orphanBytes,
+      ownerFolderBytes,
+      unknownSizeCount,
+      usage
+    };
+  }
+
+function storageAuditTableRows(rows,{checkboxes=false,limit=50}={}){
+    if(!rows.length){
+      return `<div class="empty compact"><p>No matching files.</p></div>`;
+    }
+
+    return `
+      <div class="storage-audit-table-wrap">
+        <table class="storage-audit-table">
+          <thead>
+            <tr>
+              ${checkboxes?`<th class="storage-audit-check"></th>`:""}
+              <th>File</th>
+              <th>Size</th>
+              <th>Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.slice(0,limit).map(file=>`
+              <tr>
+                ${checkboxes?`
+                  <td class="storage-audit-check">
+                    <input type="checkbox"
+                           data-storage-orphan-path="${appContext.escapeHtml(file.path)}"
+                           aria-label="Select ${appContext.escapeHtml(file.name)}">
+                  </td>`:""}
+                <td>
+                  <strong title="${appContext.escapeHtml(file.path)}">${appContext.escapeHtml(file.name)}</strong>
+                  <small>${appContext.escapeHtml(file.path)}</small>
+                </td>
+                <td>${Number.isFinite(Number(file.size)) && Number(file.size)>0 ? appContext.escapeHtml(appContext.formatApproxBytes(file.size)) : "Size unavailable"}</td>
+                <td>${file.updatedAt ? appContext.escapeHtml(new Date(file.updatedAt).toLocaleString()) : "—"}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+        ${rows.length>limit?`<div class="hint">Showing ${limit.toLocaleString()} of ${rows.length.toLocaleString()} files.</div>`:""}
+      </div>
+    `;
+  }
+
+function renderStorageAuditPage(){
+    if(!appContext.requireOwner("open Storage audit")) return;
+
+    appContext.view.innerHTML=`
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Inventory Tools · Storage</div>
+          <h2>Storage Audit</h2>
+          <p>Find large, duplicate and unreferenced files in the <strong>card-images</strong> bucket before Storage fills up.</p>
+        </div>
+      </div>
+
+      <section class="panel storage-audit-panel">
+        <div id="storageAuditStatus" class="storage-audit-status">
+          <strong>Ready to scan</strong>
+          <span>No files are deleted automatically.</span>
+        </div>
+        <div class="storage-audit-actions">
+          <button type="button" class="btn-primary" id="storageAuditRunBtn">Run Storage Audit</button>
+        </div>
+        <div id="storageAuditResults"></div>
+      </section>
+    `;
+
+    let latestAudit=null;
+
+    const setStatus=(title,message,kind="")=>{
+      const el=appContext.$("storageAuditStatus");
+      if(!el) return;
+      el.className=`storage-audit-status ${kind}`.trim();
+      el.innerHTML=`<strong>${appContext.escapeHtml(title)}</strong><span>${appContext.escapeHtml(message)}</span>`;
+    };
+
+    const selectedOrphanPaths=()=>[
+      ...appContext.view.querySelectorAll("[data-storage-orphan-path]:checked")
+    ].map(input=>String(input.dataset.storageOrphanPath||"")).filter(Boolean);
+
+    const updateSelectionSummary=()=>{
+      if(!latestAudit) return;
+      const selected=new Set(selectedOrphanPaths());
+      const bytes=latestAudit.orphans
+        .filter(file=>selected.has(file.path))
+        .reduce((sum,file)=>sum+file.size,0);
+      const label=appContext.$("storageAuditSelectedSummary");
+      const btn=appContext.$("storageAuditDeleteBtn");
+      if(label){
+        label.textContent=`${selected.size.toLocaleString()} selected · ${appContext.formatApproxBytes(bytes)}`;
+      }
+      if(btn) btn.disabled=!selected.size;
+    };
+
+    const bindResultEvents=()=>{
+      appContext.$("storageAuditSelectAllBtn")?.addEventListener("click",()=>{
+        const boxes=[...appContext.view.querySelectorAll("[data-storage-orphan-path]")];
+        const shouldSelect=boxes.some(box=>!box.checked);
+        boxes.forEach(box=>{ box.checked=shouldSelect; });
+        updateSelectionSummary();
+      });
+
+      appContext.view.querySelectorAll("[data-storage-orphan-path]").forEach(input=>{
+        input.addEventListener("change",updateSelectionSummary);
+      });
+
+      appContext.$("storageAuditDeleteBtn")?.addEventListener("click",async()=>{
+        const paths=selectedOrphanPaths();
+        if(!paths.length) return;
+
+        const selected=new Set(paths);
+        const bytes=latestAudit.orphans
+          .filter(file=>selected.has(file.path))
+          .reduce((sum,file)=>sum+file.size,0);
+
+        const ok=confirm(
+          `Delete ${paths.length} selected orphaned file${paths.length===1?"":"s"}?\n\n`+
+          `Estimated space to reclaim: ${appContext.formatApproxBytes(bytes)}\n\n`+
+          `A fresh database reference check will run before deletion. Referenced files will be retained.`
+        );
+        if(!ok) return;
+
+        const btn=appContext.$("storageAuditDeleteBtn");
+        if(btn){
+          btn.disabled=true;
+          btn.textContent="Checking & deleting…";
+        }
+
+        let allOk=true;
+        for(let i=0;i<paths.length;i+=100){
+          const okChunk=await appContext.removeCardStoragePaths(paths.slice(i,i+100));
+          if(!okChunk){
+            allOk=false;
+            break;
+          }
+        }
+
+        if(!allOk){
+          setStatus(
+            "Cleanup stopped safely",
+            "The reference check or Storage delete was not confirmed. Remaining files were retained.",
+            "warn"
+          );
+          if(btn){
+            btn.disabled=false;
+            btn.textContent="Delete Selected Orphans";
+          }
+          return;
+        }
+
+        setStatus(
+          "Cleanup completed",
+          "Selected unreferenced files were processed. Running a fresh audit now…",
+          "ok"
+        );
+        await runAudit();
+      });
+    };
+
+    const renderAudit=audit=>{
+      const usage=audit.usage;
+      const totalStorage=usage?.ok ? usage.storageBytes : null;
+      const storageLeft=usage?.ok
+        ? appContext.capacityLeft(usage.storageBytes,appContext.SUPABASE_FREE_STORAGE_LIMIT_BYTES)
+        : null;
+      const exactDupFiles=audit.exactDuplicateGroups.reduce((sum,g)=>sum+g.length,0);
+      const possibleDupFiles=audit.possibleDuplicateGroups.reduce((sum,g)=>sum+g.length,0);
+
+      appContext.$("storageAuditResults").innerHTML=`
+        <div class="storage-audit-summary">
+          <article>
+            <strong>${audit.files.length.toLocaleString()}</strong>
+            <span>Files audited</span>
+            <small>${appContext.formatApproxBytes(audit.ownerFolderBytes)} in your owner folder</small>
+          </article>
+          <article class="${audit.orphans.length?"needs-attention":""}">
+            <strong>${audit.orphans.length.toLocaleString()}</strong>
+            <span>Confirmed orphans</span>
+            <small>${appContext.formatApproxBytes(audit.orphanBytes)} potentially reclaimable</small>
+          </article>
+          <article>
+            <strong>${audit.oversized.length.toLocaleString()}</strong>
+            <span>Files ≥ 3 MB</span>
+            <small>Largest upload opportunities</small>
+          </article>
+          <article>
+            <strong>${exactDupFiles.toLocaleString()}</strong>
+            <span>Exact duplicate candidates</span>
+            <small>${audit.exactDuplicateGroups.length.toLocaleString()} matching hash/size groups</small>
+          </article>
+          <article>
+            <strong>${usage?.ok ? appContext.formatApproxBytes(totalStorage) : "—"}</strong>
+            <span>Total File Storage used</span>
+            <small>${usage?.ok ? `${appContext.formatApproxBytes(storageLeft)} left` : "Capacity RPC unavailable"}</small>
+          </article>
+        </div>
+
+        <section class="storage-audit-section storage-audit-danger-zone">
+          <div class="storage-audit-section-head">
+            <div>
+              <h3>Confirmed Orphaned Files</h3>
+              <p>Files not referenced by any card image, thumbnail, original image or reversible watermark variant.</p>
+            </div>
+            <div class="storage-audit-inline-actions">
+              <button type="button" class="btn-ghost" id="storageAuditSelectAllBtn" ${audit.orphans.length?"":"disabled"}>Select All</button>
+              <button type="button" class="btn-danger" id="storageAuditDeleteBtn" disabled>Delete Selected Orphans</button>
+            </div>
+          </div>
+          <div id="storageAuditSelectedSummary" class="hint">0 selected · 0 B</div>
+          ${appContext.storageAuditTableRows(audit.orphans,{checkboxes:true,limit:100})}
+          <div class="storage-audit-safety-note">
+            <strong>Safety check</strong>
+            <span>Delete runs the existing full database reference check again immediately before removing files. Nothing is auto-deleted.</span>
+          </div>
+        </section>
+
+        <section class="storage-audit-section">
+          <div class="storage-audit-section-head">
+            <div><h3>Largest Files</h3><p>Top 50 files by Storage size.</p></div>
+          </div>
+          ${appContext.storageAuditTableRows(audit.largest,{limit:50})}
+        </section>
+
+        <section class="storage-audit-section">
+          <div class="storage-audit-section-head">
+            <div><h3>Oversized Files</h3><p>Files at least 3 MB. Consider compressing future uploads; these are not automatically deleted.</p></div>
+          </div>
+          ${appContext.storageAuditTableRows(audit.oversized,{limit:50})}
+        </section>
+
+        <section class="storage-audit-section">
+          <div class="storage-audit-section-head">
+            <div><h3>Duplicate Candidates</h3><p>Exact groups use matching Storage hash/ETag and byte size when available. Size-only matches are shown as possible duplicates and are never auto-deleted.</p></div>
+          </div>
+          <div class="storage-audit-duplicate-summary">
+            <strong>${audit.exactDuplicateGroups.length.toLocaleString()} exact groups</strong>
+            <span>${audit.possibleDuplicateGroups.length.toLocaleString()} possible size-only groups · ${possibleDupFiles.toLocaleString()} files</span>
+          </div>
+          ${audit.exactDuplicateGroups.length ? `
+            <div class="storage-audit-duplicate-groups">
+              ${audit.exactDuplicateGroups.slice(0,20).map((group,index)=>`
+                <details>
+                  <summary>Exact group ${index+1} · ${group.length} files · ${appContext.formatApproxBytes(group[0]?.size||0)} each</summary>
+                  ${appContext.storageAuditTableRows(group,{limit:20})}
+                </details>
+              `).join("")}
+            </div>
+          ` : `<div class="empty compact"><p>No exact duplicate groups detected from available Storage metadata.</p></div>`}
+        </section>
+      `;
+
+      bindResultEvents();
+    };
+
+    const runAudit=async()=>{
+      const btn=appContext.$("storageAuditRunBtn");
+      if(btn){
+        btn.disabled=true;
+        btn.textContent="Scanning Storage…";
+      }
+      setStatus(
+        "Scanning Storage",
+        "Reading Storage objects and cross-checking every database image reference…"
+      );
+
+      try{
+        latestAudit=await appContext.buildOwnerStorageAudit();
+        renderAudit(latestAudit);
+        setStatus(
+          "Audit complete",
+          `${latestAudit.files.length.toLocaleString()} files checked · ${latestAudit.orphans.length.toLocaleString()} confirmed orphan${latestAudit.orphans.length===1?"":"s"} · ${appContext.formatApproxBytes(latestAudit.orphanBytes)} potentially reclaimable`,
+          latestAudit.orphans.length?"warn":"ok"
+        );
+      }catch(error){
+        console.error("Storage audit failed:",error);
+        setStatus(
+          "Audit unavailable",
+          appContext.errorText(error,"Could not scan Storage. Nothing was deleted."),
+          "warn"
+        );
+      }finally{
+        if(btn){
+          btn.disabled=false;
+          btn.textContent="Run Storage Audit";
+        }
+      }
+    };
+
+    appContext.$("storageAuditRunBtn")?.addEventListener("click",runAudit);
+  }
+
+
+async function ownerCardStorageReferenceMap(){
+    if(!appContext.requireOwner("analyze card image Storage references")) return new Map();
+
+    const references=new Map();
+    const add=(url,info)=>{
+      const path=appContext.cardStoragePathFromUrl(url);
+      if(!path) return;
+      if(!references.has(path)) references.set(path,[]);
+      references.get(path).push(info);
+    };
+
+    const scan=async(table,columns,order,visit)=>{
+      const pageSize=500;
+      for(let offset=0;;offset+=pageSize){
+        const {data,error}=await appContext.supabaseClient
+          .from(table)
+          .select(columns)
+          .order(order,{ascending:true})
+          .range(offset,offset+pageSize-1);
+        if(error) throw error;
+        const rows=Array.isArray(data)?data:[];
+        rows.forEach(visit);
+        if(rows.length<pageSize) break;
+      }
+    };
+
+    await scan(
+      "cards",
+      appContext.thumbnailUrlSupported ? "id,name,card_code,images,thumbnail_url" : "id,name,card_code,images",
+      "id",
+      row=>{
+        (Array.isArray(row.images)?row.images:[]).forEach((url,index)=>{
+          add(url,{
+            type:"card-image",
+            cardId:String(row.id||""),
+            cardName:String(row.name||"Card"),
+            cardCode:String(row.card_code||""),
+            imageIndex:index+1
+          });
+        });
+        if(row.thumbnail_url){
+          add(row.thumbnail_url,{
+            type:"thumbnail",
+            cardId:String(row.id||""),
+            cardName:String(row.name||"Card"),
+            cardCode:String(row.card_code||""),
+            imageIndex:0
+          });
+        }
+      }
+    );
+
+    if(appContext.cardImageVariantsSupported){
+      await scan(
+        "card_image_variants",
+        "image_key,card_id,original_url,watermarked_url,active_variant",
+        "image_key",
+        row=>{
+          add(row.original_url,{
+            type:"variant-original",
+            cardId:String(row.card_id||""),
+            imageKey:String(row.image_key||""),
+            activeVariant:String(row.active_variant||"")
+          });
+          add(row.watermarked_url,{
+            type:"variant-watermarked",
+            cardId:String(row.card_id||""),
+            imageKey:String(row.image_key||""),
+            activeVariant:String(row.active_variant||"")
+          });
+        }
+      );
+    }
+
+    return references;
+  }
+
+function storageOptimizerTargetBytes(size){
+    const bytes=Number(size);
+    if(!Number.isFinite(bytes) || bytes<=0) return null;
+    const target=1.5*1024*1024;
+    return Math.min(bytes,target);
+  }
+
+function storageOptimizerSavingsBytes(size){
+    const bytes=Number(size);
+    if(!Number.isFinite(bytes) || bytes<=0) return null;
+    const target=appContext.storageOptimizerTargetBytes(bytes);
+    if(!Number.isFinite(Number(target))) return null;
+    return Math.max(0,bytes-Number(target));
+  }
+
+function storageOptimizerReferenceLabel(ref){
+    if(!ref) return "Referenced";
+    if(ref.type==="card-image"){
+      return `${ref.cardName||"Card"}${ref.cardCode?` · ${ref.cardCode}`:""} · image ${ref.imageIndex||1}`;
+    }
+    if(ref.type==="thumbnail"){
+      return `${ref.cardName||"Card"}${ref.cardCode?` · ${ref.cardCode}`:""} · thumbnail`;
+    }
+    if(ref.type==="variant-original"){
+      return `Reversible watermark original${ref.cardId?` · card ${ref.cardId}`:""}`;
+    }
+    if(ref.type==="variant-watermarked"){
+      return `Reversible watermark copy${ref.cardId?` · card ${ref.cardId}`:""}`;
+    }
+    return "Referenced";
+  }
+
+function storageOptimizerCardGroups(files,referenceMap){
+    const cards=new Map();
+
+    files.forEach(file=>{
+      const refs=referenceMap.get(file.path)||[];
+      refs.forEach(ref=>{
+        const cardId=String(ref.cardId||"");
+        if(!cardId || !["card-image","thumbnail"].includes(ref.type)) return;
+
+        if(!cards.has(cardId)){
+          cards.set(cardId,{
+            cardId,
+            cardName:ref.cardName||"Card",
+            cardCode:ref.cardCode||"",
+            paths:new Set(),
+            bytes:0,
+            estimatedSavings:0
+          });
+        }
+
+        const group=cards.get(cardId);
+        if(group.paths.has(file.path)) return;
+        group.paths.add(file.path);
+        group.bytes+=Number(file.size||0);
+        group.estimatedSavings+=Number(appContext.storageOptimizerSavingsBytes(file.size)||0);
+      });
+    });
+
+    return [...cards.values()].sort((a,b)=>b.bytes-a.bytes);
+  }
+
+function storageOptimizerVariantPairs(files,referenceMap){
+    const byKey=new Map();
+
+    files.forEach(file=>{
+      const refs=referenceMap.get(file.path)||[];
+      refs.forEach(ref=>{
+        if(!["variant-original","variant-watermarked"].includes(ref.type)) return;
+        const key=String(ref.imageKey||"");
+        if(!key) return;
+
+        if(!byKey.has(key)){
+          byKey.set(key,{
+            imageKey:key,
+            cardId:String(ref.cardId||""),
+            original:null,
+            watermarked:null
+          });
+        }
+
+        const group=byKey.get(key);
+        if(ref.type==="variant-original") group.original=file;
+        else group.watermarked=file;
+      });
+    });
+
+    return [...byKey.values()]
+      .filter(pair=>pair.original || pair.watermarked)
+      .map(pair=>({
+        ...pair,
+        bytes:Number(pair.original?.size||0)+Number(pair.watermarked?.size||0),
+        estimatedSavings:
+          Number(appContext.storageOptimizerSavingsBytes(pair.original?.size)||0)+
+          Number(appContext.storageOptimizerSavingsBytes(pair.watermarked?.size)||0)
+      }))
+      .sort((a,b)=>b.bytes-a.bytes);
+  }
+
+async function buildOwnerStorageOptimizer(){
+    const [files,referenceMap,usage]=await Promise.all([
+      appContext.listOwnerCardStorageObjects(),
+      appContext.ownerCardStorageReferenceMap(),
+      appContext.fetchSupabaseCapacityUsage()
+    ]);
+
+    const referencedFiles=files
+      .filter(file=>referenceMap.has(file.path))
+      .map(file=>({
+        ...file,
+        references:referenceMap.get(file.path)||[],
+        targetBytes:appContext.storageOptimizerTargetBytes(file.size),
+        estimatedSavings:appContext.storageOptimizerSavingsBytes(file.size)
+      }));
+
+    const knownFiles=referencedFiles.filter(file=>Number.isFinite(Number(file.size)) && Number(file.size)>0);
+    const unknownSizeFiles=referencedFiles.filter(file=>!Number.isFinite(Number(file.size)) || Number(file.size)<=0);
+    const over2=knownFiles.filter(file=>file.size>=2*1024*1024).sort((a,b)=>b.size-a.size);
+    const over3=knownFiles.filter(file=>file.size>=3*1024*1024).sort((a,b)=>b.size-a.size);
+    const over5=knownFiles.filter(file=>file.size>=5*1024*1024).sort((a,b)=>b.size-a.size);
+    const opportunities=knownFiles
+      .filter(file=>Number(file.estimatedSavings)>0)
+      .sort((a,b)=>b.estimatedSavings-a.estimatedSavings);
+
+    const estimatedSavings=opportunities.reduce((sum,file)=>sum+Number(file.estimatedSavings||0),0);
+    const referencedBytes=knownFiles.reduce((sum,file)=>sum+Number(file.size||0),0);
+    const cards=appContext.storageOptimizerCardGroups(referencedFiles,referenceMap);
+    const variantPairs=appContext.storageOptimizerVariantPairs(referencedFiles,referenceMap);
+
+    return {
+      files:referencedFiles,
+      over2,
+      over3,
+      over5,
+      opportunities,
+      estimatedSavings,
+      referencedBytes,
+      unknownSizeFiles,
+      cards,
+      variantPairs,
+      usage
+    };
+  }
+
+function storageOptimizerTableRows(rows,{limit=50,showReference=true}={}){
+    if(!rows.length){
+      return `<div class="empty compact"><p>No matching referenced files.</p></div>`;
+    }
+
+    return `
+      <div class="storage-audit-table-wrap">
+        <table class="storage-audit-table storage-optimizer-table">
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Current</th>
+              <th>Est. target</th>
+              <th>Est. saving</th>
+              ${showReference?`<th>Referenced by</th>`:""}
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.slice(0,limit).map(file=>`
+              <tr>
+                <td>
+                  <strong title="${appContext.escapeHtml(file.path)}">${appContext.escapeHtml(file.name)}</strong>
+                  <small>${appContext.escapeHtml(file.path)}</small>
+                </td>
+                <td>${Number.isFinite(Number(file.size)) && Number(file.size)>0 ? appContext.escapeHtml(appContext.formatApproxBytes(file.size)) : "Size unavailable"}</td>
+                <td>${Number.isFinite(Number(file.targetBytes)) && Number(file.targetBytes)>0 ? appContext.escapeHtml(appContext.formatApproxBytes(file.targetBytes)) : "—"}</td>
+                <td><strong>${Number.isFinite(Number(file.estimatedSavings)) ? appContext.escapeHtml(appContext.formatApproxBytes(file.estimatedSavings)) : "—"}</strong></td>
+                ${showReference?`
+                  <td>
+                    ${(file.references||[]).slice(0,2).map(ref=>
+                      `<span class="storage-optimizer-ref">${appContext.escapeHtml(appContext.storageOptimizerReferenceLabel(ref))}</span>`
+                    ).join("")}
+                    ${(file.references||[]).length>2?`<small>+${(file.references||[]).length-2} more reference(s)</small>`:""}
+                  </td>`:""}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+        ${rows.length>limit?`<div class="hint">Showing ${limit.toLocaleString()} of ${rows.length.toLocaleString()} files.</div>`:""}
+      </div>
+    `;
+  }
+
+function renderStorageOptimizerPage(){
+    if(!appContext.requireOwner("open Storage optimizer")) return;
+
+    appContext.view.innerHTML=`
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Inventory Tools · Storage</div>
+          <h2>Storage Optimizer</h2>
+          <p>Analyze referenced card images and estimate how much File Storage could be recovered by recompressing oversized files.</p>
+        </div>
+      </div>
+
+      <section class="panel storage-audit-panel">
+        <div id="storageOptimizerStatus" class="storage-audit-status">
+          <strong>Analysis only</strong>
+          <span>This version does not modify, replace or delete referenced images.</span>
+        </div>
+        <div class="storage-audit-actions">
+          <button type="button" class="btn-primary" id="storageOptimizerRunBtn">Analyze Referenced Images</button>
+        </div>
+        <div id="storageOptimizerResults"></div>
+      </section>
+    `;
+
+    const setStatus=(title,message,kind="")=>{
+      const el=appContext.$("storageOptimizerStatus");
+      if(!el) return;
+      el.className=`storage-audit-status ${kind}`.trim();
+      el.innerHTML=`<strong>${appContext.escapeHtml(title)}</strong><span>${appContext.escapeHtml(message)}</span>`;
+    };
+
+    const run=async()=>{
+      const btn=appContext.$("storageOptimizerRunBtn");
+      if(btn){
+        btn.disabled=true;
+        btn.textContent="Analyzing…";
+      }
+      setStatus("Analyzing referenced images","Reading Storage metadata and matching it to cards and reversible watermark records…");
+
+      try{
+        const audit=await appContext.buildOwnerStorageOptimizer();
+        const storageUsed=audit.usage?.ok ? audit.usage.storageBytes : null;
+        const estimatedAfter=storageUsed!=null
+          ? Math.max(0,storageUsed-audit.estimatedSavings)
+          : null;
+
+        appContext.$("storageOptimizerResults").innerHTML=`
+          <div class="storage-audit-summary">
+            <article>
+              <strong>${audit.files.length.toLocaleString()}</strong>
+              <span>Referenced files</span>
+              <small>${appContext.formatApproxBytes(audit.referencedBytes)} tracked</small>
+            </article>
+            <article class="${audit.over2.length?"needs-attention":""}">
+              <strong>${audit.over2.length.toLocaleString()}</strong>
+              <span>Files ≥ 2 MB</span>
+              <small>${audit.over3.length.toLocaleString()} ≥ 3 MB · ${audit.over5.length.toLocaleString()} ≥ 5 MB</small>
+            </article>
+            <article class="${audit.estimatedSavings>0?"needs-attention":""}">
+              <strong>${appContext.formatApproxBytes(audit.estimatedSavings)}</strong>
+              <span>Estimated savings</span>
+              <small>Using a ~1.5 MB target per oversized referenced file</small>
+            </article>
+            <article>
+              <strong>${audit.cards.length.toLocaleString()}</strong>
+              <span>Cards with Storage files</span>
+              <small>Ranked below by current Storage usage</small>
+            </article>
+            <article>
+              <strong>${audit.variantPairs.length.toLocaleString()}</strong>
+              <span>Watermark variant pairs</span>
+              <small>Original + watermarked reversible pairs</small>
+            </article>
+            ${audit.unknownSizeFiles.length ? `
+              <article class="needs-attention">
+                <strong>${audit.unknownSizeFiles.length.toLocaleString()}</strong>
+                <span>Sizes unavailable</span>
+                <small>These files are excluded from the savings estimate</small>
+              </article>
+            ` : ""}
+          </div>
+
+          <section class="storage-audit-section">
+            <div class="storage-audit-section-head">
+              <div>
+                <h3>Projected Storage Impact</h3>
+                <p>This is a planning estimate only. No files have been changed.</p>
+              </div>
+            </div>
+            <div class="storage-optimizer-projection">
+              <div><span>Current total File Storage</span><strong>${storageUsed!=null?appContext.formatApproxBytes(storageUsed):"Unavailable"}</strong></div>
+              <div><span>Estimated recoverable</span><strong>${appContext.formatApproxBytes(audit.estimatedSavings)}</strong></div>
+              <div><span>Estimated total after optimization</span><strong>${estimatedAfter!=null?appContext.formatApproxBytes(estimatedAfter):"Unavailable"}</strong></div>
+            </div>
+            <div class="hint">Estimate assumes each referenced file above roughly 1.5 MB can be recompressed toward 1.5 MB. Actual results will depend on image dimensions, format and image complexity.</div>
+          </section>
+
+          <section class="storage-audit-section">
+            <div class="storage-audit-section-head">
+              <div>
+                <h3>Biggest Optimization Opportunities</h3>
+                <p>Referenced files with the largest estimated savings first.</p>
+              </div>
+            </div>
+            ${appContext.storageOptimizerTableRows(audit.opportunities,{limit:60})}
+          </section>
+
+          <section class="storage-audit-section">
+            <div class="storage-audit-section-head">
+              <div>
+                <h3>Cards Using the Most Storage</h3>
+                <p>Counts unique Storage files referenced by each card.</p>
+              </div>
+            </div>
+            ${audit.cards.length ? `
+              <div class="storage-optimizer-card-list">
+                ${audit.cards.slice(0,50).map((card,index)=>`
+                  <article>
+                    <span>${index+1}</span>
+                    <div>
+                      <strong>${appContext.escapeHtml(card.cardName)}</strong>
+                      <small>${appContext.escapeHtml(card.cardCode||card.cardId)}</small>
+                    </div>
+                    <div>
+                      <strong>${appContext.escapeHtml(appContext.formatApproxBytes(card.bytes))}</strong>
+                      <small>${card.paths.size.toLocaleString()} file${card.paths.size===1?"":"s"} · est. ${appContext.escapeHtml(appContext.formatApproxBytes(card.estimatedSavings))} recoverable</small>
+                    </div>
+                  </article>
+                `).join("")}
+              </div>
+            ` : `<div class="empty compact"><p>No referenced card Storage files found.</p></div>`}
+          </section>
+
+          <section class="storage-audit-section">
+            <div class="storage-audit-section-head">
+              <div>
+                <h3>Reversible Watermark Pairs</h3>
+                <p>These pairs intentionally retain both the original and watermarked copy. Do not delete originals if you want watermark reversal to remain available.</p>
+              </div>
+            </div>
+            ${audit.variantPairs.length ? `
+              <div class="storage-optimizer-pair-list">
+                ${audit.variantPairs.slice(0,50).map((pair,index)=>`
+                  <article>
+                    <div>
+                      <strong>Pair ${index+1}</strong>
+                      <small>${appContext.escapeHtml(pair.cardId||pair.imageKey)}</small>
+                    </div>
+                    <div><span>Original</span><strong>${appContext.formatApproxBytes(pair.original?.size||0)}</strong></div>
+                    <div><span>Watermarked</span><strong>${appContext.formatApproxBytes(pair.watermarked?.size||0)}</strong></div>
+                    <div><span>Total</span><strong>${appContext.formatApproxBytes(pair.bytes)}</strong></div>
+                    <div><span>Est. saving</span><strong>${appContext.formatApproxBytes(pair.estimatedSavings)}</strong></div>
+                  </article>
+                `).join("")}
+              </div>
+            ` : `<div class="empty compact"><p>No reversible watermark pairs found.</p></div>`}
+          </section>
+        `;
+
+        setStatus(
+          "Analysis complete",
+          `${audit.files.length.toLocaleString()} referenced files checked · estimated ${appContext.formatApproxBytes(audit.estimatedSavings)} potentially recoverable`,
+          audit.estimatedSavings>0?"warn":"ok"
+        );
+      }catch(error){
+        console.error("Storage optimizer analysis failed:",error);
+        setStatus(
+          "Analysis unavailable",
+          appContext.errorText(error,"Could not analyze referenced Storage images. Nothing was changed."),
+          "warn"
+        );
+      }finally{
+        if(btn){
+          btn.disabled=false;
+          btn.textContent="Analyze Referenced Images";
+        }
+      }
+    };
+
+    appContext.$("storageOptimizerRunBtn")?.addEventListener("click",run);
+  }
+
 function renderSupabaseHealthPage(){
     if(!appContext.requireOwner("view Supabase health")) return;
 
@@ -529,7 +1508,7 @@ function renderSupabaseHealthPage(){
     refresh();
   }
 
-  Object.assign(appContext,{currentInventoryToolMode,currentInventoryToolSubmode,inventoryToolsSwitcher,getStoredImageHealthSummary,saveStoredImageHealthSummary,ownerInventoryHealthSummary,ownerHealthClass,invalidateOwnerReservedAgeCache,ownerReservedAgeDays,ownerReservedAgeLabel,loadOwnerReservedAges,ownerReservedAgeSummary,hydrateOwnerReservedAgeUI,refreshOwnerReservedAgeUI,ownerAlertSummary,ownerAlertsDashboardHTML,renderSupabaseHealthPage});
+  Object.assign(appContext,{currentInventoryToolMode,currentInventoryToolSubmode,inventoryToolsSwitcher,getStoredImageHealthSummary,saveStoredImageHealthSummary,ownerInventoryHealthSummary,ownerHealthClass,invalidateOwnerReservedAgeCache,ownerReservedAgeDays,ownerReservedAgeLabel,loadOwnerReservedAges,ownerReservedAgeSummary,hydrateOwnerReservedAgeUI,refreshOwnerReservedAgeUI,ownerAlertSummary,ownerAlertsDashboardHTML,storageAuditFileSize,storageAuditResolveFileSize,storageAuditFileEtag,listOwnerCardStorageObjects,ownerCardStorageReferencePaths,storageAuditDuplicateGroups,buildOwnerStorageAudit,storageAuditTableRows,renderStorageAuditPage,ownerCardStorageReferenceMap,storageOptimizerTargetBytes,storageOptimizerSavingsBytes,storageOptimizerReferenceLabel,storageOptimizerCardGroups,storageOptimizerVariantPairs,buildOwnerStorageOptimizer,storageOptimizerTableRows,renderStorageOptimizerPage,renderSupabaseHealthPage});
 }
 
 /** State and event initialization; called in preserved startup order. */
