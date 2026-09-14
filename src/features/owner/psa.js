@@ -117,7 +117,15 @@ function psaPopEntryIsDue(entry,now=Date.now()){
     const updatedMs=psaPopEntryUpdatedMs(entry);
     if(!updatedMs) return true;
 
-    return now-updatedMs>=appContext.PSA_POP_DAILY_MS;
+    // V192: never depend on initialization order for the Due threshold.
+    // If PSA_POP_DAILY_MS is not ready yet, fall back to the configured
+    // 3-day / 72-hour refresh interval directly.
+    const configuredMs=Number(appContext.PSA_POP_DAILY_MS);
+    const dueMs=Number.isFinite(configuredMs) && configuredMs>0
+      ? configuredMs
+      : 3 * 24 * 60 * 60 * 1000;
+
+    return now-updatedMs>=dueMs;
   }
 
 function encodePsaBulkState(state){
