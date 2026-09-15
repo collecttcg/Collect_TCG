@@ -1,14 +1,19 @@
 /** V93 beta: services/catalogue. Shared dependencies are explicit on appContext. */
 export function register(appContext){
 function cardMutationReturnColumns(){
-    return appContext.CARD_PUBLIC_COLUMNS_BASE
+    return appContext.cardPublicColumns(appContext.CARD_PUBLIC_COLUMNS_BASE)
       + (appContext.soldAtSupported ? ",sold_at" : "")
       + (appContext.lifecycleSupported ? ",lifecycle_status" : "");
+  }
+
+function cardPublicColumns(columns){
+    return `${columns}${appContext.languageDetailsSupported===false ? "" : ",language_details"}`;
   }
 
 function mergeOwnerOnlyCardFields(saved,source){
     if(!saved || !source) return saved;
     saved.cost=source.cost==null ? null : Number(source.cost);
+    saved.language_details=String(source.language_details||"").trim();
     const sourceGrades=Array.isArray(source.grading)?source.grading:[];
     saved.grading=(Array.isArray(saved.grading)?saved.grading:[]).map((grade,index)=>({
       ...grade,
@@ -25,6 +30,7 @@ function dbToCard(row){
       year: row.year == null ? "" : String(row.year),
       game: row.game === "One Piece" ? "One Piece Card Game" : (row.game || ""),
       language: row.language || "",
+      language_details: String(row.language_details||"").trim(),
       era: appContext.normalizeStoredLabel(row.era || ""),
       availability: appContext.canonicalAvailability(row.availability || "Available"),
       set: row.set_name || "",
@@ -73,6 +79,9 @@ function cardToDb(card){
       year: appContext.normalizeYearValue(card.year) || null,
       game: card.game,
       language: card.language || "",
+      ...(appContext.languageDetailsSupported!==false ? {
+        language_details: String(card.language_details||"").trim().slice(0,120)
+      } : {}),
       era: appContext.normalizeStoredLabel(card.era || ""),
       availability: appContext.canonicalAvailability(card.availability || "Available"),
       set_name: card.set || "",
@@ -125,50 +134,46 @@ function optionalColumnUnavailable(error,column){
   }
 
 async function fetchPublicCards(){
-    // Prefer a lightweight catalogue query: only the first image URL is loaded
-    // up front. The full images array is fetched only when a buyer opens a card.
-    let result=await appContext.supabaseClient
-      .from("cards")
-      .select(`${appContext.CARD_PUBLIC_COLUMNS_LIGHT},sold_at`)
-      .order("created_at",{ascending:true});
+    // Language details is a newer optional column. Retry without it (and the
+    // other established optional columns) so an unapplied migration never
+    // blocks the public catalogue.
+    let light=true;
+    let includeLanguageDetails=appContext.languageDetailsSupported!==false;
+    let includeSoldAt=true;
+    let result;
 
-    if(!result.error){
-      appContext.thumbnailUrlSupported=true;
-      appContext.soldAtSupported=true;
-      return result;
-    }
-
-    // If sold_at is the only unavailable optional column, retry the light query.
-    if(appContext.optionalColumnUnavailable(result.error,"sold_at") && !appContext.optionalColumnUnavailable(result.error,"thumbnail_url")){
-      appContext.soldAtSupported=false;
+    for(let attempt=0;attempt<4;attempt++){
+      const base=light ? appContext.CARD_PUBLIC_COLUMNS_LIGHT : appContext.CARD_PUBLIC_COLUMNS_BASE;
+      const columns=`${base}${includeLanguageDetails ? ",language_details" : ""}${includeSoldAt ? ",sold_at" : ""}`;
       result=await appContext.supabaseClient
         .from("cards")
-        .select(appContext.CARD_PUBLIC_COLUMNS_LIGHT)
+        .select(columns)
         .order("created_at",{ascending:true});
-      if(!result.error){
-        appContext.thumbnailUrlSupported=true;
-        return result;
+      if(!result.error) break;
+
+      if(includeLanguageDetails && appContext.optionalColumnUnavailable(result.error,"language_details")){
+        includeLanguageDetails=false;
+        appContext.languageDetailsSupported=false;
+        continue;
       }
+      if(includeSoldAt && appContext.optionalColumnUnavailable(result.error,"sold_at")){
+        includeSoldAt=false;
+        appContext.soldAtSupported=false;
+        continue;
+      }
+      if(light && appContext.optionalColumnUnavailable(result.error,"thumbnail_url")){
+        light=false;
+        appContext.thumbnailUrlSupported=false;
+        continue;
+      }
+      break;
     }
 
-    // Database has not received the thumbnail migration yet: fall back to the
-    // original images-array query so the public site remains fully functional.
-    appContext.thumbnailUrlSupported=false;
-    result=await appContext.supabaseClient
-      .from("cards")
-      .select(`${appContext.CARD_PUBLIC_COLUMNS_BASE},sold_at`)
-      .order("created_at",{ascending:true});
-
-    if(result.error && appContext.optionalColumnUnavailable(result.error,"sold_at")){
-      appContext.soldAtSupported=false;
-      result=await appContext.supabaseClient
-        .from("cards")
-        .select(appContext.CARD_PUBLIC_COLUMNS_BASE)
-        .order("created_at",{ascending:true});
-    }else if(!result.error){
-      appContext.soldAtSupported=true;
+    if(!result?.error){
+      appContext.thumbnailUrlSupported=light;
+      appContext.soldAtSupported=includeSoldAt;
+      appContext.languageDetailsSupported=includeLanguageDetails;
     }
-
     return result;
   }
 
@@ -208,14 +213,16 @@ async function probeOwnerCardCapabilities(){
       return;
     }
 
-    const [lifecycleProbe,privateProbe,imageVariantsProbe,historyProbe]=await Promise.all([
+    const [lifecycleProbe,languageDetailsProbe,privateProbe,imageVariantsProbe,historyProbe]=await Promise.all([
       appContext.supabaseClient.from("cards").select("lifecycle_status").limit(1),
+      appContext.supabaseClient.from("cards").select("language_details").limit(1),
       appContext.supabaseClient.from("card_owner_private").select("card_id").limit(1),
       appContext.supabaseClient.from("card_image_variants").select("card_id,image_key").limit(1),
       appContext.supabaseClient.from("card_edit_history").select("id").limit(1)
     ]);
 
     appContext.lifecycleSupported=!lifecycleProbe.error;
+    appContext.languageDetailsSupported=!languageDetailsProbe.error;
     appContext.ownerPrivateSupported=!privateProbe.error;
     appContext.cardImageVariantsSupported=!imageVariantsProbe.error;
     appContext.editHistorySupported=!historyProbe.error;
@@ -236,6 +243,9 @@ async function loadCards(){
         if(first && Object.prototype.hasOwnProperty.call(first,"sold_at")){
           appContext.soldAtSupported=true;
         }
+        if(first && Object.prototype.hasOwnProperty.call(first,"language_details")){
+          appContext.languageDetailsSupported=true;
+        }
       }else{
         // Fail closed for owner-only reads, but keep the public catalogue usable.
         console.error("Secure owner card read failed:",ownerResult.error);
@@ -252,6 +262,7 @@ async function loadCards(){
       }
     }else{
       appContext.lifecycleSupported=false;
+      appContext.languageDetailsSupported=null;
       appContext.ownerPrivateSupported=false;
       appContext.cardImageVariantsSupported=false;
       appContext.editHistorySupported=false;
@@ -604,6 +615,9 @@ function cardWriteErrorText(error,action="save"){
     if(message.includes("availability") || message.includes("cards_availability_check")){
       return "The selected availability is not accepted by the current database schema.";
     }
+    if(message.includes("language") && (message.includes("check") || message.includes("constraint"))){
+      return "The selected Language is not accepted by the current database schema. Run 2026-09-15-v13-EXTEND-LANGUAGE-OPTIONS.sql in Supabase, then retry.";
+    }
     if(message.includes("grading_private")){
       return "Private grading storage is unavailable. Please run the private grading migration.";
     }
@@ -662,6 +676,7 @@ async function createCardStorage(card){
       // a database that has not received every later migration yet.
       const optionalColumns=[
         ["sold_at",()=>{ appContext.soldAtSupported=false; }],
+        ["language_details",()=>{ appContext.languageDetailsSupported=false; }],
         ["lifecycle_status",()=>{ appContext.lifecycleSupported=false; }],
         ["grading_private",()=>{}]
       ];
@@ -719,19 +734,24 @@ async function updateCardStorage(card){
         .from("cards")
         .update(payload)
         .eq("id",card.id)
-        .select(appContext.cardMutationReturnColumns())
-        .single();
+        .select("id")
+        .maybeSingle();
     }
 
     try{
       let result=await updateCurrentPayload();
 
-      if(result.error &&
-         Object.prototype.hasOwnProperty.call(payload,"sold_at") &&
-         appContext.optionalColumnUnavailable(result.error,"sold_at")){
+      const optionalColumns=[
+        ["sold_at",()=>{ appContext.soldAtSupported=false; }],
+        ["language_details",()=>{ appContext.languageDetailsSupported=false; }]
+      ];
+      for(const [column,onRemove] of optionalColumns){
+        if(!result.error) break;
+        if(!Object.prototype.hasOwnProperty.call(payload,column)) continue;
+        if(!appContext.optionalCardWriteColumnUnavailable(result.error,column)) continue;
         payload={...payload};
-        delete payload.sold_at;
-        appContext.soldAtSupported=false;
+        delete payload[column];
+        onRemove();
         result=await updateCurrentPayload();
       }
 
@@ -741,7 +761,30 @@ async function updateCardStorage(card){
         return null;
       }
 
-      return appContext.mergeOwnerOnlyCardFields(appContext.dbToCard(result.data),card);
+      if(!result.data?.id){
+        console.error("Update card returned no matching row:",card.id);
+        appContext.showToast("Supabase did not confirm this card update. Please log out, log in again, and retry.");
+        return null;
+      }
+
+      // A successful update does not need to request the whole row back. That
+      // extra REST select can fail independently after a schema change even
+      // when the write itself is valid, which used to block every edit.
+      return {
+        ...card,
+        name:(card.name||"").toUpperCase(),
+        card_code:(card.card_code||"").trim().toUpperCase(),
+        language_details:Object.prototype.hasOwnProperty.call(payload,"language_details")
+          ? String(card.language_details||"").trim()
+          : "",
+        sold_at:Object.prototype.hasOwnProperty.call(payload,"sold_at")
+          ? (card.sold_at||null)
+          : null,
+        lifecycle_status:Object.prototype.hasOwnProperty.call(payload,"lifecycle_status")
+          ? appContext.cardLifecycle(card)
+          : (card.lifecycle_status||"live"),
+        updated_at:new Date().toISOString()
+      };
     }catch(error){
       console.error("Update card request failed:",error);
       appContext.showToast(appContext.cardWriteErrorText(error,"update"));
@@ -749,7 +792,7 @@ async function updateCardStorage(card){
     }
   }
 
-  Object.assign(appContext,{cardMutationReturnColumns,mergeOwnerOnlyCardFields,dbToCard,cardToDb,optionalColumnUnavailable,fetchPublicCards,ensureCardImagesLoaded,probeOwnerCardCapabilities,loadCards,sanitizeOwnerTags,sanitizeOwnerPrivateNotes,fetchOwnerPrivateMeta,newCardImageVariantKey,fetchOwnerCardImageVariants,saveOwnerCardImageVariants,saveOwnerPrivateMeta,setCardLifecycle,deleteListingPermanently,errorText,cardWriteErrorText,optionalCardWriteColumnUnavailable,createCardStorage,updateCardStorage});
+  Object.assign(appContext,{cardMutationReturnColumns,cardPublicColumns,mergeOwnerOnlyCardFields,dbToCard,cardToDb,optionalColumnUnavailable,fetchPublicCards,ensureCardImagesLoaded,probeOwnerCardCapabilities,loadCards,sanitizeOwnerTags,sanitizeOwnerPrivateNotes,fetchOwnerPrivateMeta,newCardImageVariantKey,fetchOwnerCardImageVariants,saveOwnerCardImageVariants,saveOwnerPrivateMeta,setCardLifecycle,deleteListingPermanently,errorText,cardWriteErrorText,optionalCardWriteColumnUnavailable,createCardStorage,updateCardStorage});
 }
 
 /** State and event initialization; called in preserved startup order. */
