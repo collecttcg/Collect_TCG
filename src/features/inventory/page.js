@@ -697,8 +697,6 @@ function renderInventoryPage(scope = "inventory"){
     }
 
     function closeAllOverviewFilterMenus(except=null){
-
-    function closeAllOverviewFilterMenus(except=null){
       document.querySelectorAll(".filter-drawer-shell .overview-select-menu").forEach(m=>{
         if(m===except) return;
         m.hidden=true;
