@@ -600,7 +600,8 @@ function router(){
 
 function updateSidebarFooter(){
     // "Listings" means listing records, not inventory quantity.
-    appContext.$("sfCount").textContent=appContext.cards.filter(appContext.isLiveLifecycle).length.toLocaleString();
+    const count=appContext.$("sfCount");
+    if(count) count.textContent=appContext.cards.filter(appContext.isLiveLifecycle).length.toLocaleString();
   }
 
   Object.assign(appContext,{safeListingBrowseHash,clearFilteredResultsBrowseContext,captureFilteredResultsBrowseContext,getFilteredResultsBrowseContext,getFilteredResultNavigation,listingRouteFromHash,currentListingDomScope,canPreserveCurrentListing,canReusePreservedListing,setNavigationActiveRoute,rememberReturnScroll,restoreReturnScrollIfReady,cardShareHash,captureInsightsDetailsReturnState,restoreInsightsDetailsReturnState,openInsightsCardDetails,openCardRoute,getCollectionStats,updateStatusNavCounts,currentRoute,currentHashParams,scrollListingPageHeaderIntoView,consumeHomeViewAllScrollTarget,safeUrlFilterText,safePriceFilterValue,listingRouteForScope,updateListingUrlFromControls,router,updateSidebarFooter});
