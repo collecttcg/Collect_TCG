@@ -9682,3 +9682,51 @@ body.light-mode .interest-contact-assurance-icon{
   .purchase-copy-mobile{display:inline !important;}
   .purchase-copy-desktop{display:none !important;}
 }
+
+/* Production V04: clearer Home display hierarchy without changing layout. */
+.home-premium-hero-copy h2,
+.home-premium-section-head h3,
+.home-curated-tile-copy strong,
+.home-premium-trust-copy .eyebrow,
+.home-premium-trust-copy h3,
+.home-premium-trust-points strong{
+  text-transform:uppercase;
+}
+.home-premium-trust-copy .eyebrow{font-size:clamp(12px,.72vw,15px);line-height:1.25;}
+.home-premium-trust-copy h3{font-size:clamp(23px,1.55vw,30px);line-height:1.15;}
+.home-premium-trust-copy p{font-size:clamp(13px,.82vw,16px);line-height:1.55;}
+.home-premium-trust-points strong{font-size:clamp(12px,.78vw,15px);line-height:1.25;}
+.home-premium-trust-points small{font-size:clamp(10.5px,.68vw,13px);line-height:1.45;}
+.home-premium-trust-links a{font-size:clamp(11px,.7vw,14px);}
+@media(max-width:800px){
+  .home-premium-trust-copy .eyebrow{font-size:12px;}
+  .home-premium-trust-copy h3{font-size:22px;}
+  .home-premium-trust-copy p{font-size:13px;}
+  .home-premium-trust-points strong{font-size:12px;}
+  .home-premium-trust-points small{font-size:10.5px;}
+  .home-premium-trust-links a{font-size:11px;}
+}
+
+/* Production V05: make the Home currency control readable. */
+.home-premium-currency > span:not(.sr-only){font-size:12px !important;font-weight:760 !important;letter-spacing:.045em !important;}
+.home-premium-currency select{font-size:11px !important;font-weight:700 !important;}
+@media(max-width:800px){
+  .home-premium-currency > span:not(.sr-only){font-size:12px !important;}
+  .home-premium-currency select{font-size:11px !important;}
+}
+
+/* Production V06: consistent trust and Collection accents. */
+.home-premium-trust-points small{white-space:nowrap;font-size:clamp(9.5px,.66vw,12px);letter-spacing:-.012em;}
+#invGrid.collection-game-grouped .collection-game-group-header{
+  border-color:rgba(227,179,65,.28);
+  background:linear-gradient(180deg,rgba(227,179,65,.075),rgba(227,179,65,.025)),var(--surface-1);
+}
+#invGrid.collection-game-grouped .collection-game-group-header:hover,
+#invGrid.collection-game-grouped .collection-game-group-header:focus-visible{
+  border-color:rgba(240,196,92,.66);
+  box-shadow:0 0 0 3px rgba(227,179,65,.07);
+}
+#invGrid.collection-game-grouped .collection-game-chevron{background:rgba(227,179,65,.10);color:#efc45d;}
+body.light-mode #invGrid.collection-game-grouped .collection-game-group-header{
+  background:linear-gradient(180deg,rgba(227,179,65,.07),rgba(227,179,65,.02)),var(--surface-1);
+}
