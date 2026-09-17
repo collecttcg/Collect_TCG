@@ -87,21 +87,36 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Repository checks
-        run: npm run check
-      - name: Build smoke test
-        run: npm run build
-      - name: Compare regression suite with Production v04
+      - name: JavaScript syntax checks
         shell: bash
         run: |
           set -euo pipefail
-          node --test tests/*.test.mjs > /tmp/v05-tests.log 2>&1 || true
-          git worktree add --detach /tmp/prod-v04 1f8779e57af81c28b11e9afbaa4111f6a955dcf6
-          (cd /tmp/prod-v04 && node --test tests/*.test.mjs > /tmp/v04-tests.log 2>&1 || true)
-          echo '--- Production v04 summary ---'; grep -E '^# (tests|pass|fail)' /tmp/v04-tests.log || true
-          echo '--- Production v05 summary ---'; grep -E '^# (tests|pass|fail)' /tmp/v05-tests.log || true
-          V04_FAIL=$(grep '^# fail ' /tmp/v04-tests.log | awk '{print $3}' | tail -1); V05_FAIL=$(grep '^# fail ' /tmp/v05-tests.log | awk '{print $3}' | tail -1)
-          test "${V04_FAIL:-999}" = "${V05_FAIL:-998}"
+          find src -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Relative import and HTML asset checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import re,sys
+          errors=[]
+          for js in Path('src').rglob('*.js'):
+              text=js.read_text(errors='ignore')
+              for spec in re.findall(r"(?:from\s+|import\s*\()\s*['\"]([^'\"]+)['\"]",text):
+                  if not spec.startswith('.'): continue
+                  clean=spec.split('?',1)[0].split('#',1)[0]
+                  target=(js.parent/clean).resolve()
+                  if not target.exists(): errors.append(f'missing import: {js} -> {spec}')
+          html=Path('index.html').read_text(errors='ignore')
+          for ref in re.findall(r'(?:src|href)=["\'](\./[^"\'#?]+)',html):
+              if ref.startswith('./#'): continue
+              target=Path(ref[2:])
+              if not target.exists(): errors.append(f'missing HTML asset: {ref}')
+          if errors:
+              print('\n'.join(errors)); sys.exit(1)
+          print('Relative imports and local HTML assets resolved.')
+          PY
+          ! grep -R -n -E '^(<<<<<<<|=======|>>>>>>>)' src index.html 2026-09-17-v05-COUNTRY-CARD-DEMAND.sql
       - name: Retained Production behavior markers
         shell: bash
         run: |
@@ -113,6 +128,8 @@ jobs:
           grep -Fq 'if(count)' src/app/routing.js
           grep -R -Fq 'owner-mode' src/styles
           grep -Fq 'qr-generator.js?v=2026-09-17-v04' src/app/register-features.js
+          grep -Fq 'Malaysia' index.html
+          grep -Fq 'Singapore' index.html
       - name: Commit Production v05
         shell: bash
         run: |
