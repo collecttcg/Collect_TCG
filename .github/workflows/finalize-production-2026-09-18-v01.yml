@@ -8,13 +8,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout validation branch
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Restore exact Production v05 baseline
-        shell: bash
         run: |
           set -euo pipefail
           git fetch origin main
@@ -22,123 +20,79 @@ jobs:
           git reset --hard da18961b771bad2a62dae42eb5e4f1adc7671183
 
       - name: Apply approved Beta website delta
-        shell: bash
         run: |
           set -euo pipefail
-
-          # Production v05 and Beta v18 use the identical Insights dashboard CSS blob.
-          # Promote the approved v19 mobile-only CSS directly.
-          curl -fsSL \
-            "https://raw.githubusercontent.com/collecttcg/Collect_TCG_Beta/aab0372da15072d0a059c9351edcd6666a8f963d/beta/src/styles/27-insights-dashboard.css" \
-            -o src/styles/27-insights-dashboard.css
-
+          curl -fsSL "https://raw.githubusercontent.com/collecttcg/Collect_TCG_Beta/aab0372da15072d0a059c9351edcd6666a8f963d/beta/src/styles/27-insights-dashboard.css" -o src/styles/27-insights-dashboard.css
           python3 - <<'PY'
           from pathlib import Path
           import re
+          def one(s,a,b,label):
+              n=s.count(a)
+              if n!=1: raise SystemExit(f'{label}: expected 1 match, found {n}')
+              return s.replace(a,b,1)
 
-          def replace_once(text, old, new, label):
-              count=text.count(old)
-              if count != 1:
-                  raise SystemExit(f'{label}: expected exactly 1 match, found {count}')
-              return text.replace(old,new,1)
-
-          # Exact Beta v02 -> v03 Collection layout semantics, applied to Production v05.
-          p=Path('src/features/inventory/page.js')
-          s=p.read_text()
-          s=replace_once(
-              s,
-              '${scope==="inventory" ? `\n        <section class="inventory-game-browser" id="inventoryGameBrowser" aria-label="Browse inventory by game"></section>',
-              '${["inventory","collection"].includes(scope) ? `\n        <section class="inventory-game-browser" id="inventoryGameBrowser" aria-label="Browse ${isCollection ? "Collection" : "Inventory"} by game"></section>',
-              'Collection browser mount'
-          )
-          s=replace_once(
-              s,
-              '      const allActive=!selectedFamily && !(appContext.pillFilterState.game?.size);\n      const allTile=`<button type="button" class="inventory-game-tile ${allActive ? "active" : ""}" data-inventory-game-family="all" aria-pressed="${allActive ? "true" : "false"}"><span class="inventory-game-art inventory-game-art-all" aria-hidden="true"><span>ALL</span></span><span class="inventory-game-tile-copy"><strong>All Inventory</strong><small>${scopedCards.length.toLocaleString()} ${scopedCards.length===1?"card":"cards"}</small></span></button>`;',
-              '      const allActive=!selectedFamily && !(appContext.pillFilterState.game?.size);\n      const browserLabel=appContext.listingAvailabilityScope==="collection" ? "Collection" : "Inventory";\n      const allTile=`<button type="button" class="inventory-game-tile ${allActive ? "active" : ""}" data-inventory-game-family="all" aria-pressed="${allActive ? "true" : "false"}"><span class="inventory-game-art inventory-game-art-all" aria-hidden="true"><span>ALL</span></span><span class="inventory-game-tile-copy"><strong>All ${browserLabel}</strong><small>${scopedCards.length.toLocaleString()} ${scopedCards.length===1?"card":"cards"}</small></span></button>`;',
-              'All Collection label'
-          )
-          s=replace_once(
-              s,
-              '<div class="inventory-game-browser-head"><div><span class="eyebrow">Browse the vault</span><h3>Shop by game</h3></div><span>Choose a game to refine the grid</span></div>',
-              '<div class="inventory-game-browser-head"><div><span class="eyebrow">Browse the vault</span><h3>${appContext.listingAvailabilityScope==="collection" ? "Browse Collection by game" : "Shop by game"}</h3></div><span>Choose a game to refine the grid</span></div>',
-              'Collection browser heading'
-          )
-          s=replace_once(
-              s,
-              '      if(!mount || appContext.listingAvailabilityScope!=="inventory") return;',
-              '      if(!mount || !["inventory","collection"].includes(appContext.listingAvailabilityScope)) return;',
-              'Collection browser handler'
-          )
-          s=replace_once(
-              s,
-              '        const groupedView=appContext.listingAvailabilityScope==="collection" || collectionRearrangeMode;',
-              '        const groupedView=collectionRearrangeMode;',
-              'Collection continuous grid'
-          )
+          p=Path('src/features/inventory/page.js'); s=p.read_text()
+          s=one(s,
+            '${scope==="inventory" ? `\n        <section class="inventory-game-browser" id="inventoryGameBrowser" aria-label="Browse inventory by game"></section>',
+            '${["inventory","collection"].includes(scope) ? `\n        <section class="inventory-game-browser" id="inventoryGameBrowser" aria-label="Browse ${isCollection ? "Collection" : "Inventory"} by game"></section>',
+            'Collection browser mount')
+          s=one(s,
+            '      const allActive=!selectedFamily && !(appContext.pillFilterState.game?.size);\n      const allTile=`<button type="button" class="inventory-game-tile ${allActive ? "active" : ""}" data-inventory-game-family="all" aria-pressed="${allActive ? "true" : "false"}"><span class="inventory-game-art inventory-game-art-all" aria-hidden="true"><span>ALL</span></span><span class="inventory-game-tile-copy"><strong>All Inventory</strong><small>${scopedCards.length.toLocaleString()} ${scopedCards.length===1?"card":"cards"}</small></span></button>`;',
+            '      const allActive=!selectedFamily && !(appContext.pillFilterState.game?.size);\n      const browserLabel=appContext.listingAvailabilityScope==="collection" ? "Collection" : "Inventory";\n      const allTile=`<button type="button" class="inventory-game-tile ${allActive ? "active" : ""}" data-inventory-game-family="all" aria-pressed="${allActive ? "true" : "false"}"><span class="inventory-game-art inventory-game-art-all" aria-hidden="true"><span>ALL</span></span><span class="inventory-game-tile-copy"><strong>All ${browserLabel}</strong><small>${scopedCards.length.toLocaleString()} ${scopedCards.length===1?"card":"cards"}</small></span></button>`;',
+            'All Collection label')
+          s=one(s,
+            '<div class="inventory-game-browser-head"><div><span class="eyebrow">Browse the vault</span><h3>Shop by game</h3></div><span>Choose a game to refine the grid</span></div>',
+            '<div class="inventory-game-browser-head"><div><span class="eyebrow">Browse the vault</span><h3>${appContext.listingAvailabilityScope==="collection" ? "Browse Collection by game" : "Shop by game"}</h3></div><span>Choose a game to refine the grid</span></div>',
+            'Collection browser heading')
+          s=one(s,
+            '      if(!mount || appContext.listingAvailabilityScope!=="inventory") return;',
+            '      if(!mount || !["inventory","collection"].includes(appContext.listingAvailabilityScope)) return;',
+            'Collection browser handler')
+          s=one(s,
+            '        const groupedView=appContext.listingAvailabilityScope==="collection" || collectionRearrangeMode;',
+            '        const groupedView=collectionRearrangeMode;',
+            'Collection continuous grid')
           p.write_text(s)
 
-          # Production-only bootstrap is preserved; bump only the approved modules/cache chain.
-          p=Path('index.html')
-          s=p.read_text()
-          s,n=re.subn(r'(src/main\.js\?v=)[^"\']+',r'\g<1>2026-09-18-v01',s,count=1)
-          if n!=1: raise SystemExit(f'index main cache: expected 1 match, found {n}')
-          p.write_text(s)
-
-          p=Path('src/main.js')
-          s=p.read_text()
-          s,n=re.subn(r'(\./app/register-features\.js\?v=)[^"\']+',r'\g<1>2026-09-18-v01',s,count=1)
-          if n!=1: raise SystemExit(f'main register cache: expected 1 match, found {n}')
-          p.write_text(s)
-
-          p=Path('src/app/register-features.js')
-          s=p.read_text()
+          def bump(path,pattern):
+              p=Path(path); s=p.read_text(); s,n=re.subn(pattern,r'\g<1>2026-09-18-v01',s,count=1)
+              if n!=1: raise SystemExit(f'{path}: cache match count {n}')
+              p.write_text(s)
+          bump('index.html',r'(src/main\.js\?v=)[^"\']+')
+          bump('src/main.js',r'(\./app/register-features\.js\?v=)[^"\']+')
+          p=Path('src/app/register-features.js'); s=p.read_text()
           s,n1=re.subn(r'(\.\./features/inventory/page\.js\?v=)[^"\']+',r'\g<1>2026-09-18-v01',s,count=1)
           s,n2=re.subn(r'(\.\./features/owner/insights-dashboard\.js\?v=)[^"\']+',r'\g<1>2026-09-18-v01',s,count=1)
-          if n1!=1 or n2!=1: raise SystemExit(f'register cache matches: inventory={n1}, insights={n2}')
+          if (n1,n2)!=(1,1): raise SystemExit(f'register cache counts {(n1,n2)}')
           p.write_text(s)
-
-          p=Path('src/features/owner/insights-dashboard.js')
-          s=p.read_text()
-          s,n=re.subn(r'(\./src/styles/27-insights-dashboard\.css\?v=)[^"\']+',r'\g<1>2026-09-18-v01',s,count=1)
-          if n!=1: raise SystemExit(f'Insights CSS cache: expected 1 match, found {n}')
-          p.write_text(s)
+          bump('src/features/owner/insights-dashboard.js',r'(\./src/styles/27-insights-dashboard\.css\?v=)[^"\']+')
 
           p=Path('PRODUCTION-DEPLOY.txt')
-          s=p.read_text().rstrip()+'''\n\n2026-09-18-v01 release record\n=============================\nPrevious Production: 2026-09-17-v05\nPromoted from approved Beta: 2026-09-18-v03\nScope: approved post-v18 website changes only — mobile Insights presentation and Collection game-browser layout. Standalone Insights Beta PWA excluded. Existing Production routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.\nSQL: No new SQL required. Existing 2026-09-17-v05 Country → Card/Era migration remains the prerequisite for that Insights panel.\n'''
-          p.write_text(s)
+          p.write_text(p.read_text().rstrip()+'''\n\n2026-09-18-v01 release record\n=============================\nPrevious Production: 2026-09-17-v05\nPromoted from approved Beta: 2026-09-18-v03\nScope: approved post-v18 website changes only — mobile Insights presentation and Collection game-browser layout. Standalone Insights Beta PWA excluded. Existing Production routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.\nSQL: No new SQL required. Existing 2026-09-17-v05 Country → Card/Era migration remains the prerequisite for that Insights panel.\n''')
           PY
 
       - name: Validate Production release
-        shell: bash
         run: |
           set -euo pipefail
-          ! grep -R -nE '^(<<<<<<<|=======|>>>>>>>)' index.html src PRODUCTION-DEPLOY.txt
+          ! grep -R -nE '^(<<<<<<< .+|=======|>>>>>>> .+)$' index.html src
           find src -name '*.js' -print0 | xargs -0 -n1 node --check
-
           python3 - <<'PY'
           from pathlib import Path
-          import re, sys
+          import re,sys
           errors=[]
           for p in Path('src').rglob('*.js'):
-              text=p.read_text(errors='ignore')
-              pattern=r'(?:import|export)\s+(?:[^"\']*?\s+from\s+)?["\'](\.[^"\']+)["\']'
-              for spec in re.findall(pattern,text):
-                  clean=spec.split('?')[0]
-                  target=(p.parent/clean).resolve()
-                  ok=target.exists() if target.suffix else (target.exists() or target.with_suffix('.js').exists() or (target/'index.js').exists())
-                  if not ok: errors.append(f'Missing import {spec} from {p}')
-          html=Path('index.html').read_text(errors='ignore')
-          for attr in re.findall(r'(?:src|href)=["\']([^"\']+)["\']',html):
+              t=p.read_text(errors='ignore')
+              for spec in re.findall(r'(?:import|export)\s+(?:[^"\']*?\s+from\s+)?["\'](\.[^"\']+)["\']',t):
+                  q=(p.parent/spec.split('?')[0]).resolve()
+                  if not (q.exists() or q.with_suffix('.js').exists() or (q/'index.js').exists()): errors.append(f'Missing import {spec} from {p}')
+          for attr in re.findall(r'(?:src|href)=["\']([^"\']+)["\']',Path('index.html').read_text(errors='ignore')):
               clean=attr.split('?')[0].split('#')[0]
-              if not clean or clean.startswith(('http://','https://','mailto:','tel:','data:','javascript:')): continue
-              target=Path(clean[2:] if clean.startswith('./') else clean)
-              if not target.exists(): errors.append(f'Missing HTML asset {attr}')
-          if errors:
-              print('\n'.join(errors)); sys.exit(1)
-          print('Relative imports and HTML local assets OK')
+              if not clean or clean.startswith(('http://','https://','//','mailto:','tel:','data:','javascript:')): continue
+              if not Path(clean[2:] if clean.startswith('./') else clean).exists(): errors.append(f'Missing HTML asset {attr}')
+          if errors: print('\n'.join(errors)); sys.exit(1)
+          print('JS syntax, relative imports, and HTML assets OK')
           PY
 
-          # Exact Collection v03 semantics.
           grep -Fq '${["inventory","collection"].includes(scope)' src/features/inventory/page.js
           grep -Fq 'const browserLabel=appContext.listingAvailabilityScope==="collection" ? "Collection" : "Inventory";' src/features/inventory/page.js
           grep -Fq 'Browse Collection by game' src/features/inventory/page.js
@@ -146,7 +100,6 @@ jobs:
           grep -Fq 'const groupedView=collectionRearrangeMode;' src/features/inventory/page.js
           ! grep -Fq 'const groupedView=appContext.listingAvailabilityScope==="collection" || collectionRearrangeMode;' src/features/inventory/page.js
 
-          # Mobile Insights v19 CSS and cache chain.
           grep -Fq '2026-09-17-v19 — existing mobile Insights page aligned with the v18 decision dashboard' src/styles/27-insights-dashboard.css
           grep -Fq '.insights-v14-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}' src/styles/27-insights-dashboard.css
           grep -Fq '27-insights-dashboard.css?v=2026-09-18-v01' src/features/owner/insights-dashboard.js
@@ -155,7 +108,6 @@ jobs:
           grep -Fq 'register-features.js?v=2026-09-18-v01' src/main.js
           grep -Fq 'src/main.js?v=2026-09-18-v01' index.html
 
-          # Production-only and retained behavior guards.
           grep -Fq 'qr-generator.js?v=2026-09-17-v04' src/app/register-features.js
           grep -R -q 'Owner Mode' src index.html
           grep -R -q 'Availability' src index.html
@@ -169,7 +121,6 @@ jobs:
           test "$actual" = "$expected" || { echo "Unexpected scope: $actual"; exit 1; }
 
       - name: Commit and promote Production v01
-        shell: bash
         run: |
           set -euo pipefail
           git config user.name collecttcg
@@ -179,25 +130,19 @@ jobs:
           git push origin HEAD:main
 
       - name: Build release archives
-        shell: bash
         run: |
           set -euo pipefail
           mkdir -p /tmp/pkg/full /tmp/pkg/patch
           rsync -a --exclude='.git' --exclude='.github/workflows/finalize-production-2026-09-18-v01.yml' ./ /tmp/pkg/full/
-          cd /tmp/pkg/full
-          zip -qr /tmp/Collect-TCG-Production-2026-09-18-v01-full.zip .
-          cd "$GITHUB_WORKSPACE"
+          (cd /tmp/pkg/full && zip -qr /tmp/Collect-TCG-Production-2026-09-18-v01-full.zip .)
           for f in PRODUCTION-DEPLOY.txt index.html src/app/register-features.js src/features/inventory/page.js src/features/owner/insights-dashboard.js src/main.js src/styles/27-insights-dashboard.css; do
-            mkdir -p "/tmp/pkg/patch/$(dirname "$f")"
-            cp "$f" "/tmp/pkg/patch/$f"
+            mkdir -p "/tmp/pkg/patch/$(dirname "$f")"; cp "$f" "/tmp/pkg/patch/$f"
           done
-          cd /tmp/pkg/patch
-          zip -qr /tmp/Collect-TCG-Production-2026-09-17-v05-to-2026-09-18-v01-patch.zip .
+          (cd /tmp/pkg/patch && zip -qr /tmp/Collect-TCG-Production-2026-09-17-v05-to-2026-09-18-v01-patch.zip .)
           unzip -t /tmp/Collect-TCG-Production-2026-09-18-v01-full.zip
           unzip -t /tmp/Collect-TCG-Production-2026-09-17-v05-to-2026-09-18-v01-patch.zip
 
-      - name: Upload release packages
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: Collect-TCG-Production-2026-09-18-v01-release
           path: |
