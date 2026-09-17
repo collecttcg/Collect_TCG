@@ -114,7 +114,8 @@ jobs:
           grep -R -q 'Make an offer' src index.html
           grep -R -q 'More photos / video' src index.html
           grep -R -q 'COD / meetup' src index.html
-          grep -Fq 'const count=appContext.$("sfCount"); if(count)' src/app/routing.js
+          grep -Fq 'const count=appContext.$("sfCount");' src/app/routing.js
+          grep -Fq 'if(count) count.textContent=appContext.cards.filter(appContext.isLiveLifecycle).length.toLocaleString();' src/app/routing.js
 
           expected="$(printf '%s\n' PRODUCTION-DEPLOY.txt index.html src/app/register-features.js src/features/inventory/page.js src/features/owner/insights-dashboard.js src/main.js src/styles/27-insights-dashboard.css | sort | tr '\n' ' ')"
           actual="$(git diff --name-only | sort | tr '\n' ' ')"
