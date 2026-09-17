@@ -50,8 +50,8 @@ function inventoryPageHTML(scopeMeta,scope){
         </div>
       </div>
 
-      ${scope==="inventory" ? `
-        <section class="inventory-game-browser" id="inventoryGameBrowser" aria-label="Browse inventory by game"></section>
+      ${["inventory","collection"].includes(scope) ? `
+        <section class="inventory-game-browser" id="inventoryGameBrowser" aria-label="Browse ${isCollection ? "Collection" : "Inventory"} by game"></section>
       ` : ""}
 
       <!-- Desktop/mobile top controls only. Keep the filter drawer OUTSIDE
@@ -645,7 +645,8 @@ function renderInventoryPage(scope = "inventory"){
       const families=inventoryGameFamilies();
       const selectedFamily=families.find(inventoryFamilyHasSelection);
       const allActive=!selectedFamily && !(appContext.pillFilterState.game?.size);
-      const allTile=`<button type="button" class="inventory-game-tile ${allActive ? "active" : ""}" data-inventory-game-family="all" aria-pressed="${allActive ? "true" : "false"}"><span class="inventory-game-art inventory-game-art-all" aria-hidden="true"><span>ALL</span></span><span class="inventory-game-tile-copy"><strong>All Inventory</strong><small>${scopedCards.length.toLocaleString()} ${scopedCards.length===1?"card":"cards"}</small></span></button>`;
+      const browserLabel=appContext.listingAvailabilityScope==="collection" ? "Collection" : "Inventory";
+      const allTile=`<button type="button" class="inventory-game-tile ${allActive ? "active" : ""}" data-inventory-game-family="all" aria-pressed="${allActive ? "true" : "false"}"><span class="inventory-game-art inventory-game-art-all" aria-hidden="true"><span>ALL</span></span><span class="inventory-game-tile-copy"><strong>All ${browserLabel}</strong><small>${scopedCards.length.toLocaleString()} ${scopedCards.length===1?"card":"cards"}</small></span></button>`;
       const familyTiles=families.map(family=>{
         const active=inventoryFamilyHasSelection(family);
         const logo=inventoryGameLogos[family.key];
@@ -654,12 +655,12 @@ function renderInventoryPage(scope = "inventory"){
       }).join("");
       const onePiece=families.find(family=>family.key==="one-piece");
       const seriesTiles=selectedFamily?.key==="one-piece" && onePiece ? `<div class="inventory-game-series" aria-label="One Piece series"><span class="inventory-game-series-label">One Piece series</span><button type="button" class="inventory-game-series-chip ${inventoryFamilyIsFullyActive(onePiece) ? "active" : ""}" data-inventory-game-series="all">All One Piece</button>${Array.from(onePiece.gameValues).sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:"base",numeric:true})).map(value=>{const active=appContext.pillFilterState.game?.size===1 && appContext.selectedSetMatches(appContext.pillFilterState.game,value);return `<button type="button" class="inventory-game-series-chip ${active ? "active" : ""}" data-inventory-game-series="${appContext.escapeHtml(value)}">${appContext.escapeHtml(value)}</button>`;}).join("")}</div>` : "";
-      return `<div class="inventory-game-browser-head"><div><span class="eyebrow">Browse the vault</span><h3>Shop by game</h3></div><span>Choose a game to refine the grid</span></div><div class="inventory-game-tiles">${allTile}${familyTiles}</div>${seriesTiles}`;
+      return `<div class="inventory-game-browser-head"><div><span class="eyebrow">Browse the vault</span><h3>${appContext.listingAvailabilityScope==="collection" ? "Browse Collection by game" : "Shop by game"}</h3></div><span>Choose a game to refine the grid</span></div><div class="inventory-game-tiles">${allTile}${familyTiles}</div>${seriesTiles}`;
     }
 
     function syncInventoryGameBrowser(){
       const mount=appContext.$("inventoryGameBrowser");
-      if(!mount || appContext.listingAvailabilityScope!=="inventory") return;
+      if(!mount || !["inventory","collection"].includes(appContext.listingAvailabilityScope)) return;
       const families=inventoryGameFamilies();
       const previousTiles=mount.querySelector(".inventory-game-tiles");
       const previousSeries=mount.querySelector(".inventory-game-series");
@@ -1462,7 +1463,7 @@ function renderInventoryPage(scope = "inventory"){
           mount.innerHTML="";
         });
 
-        const groupedView=appContext.listingAvailabilityScope==="collection" || collectionRearrangeMode;
+        const groupedView=collectionRearrangeMode;
         if(groupedView){
           grid.classList.add("collection-game-grouped");
           grid.innerHTML=appContext.listingAvailabilityScope==="collection"

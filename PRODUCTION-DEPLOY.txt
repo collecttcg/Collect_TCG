@@ -23,3 +23,10 @@ Previous Production: 2026-09-17-v04
 Promoted from approved Beta: 2026-09-17-v18
 Scope: approved Beta v14-v18 Insights/dashboard/logo-fit changes only; Production v03/v04 routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.
 SQL: 2026-09-17-v05-COUNTRY-CARD-DEMAND.sql must be run in Supabase for Country → Card/Era demand.
+
+2026-09-18-v01 release record
+=============================
+Previous Production: 2026-09-17-v05
+Promoted from approved Beta: 2026-09-18-v03
+Scope: approved post-v18 website changes only — mobile Insights presentation and Collection game-browser layout. Standalone Insights Beta PWA excluded. Existing Production routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.
+SQL: No new SQL required. Existing 2026-09-17-v05 Country → Card/Era migration remains the prerequisite for that Insights panel.
