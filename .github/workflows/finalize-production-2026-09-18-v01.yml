@@ -1,0 +1,185 @@
+name: Finalize Production 2026-09-18-v01
+on:
+  push:
+    branches: [release-validate-2026-09-18-v01]
+jobs:
+  validate-promote-package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout validation branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore exact Production v05 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "da18961b771bad2a62dae42eb5e4f1adc7671183"
+          git reset --hard da18961b771bad2a62dae42eb5e4f1adc7671183
+
+      - name: Merge approved Beta website delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=b4bbac19e31b6b313c6f86d3735b89d483f1221b
+          HEAD=27224cf189ddc38d1df8801adfe166009c6bdc61
+          files=(
+            index.html
+            src/app/register-features.js
+            src/features/inventory/page.js
+            src/features/owner/insights-dashboard.js
+            src/main.js
+            src/styles/27-insights-dashboard.css
+          )
+          mkdir -p /tmp/merge/base /tmp/merge/other
+          for f in "${files[@]}"; do
+            mkdir -p "/tmp/merge/base/$(dirname "$f")" "/tmp/merge/other/$(dirname "$f")"
+            curl -fsSL "https://raw.githubusercontent.com/collecttcg/Collect_TCG_Beta/${BASE}/beta/${f}" -o "/tmp/merge/base/${f}"
+            curl -fsSL "https://raw.githubusercontent.com/collecttcg/Collect_TCG_Beta/${HEAD}/beta/${f}" -o "/tmp/merge/other/${f}"
+            cp "$f" /tmp/current-file
+            set +e
+            git merge-file -p /tmp/current-file "/tmp/merge/base/${f}" "/tmp/merge/other/${f}" > /tmp/merged-file
+            rc=$?
+            set -e
+            if [ "$rc" -ne 0 ]; then
+              echo "Merge conflict in $f"
+              cat /tmp/merged-file
+              exit 1
+            fi
+            mv /tmp/merged-file "$f"
+          done
+
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in [
+              'index.html',
+              'src/main.js',
+              'src/app/register-features.js',
+              'src/features/owner/insights-dashboard.js',
+          ]:
+              p=Path(name)
+              s=p.read_text()
+              s=s.replace('?v=2026-09-17-v19','?v=2026-09-18-v01')
+              s=s.replace('?v=2026-09-18-v03','?v=2026-09-18-v01')
+              p.write_text(s)
+          PY
+
+          cat >> PRODUCTION-DEPLOY.txt <<'EOF'
+
+2026-09-18-v01 release record
+=============================
+Previous Production: 2026-09-17-v05
+Promoted from approved Beta: 2026-09-18-v03
+Scope: approved post-v18 website changes only — mobile Insights presentation and Collection game-browser layout. Standalone Insights Beta PWA excluded. Existing Production routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.
+SQL: No new SQL required. Existing 2026-09-17-v05 Country → Card/Era migration remains the prerequisite for that Insights panel.
+EOF
+
+      - name: Validate Production release
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -R -nE '^(<<<<<<<|=======|>>>>>>>)' index.html src PRODUCTION-DEPLOY.txt
+          find src -name '*.js' -print0 | xargs -0 -n1 node --check
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, sys
+          errors=[]
+          for p in Path('src').rglob('*.js'):
+              text=p.read_text(errors='ignore')
+              pattern=r'(?:import|export)\s+(?:[^"\']*?\s+from\s+)?["\'](\.[^"\']+)["\']'
+              for spec in re.findall(pattern,text):
+                  clean=spec.split('?')[0]
+                  target=(p.parent/clean).resolve()
+                  ok=target.exists() if target.suffix else (target.exists() or target.with_suffix('.js').exists() or (target/'index.js').exists())
+                  if not ok:
+                      errors.append(f'Missing import {spec} from {p}')
+          html=Path('index.html').read_text(errors='ignore')
+          for attr in re.findall(r'(?:src|href)=["\']([^"\']+)["\']',html):
+              clean=attr.split('?')[0].split('#')[0]
+              if not clean or clean.startswith(('http://','https://','mailto:','tel:','data:','javascript:')):
+                  continue
+              target=Path(clean[2:] if clean.startswith('./') else clean)
+              if not target.exists():
+                  errors.append(f'Missing HTML asset {attr}')
+          if errors:
+              print('\n'.join(errors))
+              sys.exit(1)
+          print('Relative imports and HTML local assets OK')
+          PY
+
+          # Requested Collection layout and Owner reorder preservation.
+          grep -q 'function renderInventoryGameBrowser' src/features/inventory/page.js
+          grep -q 'Browse Collection by game' src/features/inventory/page.js
+          grep -q 'collectionReorderMode' src/features/inventory/page.js
+
+          # Mobile Insights presentation retained.
+          grep -q 'insights-v18-market-row' src/styles/27-insights-dashboard.css
+          grep -q '@media' src/styles/27-insights-dashboard.css
+          grep -q '2026-09-18-v01' src/features/owner/insights-dashboard.js
+
+          # Production-only and retained behavior guards.
+          grep -q 'qr-generator' src/app/register-features.js
+          grep -R -q 'Owner Mode' src index.html
+          grep -R -q 'Availability' src index.html
+          grep -R -q 'Make an offer' src index.html
+          grep -R -q 'More photos / video' src index.html
+          grep -R -q 'COD / meetup' src index.html
+
+          expected="$(printf '%s\n' \
+            PRODUCTION-DEPLOY.txt \
+            index.html \
+            src/app/register-features.js \
+            src/features/inventory/page.js \
+            src/features/owner/insights-dashboard.js \
+            src/main.js \
+            src/styles/27-insights-dashboard.css | sort | tr '\n' ' ')"
+          actual="$(git diff --name-only | sort | tr '\n' ' ')"
+          test "$actual" = "$expected" || { echo "Unexpected scope: $actual"; exit 1; }
+
+      - name: Commit and promote Production v01
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name collecttcg
+          git config user.email z3313514@gmail.com
+          git add PRODUCTION-DEPLOY.txt index.html src/app/register-features.js src/features/inventory/page.js src/features/owner/insights-dashboard.js src/main.js src/styles/27-insights-dashboard.css
+          git commit -m 'Production 2026-09-18-v01: promote Beta 2026-09-18-v03'
+          git push origin HEAD:main
+
+      - name: Build release archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/pkg/full /tmp/pkg/patch
+          rsync -a --exclude='.git' --exclude='.github/workflows/finalize-production-2026-09-18-v01.yml' ./ /tmp/pkg/full/
+          cd /tmp/pkg/full
+          zip -qr /tmp/Collect-TCG-Production-2026-09-18-v01-full.zip .
+          cd "$GITHUB_WORKSPACE"
+          for f in \
+            PRODUCTION-DEPLOY.txt \
+            index.html \
+            src/app/register-features.js \
+            src/features/inventory/page.js \
+            src/features/owner/insights-dashboard.js \
+            src/main.js \
+            src/styles/27-insights-dashboard.css; do
+            mkdir -p "/tmp/pkg/patch/$(dirname "$f")"
+            cp "$f" "/tmp/pkg/patch/$f"
+          done
+          cd /tmp/pkg/patch
+          zip -qr /tmp/Collect-TCG-Production-2026-09-17-v05-to-2026-09-18-v01-patch.zip .
+          unzip -t /tmp/Collect-TCG-Production-2026-09-18-v01-full.zip
+          unzip -t /tmp/Collect-TCG-Production-2026-09-17-v05-to-2026-09-18-v01-patch.zip
+
+      - name: Upload release packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: Collect-TCG-Production-2026-09-18-v01-release
+          path: |
+            /tmp/Collect-TCG-Production-2026-09-18-v01-full.zip
+            /tmp/Collect-TCG-Production-2026-09-17-v05-to-2026-09-18-v01-patch.zip
