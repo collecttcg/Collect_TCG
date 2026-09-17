@@ -16,3 +16,10 @@ V95 image-safety merge:
 - Latest Version 4 saved-image cleanup protection merged from the newest production HTML.
 - After a database save attempt, photos are retained if confirmation or a follow-up step fails.
 - Storage deletion checks live card and variant references first; if that safety check fails, files are retained.
+
+2026-09-17-v05 release record
+=============================
+Previous Production: 2026-09-17-v04
+Promoted from approved Beta: 2026-09-17-v18
+Scope: approved Beta v14-v18 Insights/dashboard/logo-fit changes only; Production v03/v04 routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.
+SQL: 2026-09-17-v05-COUNTRY-CARD-DEMAND.sql must be run in Supabase for Country → Card/Era demand.
