@@ -21,22 +21,16 @@ jobs:
           test "$(git rev-parse origin/main)" = "da18961b771bad2a62dae42eb5e4f1adc7671183"
           git reset --hard da18961b771bad2a62dae42eb5e4f1adc7671183
 
-      - name: Merge approved Beta website delta
+      - name: Apply approved Beta website delta
         shell: bash
         run: |
           set -euo pipefail
           BASE=b4bbac19e31b6b313c6f86d3735b89d483f1221b
           HEAD=27224cf189ddc38d1df8801adfe166009c6bdc61
-          files=(
-            index.html
-            src/app/register-features.js
-            src/features/inventory/page.js
-            src/features/owner/insights-dashboard.js
-            src/main.js
-            src/styles/27-insights-dashboard.css
-          )
-          mkdir -p /tmp/merge/base /tmp/merge/other
-          for f in "${files[@]}"; do
+
+          # Only the two substantive website files need a three-way content merge.
+          # Shared bootstrap/cache files are updated surgically below so Production-only wiring is untouched.
+          for f in src/features/inventory/page.js src/styles/27-insights-dashboard.css; do
             mkdir -p "/tmp/merge/base/$(dirname "$f")" "/tmp/merge/other/$(dirname "$f")"
             curl -fsSL "https://raw.githubusercontent.com/collecttcg/Collect_TCG_Beta/${BASE}/beta/${f}" -o "/tmp/merge/base/${f}"
             curl -fsSL "https://raw.githubusercontent.com/collecttcg/Collect_TCG_Beta/${HEAD}/beta/${f}" -o "/tmp/merge/other/${f}"
@@ -55,17 +49,29 @@ jobs:
 
           python3 - <<'PY'
           from pathlib import Path
-          for name in [
-              'index.html',
-              'src/main.js',
-              'src/app/register-features.js',
-              'src/features/owner/insights-dashboard.js',
-          ]:
-              p=Path(name)
-              s=p.read_text()
-              s=s.replace('?v=2026-09-17-v19','?v=2026-09-18-v01')
-              s=s.replace('?v=2026-09-18-v03','?v=2026-09-18-v01')
-              p.write_text(s)
+          import re
+
+          p=Path('index.html')
+          s=p.read_text()
+          s=re.sub(r'(src/styles/27-insights-dashboard\.css\?v=)[^"\']+',r'\g<1>2026-09-18-v01',s)
+          s=re.sub(r'(src/main\.js\?v=)[^"\']+',r'\g<1>2026-09-18-v01',s)
+          p.write_text(s)
+
+          p=Path('src/main.js')
+          s=p.read_text()
+          s=re.sub(r'(\./app/register-features\.js\?v=)[^"\']+',r'\g<1>2026-09-18-v01',s)
+          p.write_text(s)
+
+          p=Path('src/app/register-features.js')
+          s=p.read_text()
+          s=re.sub(r'(\.\./features/inventory/page\.js\?v=)[^"\']+',r'\g<1>2026-09-18-v01',s)
+          s=re.sub(r'(\.\./features/owner/insights-dashboard\.js\?v=)[^"\']+',r'\g<1>2026-09-18-v01',s)
+          p.write_text(s)
+
+          p=Path('src/features/owner/insights-dashboard.js')
+          s=p.read_text()
+          s=re.sub(r'(\./src/styles/27-insights-dashboard\.css\?v=)[^"\']+',r'\g<1>2026-09-18-v01',s)
+          p.write_text(s)
           PY
 
           cat >> PRODUCTION-DEPLOY.txt <<'EOF'
@@ -96,34 +102,40 @@ jobs:
                   clean=spec.split('?')[0]
                   target=(p.parent/clean).resolve()
                   ok=target.exists() if target.suffix else (target.exists() or target.with_suffix('.js').exists() or (target/'index.js').exists())
-                  if not ok:
-                      errors.append(f'Missing import {spec} from {p}')
+                  if not ok: errors.append(f'Missing import {spec} from {p}')
           html=Path('index.html').read_text(errors='ignore')
           for attr in re.findall(r'(?:src|href)=["\']([^"\']+)["\']',html):
               clean=attr.split('?')[0].split('#')[0]
-              if not clean or clean.startswith(('http://','https://','mailto:','tel:','data:','javascript:')):
-                  continue
+              if not clean or clean.startswith(('http://','https://','mailto:','tel:','data:','javascript:')): continue
               target=Path(clean[2:] if clean.startswith('./') else clean)
-              if not target.exists():
-                  errors.append(f'Missing HTML asset {attr}')
+              if not target.exists(): errors.append(f'Missing HTML asset {attr}')
           if errors:
-              print('\n'.join(errors))
-              sys.exit(1)
+              print('\n'.join(errors)); sys.exit(1)
           print('Relative imports and HTML local assets OK')
           PY
 
+          # Requested Collection layout and reorder preservation.
           grep -q 'function renderInventoryGameBrowser' src/features/inventory/page.js
           grep -q 'Browse Collection by game' src/features/inventory/page.js
           grep -q 'collectionReorderMode' src/features/inventory/page.js
+
+          # Mobile Insights update and cache chain.
           grep -q 'insights-v18-market-row' src/styles/27-insights-dashboard.css
           grep -q '@media' src/styles/27-insights-dashboard.css
-          grep -q '2026-09-18-v01' src/features/owner/insights-dashboard.js
-          grep -q 'qr-generator' src/app/register-features.js
+          grep -q '27-insights-dashboard.css?v=2026-09-18-v01' src/features/owner/insights-dashboard.js
+          grep -q 'insights-dashboard.js?v=2026-09-18-v01' src/app/register-features.js
+          grep -q 'features/inventory/page.js?v=2026-09-18-v01' src/app/register-features.js
+          grep -q 'register-features.js?v=2026-09-18-v01' src/main.js
+          grep -q 'src/main.js?v=2026-09-18-v01' index.html
+
+          # Production-only and retained behavior guards.
+          grep -q 'qr-generator.js?v=2026-09-17-v04' src/app/register-features.js
           grep -R -q 'Owner Mode' src index.html
           grep -R -q 'Availability' src index.html
           grep -R -q 'Make an offer' src index.html
           grep -R -q 'More photos / video' src index.html
           grep -R -q 'COD / meetup' src index.html
+          grep -q 'const count=appContext.$("sfCount"); if(count)' src/app/routing.js
 
           expected="$(printf '%s\n' PRODUCTION-DEPLOY.txt index.html src/app/register-features.js src/features/inventory/page.js src/features/owner/insights-dashboard.js src/main.js src/styles/27-insights-dashboard.css | sort | tr '\n' ' ')"
           actual="$(git diff --name-only | sort | tr '\n' ' ')"
