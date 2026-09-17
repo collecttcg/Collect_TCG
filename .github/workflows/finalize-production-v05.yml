@@ -1,0 +1,235 @@
+name: Finalize Production 2026-09-17-v05
+
+on:
+  push:
+    branches:
+      - release-validate-2026-09-17-v05
+    paths:
+      - .github/workflows/finalize-production-v05.yml
+
+permissions:
+  contents: write
+
+jobs:
+  validate-promote-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact Production v04
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Confirm baselines and fetch approved Beta v18
+        shell: bash
+        run: |
+          set -euo pipefail
+          PROD_BASE='1f8779e57af81c28b11e9afbaa4111f6a955dcf6'
+          BETA_HEAD='b4bbac19e31b6b313c6f86d3735b89d483f1221b'
+          test "$(git rev-parse HEAD)" = "$PROD_BASE"
+          rm -rf /tmp/Collect_TCG_Beta
+          git clone --quiet https://github.com/collecttcg/Collect_TCG_Beta.git /tmp/Collect_TCG_Beta
+          git -C /tmp/Collect_TCG_Beta checkout --quiet "$BETA_HEAD"
+          test "$(git -C /tmp/Collect_TCG_Beta rev-parse HEAD)" = "$BETA_HEAD"
+          test -f /tmp/Collect_TCG_Beta/beta/src/features/owner/insights-dashboard.js
+          test -f /tmp/Collect_TCG_Beta/beta/2026-09-17-v18-COUNTRY-CARD-DEMAND.sql
+
+      - name: Apply approved Beta v18 changes selectively
+        shell: bash
+        run: |
+          set -euo pipefail
+          BETA=/tmp/Collect_TCG_Beta/beta
+
+          cp "$BETA/src/services/analytics.js" src/services/analytics.js
+          cp "$BETA/src/features/owner/insights-intent-rates.js" src/features/owner/insights-intent-rates.js
+          cp "$BETA/src/features/owner/insights-dashboard.js" src/features/owner/insights-dashboard.js
+          cp "$BETA/src/styles/27-insights-dashboard.css" src/styles/27-insights-dashboard.css
+          cp "$BETA/src/styles/28-inventory-game-logo-fit.css" src/styles/28-inventory-game-logo-fit.css
+          cp "$BETA/2026-09-17-v18-COUNTRY-CARD-DEMAND.sql" 2026-09-17-v05-COUNTRY-CARD-DEMAND.sql
+
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p=Path(path)
+              text=p.read_text()
+              count=text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exactly one occurrence of {old!r}, found {count}')
+              p.write_text(text.replace(old,new,1))
+
+          # Production cache/version wiring only. Preserve Production v03 initialize/routing chain.
+          p=Path('src/features/owner/insights-dashboard.js')
+          text=p.read_text()
+          text=text.replace('27-insights-dashboard.css?v=2026-09-17-v18','27-insights-dashboard.css?v=2026-09-17-v05')
+          p.write_text(text)
+
+          p=Path('index.html')
+          text=p.read_text()
+          anchor='<link rel="stylesheet" href="./src/styles/26-compatibility.css?v=210">\n'
+          new_link='<link rel="stylesheet" href="./src/styles/28-inventory-game-logo-fit.css?v=2026-09-17-v05">\n'
+          if text.count(anchor) != 1:
+              raise SystemExit('index.html: compatibility stylesheet anchor changed')
+          if '28-inventory-game-logo-fit.css' in text:
+              raise SystemExit('index.html: logo-fit stylesheet already present unexpectedly')
+          text=text.replace(anchor,anchor+new_link,1)
+          old_main='<script type="module" src="./src/main.js?v=2026-09-17-v03"></script>'
+          new_main='<script type="module" src="./src/main.js?v=2026-09-17-v05"></script>'
+          if text.count(old_main) != 1:
+              raise SystemExit('index.html: expected Production v03 main entry reference')
+          text=text.replace(old_main,new_main,1)
+          p.write_text(text)
+
+          p=Path('src/app/register-features.js')
+          text=p.read_text()
+          old_analytics="import { register as register12 } from '../services/analytics.js';"
+          new_analytics="import { register as register12 } from '../services/analytics.js?v=2026-09-17-v05';"
+          if text.count(old_analytics) != 1:
+              raise SystemExit('register-features.js: analytics import baseline changed')
+          text=text.replace(old_analytics,new_analytics,1)
+
+          old_intent="import { register as registerInsightsIntentRates } from '../features/owner/insights-intent-rates.js?v=2026-09-17-v04';"
+          new_intent="import { register as registerInsightsIntentRates } from '../features/owner/insights-intent-rates.js?v=2026-09-17-v05';"
+          if text.count(old_intent) != 1:
+              raise SystemExit('register-features.js: intent import baseline changed')
+          text=text.replace(old_intent,new_intent,1)
+          dashboard_import="import { register as registerInsightsDashboard } from '../features/owner/insights-dashboard.js?v=2026-09-17-v05';"
+          text=text.replace(new_intent,new_intent+'\n'+dashboard_import,1)
+
+          old_call='  registerInsightsIntentRates(appContext);\n  register28(appContext);'
+          new_call='  registerInsightsIntentRates(appContext);\n  if(typeof document!=="undefined") registerInsightsDashboard(appContext);\n  register28(appContext);'
+          if text.count(old_call) != 1:
+              raise SystemExit('register-features.js: Insights registration baseline changed')
+          text=text.replace(old_call,new_call,1)
+          p.write_text(text)
+
+          replace_once(
+              'src/main.js',
+              "import { registerFeatures } from './app/register-features.js?v=2026-09-17-v04';",
+              "import { registerFeatures } from './app/register-features.js?v=2026-09-17-v05';"
+          )
+
+          p=Path('PRODUCTION-DEPLOY.txt')
+          text=p.read_text().rstrip()+'''\n\n====================================\nProduction release: 2026-09-17-v05\nPrevious Production: 2026-09-17-v04\nPromoted from approved Beta: 2026-09-17-v18\n\nPromoted changes:\n- Readable decision-first Owner Insights dashboard and freeze-safe bounded observers.\n- Card Era demand while keeping Price Bands visible.\n- Aggregate Country -> Card / Era demand view.\n- Desktop One Piece / Pokemon game-logo fit refinement.\n\nSQL required:\n- 2026-09-17-v05-COUNTRY-CARD-DEMAND.sql\n\nProduction-specific v03 routing/initialize fixes are intentionally preserved.\n'''
+          p.write_text(text)
+          PY
+
+          git add -A 2026-09-17-v05-COUNTRY-CARD-DEMAND.sql PRODUCTION-DEPLOY.txt index.html src
+
+      - name: Verify exact Production promotion surface
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/expected.txt <<'EOF'
+          2026-09-17-v05-COUNTRY-CARD-DEMAND.sql
+          PRODUCTION-DEPLOY.txt
+          index.html
+          src/app/register-features.js
+          src/features/owner/insights-dashboard.js
+          src/features/owner/insights-intent-rates.js
+          src/main.js
+          src/services/analytics.js
+          src/styles/27-insights-dashboard.css
+          src/styles/28-inventory-game-logo-fit.css
+          EOF
+          git diff --cached --name-only | sort > /tmp/actual.txt
+          sort /tmp/expected.txt -o /tmp/expected.txt
+          echo 'Production v04 -> v05 files:'
+          cat /tmp/actual.txt
+          diff -u /tmp/expected.txt /tmp/actual.txt
+
+          # Preserve Production-only startup/routing/inventory fixes exactly.
+          git diff --exit-code HEAD -- src/app/routing.js src/app/initialize.js src/features/inventory/page.js
+          grep -Fq "initializeApp } from './app/initialize.js?v=2026-09-17-v03'" src/main.js
+          grep -Fq "register23 } from '../features/inventory/page.js?v=2026-09-17-v02'" src/app/register-features.js
+
+          # Preserve the isolated Production QR Generator promotion.
+          grep -Fq "registerQrGenerator } from '../features/owner/qr-generator.js?v=2026-09-17-v04'" src/app/register-features.js
+          grep -Fq 'registerQrGenerator(appContext);' src/app/register-features.js
+
+          # Requested / approved Insights behavior.
+          grep -Fq '<h4>Card era</h4>' src/features/owner/insights-dashboard.js
+          grep -Fq '<h4>Price bands</h4>' src/features/owner/insights-dashboard.js
+          grep -Fq '<h4>Card views by country</h4>' src/features/owner/insights-dashboard.js
+          grep -Fq 'String(card?.era||"")' src/features/owner/insights-dashboard.js
+          grep -Fq 'get_country_card_view_insights' src/services/analytics.js
+          grep -Fq 'if not public.is_app_owner() then' 2026-09-17-v05-COUNTRY-CARD-DEMAND.sql
+
+          # Freeze regression must remain fixed in both enhancement modules.
+          ! grep -Fq 'subtree:true' src/features/owner/insights-dashboard.js
+          ! grep -Fq 'subtree:true' src/features/owner/insights-intent-rates.js
+          ! grep -Fq 'observer.observe(appContext.view' src/features/owner/insights-dashboard.js
+          ! grep -Fq 'observer.observe(appContext.view' src/features/owner/insights-intent-rates.js
+
+          # Retained buyer / owner behavior markers.
+          grep -Fq 'Availability' index.html
+          grep -Fq 'Make an offer' index.html
+          grep -Fq 'More photos / video' index.html
+          grep -Fq 'COD / meetup' index.html
+          grep -R -Fq 'owner-mode' src/styles
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: JavaScript import and HTML asset checks
+        run: npm run check
+
+      - name: Build smoke test
+        run: npm run build
+
+      - name: Compare regression suite with Production v04
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/*.test.mjs > /tmp/v05-tests.log 2>&1 || true
+          git worktree add --detach /tmp/prod-v04 1f8779e57af81c28b11e9afbaa4111f6a955dcf6
+          (cd /tmp/prod-v04 && node --test tests/*.test.mjs > /tmp/v04-tests.log 2>&1 || true)
+          echo '--- Production v04 summary ---'
+          grep -E '^# (tests|pass|fail)' /tmp/v04-tests.log || true
+          echo '--- Production v05 summary ---'
+          grep -E '^# (tests|pass|fail)' /tmp/v05-tests.log || true
+          V04_FAIL=$(grep '^# fail ' /tmp/v04-tests.log | awk '{print $3}' | tail -1)
+          V05_FAIL=$(grep '^# fail ' /tmp/v05-tests.log | awk '{print $3}' | tail -1)
+          test "${V04_FAIL:-999}" = "${V05_FAIL:-998}"
+
+      - name: Commit and promote Production v05
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name collecttcg
+          git config user.email z3313514@gmail.com
+          test "$(git diff --cached --name-only | wc -l)" -eq 10
+          git commit -m 'Production 2026-09-17-v05: promote approved Beta v18'
+          git push origin HEAD:main
+
+      - name: Build Production release archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='1f8779e57af81c28b11e9afbaa4111f6a955dcf6'
+          HEAD_SHA=$(git rev-parse HEAD)
+          mkdir -p release/patch
+          zip -qr release/Collect-TCG-Production-2026-09-17-v05-full.zip . -x '.git/*' '.github/*' 'release/*'
+          git diff --name-only "$BASE" "$HEAD_SHA" > /tmp/v05-files.txt
+          test "$(wc -l < /tmp/v05-files.txt)" -eq 10
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            mkdir -p "release/patch/$(dirname "$file")"
+            cp "$file" "release/patch/$file"
+          done < /tmp/v05-files.txt
+          (cd release/patch && zip -qr ../Collect-TCG-Production-2026-09-17-v04-to-2026-09-17-v05-patch.zip .)
+          unzip -t release/Collect-TCG-Production-2026-09-17-v05-full.zip
+          unzip -t release/Collect-TCG-Production-2026-09-17-v04-to-2026-09-17-v05-patch.zip
+          cp 2026-09-17-v05-COUNTRY-CARD-DEMAND.sql release/2026-09-17-v05-COUNTRY-CARD-DEMAND.sql
+
+      - name: Upload Production v05 release package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Collect-TCG-Production-2026-09-17-v05-release
+          path: |
+            release/Collect-TCG-Production-2026-09-17-v05-full.zip
+            release/Collect-TCG-Production-2026-09-17-v04-to-2026-09-17-v05-patch.zip
+            release/2026-09-17-v05-COUNTRY-CARD-DEMAND.sql
+          if-no-files-found: error
