@@ -19,7 +19,6 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-
       - name: Checkout approved Beta v18
         uses: actions/checkout@v4
         with:
@@ -27,7 +26,6 @@ jobs:
           ref: b4bbac19e31b6b313c6f86d3735b89d483f1221b
           path: beta-v18
           persist-credentials: false
-
       - name: Checkout Beta v13 baseline
         uses: actions/checkout@v4
         with:
@@ -35,7 +33,6 @@ jobs:
           ref: fd8c2151d872845edd46064d8027c0d8061a6f51
           path: beta-v13
           persist-credentials: false
-
       - name: Promote approved Beta delta safely
         shell: bash
         run: |
@@ -52,30 +49,23 @@ jobs:
           import difflib
           old=Path('beta-v13/beta/src/features/owner/insights-intent-rates.js').read_text()
           new=Path('beta-v18/beta/src/features/owner/insights-intent-rates.js').read_text()
-          patch=''.join(difflib.unified_diff(old.splitlines(True),new.splitlines(True),fromfile='src/features/owner/insights-intent-rates.js',tofile='src/features/owner/insights-intent-rates.js'))
-          Path('/tmp/rates.patch').write_text(patch)
+          Path('/tmp/rates.patch').write_text(''.join(difflib.unified_diff(old.splitlines(True),new.splitlines(True),fromfile='src/features/owner/insights-intent-rates.js',tofile='src/features/owner/insights-intent-rates.js')))
           PY
           patch -p0 --forward < /tmp/rates.patch
+          rm -f src/features/owner/insights-intent-rates.js.orig
           python - <<'PY'
           from pathlib import Path
-          p=Path('src/app/register-features.js')
-          s=p.read_text()
+          p=Path('src/app/register-features.js'); s=p.read_text()
           s=s.replace("import { register as register12 } from '../services/analytics.js';", "import { register as register12 } from '../services/analytics.js?v=2026-09-17-v05';")
           s=s.replace("import { register as registerInsightsIntentRates } from '../features/owner/insights-intent-rates.js?v=2026-09-17-v04';", "import { register as registerInsightsIntentRates } from '../features/owner/insights-intent-rates.js?v=2026-09-17-v05';\nimport { register as registerInsightsDashboard } from '../features/owner/insights-dashboard.js?v=2026-09-17-v05';")
           s=s.replace("  registerInsightsIntentRates(appContext);\n  register28(appContext);", "  registerInsightsIntentRates(appContext);\n  if(typeof document!==\"undefined\") registerInsightsDashboard(appContext);\n  register28(appContext);")
           p.write_text(s)
-          p=Path('src/main.js')
-          p.write_text(p.read_text().replace("./app/register-features.js?v=2026-09-17-v04", "./app/register-features.js?v=2026-09-17-v05"))
-          p=Path('index.html')
-          s=p.read_text()
-          anchor='<link rel="stylesheet" href="./src/styles/26-compatibility.css?v=210">'
-          addition=anchor+'\n<link rel="stylesheet" href="./src/styles/27-insights-dashboard.css?v=2026-09-17-v05">\n<link rel="stylesheet" href="./src/styles/28-inventory-game-logo-fit.css?v=2026-09-17-v05">'
+          p=Path('src/main.js'); p.write_text(p.read_text().replace("./app/register-features.js?v=2026-09-17-v04", "./app/register-features.js?v=2026-09-17-v05"))
+          p=Path('index.html'); s=p.read_text(); anchor='<link rel="stylesheet" href="./src/styles/26-compatibility.css?v=210">'; addition=anchor+'\n<link rel="stylesheet" href="./src/styles/27-insights-dashboard.css?v=2026-09-17-v05">\n<link rel="stylesheet" href="./src/styles/28-inventory-game-logo-fit.css?v=2026-09-17-v05">';
           if '27-insights-dashboard.css' not in s: s=s.replace(anchor,addition)
           p.write_text(s)
-          p=Path('PRODUCTION-DEPLOY.txt')
-          p.write_text(p.read_text().rstrip()+"\n\n2026-09-17-v05 release record\n=============================\nPrevious Production: 2026-09-17-v04\nPromoted from approved Beta: 2026-09-17-v18\nScope: approved Beta v14-v18 Insights/dashboard/logo-fit changes only; Production v03/v04 routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.\nSQL: 2026-09-17-v05-COUNTRY-CARD-DEMAND.sql must be run in Supabase for Country → Card/Era demand.\n")
+          p=Path('PRODUCTION-DEPLOY.txt'); p.write_text(p.read_text().rstrip()+"\n\n2026-09-17-v05 release record\n=============================\nPrevious Production: 2026-09-17-v04\nPromoted from approved Beta: 2026-09-17-v18\nScope: approved Beta v14-v18 Insights/dashboard/logo-fit changes only; Production v03/v04 routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.\nSQL: 2026-09-17-v05-COUNTRY-CARD-DEMAND.sql must be run in Supabase for Country → Card/Era demand.\n")
           PY
-
       - name: Verify exact promotion scope
         shell: bash
         run: |
@@ -93,18 +83,14 @@ jobs:
           grep -Fq "./app/initialize.js?v=2026-09-17-v03" src/main.js
           ! grep -Fq 'subtree:true' src/features/owner/insights-dashboard.js
           ! grep -Fq 'subtree:true' src/features/owner/insights-intent-rates.js
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
       - name: Repository checks
         run: npm run check
-
       - name: Build smoke test
         run: npm run build
-
       - name: Compare regression suite with Production v04
         shell: bash
         run: |
@@ -112,14 +98,10 @@ jobs:
           node --test tests/*.test.mjs > /tmp/v05-tests.log 2>&1 || true
           git worktree add --detach /tmp/prod-v04 1f8779e57af81c28b11e9afbaa4111f6a955dcf6
           (cd /tmp/prod-v04 && node --test tests/*.test.mjs > /tmp/v04-tests.log 2>&1 || true)
-          echo '--- Production v04 summary ---'
-          grep -E '^# (tests|pass|fail)' /tmp/v04-tests.log || true
-          echo '--- Production v05 summary ---'
-          grep -E '^# (tests|pass|fail)' /tmp/v05-tests.log || true
-          V04_FAIL=$(grep '^# fail ' /tmp/v04-tests.log | awk '{print $3}' | tail -1)
-          V05_FAIL=$(grep '^# fail ' /tmp/v05-tests.log | awk '{print $3}' | tail -1)
+          echo '--- Production v04 summary ---'; grep -E '^# (tests|pass|fail)' /tmp/v04-tests.log || true
+          echo '--- Production v05 summary ---'; grep -E '^# (tests|pass|fail)' /tmp/v05-tests.log || true
+          V04_FAIL=$(grep '^# fail ' /tmp/v04-tests.log | awk '{print $3}' | tail -1); V05_FAIL=$(grep '^# fail ' /tmp/v05-tests.log | awk '{print $3}' | tail -1)
           test "${V04_FAIL:-999}" = "${V05_FAIL:-998}"
-
       - name: Retained Production behavior markers
         shell: bash
         run: |
@@ -131,7 +113,6 @@ jobs:
           grep -Fq 'if(count)' src/app/routing.js
           grep -R -Fq 'owner-mode' src/styles
           grep -Fq 'qr-generator.js?v=2026-09-17-v04' src/app/register-features.js
-
       - name: Commit Production v05
         shell: bash
         run: |
@@ -142,13 +123,11 @@ jobs:
           test "$(git diff --cached --name-only | wc -l)" -eq 10
           git commit -m 'Production 2026-09-17-v05: promote Beta 2026-09-17-v18'
           git push origin HEAD:main
-
       - name: Build Production release archives
         shell: bash
         run: |
           set -euo pipefail
-          HEAD_SHA=$(git rev-parse HEAD)
-          mkdir -p release/patch
+          HEAD_SHA=$(git rev-parse HEAD); mkdir -p release/patch
           zip -qr release/Collect-TCG-Production-2026-09-17-v05-full.zip . -x '.git/*' '.github/*' 'beta-v13/*' 'beta-v18/*' 'release/*'
           git diff --name-only 1f8779e57af81c28b11e9afbaa4111f6a955dcf6 "$HEAD_SHA" > /tmp/v05-files.txt
           test "$(wc -l < /tmp/v05-files.txt)" -eq 10
@@ -156,7 +135,6 @@ jobs:
           (cd release/patch && zip -qr ../Collect-TCG-Production-2026-09-17-v04-to-2026-09-17-v05-patch.zip .)
           unzip -t release/Collect-TCG-Production-2026-09-17-v05-full.zip
           unzip -t release/Collect-TCG-Production-2026-09-17-v04-to-2026-09-17-v05-patch.zip
-
       - name: Upload Production v05 release package
         uses: actions/upload-artifact@v4
         with:
