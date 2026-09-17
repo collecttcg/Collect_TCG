@@ -70,13 +70,13 @@ jobs:
 
           cat >> PRODUCTION-DEPLOY.txt <<'EOF'
 
-2026-09-18-v01 release record
-=============================
-Previous Production: 2026-09-17-v05
-Promoted from approved Beta: 2026-09-18-v03
-Scope: approved post-v18 website changes only — mobile Insights presentation and Collection game-browser layout. Standalone Insights Beta PWA excluded. Existing Production routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.
-SQL: No new SQL required. Existing 2026-09-17-v05 Country → Card/Era migration remains the prerequisite for that Insights panel.
-EOF
+          2026-09-18-v01 release record
+          =============================
+          Previous Production: 2026-09-17-v05
+          Promoted from approved Beta: 2026-09-18-v03
+          Scope: approved post-v18 website changes only — mobile Insights presentation and Collection game-browser layout. Standalone Insights Beta PWA excluded. Existing Production routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.
+          SQL: No new SQL required. Existing 2026-09-17-v05 Country → Card/Era migration remains the prerequisite for that Insights panel.
+          EOF
 
       - name: Validate Production release
         shell: bash
@@ -112,17 +112,12 @@ EOF
           print('Relative imports and HTML local assets OK')
           PY
 
-          # Requested Collection layout and Owner reorder preservation.
           grep -q 'function renderInventoryGameBrowser' src/features/inventory/page.js
           grep -q 'Browse Collection by game' src/features/inventory/page.js
           grep -q 'collectionReorderMode' src/features/inventory/page.js
-
-          # Mobile Insights presentation retained.
           grep -q 'insights-v18-market-row' src/styles/27-insights-dashboard.css
           grep -q '@media' src/styles/27-insights-dashboard.css
           grep -q '2026-09-18-v01' src/features/owner/insights-dashboard.js
-
-          # Production-only and retained behavior guards.
           grep -q 'qr-generator' src/app/register-features.js
           grep -R -q 'Owner Mode' src index.html
           grep -R -q 'Availability' src index.html
@@ -130,14 +125,7 @@ EOF
           grep -R -q 'More photos / video' src index.html
           grep -R -q 'COD / meetup' src index.html
 
-          expected="$(printf '%s\n' \
-            PRODUCTION-DEPLOY.txt \
-            index.html \
-            src/app/register-features.js \
-            src/features/inventory/page.js \
-            src/features/owner/insights-dashboard.js \
-            src/main.js \
-            src/styles/27-insights-dashboard.css | sort | tr '\n' ' ')"
+          expected="$(printf '%s\n' PRODUCTION-DEPLOY.txt index.html src/app/register-features.js src/features/inventory/page.js src/features/owner/insights-dashboard.js src/main.js src/styles/27-insights-dashboard.css | sort | tr '\n' ' ')"
           actual="$(git diff --name-only | sort | tr '\n' ' ')"
           test "$actual" = "$expected" || { echo "Unexpected scope: $actual"; exit 1; }
 
@@ -160,14 +148,7 @@ EOF
           cd /tmp/pkg/full
           zip -qr /tmp/Collect-TCG-Production-2026-09-18-v01-full.zip .
           cd "$GITHUB_WORKSPACE"
-          for f in \
-            PRODUCTION-DEPLOY.txt \
-            index.html \
-            src/app/register-features.js \
-            src/features/inventory/page.js \
-            src/features/owner/insights-dashboard.js \
-            src/main.js \
-            src/styles/27-insights-dashboard.css; do
+          for f in PRODUCTION-DEPLOY.txt index.html src/app/register-features.js src/features/inventory/page.js src/features/owner/insights-dashboard.js src/main.js src/styles/27-insights-dashboard.css; do
             mkdir -p "/tmp/pkg/patch/$(dirname "$f")"
             cp "$f" "/tmp/pkg/patch/$f"
           done
