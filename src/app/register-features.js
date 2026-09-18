@@ -17,7 +17,7 @@ import { register as register14 } from '../app/routing.js';
 import { register as register15 } from '../features/media/images.js';
 import { register as register16 } from '../features/cards/presentation.js';
 import { register as register17 } from '../features/owner/forms.js';
-import { register as register18 } from '../features/content/home.js';
+import { register as register18 } from '../features/content/home.js?v=2026-09-18-v04';
 import { register as register19 } from '../features/inventory/filtering.js';
 import { register as register20 } from '../features/cards/related.js';
 import { register as register21 } from '../features/cards/compare.js';
@@ -31,7 +31,7 @@ import { register as registerInsightsIntentRates } from '../features/owner/insig
 import { register as registerInsightsDashboard } from '../features/owner/insights-dashboard.js?v=2026-09-18-v01';
 import { register as register28 } from '../features/content/reviews.js';
 import { register as register29 } from '../features/content/information.js';
-import { register as register30 } from '../features/social/posts.js';
+import { register as register30 } from '../features/social/posts.js?v=2026-09-18-v04';
 import { register as register31 } from '../features/owner/quality.js';
 import { register as register32 } from '../features/owner/tools.js';
 import { register as register33 } from '../features/owner/bulk-status.js';
