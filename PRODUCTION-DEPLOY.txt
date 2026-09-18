@@ -37,3 +37,10 @@ Previous Production: 2026-09-18-v01
 Promoted from approved Beta: 2026-09-18-v04
 Scope: approved Meta automated-fetcher analytics exclusion only. Existing Production Collection layout, Insights, routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.
 SQL: No new SQL required.
+
+2026-09-18-v03 release record
+=============================
+Previous Production: 2026-09-18-v02
+Promoted from approved Beta: 2026-09-18-v05
+Scope: approved ZIP-photo QR caption update only — adds “more photos” to the QR artwork line. Existing Production analytics filtering, Collection layout, Insights, routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.
+SQL: No new SQL required.
