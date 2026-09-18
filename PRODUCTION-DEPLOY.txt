@@ -51,3 +51,10 @@ Previous Production: 2026-09-18-v03
 Promoted from approved Beta: 2026-09-18-v07
 Scope: approved Beta v06-v07 website changes — brand-first Home hero with Collector Spotlight, plus removal of the generic SOCIALS link footer from generated social posts. Existing Production QR ZIP caption, Meta crawler analytics filtering, Collection layout, Insights, routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.
 SQL: No new SQL required.
+
+2026-09-18-v05 release record
+=============================
+Previous Production: 2026-09-18-v04
+Promoted from approved Beta: 2026-09-18-v08
+Scope: stronger social/share analytics filtering only — known automated clients are blocked, while Facebook/Instagram sessions require a trusted human interaction before buyer-facing analytics begin. Existing Production Home, generator outputs, QR ZIP caption, Collection layout, Insights, routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.
+SQL: No new SQL required.
