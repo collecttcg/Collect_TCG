@@ -1,0 +1,131 @@
+name: Finalize Production 2026-09-18-v03
+
+on:
+  push:
+    branches: [release-validate-2026-09-18-v03]
+
+jobs:
+  validate-promote-package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore exact Production v03 candidate
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "06dff2c5fc2a00baaf5e27707af3087281ca9055"
+          git reset --hard 76dae34c51a51c015dee0cb1f047476580f2be16
+          test "$(git rev-parse HEAD~5)" = "06dff2c5fc2a00baaf5e27707af3087281ca9055"
+
+      - name: Validate intended scope
+        run: |
+          set -euo pipefail
+          expected="$(printf '%s\n' PRODUCTION-DEPLOY.txt index.html src/app/register-features.js src/features/cards/details.js src/main.js | sort | tr '\n' ' ')"
+          actual="$(git diff --name-only 06dff2c5fc2a00baaf5e27707af3087281ca9055..HEAD | sort | tr '\n' ' ')"
+          test "$actual" = "$expected" || { echo "Unexpected scope: $actual"; exit 1; }
+
+      - name: Validate Production code and assets
+        run: |
+          set -euo pipefail
+          ! grep -R -nE '^(<<<<<<< .+|=======|>>>>>>> .+)$' index.html src PRODUCTION-DEPLOY.txt
+          find src -name '*.js' -print0 | xargs -0 -n1 node --check
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,sys
+          errors=[]
+          for p in Path('src').rglob('*.js'):
+              text=p.read_text(errors='ignore')
+              pattern=r'(?:import|export)\s+(?:[^"\']*?\s+from\s+)?["\'](\.[^"\']+)["\']'
+              for spec in re.findall(pattern,text):
+                  clean=spec.split('?')[0]
+                  target=(p.parent/clean).resolve()
+                  ok=target.exists() if target.suffix else (target.exists() or target.with_suffix('.js').exists() or (target/'index.js').exists())
+                  if not ok: errors.append(f'Missing import {spec} from {p}')
+          html=Path('index.html').read_text(errors='ignore')
+          for attr in re.findall(r'(?:src|href)=["\']([^"\']+)["\']',html):
+              clean=attr.split('?')[0].split('#')[0]
+              if not clean or clean.startswith(('http://','https://','//','mailto:','tel:','data:','javascript:')): continue
+              target=Path(clean[2:] if clean.startswith('./') else clean)
+              if not target.exists(): errors.append(f'Missing HTML asset {attr}')
+          if errors:
+              print('\n'.join(errors)); sys.exit(1)
+          print('JavaScript syntax, relative imports and HTML assets OK')
+          PY
+
+      - name: Verify exact approved Beta details module
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://raw.githubusercontent.com/collecttcg/Collect_TCG_Beta/8448ceaf2da5a10f3af4906a2ce8aaa868da89cc/beta/src/features/cards/details.js" -o /tmp/beta-v05-details.js
+          cmp src/features/cards/details.js /tmp/beta-v05-details.js
+
+      - name: Validate ZIP QR caption and behavior
+        run: |
+          set -euo pipefail
+          grep -Fq 'More cards, more photos, prices and updates on our website' src/features/cards/details.js
+          ! grep -Fq 'More cards, prices and updates on our website' src/features/cards/details.js
+          grep -Fq 'createCollectionCollageQrCode(appContext.CARD_WATERMARK_URL, 720)' src/features/cards/details.js
+          grep -Fq 'const qrBlob = await appContext.createInventoryQrDownloadBlob(card);' src/features/cards/details.js
+          grep -Fq 'Inventory QR.png' src/features/cards/details.js
+          grep -Fq '../features/cards/details.js?v=2026-09-18-v03' src/app/register-features.js
+          grep -Fq './app/register-features.js?v=2026-09-18-v03' src/main.js
+          grep -Fq './src/main.js?v=2026-09-18-v03' index.html
+
+      - name: Validate retained Production behavior
+        run: |
+          set -euo pipefail
+          grep -R -q 'Owner Mode' src index.html
+          grep -R -q 'Availability' src index.html
+          grep -R -q 'Make an offer' src index.html
+          grep -R -q 'More photos / video' src index.html
+          grep -R -q 'COD / meetup' src index.html
+
+          grep -Fq 'const count=appContext.$("sfCount");' src/app/routing.js
+          grep -Fq 'if(count) count.textContent=' src/app/routing.js
+          grep -Fq 'Browse Collection by game' src/features/inventory/page.js
+          grep -Fq 'const groupedView=collectionRearrangeMode;' src/features/inventory/page.js
+
+          grep -q 'facebookexternalhit' src/services/analytics.js
+          grep -q 'meta-externalfetcher' src/services/analytics.js
+          grep -q 'isBuyerAnalyticsBlocked' src/services/analytics.js
+
+          test -f src/features/owner/insights-dashboard.js
+          test -f src/features/owner/qr-generator.js
+          grep -R -q 'giveaway' src/features/content src/features/owner
+
+      - name: Squash and promote Production v03
+        run: |
+          set -euo pipefail
+          git config user.name collecttcg
+          git config user.email z3313514@gmail.com
+          git reset --soft 06dff2c5fc2a00baaf5e27707af3087281ca9055
+          git commit -m 'Production 2026-09-18-v03: promote Beta 2026-09-18-v05'
+          git push origin HEAD:main
+
+      - name: Build release archives
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/pkg/full /tmp/pkg/patch
+          rsync -a --exclude='.git' --exclude='.github/workflows/finalize-production-2026-09-18-v03.yml' ./ /tmp/pkg/full/
+          (cd /tmp/pkg/full && zip -qr /tmp/Collect-TCG-Production-2026-09-18-v03-full.zip .)
+
+          for f in PRODUCTION-DEPLOY.txt index.html src/app/register-features.js src/features/cards/details.js src/main.js; do
+            mkdir -p "/tmp/pkg/patch/$(dirname "$f")"
+            cp "$f" "/tmp/pkg/patch/$f"
+          done
+          (cd /tmp/pkg/patch && zip -qr /tmp/Collect-TCG-Production-2026-09-18-v02-to-2026-09-18-v03-patch.zip .)
+
+          unzip -t /tmp/Collect-TCG-Production-2026-09-18-v03-full.zip
+          unzip -t /tmp/Collect-TCG-Production-2026-09-18-v02-to-2026-09-18-v03-patch.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Collect-TCG-Production-2026-09-18-v03-release
+          path: |
+            /tmp/Collect-TCG-Production-2026-09-18-v03-full.zip
+            /tmp/Collect-TCG-Production-2026-09-18-v02-to-2026-09-18-v03-patch.zip
