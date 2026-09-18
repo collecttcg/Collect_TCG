@@ -1,5 +1,7 @@
 /** V93 beta: features/owner/tools. Shared dependencies are explicit on appContext. */
 export function register(appContext){
+const SUPABASE_PRO_DATABASE_LIMIT_BYTES=8*1024*1024*1024;
+const SUPABASE_PRO_STORAGE_LIMIT_BYTES=100*1024*1024*1024;
 function currentInventoryToolMode(){
     const mode=appContext.currentHashParams().get("mode");
     const aliases={
@@ -19,7 +21,7 @@ function currentInventoryToolSubmode(mode){
     const requested=String(appContext.currentHashParams().get("sub")||"");
     const allowed={
       bulk:["prices","metadata","status","psa","missing-certs"],
-      activity:["recent","history"],
+      activity:["recent","history","qr"],
       quality:["audit","images","duplicates","reprocess"],
       lifecycle:["lifecycle"],
       storage:["health","storage-audit","storage-optimizer","migration","backup"]
@@ -43,7 +45,7 @@ function inventoryToolsSwitcher(mode,submode){
 
     const subtabs={
       bulk:[["prices","Bulk Prices"],["metadata","Bulk Metadata"],["status","Bulk Status"],["psa","PSA POP"],["missing-certs","Missing Certs"]],
-      activity:[["recent","Recently Edited"],["history","Edit History"]],
+      activity:[["recent","Recently Edited"],["history","Edit History"],["qr","QR Generator"]],
       quality:[["audit","Catalogue Audit"],["images","Image Health"],["duplicates","Duplicates"],["reprocess","Reprocess Images"]],
       lifecycle:[["lifecycle","Drafts & Archive"]],
       storage:[["health","Database & Storage"],["storage-audit","Storage Audit"],["storage-optimizer","Storage Optimizer"],["migration","Image Migration"],["backup","Backup"]]
@@ -754,94 +756,11 @@ function renderStorageAuditPage(){
       el.innerHTML=`<strong>${appContext.escapeHtml(title)}</strong><span>${appContext.escapeHtml(message)}</span>`;
     };
 
-    const selectedOrphanPaths=()=>[
-      ...appContext.view.querySelectorAll("[data-storage-orphan-path]:checked")
-    ].map(input=>String(input.dataset.storageOrphanPath||"")).filter(Boolean);
-
-    const updateSelectionSummary=()=>{
-      if(!latestAudit) return;
-      const selected=new Set(selectedOrphanPaths());
-      const bytes=latestAudit.orphans
-        .filter(file=>selected.has(file.path))
-        .reduce((sum,file)=>sum+file.size,0);
-      const label=appContext.$("storageAuditSelectedSummary");
-      const btn=appContext.$("storageAuditDeleteBtn");
-      if(label){
-        label.textContent=`${selected.size.toLocaleString()} selected · ${appContext.formatApproxBytes(bytes)}`;
-      }
-      if(btn) btn.disabled=!selected.size;
-    };
-
-    const bindResultEvents=()=>{
-      appContext.$("storageAuditSelectAllBtn")?.addEventListener("click",()=>{
-        const boxes=[...appContext.view.querySelectorAll("[data-storage-orphan-path]")];
-        const shouldSelect=boxes.some(box=>!box.checked);
-        boxes.forEach(box=>{ box.checked=shouldSelect; });
-        updateSelectionSummary();
-      });
-
-      appContext.view.querySelectorAll("[data-storage-orphan-path]").forEach(input=>{
-        input.addEventListener("change",updateSelectionSummary);
-      });
-
-      appContext.$("storageAuditDeleteBtn")?.addEventListener("click",async()=>{
-        const paths=selectedOrphanPaths();
-        if(!paths.length) return;
-
-        const selected=new Set(paths);
-        const bytes=latestAudit.orphans
-          .filter(file=>selected.has(file.path))
-          .reduce((sum,file)=>sum+file.size,0);
-
-        const ok=confirm(
-          `Delete ${paths.length} selected orphaned file${paths.length===1?"":"s"}?\n\n`+
-          `Estimated space to reclaim: ${appContext.formatApproxBytes(bytes)}\n\n`+
-          `A fresh database reference check will run before deletion. Referenced files will be retained.`
-        );
-        if(!ok) return;
-
-        const btn=appContext.$("storageAuditDeleteBtn");
-        if(btn){
-          btn.disabled=true;
-          btn.textContent="Checking & deleting…";
-        }
-
-        let allOk=true;
-        for(let i=0;i<paths.length;i+=100){
-          const okChunk=await appContext.removeCardStoragePaths(paths.slice(i,i+100));
-          if(!okChunk){
-            allOk=false;
-            break;
-          }
-        }
-
-        if(!allOk){
-          setStatus(
-            "Cleanup stopped safely",
-            "The reference check or Storage delete was not confirmed. Remaining files were retained.",
-            "warn"
-          );
-          if(btn){
-            btn.disabled=false;
-            btn.textContent="Delete Selected Orphans";
-          }
-          return;
-        }
-
-        setStatus(
-          "Cleanup completed",
-          "Selected unreferenced files were processed. Running a fresh audit now…",
-          "ok"
-        );
-        await runAudit();
-      });
-    };
-
     const renderAudit=audit=>{
       const usage=audit.usage;
       const totalStorage=usage?.ok ? usage.storageBytes : null;
       const storageLeft=usage?.ok
-        ? appContext.capacityLeft(usage.storageBytes,appContext.SUPABASE_FREE_STORAGE_LIMIT_BYTES)
+        ? appContext.capacityLeft(usage.storageBytes,SUPABASE_PRO_STORAGE_LIMIT_BYTES)
         : null;
       const exactDupFiles=audit.exactDuplicateGroups.reduce((sum,g)=>sum+g.length,0);
       const possibleDupFiles=audit.possibleDuplicateGroups.reduce((sum,g)=>sum+g.length,0);
@@ -882,15 +801,13 @@ function renderStorageAuditPage(){
               <p>Files not referenced by any card image, thumbnail, original image or reversible watermark variant.</p>
             </div>
             <div class="storage-audit-inline-actions">
-              <button type="button" class="btn-ghost" id="storageAuditSelectAllBtn" ${audit.orphans.length?"":"disabled"}>Select All</button>
-              <button type="button" class="btn-danger" id="storageAuditDeleteBtn" disabled>Delete Selected Orphans</button>
+              <span class="hint">Scan only</span>
             </div>
           </div>
-          <div id="storageAuditSelectedSummary" class="hint">0 selected · 0 B</div>
-          ${appContext.storageAuditTableRows(audit.orphans,{checkboxes:true,limit:100})}
+          ${appContext.storageAuditTableRows(audit.orphans,{limit:100})}
           <div class="storage-audit-safety-note">
-            <strong>Safety check</strong>
-            <span>Delete runs the existing full database reference check again immediately before removing files. Nothing is auto-deleted.</span>
+            <strong>Analysis only</strong>
+            <span>This tool reports unreferenced files and estimated reclaimable space. It cannot delete Storage objects.</span>
           </div>
         </section>
 
@@ -929,7 +846,6 @@ function renderStorageAuditPage(){
         </section>
       `;
 
-      bindResultEvents();
     };
 
     const runAudit=async()=>{
@@ -1438,7 +1354,7 @@ function renderSupabaseHealthPage(){
         </div>
         <button class="btn-primary" type="button" id="healthRefreshBtn">Refresh Supabase Usage</button>
         <div id="healthCapacityWarning" class="capacity-warning" hidden></div>
-        <div class="hint" style="margin-top:10px">Database and file usage are read through the owner-only <code>get_owner_capacity_usage()</code> RPC. Remaining values are calculated from the live usage returned by <code>get_owner_capacity_usage()</code>. Reference capacities used for the calculation: 500 MB database and 1 GB File Storage.</div>
+        <div class="hint" style="margin-top:10px">Database and file usage are read through the owner-only <code>get_owner_capacity_usage()</code> RPC. Remaining values are calculated from the live usage returned by <code>get_owner_capacity_usage()</code>. Pro plan included capacities used for the calculation: 8 GB database disk and 100 GB File Storage.</div>
       </section>`;
 
     const refresh=async()=>{
@@ -1457,24 +1373,24 @@ function renderSupabaseHealthPage(){
             if(el) el.textContent="Unavailable";
           });
         }else{
-          const dbLeft=appContext.capacityLeft(usage.databaseBytes,appContext.SUPABASE_FREE_DATABASE_LIMIT_BYTES);
-          const storageLeft=appContext.capacityLeft(usage.storageBytes,appContext.SUPABASE_FREE_STORAGE_LIMIT_BYTES);
+          const dbLeft=appContext.capacityLeft(usage.databaseBytes,SUPABASE_PRO_DATABASE_LIMIT_BYTES);
+          const storageLeft=appContext.capacityLeft(usage.storageBytes,SUPABASE_PRO_STORAGE_LIMIT_BYTES);
           appContext.$("healthDbUsed").textContent=appContext.formatApproxBytes(usage.databaseBytes);
           appContext.$("healthDbLeft").textContent=appContext.formatApproxBytes(dbLeft);
           appContext.$("healthStorageUsed").textContent=appContext.formatApproxBytes(usage.storageBytes);
           appContext.$("healthStorageLeft").textContent=appContext.formatApproxBytes(storageLeft);
 
-          appContext.$("healthDbUsed").title=appContext.capacitySummaryText("Database",usage.databaseBytes,appContext.SUPABASE_FREE_DATABASE_LIMIT_BYTES);
-          appContext.$("healthDbLeft").title=appContext.capacitySummaryText("Database",usage.databaseBytes,appContext.SUPABASE_FREE_DATABASE_LIMIT_BYTES);
-          appContext.$("healthStorageUsed").title=appContext.capacitySummaryText("File Storage",usage.storageBytes,appContext.SUPABASE_FREE_STORAGE_LIMIT_BYTES);
-          appContext.$("healthStorageLeft").title=appContext.capacitySummaryText("File Storage",usage.storageBytes,appContext.SUPABASE_FREE_STORAGE_LIMIT_BYTES);
+          appContext.$("healthDbUsed").title=appContext.capacitySummaryText("Database",usage.databaseBytes,SUPABASE_PRO_DATABASE_LIMIT_BYTES);
+          appContext.$("healthDbLeft").title=appContext.capacitySummaryText("Database",usage.databaseBytes,SUPABASE_PRO_DATABASE_LIMIT_BYTES);
+          appContext.$("healthStorageUsed").title=appContext.capacitySummaryText("File Storage",usage.storageBytes,SUPABASE_PRO_STORAGE_LIMIT_BYTES);
+          appContext.$("healthStorageLeft").title=appContext.capacitySummaryText("File Storage",usage.storageBytes,SUPABASE_PRO_STORAGE_LIMIT_BYTES);
 
-          const dbPct=appContext.capacityPercent(usage.databaseBytes,appContext.SUPABASE_FREE_DATABASE_LIMIT_BYTES);
-          const storagePct=appContext.capacityPercent(usage.storageBytes,appContext.SUPABASE_FREE_STORAGE_LIMIT_BYTES);
+          const dbPct=appContext.capacityPercent(usage.databaseBytes,SUPABASE_PRO_DATABASE_LIMIT_BYTES);
+          const storagePct=appContext.capacityPercent(usage.storageBytes,SUPABASE_PRO_STORAGE_LIMIT_BYTES);
           const warning=appContext.$("healthCapacityWarning");
           const parts=[];
-          if(dbPct>=80) parts.push(`Database is ${dbPct.toFixed(1)}% of the 500 MB reference limit.`);
-          if(storagePct>=80) parts.push(`File Storage is ${storagePct.toFixed(1)}% of the 1 GB reference limit.`);
+          if(dbPct>=80) parts.push(`Database is ${dbPct.toFixed(1)}% of the 8 GB Pro included database disk.`);
+          if(storagePct>=80) parts.push(`File Storage is ${storagePct.toFixed(1)}% of the 100 GB Pro included File Storage.`);
           warning.hidden=!parts.length;
           warning.classList.toggle("danger",dbPct>=90||storagePct>=90);
           warning.textContent=parts.join(" ");
