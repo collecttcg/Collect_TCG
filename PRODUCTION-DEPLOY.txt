@@ -30,3 +30,10 @@ Previous Production: 2026-09-17-v05
 Promoted from approved Beta: 2026-09-18-v03
 Scope: approved post-v18 website changes only — mobile Insights presentation and Collection game-browser layout. Standalone Insights Beta PWA excluded. Existing Production routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.
 SQL: No new SQL required. Existing 2026-09-17-v05 Country → Card/Era migration remains the prerequisite for that Insights panel.
+
+2026-09-18-v02 release record
+=============================
+Previous Production: 2026-09-18-v01
+Promoted from approved Beta: 2026-09-18-v04
+Scope: approved Meta automated-fetcher analytics exclusion only. Existing Production Collection layout, Insights, routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.
+SQL: No new SQL required.
