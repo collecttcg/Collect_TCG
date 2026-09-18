@@ -214,7 +214,7 @@ jobs:
           grep -q 'isBuyerAnalyticsBlocked' src/services/analytics.js
 
           grep -Fq 'More cards, more photos, prices and updates on our website' src/features/cards/details.js
-          grep -Fq 'QR Generator' src/features/owner/tools.js
+          test -f src/features/owner/qr-generator.js
           test -f src/features/owner/insights-dashboard.js
           grep -R -q 'giveaway' src/features/content src/features/owner
 
