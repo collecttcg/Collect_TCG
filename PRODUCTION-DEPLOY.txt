@@ -44,3 +44,10 @@ Previous Production: 2026-09-18-v02
 Promoted from approved Beta: 2026-09-18-v05
 Scope: approved ZIP-photo QR caption update only — adds “more photos” to the QR artwork line. Existing Production analytics filtering, Collection layout, Insights, routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.
 SQL: No new SQL required.
+
+2026-09-18-v04 release record
+=============================
+Previous Production: 2026-09-18-v03
+Promoted from approved Beta: 2026-09-18-v07
+Scope: approved Beta v06-v07 website changes — brand-first Home hero with Collector Spotlight, plus removal of the generic SOCIALS link footer from generated social posts. Existing Production QR ZIP caption, Meta crawler analytics filtering, Collection layout, Insights, routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.
+SQL: No new SQL required.
