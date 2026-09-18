@@ -1,0 +1,251 @@
+name: Finalize Production 2026-09-18-v04
+
+on:
+  push:
+    branches: [release-validate-2026-09-18-v04]
+
+jobs:
+  validate-promote-package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore exact Production v04 candidate
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "02719ec326aa474ffeebec22343c8f95ecdceae9"
+          git reset --hard 489bbaab9df5d8a001bc55e913bf44e71ef42a2b
+          test "$(git rev-parse HEAD~7)" = "02719ec326aa474ffeebec22343c8f95ecdceae9"
+
+      - name: Validate intended scope
+        run: |
+          set -euo pipefail
+          expected="$(printf '%s\n' PRODUCTION-DEPLOY.txt index.html src/app/register-features.js src/features/content/home.js src/features/social/posts.js src/main.js src/styles/29-home-brand-spotlight.css | sort | tr '\n' ' ')"
+          actual="$(git diff --name-only 02719ec326aa474ffeebec22343c8f95ecdceae9..HEAD | sort | tr '\n' ' ')"
+          test "$actual" = "$expected" || { echo "Unexpected scope: $actual"; exit 1; }
+
+      - name: Validate JavaScript imports and assets
+        run: |
+          set -euo pipefail
+          ! grep -R -nE '^(<<<<<<< .+|=======|>>>>>>> .+)$' index.html src PRODUCTION-DEPLOY.txt
+          find src -name '*.js' -print0 | xargs -0 -n1 node --check
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,sys
+          errors=[]
+          for p in Path('src').rglob('*.js'):
+              text=p.read_text(errors='ignore')
+              pattern=r'(?:import|export)\s+(?:[^"\']*?\s+from\s+)?["\'](\.[^"\']+)["\']'
+              for spec in re.findall(pattern,text):
+                  clean=spec.split('?')[0]
+                  target=(p.parent/clean).resolve()
+                  ok=target.exists() if target.suffix else (target.exists() or target.with_suffix('.js').exists() or (target/'index.js').exists())
+                  if not ok: errors.append(f'Missing import {spec} from {p}')
+          html=Path('index.html').read_text(errors='ignore')
+          for attr in re.findall(r'(?:src|href)=["\']([^"\']+)["\']',html):
+              clean=attr.split('?')[0].split('#')[0]
+              if not clean or clean.startswith(('http://','https://','//','mailto:','tel:','data:','javascript:')): continue
+              target=Path(clean[2:] if clean.startswith('./') else clean)
+              if not target.exists(): errors.append(f'Missing HTML asset {attr}')
+          if errors:
+              print('\n'.join(errors)); sys.exit(1)
+          print('JavaScript syntax, relative imports and HTML assets OK')
+          PY
+
+          test -f assets/shop-logo.png
+
+      - name: Verify approved Home files from Beta v07
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://raw.githubusercontent.com/collecttcg/Collect_TCG_Beta/a89a0613784e0092542485eef201d93a5bc9be22/beta/src/features/content/home.js" -o /tmp/beta-home.js
+          curl -fsSL "https://raw.githubusercontent.com/collecttcg/Collect_TCG_Beta/a89a0613784e0092542485eef201d93a5bc9be22/beta/src/styles/29-home-brand-spotlight.css" -o /tmp/beta-home.css
+          cmp src/features/content/home.js /tmp/beta-home.js
+          cmp src/styles/29-home-brand-spotlight.css /tmp/beta-home.css
+
+          grep -Fq 'Rare cards. Curated with intent.' src/features/content/home.js
+          grep -Fq 'Collector Spotlight' src/features/content/home.js
+          grep -Fq 'Browse Inventory' src/features/content/home.js
+          grep -Fq 'View Collection' src/features/content/home.js
+          grep -Fq './assets/shop-logo.png' src/features/content/home.js
+          grep -Fq '@media(max-width:800px)' src/styles/29-home-brand-spotlight.css
+          grep -Fq 'body.light-mode .home-collector-spotlight' src/styles/29-home-brand-spotlight.css
+
+      - name: Verify exact Production social-footer patch
+        run: |
+          set -euo pipefail
+          git show 02719ec326aa474ffeebec22343c8f95ecdceae9:src/features/social/posts.js > /tmp/posts-base.js
+          cp /tmp/posts-base.js /tmp/posts-expected.js
+
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/posts-expected.js')
+          s=p.read_text()
+          replacements=[
+          ('''    lines.push(
+                "",
+                ...appContext.collectSocialPostLines(),
+                "",
+                divider,
+                "",
+                "HASHTAG :",
+                hashtags
+              );''','''    lines.push(
+                "",
+                "HASHTAG :",
+                hashtags
+              );'''),
+          ('''      divider,
+                "",
+                ...appContext.collectSocialPostLines(),
+                "",
+                divider,
+                "",
+                "HASHTAG :",
+                hashtags''','''      divider,
+                "",
+                "HASHTAG :",
+                hashtags'''),
+          ('''      `COLLECTION : ${location.origin}${location.pathname}#/collection`,
+                ...appContext.collectSocialPostLines(),
+                divider,''','''      `COLLECTION : ${location.origin}${location.pathname}#/collection`,
+                divider,'''),
+          ('''      `WEBSITE : ${appContext.getWebsiteShareUrl()}`,
+                ...appContext.collectSocialPostLines(),
+                "",
+                divider,''','''      `WEBSITE : ${appContext.getWebsiteShareUrl()}`,
+                "",
+                divider,''')
+          ]
+          for old,new in replacements:
+              if s.count(old)!=1:
+                  raise SystemExit(f'Expected one social footer block, found {s.count(old)}')
+              s=s.replace(old,new)
+          p.write_text(s)
+          PY
+
+          cmp src/features/social/posts.js /tmp/posts-expected.js
+          ! grep -Fq 'appContext.collectSocialPostLines()' src/features/social/posts.js
+
+          # Generator modes still exist.
+          for fn in buildFbPostText buildFbNfsPostText buildFbGiveawayPost buildGiveawayWinnerAnnouncementPost buildCarousellPostText buildFbCardListPost buildFbCardDropPost; do
+            grep -Fq "function $fn" src/features/social/posts.js
+          done
+
+          # Giveaway social requirements remain; only generic footer was removed.
+          grep -Fq 'followFacebook' src/features/social/posts.js
+          grep -Fq 'followInstagram' src/features/social/posts.js
+          grep -Fq 'facebookPageUrl' src/features/social/posts.js
+          grep -Fq 'instagramUrl' src/features/social/posts.js
+          grep -Fq 'includeFacebookGroupBonus' src/features/social/posts.js
+
+      - name: Smoke-test generated Single Card and NFS text
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { register } from './src/features/social/posts.js';
+
+          globalThis.location={
+            origin:'https://example.test',
+            pathname:'/Collect_TCG/',
+            search:''
+          };
+
+          const appContext={
+            localStorage:{getItem(){return null},setItem(){}},
+            normalizeFilterValue:v=>String(v||'').trim().toLowerCase(),
+            effectiveFormat:()=> 'Raw',
+            rawConditionPostLabel:()=> 'RAW',
+            getCardShareUrl:id=>`https://example.test/card/${id}`,
+            getWebsiteShareUrl:()=> 'https://example.test/inventory'
+          };
+          register(appContext);
+
+          const values={
+            language:'en',
+            title:'TEST CARD',
+            hashtags:'#tcg',
+            carousellShopUrl:'https://carousell.test/',
+            instagramUrl:'https://instagram.test/'
+          };
+          const card={id:'abc',name:'Test Card'};
+
+          for(const [name,output] of [
+            ['single',appContext.buildFbPostText(card,values)],
+            ['nfs',appContext.buildFbNfsPostText(card,values)]
+          ]){
+            if(/SOCIALS|Instagram:|Facebook:|Carousell Malaysia:|Carousell Singapore:/i.test(output)){
+              throw new Error(name+' still contains social footer');
+            }
+            if(!output.includes('HASHTAG :')) throw new Error(name+' lost hashtags');
+          }
+          console.log('Production generator smoke tests passed');
+          NODE
+
+      - name: Validate cache chain and retained Production behavior
+        run: |
+          set -euo pipefail
+          grep -Fq "../features/content/home.js?v=2026-09-18-v04" src/app/register-features.js
+          grep -Fq "../features/social/posts.js?v=2026-09-18-v04" src/app/register-features.js
+          grep -Fq "../features/cards/details.js?v=2026-09-18-v03" src/app/register-features.js
+          grep -Fq "qr-generator.js?v=2026-09-17-v04" src/app/register-features.js
+          grep -Fq "./app/register-features.js?v=2026-09-18-v04" src/main.js
+          grep -Fq "./src/styles/29-home-brand-spotlight.css?v=2026-09-18-v04" index.html
+          grep -Fq "./src/main.js?v=2026-09-18-v04" index.html
+
+          grep -R -q 'Owner Mode' src index.html
+          grep -R -q 'Availability' src index.html
+          grep -R -q 'Make an offer' src index.html
+          grep -R -q 'More photos / video' src index.html
+          grep -R -q 'COD / meetup' src index.html
+
+          grep -Fq 'const count=appContext.$("sfCount");' src/app/routing.js
+          grep -Fq 'if(count) count.textContent=' src/app/routing.js
+          grep -Fq 'Browse Collection by game' src/features/inventory/page.js
+          grep -Fq 'const groupedView=collectionRearrangeMode;' src/features/inventory/page.js
+
+          grep -q 'facebookexternalhit' src/services/analytics.js
+          grep -q 'meta-externalfetcher' src/services/analytics.js
+          grep -q 'isBuyerAnalyticsBlocked' src/services/analytics.js
+
+          grep -Fq 'More cards, more photos, prices and updates on our website' src/features/cards/details.js
+          grep -Fq 'QR Generator' src/features/owner/tools.js
+          test -f src/features/owner/insights-dashboard.js
+          grep -R -q 'giveaway' src/features/content src/features/owner
+
+      - name: Squash and promote Production v04
+        run: |
+          set -euo pipefail
+          git config user.name collecttcg
+          git config user.email z3313514@gmail.com
+          git reset --soft 02719ec326aa474ffeebec22343c8f95ecdceae9
+          git commit -m 'Production 2026-09-18-v04: promote Beta 2026-09-18-v07'
+          git push origin HEAD:main
+
+      - name: Build release archives
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/pkg/full /tmp/pkg/patch
+          rsync -a --exclude='.git' --exclude='.github/workflows/finalize-production-2026-09-18-v04.yml' ./ /tmp/pkg/full/
+          (cd /tmp/pkg/full && zip -qr /tmp/Collect-TCG-Production-2026-09-18-v04-full.zip .)
+
+          for f in PRODUCTION-DEPLOY.txt index.html src/app/register-features.js src/features/content/home.js src/features/social/posts.js src/main.js src/styles/29-home-brand-spotlight.css; do
+            mkdir -p "/tmp/pkg/patch/$(dirname "$f")"
+            cp "$f" "/tmp/pkg/patch/$f"
+          done
+          (cd /tmp/pkg/patch && zip -qr /tmp/Collect-TCG-Production-2026-09-18-v03-to-2026-09-18-v04-patch.zip .)
+
+          unzip -t /tmp/Collect-TCG-Production-2026-09-18-v04-full.zip
+          unzip -t /tmp/Collect-TCG-Production-2026-09-18-v03-to-2026-09-18-v04-patch.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Collect-TCG-Production-2026-09-18-v04-release
+          path: |
+            /tmp/Collect-TCG-Production-2026-09-18-v04-full.zip
+            /tmp/Collect-TCG-Production-2026-09-18-v03-to-2026-09-18-v04-patch.zip
