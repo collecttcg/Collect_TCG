@@ -387,7 +387,7 @@ async function copyPlainText(text,successMessage){
 
 function currentFacebookToolMode(){
     const mode=appContext.currentHashParams().get("mode");
-    return ["single","nfs","list","giveaway","winner","carousell"].includes(mode) ? mode : "single";
+    return ["single","nfs","list","giveaway","winner","carousell","ebay"].includes(mode) ? mode : "single";
   }
 
 function facebookToolsHeaderHTML(mode){
@@ -397,7 +397,8 @@ function facebookToolsHeaderHTML(mode){
       list:"Create a complete Facebook sales list from your available inventory.",
       giveaway:"Create a reusable Facebook giveaway post from your giveaway template.",
       winner:"Create a winner-announcement post from your saved Past Winners.",
-      carousell:"Create a ready-to-copy Carousell listing description from your card inventory."
+      carousell:"Create a ready-to-copy Carousell listing description from your card inventory.",
+      ebay:"Create an eBay-ready title, item specifics and listing description from one inventory card."
     };
 
     return appContext.compactGeneratedPostSpacing(`
@@ -464,6 +465,8 @@ function facebookToolsHeaderHTML(mode){
           </span>
         </a>
 
+        <a href="#/fb-tools?mode=ebay" class="fb-tools-switch ${mode==="ebay" ? "active" : ""}" role="tab" aria-selected="${mode==="ebay" ? "true" : "false"}"><span class="fb-tools-switch-icon">e</span><span><strong>eBay Listing</strong><small>Choose one card · title · item specifics · description</small></span></a>
+
         <a href="#/fb-tools?mode=carousell"
            class="fb-tools-switch ${mode==="carousell" ? "active" : ""}"
            role="tab"
@@ -493,6 +496,8 @@ function renderFacebookToolsPage(){
       appContext.renderGiveawayWinnerPostGeneratorPage();
     }else if(mode==="carousell"){
       appContext.renderCarousellPostGeneratorPage();
+    }else if(mode==="ebay"){
+      appContext.renderEbayListingGeneratorPage();
     }else{
       appContext.renderFbPostGeneratorPage();
     }
@@ -2029,6 +2034,37 @@ async function downloadCarousellGiveawayImagesZip(giveaway,progressCallback){
     a.remove();
     setTimeout(()=>URL.revokeObjectURL(href),1500);
     return {added,failed};
+  }
+
+function ebayListingTitle(card){
+    if(!card) return "";
+    const type=appContext.cardListFormat(card);
+    const condition=type==="graded" ? appContext.gradedPostLabel(card) : (type==="sealed" ? "Sealed" : appContext.rawConditionPostLabel(card));
+    return [card.name,card.card_code,card.series,condition,card.language,appContext.fbGameLabel(card)].map(v=>String(v||"").trim()).filter(Boolean).join(" ").replace(/\s+/g," ").trim().slice(0,80).trim();
+  }
+
+function ebayItemSpecifics(card){
+    if(!card) return "";
+    const type=appContext.cardListFormat(card);
+    const rows=[["Game",card.game],["Card Name",card.name],["Card Number",card.card_code],["Set / Series",card.series],["Year",card.year],["Language",card.language],["Condition",type==="graded"?"Graded":type==="sealed"?"Sealed":appContext.rawConditionPostLabel(card)]];
+    if(type==="graded") rows.push(["Grade",appContext.gradedPostLabel(card)]);
+    return rows.filter(row=>String(row[1]||"").trim()).map(row=>row[0]+": "+String(row[1]).trim()).join("\n");
+  }
+
+function ebayListingDescription(card){
+    if(!card) return "";
+    return appContext.compactGeneratedPostSpacing([String(card.name||"").toUpperCase()+(card.card_code ? " · "+String(card.card_code).toUpperCase() : ""),"",appContext.ebayItemSpecifics(card),"","[ITEM DETAILS]","You will receive the exact card/item shown in the photos.","Please review all photos carefully before purchasing.","Additional photos can be provided on request.","","[SHIPPING]","The item will be packed securely for shipment.","Tracking will be provided after dispatch.","","[COLLECT TCG MY & SG]","More trading cards, vintage cards and tournament cards are available in our inventory."].join("\n"));
+  }
+
+function renderEbayListingGeneratorPage(){
+    if(!appContext.requireOwner("open eBay listing generator")) return;
+    const cards=appContext.cards.filter(card=>appContext.cardLifecycle(card)!=="archived").slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
+    appContext.view.innerHTML='<div class="page-head fb-post-page-head"><div><div class="eyebrow">Owner Tool</div><h2>eBay Listing Generator</h2><p>Select an inventory card and copy an eBay-ready title, item specifics and description.</p></div></div><div class="fb-post-layout"><section class="panel fb-post-builder"><div class="fb-post-section-title"><div><div class="eyebrow">1 · Select Card</div><h3>Card Details</h3></div></div><div class="field"><label for="ebayCardSearch">Search cards</label><input id="ebayCardSearch" type="search" maxlength="100" placeholder="Name, code, series, game…"></div><div class="field"><label for="ebayCardSelect">Card</label><select id="ebayCardSelect"><option value="">Select a card…</option></select><div class="hint" id="ebayCardCount"></div></div><div id="ebaySelectedCard" class="fb-post-selected-card" hidden></div></section><section class="panel fb-post-output-panel"><div class="fb-post-section-title"><div><div class="eyebrow">2 · Copy Listing</div><h3>eBay Listing</h3></div></div><div class="field"><label for="ebayTitleOutput">eBay Title <span id="ebayTitleCount">0 / 80</span></label><input id="ebayTitleOutput" type="text" maxlength="80"><div class="hint">Card name · card code · series · grade/condition · language · game.</div></div><div class="fb-post-copy-actions"><button type="button" class="btn-ghost" id="ebayCopyTitle" disabled>Copy Title</button></div><div class="field"><label for="ebaySpecificsOutput">Item Specifics</label><textarea id="ebaySpecificsOutput" rows="8" readonly></textarea></div><div class="fb-post-copy-actions"><button type="button" class="btn-ghost" id="ebayCopySpecifics" disabled>Copy Item Specifics</button></div><div class="field"><label for="ebayDescriptionOutput">Description</label><textarea id="ebayDescriptionOutput" class="fb-post-output" readonly></textarea></div><div class="fb-post-copy-actions"><button type="button" class="btn-ghost" id="ebayCopyDescription" disabled>Copy Description</button><button type="button" class="btn-primary" id="ebayCopyAll" disabled>Copy All</button></div><div class="fb-post-bottom-actions"><button type="button" class="btn-ghost" id="ebayOpenCard" disabled>Open Card</button></div></section></div>';
+    const search=appContext.$("ebayCardSearch"),select=appContext.$("ebayCardSelect"),count=appContext.$("ebayCardCount"),mount=appContext.$("ebaySelectedCard"),title=appContext.$("ebayTitleOutput"),titleCount=appContext.$("ebayTitleCount"),specifics=appContext.$("ebaySpecificsOutput"),description=appContext.$("ebayDescriptionOutput"),copyTitle=appContext.$("ebayCopyTitle"),copySpecifics=appContext.$("ebayCopySpecifics"),copyDescription=appContext.$("ebayCopyDescription"),copyAll=appContext.$("ebayCopyAll"),open=appContext.$("ebayOpenCard");
+    let selected=null;
+    function renderOptions(){const q=appContext.normalizeFilterValue(search.value);const visible=cards.filter(c=>!q||[c.name,c.card_code,c.series,c.game,c.year,c.language].map(v=>appContext.normalizeFilterValue(v)).join(" ").includes(q));const id=String(selected?.id||select.value||"");select.innerHTML='<option value="">Select a card…</option>'+visible.map(c=>'<option value="'+appContext.escapeHtml(c.id)+'">'+appContext.escapeHtml([c.name,c.card_code,c.series].filter(Boolean).join(" · "))+'</option>').join("");if(id&&visible.some(c=>String(c.id)===id))select.value=id;count.textContent=visible.length+" of "+cards.length+" cards shown";}
+    function update(){if(!selected){title.value=specifics.value=description.value="";mount.hidden=true;[copyTitle,copySpecifics,copyDescription,copyAll,open].forEach(b=>b.disabled=true);titleCount.textContent="0 / 80";return;}title.value=appContext.ebayListingTitle(selected);specifics.value=appContext.ebayItemSpecifics(selected);description.value=appContext.ebayListingDescription(selected);titleCount.textContent=title.value.length+" / 80";mount.hidden=false;const image=appContext.getImages(selected)[0]||"";mount.innerHTML='<div class="fb-post-card-image">'+(image?'<img src="'+appContext.escapeHtml(image)+'" alt="">':'<div class="fb-post-no-image">No image</div>')+'</div><div class="fb-post-card-copy"><strong>'+appContext.escapeHtml(selected.name||"Untitled card")+'</strong><span>'+appContext.escapeHtml([selected.card_code,selected.series,selected.year].filter(Boolean).join(" · "))+'</span></div>';[copyTitle,copySpecifics,copyDescription,copyAll,open].forEach(b=>b.disabled=false);}
+    search.addEventListener("input",renderOptions);select.addEventListener("change",()=>{selected=cards.find(card=>String(card.id)===String(select.value))||null;update();});title.addEventListener("input",()=>{titleCount.textContent=title.value.length+" / 80";copyTitle.disabled=!title.value.trim();copyAll.disabled=!title.value.trim();});copyTitle.addEventListener("click",()=>appContext.copyPlainText(title.value,"eBay title copied"));copySpecifics.addEventListener("click",()=>appContext.copyPlainText(specifics.value,"eBay item specifics copied"));copyDescription.addEventListener("click",()=>appContext.copyPlainText(description.value,"eBay description copied"));copyAll.addEventListener("click",()=>appContext.copyPlainText("TITLE\n"+title.value+"\n\nITEM SPECIFICS\n"+specifics.value+"\n\nDESCRIPTION\n"+description.value,"eBay listing copied"));open.addEventListener("click",()=>{if(selected)appContext.openDetailsModal(selected);});renderOptions();update();
   }
 
 function renderCarousellPostGeneratorPage(){
@@ -3744,7 +3780,7 @@ function renderFbCardListGeneratorPage(){
     applyOrderPreset("default");
   }
 
-  Object.assign(appContext,{compactGeneratedPostSpacing,normalizePostLanguage,getPostGeneratorLanguage,savePostGeneratorLanguage,postLanguageSelectHTML,postLocale,replacePostTokens,postSalesFooterLines,getFbPostPrefs,saveFbPostPrefs,getFbCardMeta,saveFbCardMeta,safeHttpUrl,openSafeExternalUrl,fbFormatLabel,postEraLabel,postPopLabel,fbGameLabel,defaultFbPostTitle,singleCardCopyTitle,defaultFbHashtags,buildFbPostText,buildFbNfsPostText,copyTextToClipboard,copyPlainText,currentFacebookToolMode,facebookToolsHeaderHTML,renderFacebookToolsPage,renderFbPostGeneratorPage,getFbGiveawayPostPrefs,saveFbGiveawayPostPrefs,giveawayNumberFromTitle,formatGiveawayEndsGmt8,getGiveawayShareUrl,buildGiveawayWinnerAnnouncementPost,renderGiveawayWinnerPostGeneratorPage,buildFbGiveawayPost,renderFbGiveawayPostGeneratorPage,defaultCarousellProductDetails,carousellGiveawayImages,defaultCarousellGiveawayProductDetails,downloadCarousellGiveawayImagesZip,getCarousellPostPrefs,saveCarousellPostPrefs,buildCarousellPostText,renderCarousellPostGeneratorPage,getFbCardListPostPrefs,saveFbCardListPostPrefs,ordinalDay,fbCardListDateLabel,cardListFormat,rawConditionPostLabel,gradedPostLabel,cardListPriceLine,cardListGroupHeading,cardListItemLine,dropDisplayText,dropCardName,dropCardLanguageLabel,dropCardMetaLine,dropCardPriceLine,dropCardEntryLines,sortCardListCards,buildFbCardListSection,buildFbCardDropPost,balancedCardDropCards,buildFbCardListPost,dataUrlToBlob,imageSourceToBlob,imageExtensionFromBlob,loadScriptOnce,ensureJsZip,downloadCardListFirstImagesZip,renderFbCardListGeneratorPage});
+  Object.assign(appContext,{compactGeneratedPostSpacing,normalizePostLanguage,getPostGeneratorLanguage,savePostGeneratorLanguage,postLanguageSelectHTML,postLocale,replacePostTokens,postSalesFooterLines,getFbPostPrefs,saveFbPostPrefs,getFbCardMeta,saveFbCardMeta,safeHttpUrl,openSafeExternalUrl,fbFormatLabel,postEraLabel,postPopLabel,fbGameLabel,defaultFbPostTitle,singleCardCopyTitle,defaultFbHashtags,buildFbPostText,buildFbNfsPostText,copyTextToClipboard,copyPlainText,currentFacebookToolMode,facebookToolsHeaderHTML,renderFacebookToolsPage,renderFbPostGeneratorPage,getFbGiveawayPostPrefs,saveFbGiveawayPostPrefs,giveawayNumberFromTitle,formatGiveawayEndsGmt8,getGiveawayShareUrl,buildGiveawayWinnerAnnouncementPost,renderGiveawayWinnerPostGeneratorPage,buildFbGiveawayPost,renderFbGiveawayPostGeneratorPage,defaultCarousellProductDetails,carousellGiveawayImages,defaultCarousellGiveawayProductDetails,downloadCarousellGiveawayImagesZip,getCarousellPostPrefs,saveCarousellPostPrefs,buildCarousellPostText,renderCarousellPostGeneratorPage,ebayListingTitle,ebayItemSpecifics,ebayListingDescription,renderEbayListingGeneratorPage,getFbCardListPostPrefs,saveFbCardListPostPrefs,ordinalDay,fbCardListDateLabel,cardListFormat,rawConditionPostLabel,gradedPostLabel,cardListPriceLine,cardListGroupHeading,cardListItemLine,dropDisplayText,dropCardName,dropCardLanguageLabel,dropCardMetaLine,dropCardPriceLine,dropCardEntryLines,sortCardListCards,buildFbCardListSection,buildFbCardDropPost,balancedCardDropCards,buildFbCardListPost,dataUrlToBlob,imageSourceToBlob,imageExtensionFromBlob,loadScriptOnce,ensureJsZip,downloadCardListFirstImagesZip,renderFbCardListGeneratorPage});
 }
 
 /** State and event initialization; called in preserved startup order. */
