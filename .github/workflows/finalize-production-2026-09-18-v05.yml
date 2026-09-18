@@ -1,0 +1,261 @@
+name: Finalize Production 2026-09-18-v05
+
+on:
+  push:
+    branches: [release-validate-2026-09-18-v05]
+
+jobs:
+  validate-promote-package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore exact Production v05 candidate
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "2ca3175a521b50ddefdf7ede27a2eb720ad828a7"
+          git reset --hard 4513995ebbba0caf582e8819ebe8c26844bd979b
+          test "$(git rev-parse HEAD~6)" = "2ca3175a521b50ddefdf7ede27a2eb720ad828a7"
+
+      - name: Validate intended scope
+        run: |
+          set -euo pipefail
+          expected="$(printf '%s\n' PRODUCTION-DEPLOY.txt index.html src/app/initialize.js src/app/register-features.js src/main.js src/services/analytics.js | sort | tr '\n' ' ')"
+          actual="$(git diff --name-only 2ca3175a521b50ddefdf7ede27a2eb720ad828a7..HEAD | sort | tr '\n' ' ')"
+          test "$actual" = "$expected" || { echo "Unexpected scope: $actual"; exit 1; }
+
+      - name: Validate JavaScript imports and assets
+        run: |
+          set -euo pipefail
+          ! grep -R -nE '^(<<<<<<< .+|=======|>>>>>>> .+)$' index.html src PRODUCTION-DEPLOY.txt
+          find src -name '*.js' -print0 | xargs -0 -n1 node --check
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,sys
+          errors=[]
+          for p in Path('src').rglob('*.js'):
+              text=p.read_text(errors='ignore')
+              pattern=r'(?:import|export)\s+(?:[^"\']*?\s+from\s+)?["\'](\.[^"\']+)["\']'
+              for spec in re.findall(pattern,text):
+                  clean=spec.split('?')[0]
+                  target=(p.parent/clean).resolve()
+                  ok=target.exists() if target.suffix else (target.exists() or target.with_suffix('.js').exists() or (target/'index.js').exists())
+                  if not ok: errors.append(f'Missing import {spec} from {p}')
+          html=Path('index.html').read_text(errors='ignore')
+          for attr in re.findall(r'(?:src|href)=["\']([^"\']+)["\']',html):
+              clean=attr.split('?')[0].split('#')[0]
+              if not clean or clean.startswith(('http://','https://','//','mailto:','tel:','data:','javascript:')): continue
+              target=Path(clean[2:] if clean.startswith('./') else clean)
+              if not target.exists(): errors.append(f'Missing HTML asset {attr}')
+          if errors:
+              print('\n'.join(errors)); sys.exit(1)
+          print('JavaScript syntax, relative imports and HTML assets OK')
+          PY
+
+      - name: Verify exact approved Beta v08 analytics
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://raw.githubusercontent.com/collecttcg/Collect_TCG_Beta/2afc3fdbc1f091a89928a46ccc7a5a71ca3940e5/beta/src/services/analytics.js" -o /tmp/beta-v08-analytics.js
+          cmp src/services/analytics.js /tmp/beta-v08-analytics.js
+
+      - name: Verify Production-specific patch isolation
+        run: |
+          set -euo pipefail
+          git show 2ca3175a521b50ddefdf7ede27a2eb720ad828a7:src/app/initialize.js > /tmp/initialize-base.js
+          cp /tmp/initialize-base.js /tmp/initialize-expected.js
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/initialize-expected.js')
+          s=p.read_text()
+          import re
+          matches=re.findall(r"\.\./services/analytics\.js(?:\?v=[^'\"]+)?",s)
+          if len(matches)!=1:
+              raise SystemExit(f'Expected one Production analytics initializer import, got {len(matches)}')
+          s=s.replace(matches[0],"../services/analytics.js?v=2026-09-18-v05")
+          p.write_text(s)
+          PY
+          cmp src/app/initialize.js /tmp/initialize-expected.js
+
+          grep -Fq "../services/analytics.js?v=2026-09-18-v05" src/app/initialize.js
+          grep -Fq "../services/analytics.js?v=2026-09-18-v05" src/app/register-features.js
+          grep -Fq "./app/initialize.js?v=2026-09-18-v05" src/main.js
+          grep -Fq "./app/register-features.js?v=2026-09-18-v05" src/main.js
+          grep -Fq "./src/main.js?v=2026-09-18-v05" index.html
+
+      - name: Validate stronger social analytics gate
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { register } from './src/services/analytics.js';
+
+          const storage=()=>{
+            const map=new Map();
+            return {
+              getItem:key=>map.has(key)?map.get(key):null,
+              setItem:(key,value)=>map.set(key,String(value))
+            };
+          };
+
+          function setNavigator(userAgent,webdriver=false){
+            Object.defineProperty(globalThis,'navigator',{
+              value:{userAgent,webdriver,platform:'MacIntel',maxTouchPoints:0},
+              configurable:true
+            });
+          }
+
+          function setPage({referrer='',search=''}={}){
+            globalThis.document={referrer,hidden:false,visibilityState:'visible'};
+            globalThis.location={hostname:'collecttcg.github.io',search};
+          }
+
+          function context(){
+            const appContext={
+              localStorage:storage(),
+              sessionStorage:storage(),
+              isOwnerAuthenticated:()=>false,
+              isAnalyticsExcludedDevice:()=>false,
+              safeCardId:value=>String(value||'').trim()
+            };
+            register(appContext);
+            appContext.ANALYTICS_HUMAN_INTERACTION_SESSION_KEY='collect_tcg_human_interaction_v1';
+            appContext.analyticsHumanInteractionObserved=false;
+            appContext.analyticsDeferredSocialStartupAttempted=false;
+            appContext.analyticsDeferredSocialResumeStarted=false;
+            appContext.analyticsHumanInteractionHandlersInstalled=false;
+            appContext.detailsCardId='';
+            appContext.cards=[];
+            return appContext;
+          }
+
+          setPage();
+          setNavigator('Mozilla/5.0 Chrome/152.0 Safari/537.36');
+          let app=context();
+          if(app.isBuyerAnalyticsBlocked()) throw new Error('Normal direct Chrome incorrectly blocked');
+
+          setPage({referrer:'https://www.facebook.com/'});
+          setNavigator('Mozilla/5.0 Chrome/152.0 Safari/537.36');
+          app=context();
+          if(!app.isFacebookInstagramAnalyticsSession() || !app.isBuyerAnalyticsBlocked()){
+            throw new Error('Facebook pre-interaction gate failed');
+          }
+          const deferred=await app.recordAnalyticsSession();
+          if(deferred!==false || !app.analyticsDeferredSocialStartupAttempted){
+            throw new Error('Facebook startup did not defer');
+          }
+
+          let sessionWrites=0,visitWrites=0,durationStarts=0;
+          app.recordAnalyticsSession=async()=>{sessionWrites+=1;return true;};
+          app.recordWebsiteVisit=async()=>{visitWrites+=1;return true;};
+          app.startSessionDurationTracking=()=>{durationStarts+=1;};
+
+          if(app.noteHumanAnalyticsInteraction({isTrusted:false})!==false) throw new Error('Synthetic event accepted');
+          if(!app.isBuyerAnalyticsBlocked()) throw new Error('Synthetic event unlocked analytics');
+
+          if(!app.noteHumanAnalyticsInteraction({isTrusted:true})) throw new Error('Trusted interaction rejected');
+          await new Promise(resolve=>setTimeout(resolve,0));
+          if(app.isBuyerAnalyticsBlocked()) throw new Error('Real Facebook visitor stayed blocked');
+          if(sessionWrites!==1 || visitWrites!==1 || durationStarts!==1){
+            throw new Error('Deferred analytics did not resume exactly once');
+          }
+
+          setPage({referrer:'https://l.instagram.com/'});
+          setNavigator('Mozilla/5.0 Chrome/152.0 Safari/537.36');
+          app=context();
+          if(!app.isFacebookInstagramAnalyticsSession() || !app.isBuyerAnalyticsBlocked()){
+            throw new Error('Instagram referrer gate failed');
+          }
+
+          setPage();
+          setNavigator('Mozilla/5.0 (iPhone) [FBAN/FBIOS;FBAV/500.0.0.0.0]');
+          app=context();
+          if(!app.isFacebookInstagramAnalyticsSession() || !app.isBuyerAnalyticsBlocked()){
+            throw new Error('Facebook in-app gate failed');
+          }
+          app.analyticsHumanInteractionObserved=true;
+          if(app.isBuyerAnalyticsBlocked()) throw new Error('Facebook in-app visitor remained blocked after human proof');
+
+          setPage({search:'?fbclid=test'});
+          setNavigator('Mozilla/5.0 Chrome/152.0 Safari/537.36');
+          app=context();
+          if(!app.isFacebookInstagramAnalyticsSession() || !app.isBuyerAnalyticsBlocked()){
+            throw new Error('fbclid gate failed');
+          }
+
+          for(const [ua,webdriver] of [
+            ['facebookexternalhit/1.1',false],
+            ['Mozilla/5.0 HeadlessChrome/152.0',false],
+            ['Googlebot/2.1',false],
+            ['Mozilla/5.0 Chrome/152.0',true]
+          ]){
+            setPage({referrer:'https://www.facebook.com/'});
+            setNavigator(ua,webdriver);
+            app=context();
+            app.analyticsHumanInteractionObserved=true;
+            if(!app.isKnownAutomatedSocialFetcher() || !app.isBuyerAnalyticsBlocked()){
+              throw new Error('Automated client escaped filter: '+ua);
+            }
+          }
+
+          console.log('Production social analytics tests passed');
+          NODE
+
+      - name: Validate retained Production behavior
+        run: |
+          set -euo pipefail
+          grep -R -q 'Owner Mode' src index.html
+          grep -R -q 'Availability' src index.html
+          grep -R -q 'Make an offer' src index.html
+          grep -R -q 'More photos / video' src index.html
+          grep -R -q 'COD / meetup' src index.html
+
+          grep -Fq 'Rare cards. Curated with intent.' src/features/content/home.js
+          grep -Fq 'Collector Spotlight' src/features/content/home.js
+          ! grep -Fq 'appContext.collectSocialPostLines()' src/features/social/posts.js
+          grep -Fq 'More cards, more photos, prices and updates on our website' src/features/cards/details.js
+
+          grep -Fq 'const count=appContext.$("sfCount");' src/app/routing.js
+          grep -Fq 'if(count) count.textContent=' src/app/routing.js
+          grep -Fq 'Browse Collection by game' src/features/inventory/page.js
+          grep -Fq 'const groupedView=collectionRearrangeMode;' src/features/inventory/page.js
+
+          test -f src/features/owner/qr-generator.js
+          test -f src/features/owner/insights-dashboard.js
+          grep -R -q 'giveaway' src/features/content src/features/owner
+
+      - name: Squash and promote Production v05
+        run: |
+          set -euo pipefail
+          git config user.name collecttcg
+          git config user.email z3313514@gmail.com
+          git reset --soft 2ca3175a521b50ddefdf7ede27a2eb720ad828a7
+          git commit -m 'Production 2026-09-18-v05: promote Beta 2026-09-18-v08'
+          git push origin HEAD:main
+
+      - name: Build release archives
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/pkg/full /tmp/pkg/patch
+          rsync -a --exclude='.git' --exclude='.github/workflows/finalize-production-2026-09-18-v05.yml' ./ /tmp/pkg/full/
+          (cd /tmp/pkg/full && zip -qr /tmp/Collect-TCG-Production-2026-09-18-v05-full.zip .)
+
+          for f in PRODUCTION-DEPLOY.txt index.html src/app/initialize.js src/app/register-features.js src/main.js src/services/analytics.js; do
+            mkdir -p "/tmp/pkg/patch/$(dirname "$f")"
+            cp "$f" "/tmp/pkg/patch/$f"
+          done
+          (cd /tmp/pkg/patch && zip -qr /tmp/Collect-TCG-Production-2026-09-18-v04-to-2026-09-18-v05-patch.zip .)
+
+          unzip -t /tmp/Collect-TCG-Production-2026-09-18-v05-full.zip
+          unzip -t /tmp/Collect-TCG-Production-2026-09-18-v04-to-2026-09-18-v05-patch.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Collect-TCG-Production-2026-09-18-v05-release
+          path: |
+            /tmp/Collect-TCG-Production-2026-09-18-v05-full.zip
+            /tmp/Collect-TCG-Production-2026-09-18-v04-to-2026-09-18-v05-patch.zip
