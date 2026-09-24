@@ -16,8 +16,10 @@ on:
       - 'index.html'
       - 'src/app/register-features.js'
       - 'src/app/initialize.js'
+      - 'src/app/startup.js'
       - 'src/app/routing.js'
       - 'src/services/analytics.js'
+      - 'src/services/catalogue.js'
       - 'src/features/core/utilities.js'
       - 'src/features/cards/details.js'
       - 'src/features/cards/tiles.js'
@@ -64,6 +66,8 @@ jobs:
           node --check src/features/owner/insights-dashboard.js
           node --check src/app/routing.js
           node --check src/services/analytics.js
+          node --check src/services/catalogue.js
+          node --check src/app/startup.js
           node --check src/app/register-features.js
           node --check src/app/initialize.js
           node --check src/main.js
@@ -88,6 +92,8 @@ jobs:
             'src/features/owner/insights-dashboard.js',
             'src/app/routing.js',
             'src/services/analytics.js',
+            'src/services/catalogue.js',
+            'src/app/startup.js',
             'src/app/register-features.js',
             'src/app/initialize.js',
             'src/main.js'
@@ -202,10 +208,40 @@ jobs:
           grep -q 'history.back()' src/features/cards/details.js
           grep -q 'event.stopPropagation()' src/features/content/home.js
           grep -q 'routing.js?v=2026-09-24-v07' src/app/initialize.js
-          grep -q 'details.js?v=2026-09-24-v07' src/app/initialize.js
+          grep -q 'details.js?v=2026-09-24-v08' src/app/initialize.js
           grep -q 'routing.js?v=2026-09-24-v07' src/app/register-features.js
           grep -q 'home.js?v=2026-09-24-v07' src/app/register-features.js
-          grep -q 'details.js?v=2026-09-24-v07' src/app/register-features.js
+          grep -q 'details.js?v=2026-09-24-v08' src/app/register-features.js
+
+      - name: Validate Phase 3 conversion and performance
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/features/cards/details.js
+          node --check src/services/analytics.js
+          node --check src/services/catalogue.js
+          node --check src/features/cards/tiles.js
+          node --check src/features/owner/insights-dashboard.js
+          node --check src/app/startup.js
+          grep -q 'function contactCardReferenceLines' src/features/cards/details.js
+          grep -q 'recordCardEngagement(card.id,"inquiry_copy",platform)' src/features/cards/details.js
+          grep -q 'fetchOwnerCardConversionSummary' src/services/analytics.js
+          grep -q 'ownerCardConversionSummaryCache = new Map' src/services/analytics.js
+          grep -q 'data-owner-conversion="intent-rate"' src/features/cards/details.js
+          grep -q 'cardImageLoadPromises.get(id)' src/services/catalogue.js
+          grep -q 'preloadCardDetailsMedia' src/features/cards/tiles.js
+          grep -q 'Saved without contact' src/features/owner/insights-dashboard.js
+          grep -q 'const directCardEntry=' src/app/startup.js
+          grep -q 'Promise.allSettled' src/app/startup.js
+          grep -q 'analytics.js?v=2026-09-24-v08' src/app/register-features.js
+          grep -q 'catalogue.js?v=2026-09-24-v08' src/app/register-features.js
+          grep -q 'tiles.js?v=2026-09-24-v08' src/app/register-features.js
+          grep -q 'insights-dashboard.js?v=2026-09-24-v08' src/app/register-features.js
+          grep -q 'details.js?v=2026-09-24-v08' src/app/register-features.js
+          grep -q 'startup.js?v=2026-09-24-v08' src/app/register-features.js
+          grep -q 'register-features.js?v=2026-09-24-v08' src/main.js
+          grep -q 'initialize.js?v=2026-09-24-v08' src/main.js
+          grep -q 'src/main.js?v=2026-09-24-v08' index.html
 
       - name: Generate Production SEO card pages
         run: node tools/generate-seo.mjs --production
@@ -240,14 +276,14 @@ jobs:
             git push
           fi
 
-      # Final Production v07 clean packaging from completed v06.
+      # Final Production v08 packaging from completed v07.
       - name: Create Production release packages
         shell: bash
         env:
-          RELEASE_VERSION: 2026-09-24-v07
-          PREVIOUS_VERSION: 2026-09-24-v06
-          PREVIOUS_COMMIT: 0a87ca1085a32766fda3509740573eceded0e7d0
-          BETA_PROMOTED: 2026-09-24-v11
+          RELEASE_VERSION: 2026-09-24-v08
+          PREVIOUS_VERSION: 2026-09-24-v07
+          PREVIOUS_COMMIT: a4a9fe543aeb8e95d977d2593ab480877af279cc
+          BETA_PROMOTED: 2026-09-24-v13
         run: |
           set -euo pipefail
           mkdir -p release
@@ -275,10 +311,10 @@ jobs:
       - name: Upload Production release packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-09-24-v07-packages
+          name: Collect-TCG-Production-2026-09-24-v08-packages
           path: |
-            release/Collect-TCG-Production-2026-09-24-v07-full.zip
-            release/Collect-TCG-Production-2026-09-24-v06-to-2026-09-24-v07-patch.zip
+            release/Collect-TCG-Production-2026-09-24-v08-full.zip
+            release/Collect-TCG-Production-2026-09-24-v07-to-2026-09-24-v08-patch.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -287,17 +323,17 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-manifests
-          MANIFEST="release-manifests/2026-09-24-v07.txt"
+          MANIFEST="release-manifests/2026-09-24-v08.txt"
           {
-            echo "Version: 2026-09-24-v07"
-            echo "Previous Production: 2026-09-24-v06"
-            echo "Beta promoted from: 2026-09-24-v11"
+            echo "Version: 2026-09-24-v08"
+            echo "Previous Production: 2026-09-24-v07"
+            echo "Beta promoted from: 2026-09-24-v13"
             echo "Source commit: $(git rev-parse HEAD)"
-            echo "Full ZIP: Collect-TCG-Production-2026-09-24-v07-full.zip"
-            echo "Patch ZIP: Collect-TCG-Production-2026-09-24-v06-to-2026-09-24-v07-patch.zip"
+            echo "Full ZIP: Collect-TCG-Production-2026-09-24-v08-full.zip"
+            echo "Patch ZIP: Collect-TCG-Production-2026-09-24-v07-to-2026-09-24-v08-patch.zip"
             echo
             sha256sum release/*.zip
           } > "$MANIFEST"
           git add "$MANIFEST"
-          git commit -m "Production 2026-09-24-v07: record package validation"
+          git commit -m "Production 2026-09-24-v08: record package validation"
           git push

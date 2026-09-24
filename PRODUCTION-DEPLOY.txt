@@ -58,3 +58,11 @@ Previous Production: 2026-09-18-v04
 Promoted from approved Beta: 2026-09-18-v08
 Scope: stronger social/share analytics filtering only — known automated clients are blocked, while Facebook/Instagram sessions require a trusted human interaction before buyer-facing analytics begin. Existing Production Home, generator outputs, QR ZIP caption, Collection layout, Insights, routing, QR Generator, Owner Mode, Supabase/RLS, giveaways and Contact-to-Buy behavior preserved.
 SQL: No new SQL required.
+
+2026-09-24-v08 release record
+=============================
+Previous Production: 2026-09-24-v07
+Promoted from approved Beta: 2026-09-24-v13
+Scope: Phase 3 buyer-conversion and performance changes — richer inquiry context/copy tracking, Owner card conversion summaries and Saved without contact opportunity, deduplicated/preloaded card detail media, and faster direct card entry startup. Includes the v13 owner conversion cache initialization fix discovered during Production promotion validation.
+SQL: No new SQL required. Existing Production database migrations remain unchanged.
+
