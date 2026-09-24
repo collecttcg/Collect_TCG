@@ -240,13 +240,13 @@ jobs:
             git push
           fi
 
-      # Final Production v07 packaging after restoring the validated v06 manifest.
+      # Final Production v07 packaging from the completed v06 release commit.
       - name: Create Production release packages
         shell: bash
         env:
           RELEASE_VERSION: 2026-09-24-v07
           PREVIOUS_VERSION: 2026-09-24-v06
-          PREVIOUS_COMMIT: 5655aeffe61a829f402a94d5c7925bec80f37c54
+          PREVIOUS_COMMIT: 0a87ca1085a32766fda3509740573eceded0e7d0
           BETA_PROMOTED: 2026-09-24-v11
         run: |
           set -euo pipefail
