@@ -1,0 +1,191 @@
+name: Refresh Production SEO card pages
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '37 3 * * *'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/production-seo.yml'
+      - 'tools/generate-seo.mjs'
+      - '2026-09-24-v01-SEO-PUBLIC-CATALOG.sql'
+      - 'index.html'
+      - 'src/app/register-features.js'
+      - 'src/app/routing.js'
+      - 'src/features/core/utilities.js'
+      - 'src/features/cards/details.js'
+      - 'src/main.js'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: production-seo-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Validate changed JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check tools/generate-seo.mjs
+          node --check src/features/core/utilities.js
+          node --check src/features/cards/details.js
+          node --check src/app/routing.js
+          node --check src/app/register-features.js
+          node --check src/main.js
+          node tools/generate-seo.mjs --self-test
+
+      - name: Validate imports and HTML assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+
+          const files=[
+            'src/features/core/utilities.js',
+            'src/features/cards/details.js',
+            'src/app/routing.js',
+            'src/app/register-features.js',
+            'src/main.js'
+          ];
+
+          for(const file of files){
+            const source=fs.readFileSync(file,'utf8');
+            const dir=path.dirname(file);
+            const matches=[...source.matchAll(/(?:from\s*|import\s*)['"]([^'"]+)['"]/g)];
+            for(const match of matches){
+              const spec=match[1];
+              if(!spec.startsWith('.')) continue;
+              const clean=spec.split(/[?#]/)[0];
+              const target=path.resolve(dir,clean);
+              if(!fs.existsSync(target)){
+                throw new Error(`Missing relative import from ${file}: ${spec}`);
+              }
+            }
+          }
+
+          const html=fs.readFileSync('index.html','utf8');
+          for(const match of html.matchAll(/(?:src|href)=["']([^"']+)["']/g)){
+            const ref=match[1];
+            if(!ref || /^(?:https?:|data:|mailto:|tel:|#|\/\/)/i.test(ref)) continue;
+            const clean=ref.split(/[?#]/)[0];
+            if(!clean || clean==='/' || clean.startsWith('/')) continue;
+            const target=path.resolve(clean.replace(/^\.\//,''));
+            if(!fs.existsSync(target)){
+              throw new Error(`Missing local HTML asset: ${ref}`);
+            }
+          }
+          console.log('Production imports and local HTML assets verified.');
+          NODE
+
+      - name: Generate Production SEO card pages
+        run: node tools/generate-seo.mjs --production
+
+      - name: Validate generated Production SEO files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s sitemap.xml
+          test -s robots.txt
+          test -s seo-slugs.json
+          grep -q 'Allow: /' robots.txt
+          grep -q '<urlset' sitemap.xml
+          grep -q 'index,follow,max-image-preview:large' cards/*/index.html
+          if grep -Eq '/cards/[^<]*/?--[0-9a-fA-F-]{20,40}/' sitemap.xml; then
+            echo "UUID found in public card URL" >&2
+            exit 1
+          fi
+          git diff --check
+
+      - name: Commit refreshed Production SEO pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cards sitemap.xml robots.txt seo-slugs.json
+          if git diff --cached --quiet; then
+            echo "Production SEO output already current."
+          else
+            git commit -m "chore: refresh Production SEO card pages [skip ci]"
+            git push
+          fi
+
+      - name: Create Production release packages
+        shell: bash
+        env:
+          RELEASE_VERSION: 2026-09-24-v01
+          PREVIOUS_VERSION: 2026-09-19-v03
+          PREVIOUS_COMMIT: f3d6c9659f3bb8a46eeb01d5c61b9423f3b96ba6
+          BETA_PROMOTED: 2026-09-24-v03
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          FULL="release/Collect-TCG-Production-${RELEASE_VERSION}-full.zip"
+          PATCH="release/Collect-TCG-Production-${PREVIOUS_VERSION}-to-${RELEASE_VERSION}-patch.zip"
+
+          git archive --format=zip --output="${FULL}" HEAD
+
+          rm -rf .release-patch
+          mkdir -p .release-patch
+          while IFS= read -r -d '' file; do
+            mkdir -p ".release-patch/$(dirname "$file")"
+            cp -a "$file" ".release-patch/$file"
+          done < <(git diff --name-only --diff-filter=ACMRT -z "${PREVIOUS_COMMIT}" HEAD)
+
+          git diff --name-only --diff-filter=D "${PREVIOUS_COMMIT}" HEAD > .release-patch/PATCH-DELETIONS.txt
+          (
+            cd .release-patch
+            zip -qr "../${PATCH}" .
+          )
+
+          unzip -tq "${FULL}"
+          unzip -tq "${PATCH}"
+
+      - name: Upload Production release packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: Collect-TCG-Production-2026-09-24-v01-packages
+          path: |
+            release/Collect-TCG-Production-2026-09-24-v01-full.zip
+            release/Collect-TCG-Production-2026-09-19-v03-to-2026-09-24-v01-patch.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Record Production package validation manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-manifests
+          MANIFEST="release-manifests/2026-09-24-v01.txt"
+          {
+            echo "Version: 2026-09-24-v01"
+            echo "Previous Production: 2026-09-19-v03"
+            echo "Beta promoted from: 2026-09-24-v03"
+            echo "Source commit: $(git rev-parse HEAD)"
+            echo "Full ZIP: Collect-TCG-Production-2026-09-24-v01-full.zip"
+            echo "Patch ZIP: Collect-TCG-Production-2026-09-19-v03-to-2026-09-24-v01-patch.zip"
+            echo
+            sha256sum release/*.zip
+          } > "$MANIFEST"
+          git add "$MANIFEST"
+          git commit -m "Production 2026-09-24-v01: record package validation"
+          git push
