@@ -132,10 +132,10 @@ jobs:
       - name: Create Production release packages
         shell: bash
         env:
-          RELEASE_VERSION: 2026-09-24-v02
-          PREVIOUS_VERSION: 2026-09-24-v01
-          PREVIOUS_COMMIT: 0b88212caba31c49d4f0be25f24703a78d00aa5f
-          BETA_PROMOTED: 2026-09-24-v04
+          RELEASE_VERSION: 2026-09-24-v03
+          PREVIOUS_VERSION: 2026-09-24-v02
+          PREVIOUS_COMMIT: cc07b054f4348fc38ba0eee6b9f4d2251be69391
+          BETA_PROMOTED: 2026-09-24-v05
         run: |
           set -euo pipefail
           mkdir -p release
@@ -163,10 +163,10 @@ jobs:
       - name: Upload Production release packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-09-24-v02-packages
+          name: Collect-TCG-Production-2026-09-24-v03-packages
           path: |
-            release/Collect-TCG-Production-2026-09-24-v02-full.zip
-            release/Collect-TCG-Production-2026-09-24-v01-to-2026-09-24-v02-patch.zip
+            release/Collect-TCG-Production-2026-09-24-v03-full.zip
+            release/Collect-TCG-Production-2026-09-24-v02-to-2026-09-24-v03-patch.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -175,17 +175,17 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-manifests
-          MANIFEST="release-manifests/2026-09-24-v02.txt"
+          MANIFEST="release-manifests/2026-09-24-v03.txt"
           {
-            echo "Version: 2026-09-24-v02"
-            echo "Previous Production: 2026-09-24-v01"
-            echo "Beta promoted from: 2026-09-24-v04"
+            echo "Version: 2026-09-24-v03"
+            echo "Previous Production: 2026-09-24-v02"
+            echo "Beta promoted from: 2026-09-24-v05"
             echo "Source commit: $(git rev-parse HEAD)"
-            echo "Full ZIP: Collect-TCG-Production-2026-09-24-v02-full.zip"
-            echo "Patch ZIP: Collect-TCG-Production-2026-09-24-v01-to-2026-09-24-v02-patch.zip"
+            echo "Full ZIP: Collect-TCG-Production-2026-09-24-v03-full.zip"
+            echo "Patch ZIP: Collect-TCG-Production-2026-09-24-v02-to-2026-09-24-v03-patch.zip"
             echo
             sha256sum release/*.zip
           } > "$MANIFEST"
           git add "$MANIFEST"
-          git commit -m "Production 2026-09-24-v02: record package validation"
+          git commit -m "Production 2026-09-24-v03: record package validation"
           git push
