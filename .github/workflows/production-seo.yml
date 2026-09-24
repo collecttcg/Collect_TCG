@@ -12,6 +12,7 @@ on:
       - 'tools/generate-seo.mjs'
       - '2026-09-24-v01-SEO-PUBLIC-CATALOG.sql'
       - '2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql'
+      - '2026-09-24-v06-DISCOVERY-SUMMARY.sql'
       - 'index.html'
       - 'src/app/register-features.js'
       - 'src/app/routing.js'
@@ -20,6 +21,10 @@ on:
       - 'src/features/cards/details.js'
       - 'src/features/cards/tiles.js'
       - 'src/features/content/home.js'
+      - 'src/features/owner/insights-dashboard.js'
+      - 'src/features/inventory/page.js'
+      - 'src/features/inventory/filtering.js'
+      - 'src/features/cards/related.js'
       - 'src/main.js'
 
 permissions:
@@ -52,6 +57,10 @@ jobs:
           node --check src/features/cards/details.js
           node --check src/features/cards/tiles.js
           node --check src/features/content/home.js
+          node --check src/features/cards/related.js
+          node --check src/features/inventory/filtering.js
+          node --check src/features/inventory/page.js
+          node --check src/features/owner/insights-dashboard.js
           node --check src/app/routing.js
           node --check src/services/analytics.js
           node --check src/app/register-features.js
@@ -71,6 +80,10 @@ jobs:
             'src/features/cards/details.js',
             'src/features/cards/tiles.js',
             'src/features/content/home.js',
+            'src/features/cards/related.js',
+            'src/features/inventory/filtering.js',
+            'src/features/inventory/page.js',
+            'src/features/owner/insights-dashboard.js',
             'src/app/routing.js',
             'src/services/analytics.js',
             'src/app/register-features.js',
@@ -152,6 +165,24 @@ jobs:
           grep -q 'recordQualifiedViewDiscoveryAttribution' src/services/analytics.js
           grep -q 'record_card_discovery_view' src/services/analytics.js
 
+      - name: Validate Phase 2 completion
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s 2026-09-24-v06-DISCOVERY-SUMMARY.sql
+          grep -q 'create or replace function public.get_card_discovery_summary' 2026-09-24-v06-DISCOVERY-SUMMARY.sql
+          grep -q 'public.is_app_owner()' 2026-09-24-v06-DISCOVERY-SUMMARY.sql
+          grep -q 'revoke all on function public.get_card_discovery_summary' 2026-09-24-v06-DISCOVERY-SUMMARY.sql
+          grep -q 'grant execute on function public.get_card_discovery_summary' 2026-09-24-v06-DISCOVERY-SUMMARY.sql
+          grep -q 'function relatedSeriesAffinity' src/features/cards/related.js
+          grep -q 'function relatedGradeAffinity' src/features/cards/related.js
+          grep -Fq 'unique*100' src/features/inventory/filtering.js
+          grep -q 'trendingCardScore(b)-appContext.trendingCardScore(a)' src/features/content/home.js
+          grep -q 'unique qualified collector interest' src/features/inventory/page.js
+          grep -q 'fetchDiscoverySourceSummary' src/services/analytics.js
+          grep -q 'Where card interest starts' src/features/owner/insights-dashboard.js
+          grep -q 'directional context while traffic is still small' src/features/owner/insights-dashboard.js
+
       - name: Generate Production SEO card pages
         run: node tools/generate-seo.mjs --production
 
@@ -188,10 +219,10 @@ jobs:
       - name: Create Production release packages
         shell: bash
         env:
-          RELEASE_VERSION: 2026-09-24-v05
-          PREVIOUS_VERSION: 2026-09-24-v04
-          PREVIOUS_COMMIT: 8589743289db41b01c66758a498d0b482cbfb0d0
-          BETA_PROMOTED: 2026-09-24-v07
+          RELEASE_VERSION: 2026-09-24-v06
+          PREVIOUS_VERSION: 2026-09-24-v05
+          PREVIOUS_COMMIT: 3ab92f57a1de1c4ed0505bb340997c0105f24611
+          BETA_PROMOTED: 2026-09-24-v08
         run: |
           set -euo pipefail
           mkdir -p release
@@ -219,10 +250,10 @@ jobs:
       - name: Upload Production release packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-09-24-v05-packages
+          name: Collect-TCG-Production-2026-09-24-v06-packages
           path: |
-            release/Collect-TCG-Production-2026-09-24-v05-full.zip
-            release/Collect-TCG-Production-2026-09-24-v04-to-2026-09-24-v05-patch.zip
+            release/Collect-TCG-Production-2026-09-24-v06-full.zip
+            release/Collect-TCG-Production-2026-09-24-v05-to-2026-09-24-v06-patch.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -231,17 +262,17 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-manifests
-          MANIFEST="release-manifests/2026-09-24-v05.txt"
+          MANIFEST="release-manifests/2026-09-24-v06.txt"
           {
-            echo "Version: 2026-09-24-v05"
-            echo "Previous Production: 2026-09-24-v04"
-            echo "Beta promoted from: 2026-09-24-v07"
+            echo "Version: 2026-09-24-v06"
+            echo "Previous Production: 2026-09-24-v05"
+            echo "Beta promoted from: 2026-09-24-v08"
             echo "Source commit: $(git rev-parse HEAD)"
-            echo "Full ZIP: Collect-TCG-Production-2026-09-24-v05-full.zip"
-            echo "Patch ZIP: Collect-TCG-Production-2026-09-24-v04-to-2026-09-24-v05-patch.zip"
+            echo "Full ZIP: Collect-TCG-Production-2026-09-24-v06-full.zip"
+            echo "Patch ZIP: Collect-TCG-Production-2026-09-24-v05-to-2026-09-24-v06-patch.zip"
             echo
             sha256sum release/*.zip
           } > "$MANIFEST"
           git add "$MANIFEST"
-          git commit -m "Production 2026-09-24-v05: record package validation"
+          git commit -m "Production 2026-09-24-v06: record package validation"
           git push
