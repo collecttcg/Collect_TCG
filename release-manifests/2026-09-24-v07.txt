@@ -1,9 +1,0 @@
-Version: 2026-09-24-v07
-Previous Production: 2026-09-24-v06
-Beta promoted from: 2026-09-24-v11
-Source commit: 7b1064f146b433b0e6fff4cc97b8a56d96217cee
-Full ZIP: Collect-TCG-Production-2026-09-24-v07-full.zip
-Patch ZIP: Collect-TCG-Production-2026-09-24-v06-to-2026-09-24-v07-patch.zip
-
-ebac55be42253a4fddf7cc0ebf0d57f398b50d881e5b128f8f6d96819b058f05  release/Collect-TCG-Production-2026-09-24-v06-to-2026-09-24-v07-patch.zip
-f2b9f6a43939c7c32da640e543f22cb6f7c4ee6b35c6469b1bb697a9b2eb90aa  release/Collect-TCG-Production-2026-09-24-v07-full.zip
