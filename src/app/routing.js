@@ -308,7 +308,32 @@ async function openCardRoute(cardId,discoverySource=""){
             String(appContext.detailsReturnHash||current||"#/home").slice(0,1500)
           );
         }catch{}
-        location.assign(clean);
+
+        let pushedCleanUrl=false;
+        try{
+          const cleanUrl=new URL(clean,location.href);
+          if(cleanUrl.origin===location.origin){
+            const state=history.state && typeof history.state==="object"
+              ? {...history.state}
+              : {};
+            state.collectTcgSpaCardId=id;
+            state.collectTcgSpaCard=true;
+            history.pushState(state,"",cleanUrl.pathname+cleanUrl.search+cleanUrl.hash);
+            pushedCleanUrl=true;
+          }
+        }catch{}
+
+        if(pushedCleanUrl){
+          appContext.openDetailsModal(card);
+          return;
+        }
+
+        const fallbackTarget=appContext.cardShareHash(id);
+        if(location.hash===fallbackTarget){
+          appContext.openDetailsModal(card);
+        }else{
+          location.hash=fallbackTarget;
+        }
         return;
       }
     }
@@ -365,6 +390,13 @@ function currentRoute(){
     const h = location.hash.replace(/^#\/?/, "");
     const hashRoute=(h.split("?")[0] || "").trim();
     if(hashRoute) return hashRoute;
+    const spaCardId=appContext.safeCardId(
+      history.state && typeof history.state==="object"
+        ? history.state.collectTcgSpaCardId
+        : ""
+    );
+    if(spaCardId) return `card/${spaCardId}`;
+
     const seoCardId=appContext.safeCardId(
       document.querySelector('meta[name="collect-tcg-card-id"]')?.content || ""
     );
@@ -702,6 +734,7 @@ export function initialize(appContext,runtime){
   appContext.insightsDetailsReturnState = null;
 
 window.addEventListener("hashchange", appContext.router);
+window.addEventListener("popstate", appContext.router);
 
   appContext.CARD_WATERMARK_LOGO = "./assets/watermark-logo.png";
 
