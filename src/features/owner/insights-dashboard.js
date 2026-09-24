@@ -29,7 +29,7 @@ export function register(appContext){
     const link=document.createElement("link");
     link.id="insights-dashboard-v14-styles";
     link.rel="stylesheet";
-    link.href="./src/styles/27-insights-dashboard.css?v=2026-09-18-v01";
+    link.href="./src/styles/27-insights-dashboard.css?v=2026-09-17-v19";
     document.head.appendChild(link);
   }
 
@@ -409,6 +409,108 @@ export function register(appContext){
     };
   }
 
+  function salesSignal(row){
+    const views=Math.max(0,Number(row?.unique_views||0));
+    const saves=Math.max(0,Number(row?.favorite_adds||0));
+    const viewed=contactViewed(row);
+    const intent=contactIntent(row);
+    if(intent>=2) return {label:"High intent",tone:"good"};
+    if(intent>=1) return {label:"Buyer intent",tone:"good"};
+    if(saves>=1 && intent===0) return {label:"Saved, no contact",tone:"watch"};
+    if(views>=3 && intent===0) return {label:"Views, no intent",tone:"watch"};
+    if((saves>=1 || intent>=1) && views<=6) return {label:"Low exposure",tone:"focus"};
+    if(viewed>0 && intent===0) return {label:"Contact viewed",tone:"neutral"};
+    return {label:"Watching",tone:"neutral"};
+  }
+
+  function cardPerformanceRows(rows){
+    return uniqueRowCards(rows).map(row=>{
+      const card=rowCard(row);
+      const views=Math.max(0,Number(row?.unique_views||0));
+      const saves=Math.max(0,Number(row?.favorite_adds||0));
+      const viewed=contactViewed(row);
+      const intent=contactIntent(row);
+      return {row,card,views,saves,viewed,intent,intentRate:views?intent/views*100:0,signal:salesSignal(row)};
+    });
+  }
+
+  function cardPerformanceHtml(rows){
+    const items=cardPerformanceRows(rows);
+    if(!items.length) return `<div class="insights-v14-empty">No card activity for this selection yet.</div>`;
+    return `<section class="insights-v20-performance" data-insights-v20-performance>
+      <div class="insights-v20-performance-tools">
+        <div>
+          <span>Owner sales intelligence</span>
+          <h4>Card performance</h4>
+          <p>Compare views, saves and buyer intent. Select a column to sort the current filtered cards.</p>
+        </div>
+        <div class="insights-v20-performance-controls">
+          <label>
+            <span>Sort by</span>
+            <select data-insights-v20-sort>
+              <option value="views">Most viewed</option>
+              <option value="saves">Most saved</option>
+              <option value="intent">Most buyer intent</option>
+              <option value="rate">Highest intent rate</option>
+              <option value="attention">Needs attention</option>
+            </select>
+          </label>
+          <div class="insights-v20-pagination" data-insights-v20-pagination hidden>
+            <button type="button" data-insights-v20-page="prev">Previous</button>
+            <span data-insights-v20-page-status></span>
+            <button type="button" data-insights-v20-page="next">Next</button>
+          </div>
+        </div>
+      </div>
+      <div class="insights-v20-table-wrap">
+        <table class="insights-v20-table">
+          <thead><tr><th>Card</th><th>Views</th><th>Saves</th><th>Contact viewed</th><th>Buyer intent</th><th>Intent rate</th><th>Signal</th></tr></thead>
+          <tbody data-insights-v20-performance-body></tbody>
+        </table>
+      </div>
+    </section>`;
+  }
+
+  function performanceSort(items,mode){
+    const copy=items.slice();
+    if(mode==="saves") return copy.sort((a,b)=>b.saves-a.saves || b.views-a.views);
+    if(mode==="intent") return copy.sort((a,b)=>b.intent-a.intent || b.views-a.views);
+    if(mode==="rate") return copy.sort((a,b)=>b.intentRate-a.intentRate || b.intent-a.intent || b.views-a.views);
+    if(mode==="attention") return copy.sort((a,b)=>{
+      const score=item=>(item.intent===0 ? item.saves*5+item.views : 0);
+      return score(b)-score(a) || b.saves-a.saves || b.views-a.views;
+    });
+    return copy.sort((a,b)=>b.views-a.views || b.intent-a.intent || b.saves-a.saves);
+  }
+
+  function renderPerformanceRows(mount,rows,mode="views",page=1){
+    const body=mount?.querySelector("[data-insights-v20-performance-body]");
+    if(!body) return {page:1,pages:1};
+    const items=performanceSort(cardPerformanceRows(rows),mode);
+    const pageSize=10;
+    const pages=Math.max(1,Math.ceil(items.length/pageSize));
+    const safePage=Math.min(Math.max(1,Number(page)||1),pages);
+    const visible=items.slice((safePage-1)*pageSize,safePage*pageSize);
+    body.innerHTML=visible.map(item=>`<tr>
+      <td><button type="button" data-insights-v14-open-card="${appContext.escapeHtml(item.card?.id||"")}"><strong>${appContext.escapeHtml(item.card?.name||item.row?.name||"Untitled card")}</strong><small>${appContext.escapeHtml(String(item.card?.game||item.row?.game||""))}</small></button></td>
+      <td>${item.views.toLocaleString()}</td>
+      <td>${item.saves.toLocaleString()}</td>
+      <td>${item.viewed.toLocaleString()}</td>
+      <td>${item.intent.toLocaleString()}</td>
+      <td>${item.views ? item.intentRate.toFixed(item.intentRate>=10?0:1)+"%" : "—"}</td>
+      <td><span class="insights-v20-signal ${item.signal.tone}">${appContext.escapeHtml(item.signal.label)}</span></td>
+    </tr>`).join("");
+    const pager=mount.querySelector("[data-insights-v20-pagination]");
+    const status=mount.querySelector("[data-insights-v20-page-status]");
+    const prev=mount.querySelector('[data-insights-v20-page="prev"]');
+    const next=mount.querySelector('[data-insights-v20-page="next"]');
+    if(pager) pager.hidden=items.length<=pageSize;
+    if(status) status.textContent=`Page ${safePage} of ${pages}`;
+    if(prev) prev.disabled=safePage<=1;
+    if(next) next.disabled=safePage>=pages;
+    return {page:safePage,pages};
+  }
+
   function demandBars(items,{inventoryGap=false,limit=5}={}){
     const safe=items.filter(item=>item.views>0 || item.inventory>0).slice(0,limit);
     if(!safe.length) return `<div class="insights-v14-empty">No demand data for this selection yet.</div>`;
@@ -518,6 +620,19 @@ export function register(appContext){
     return `<article><span>${appContext.escapeHtml(label)}</span><strong>${appContext.escapeHtml(value||"—")}</strong><small>${appContext.escapeHtml(detail||"")}</small></article>`;
   }
 
+  function bindCardOpenButtons(root){
+    root?.querySelectorAll("[data-insights-v14-open-card]").forEach(btn=>{
+      if(btn.dataset.insightsV20Bound==="1") return;
+      btn.dataset.insightsV20Bound="1";
+      btn.addEventListener("click",()=>{
+        const id=String(btn.dataset.insightsV14OpenCard||"");
+        if(!id) return;
+        if(typeof appContext.openInsightsCardDetails==="function") appContext.openInsightsCardDetails(id);
+        else if(typeof appContext.openCardRoute==="function") appContext.openCardRoute(id);
+      });
+    });
+  }
+
   function renderDashboard(mount){
     const m=metrics();
     const rangeText=String(appContext.$?.("insightsRange")?.selectedOptions?.[0]?.textContent||"Selected period").trim();
@@ -600,6 +715,8 @@ export function register(appContext){
         ${discoverySummaryHtml()}
       </section>
 
+      ${cardPerformanceHtml(m.rows)}
+
       <section class="insights-v14-panel insights-v18-market-panel">
         <div class="insights-v14-panel-head">
           <div><span>Market demand</span><h4>Card views by country</h4></div>
@@ -627,14 +744,24 @@ export function register(appContext){
         Market demand is aggregated from anonymous qualified card views and country events. Individual visitor histories are never shown.
       </div>`;
 
-    mount.querySelectorAll("[data-insights-v14-open-card]").forEach(btn=>{
-      btn.addEventListener("click",()=>{
-        const id=String(btn.dataset.insightsV14OpenCard||"");
-        if(!id) return;
-        if(typeof appContext.openInsightsCardDetails==="function") appContext.openInsightsCardDetails(id);
-        else if(typeof appContext.openCardRoute==="function") appContext.openCardRoute(id);
-      });
-    });
+    const performance=mount.querySelector("[data-insights-v20-performance]");
+    if(performance){
+      const sort=performance.querySelector("[data-insights-v20-sort]");
+      let page=1;
+      const refresh=()=>{
+        const result=renderPerformanceRows(performance,m.rows,String(sort?.value||"views"),page);
+        page=result.page;
+        bindCardOpenButtons(performance);
+      };
+      if(sort) sort.addEventListener("change",()=>{ page=1; refresh(); });
+      performance.querySelectorAll("[data-insights-v20-page]").forEach(btn=>btn.addEventListener("click",()=>{
+        page+=btn.dataset.insightsV20Page==="next"?1:-1;
+        refresh();
+      }));
+      refresh();
+    }
+
+    bindCardOpenButtons(mount);
   }
 
   function detailsShell(){
