@@ -240,7 +240,7 @@ jobs:
             git push
           fi
 
-      # Final Production v07 packaging from the completed v06 release commit.
+      # Final Production v07 clean packaging from completed v06.
       - name: Create Production release packages
         shell: bash
         env:
