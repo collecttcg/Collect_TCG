@@ -15,6 +15,7 @@ on:
       - '2026-09-24-v06-DISCOVERY-SUMMARY.sql'
       - 'index.html'
       - 'src/app/register-features.js'
+      - 'src/app/initialize.js'
       - 'src/app/routing.js'
       - 'src/services/analytics.js'
       - 'src/features/core/utilities.js'
@@ -64,6 +65,7 @@ jobs:
           node --check src/app/routing.js
           node --check src/services/analytics.js
           node --check src/app/register-features.js
+          node --check src/app/initialize.js
           node --check src/main.js
           node tools/generate-seo.mjs --self-test
 
@@ -87,6 +89,7 @@ jobs:
             'src/app/routing.js',
             'src/services/analytics.js',
             'src/app/register-features.js',
+            'src/app/initialize.js',
             'src/main.js'
           ];
 
@@ -141,7 +144,8 @@ jobs:
           requireMatch(routing,/function rememberCardDiscoverySource\(cardId,source\)/,'discovery source storage');
           requireMatch(routing,/function currentCardDiscoverySource\(\)/,'discovery source detection');
           requireMatch(routing,/openCardRoute\(cardId,discoverySource=""\)/,'discovery-aware card routing');
-          requireMatch(routing,/location\.assign\(clean\)/,'clean card navigation');
+          requireMatch(routing,/history\.pushState\(state,"",cleanUrl\.pathname\+cleanUrl\.search\+cleanUrl\.hash\)/,'clean card SPA navigation');
+          requireNoMatch(routing,/location\.assign\(clean\)/,'full-page clean card navigation');
           requireNoMatch(home,/home-collector-spotlight-media" href="#\/card\//,'Spotlight hash card link');
           requireMatch(home,/data-spotlight-card-id/,'Spotlight routed card id');
           requireMatch(home,/source:"recently-added"/,'Recently Added source');
@@ -183,6 +187,26 @@ jobs:
           grep -q 'Where card interest starts' src/features/owner/insights-dashboard.js
           grep -q 'directional context while traffic is still small' src/features/owner/insights-dashboard.js
 
+      - name: Validate fast clean-card navigation
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/app/routing.js
+          node --check src/features/cards/details.js
+          node --check src/features/content/home.js
+          node --check src/app/initialize.js
+          grep -Fq 'history.pushState(state,"",cleanUrl.pathname+cleanUrl.search+cleanUrl.hash)' src/app/routing.js
+          grep -q 'state.collectTcgSpaCardId=id' src/app/routing.js
+          grep -q 'window.addEventListener("popstate", appContext.router)' src/app/routing.js
+          ! grep -q 'location.assign(clean)' src/app/routing.js
+          grep -q 'history.back()' src/features/cards/details.js
+          grep -q 'event.stopPropagation()' src/features/content/home.js
+          grep -q 'routing.js?v=2026-09-24-v07' src/app/initialize.js
+          grep -q 'details.js?v=2026-09-24-v07' src/app/initialize.js
+          grep -q 'routing.js?v=2026-09-24-v07' src/app/register-features.js
+          grep -q 'home.js?v=2026-09-24-v07' src/app/register-features.js
+          grep -q 'details.js?v=2026-09-24-v07' src/app/register-features.js
+
       - name: Generate Production SEO card pages
         run: node tools/generate-seo.mjs --production
 
@@ -216,14 +240,14 @@ jobs:
             git push
           fi
 
-      # Final v06 packaging after cleaning intermediate manifests.
+      # Production v07 packaging: promote validated Beta v11 navigation.
       - name: Create Production release packages
         shell: bash
         env:
-          RELEASE_VERSION: 2026-09-24-v06
-          PREVIOUS_VERSION: 2026-09-24-v05
-          PREVIOUS_COMMIT: 3ab92f57a1de1c4ed0505bb340997c0105f24611
-          BETA_PROMOTED: 2026-09-24-v08
+          RELEASE_VERSION: 2026-09-24-v07
+          PREVIOUS_VERSION: 2026-09-24-v06
+          PREVIOUS_COMMIT: 5655aeffe61a829f402a94d5c7925bec80f37c54
+          BETA_PROMOTED: 2026-09-24-v11
         run: |
           set -euo pipefail
           mkdir -p release
@@ -251,10 +275,10 @@ jobs:
       - name: Upload Production release packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-09-24-v06-packages
+          name: Collect-TCG-Production-2026-09-24-v07-packages
           path: |
-            release/Collect-TCG-Production-2026-09-24-v06-full.zip
-            release/Collect-TCG-Production-2026-09-24-v05-to-2026-09-24-v06-patch.zip
+            release/Collect-TCG-Production-2026-09-24-v07-full.zip
+            release/Collect-TCG-Production-2026-09-24-v06-to-2026-09-24-v07-patch.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -263,17 +287,17 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-manifests
-          MANIFEST="release-manifests/2026-09-24-v06.txt"
+          MANIFEST="release-manifests/2026-09-24-v07.txt"
           {
-            echo "Version: 2026-09-24-v06"
-            echo "Previous Production: 2026-09-24-v05"
-            echo "Beta promoted from: 2026-09-24-v08"
+            echo "Version: 2026-09-24-v07"
+            echo "Previous Production: 2026-09-24-v06"
+            echo "Beta promoted from: 2026-09-24-v11"
             echo "Source commit: $(git rev-parse HEAD)"
-            echo "Full ZIP: Collect-TCG-Production-2026-09-24-v06-full.zip"
-            echo "Patch ZIP: Collect-TCG-Production-2026-09-24-v05-to-2026-09-24-v06-patch.zip"
+            echo "Full ZIP: Collect-TCG-Production-2026-09-24-v07-full.zip"
+            echo "Patch ZIP: Collect-TCG-Production-2026-09-24-v06-to-2026-09-24-v07-patch.zip"
             echo
             sha256sum release/*.zip
           } > "$MANIFEST"
           git add "$MANIFEST"
-          git commit -m "Production 2026-09-24-v06: record package validation"
+          git commit -m "Production 2026-09-24-v07: record package validation"
           git push
