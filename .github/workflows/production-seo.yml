@@ -216,6 +216,7 @@ jobs:
             git push
           fi
 
+      # Build v06 packages only after the validated previous manifest is restored.
       - name: Create Production release packages
         shell: bash
         env:
