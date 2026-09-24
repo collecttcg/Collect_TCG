@@ -240,7 +240,7 @@ jobs:
             git push
           fi
 
-      # Production v07 packaging: promote validated Beta v11 navigation.
+      # Final Production v07 packaging after restoring the validated v06 manifest.
       - name: Create Production release packages
         shell: bash
         env:
