@@ -16,6 +16,8 @@ on:
       - 'src/app/routing.js'
       - 'src/features/core/utilities.js'
       - 'src/features/cards/details.js'
+      - 'src/features/cards/tiles.js'
+      - 'src/features/content/home.js'
       - 'src/main.js'
 
 permissions:
@@ -46,6 +48,8 @@ jobs:
           node --check tools/generate-seo.mjs
           node --check src/features/core/utilities.js
           node --check src/features/cards/details.js
+          node --check src/features/cards/tiles.js
+          node --check src/features/content/home.js
           node --check src/app/routing.js
           node --check src/app/register-features.js
           node --check src/main.js
@@ -62,6 +66,8 @@ jobs:
           const files=[
             'src/features/core/utilities.js',
             'src/features/cards/details.js',
+            'src/features/cards/tiles.js',
+            'src/features/content/home.js',
             'src/app/routing.js',
             'src/app/register-features.js',
             'src/main.js'
@@ -94,6 +100,39 @@ jobs:
             }
           }
           console.log('Production imports and local HTML assets verified.');
+          NODE
+
+      - name: Validate Phase 2A discovery routing
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+
+          const routing=fs.readFileSync('src/app/routing.js','utf8');
+          const home=fs.readFileSync('src/features/content/home.js','utf8');
+          const tiles=fs.readFileSync('src/features/cards/tiles.js','utf8');
+          const details=fs.readFileSync('src/features/cards/details.js','utf8');
+
+          const requireMatch=(source,pattern,label)=>{
+            if(!pattern.test(source)) throw new Error(`Missing Phase 2A behavior: ${label}`);
+          };
+          const requireNoMatch=(source,pattern,label)=>{
+            if(pattern.test(source)) throw new Error(`Legacy behavior remains: ${label}`);
+          };
+
+          requireMatch(routing,/function rememberCardDiscoverySource\(cardId,source\)/,'discovery source storage');
+          requireMatch(routing,/function currentCardDiscoverySource\(\)/,'discovery source detection');
+          requireMatch(routing,/openCardRoute\(cardId,discoverySource=""\)/,'discovery-aware card routing');
+          requireMatch(routing,/location\.assign\(clean\)/,'clean card navigation');
+          requireNoMatch(home,/home-collector-spotlight-media" href="#\/card\//,'Spotlight hash card link');
+          requireMatch(home,/data-spotlight-card-id/,'Spotlight routed card id');
+          requireMatch(home,/source:"recently-added"/,'Recently Added source');
+          requireMatch(home,/source:"trending"/,'Trending source');
+          requireMatch(tiles,/data-discovery-source="related"/,'Related Cards source');
+          requireMatch(tiles,/openCardRoute\(card\.id,tile\.dataset\.discoverySource\|\|""\)/,'tile discovery propagation');
+          requireMatch(details,/rememberCardDiscoverySource\(id,el\.dataset\.discoverySource\|\|"related"\)/,'Related click context');
+          console.log('Production Phase 2A discovery routing verified.');
           NODE
 
       - name: Generate Production SEO card pages
@@ -132,10 +171,10 @@ jobs:
       - name: Create Production release packages
         shell: bash
         env:
-          RELEASE_VERSION: 2026-09-24-v03
-          PREVIOUS_VERSION: 2026-09-24-v02
-          PREVIOUS_COMMIT: cc07b054f4348fc38ba0eee6b9f4d2251be69391
-          BETA_PROMOTED: 2026-09-24-v05
+          RELEASE_VERSION: 2026-09-24-v04
+          PREVIOUS_VERSION: 2026-09-24-v03
+          PREVIOUS_COMMIT: 63e5abd0e03753d53a65dfd2c45a07f7da9d5e38
+          BETA_PROMOTED: 2026-09-24-v06
         run: |
           set -euo pipefail
           mkdir -p release
@@ -163,10 +202,10 @@ jobs:
       - name: Upload Production release packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-09-24-v03-packages
+          name: Collect-TCG-Production-2026-09-24-v04-packages
           path: |
-            release/Collect-TCG-Production-2026-09-24-v03-full.zip
-            release/Collect-TCG-Production-2026-09-24-v02-to-2026-09-24-v03-patch.zip
+            release/Collect-TCG-Production-2026-09-24-v04-full.zip
+            release/Collect-TCG-Production-2026-09-24-v03-to-2026-09-24-v04-patch.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -175,17 +214,17 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-manifests
-          MANIFEST="release-manifests/2026-09-24-v03.txt"
+          MANIFEST="release-manifests/2026-09-24-v04.txt"
           {
-            echo "Version: 2026-09-24-v03"
-            echo "Previous Production: 2026-09-24-v02"
-            echo "Beta promoted from: 2026-09-24-v05"
+            echo "Version: 2026-09-24-v04"
+            echo "Previous Production: 2026-09-24-v03"
+            echo "Beta promoted from: 2026-09-24-v06"
             echo "Source commit: $(git rev-parse HEAD)"
-            echo "Full ZIP: Collect-TCG-Production-2026-09-24-v03-full.zip"
-            echo "Patch ZIP: Collect-TCG-Production-2026-09-24-v02-to-2026-09-24-v03-patch.zip"
+            echo "Full ZIP: Collect-TCG-Production-2026-09-24-v04-full.zip"
+            echo "Patch ZIP: Collect-TCG-Production-2026-09-24-v03-to-2026-09-24-v04-patch.zip"
             echo
             sha256sum release/*.zip
           } > "$MANIFEST"
           git add "$MANIFEST"
-          git commit -m "Production 2026-09-24-v03: record package validation"
+          git commit -m "Production 2026-09-24-v04: record package validation"
           git push
