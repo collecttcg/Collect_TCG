@@ -1,3 +1,4 @@
+import { createModalKeyboardController } from './modal-keyboard.js?v=2026-09-25-v07';
 /** V93 beta: features/cards/details. Shared dependencies are explicit on appContext. */
 export function register(appContext){
 function syncDetailsStatusCornerToVisibleImage(){
@@ -68,6 +69,7 @@ function openImageLightbox(images, startIndex){
     });
     appContext.$("imageLightbox").hidden = false;
     document.body.style.overflow = "hidden";
+    appContext.imageLightboxKeyboard?.open();
     appContext.renderLightboxImage(startIndex || 0);
   }
 
@@ -78,6 +80,7 @@ function closeImageLightbox(){
     appContext.lightboxImages = [];
     appContext.lightboxIndex = 0;
     document.body.style.overflow = "";
+    appContext.imageLightboxKeyboard?.close();
   }
 
 function safeDownloadName(value){
@@ -1403,19 +1406,6 @@ async function openDetailsModal(card){
 
           ${card.notes ? `<div class="detail-section"><h3>Notes</h3><div class="detail-notes">${appContext.escapeHtml(card.notes)}</div></div>` : ""}
 
-          ${!isNfsListing && !isSoldListing && appContext.normalizeFilterValue(card.availability||"Available")==="available" ? `
-            <div class="details-desktop-contact-socials">
-              <div class="details-contact-copy">
-                <strong>Contact to Buy</strong>
-                <span class="details-contact-description">Contact us to confirm current availability, transaction method and delivery / meetup options before payment.</span>
-                <span class="details-contact-location">🌍 Worldwide shipping · High-value delivery by arrangement · COD / meetup in MY &amp; SG</span>
-              </div>
-              <div class="details-contact-actions">
-                <span class="details-contact-via-label">Contact via</span>
-                ${detailsContactSocialLinksHtml("details-social-links")}
-              </div>
-            </div>
-          ` : ""}
         </div>
       </div>
 
@@ -1779,6 +1769,12 @@ function closeDetailsModal(navigateBack = true){
 export function initialize(appContext,runtime){
   appContext.lightboxImages = [];
 
+  appContext.imageLightboxKeyboard=createModalKeyboardController({
+    getOverlay:()=>appContext.$("imageLightbox"),
+    getInitialFocus:()=>appContext.$("imageLightboxClose"),
+    onEscape:()=>appContext.closeImageLightbox()
+  });
+  document.addEventListener("keydown",appContext.imageLightboxKeyboard.keydown);
   appContext.lightboxIndex = 0;
 
   appContext.COLLECT_TCG_FACEBOOK_MESSENGER_URL = "https://m.me/61590041416102";
@@ -1982,7 +1978,6 @@ appContext.detailsOverlay.addEventListener("click", e=>{
 
 document.addEventListener("keydown", e=>{
     if(!appContext.$("imageLightbox").hidden){
-      if(e.key === "Escape"){ appContext.closeImageLightbox(); return; }
       if(e.key === "ArrowLeft" && appContext.lightboxImages.length > 1){ appContext.renderLightboxImage(appContext.lightboxIndex - 1); return; }
       if(e.key === "ArrowRight" && appContext.lightboxImages.length > 1){ appContext.renderLightboxImage(appContext.lightboxIndex + 1); return; }
     }
