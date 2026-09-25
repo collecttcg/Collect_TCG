@@ -242,9 +242,9 @@ jobs:
           grep -q 'insights-dashboard.js?v=2026-09-25-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-24-v08' src/app/register-features.js
           grep -q 'startup.js?v=2026-09-24-v08' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-25-v04' src/main.js
+          grep -q 'register-features.js?v=2026-09-25-v05' src/main.js
           grep -q 'initialize.js?v=2026-09-24-v08' src/main.js
-          grep -q 'src/main.js?v=2026-09-25-v04' index.html
+          grep -q 'src/main.js?v=2026-09-25-v05' index.html
 
       - name: Validate Phase 4 owner sales intelligence
         shell: bash
@@ -256,8 +256,35 @@ jobs:
           grep -q 'insights-v20-performance-controls' src/features/owner/insights-dashboard.js
           grep -q 'data-insights-v20-pagination' src/features/owner/insights-dashboard.js
           grep -q 'insights-dashboard.js?v=2026-09-25-v01' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-25-v04' src/main.js
-          grep -q 'src/main.js?v=2026-09-25-v04' index.html
+          grep -q 'register-features.js?v=2026-09-25-v05' src/main.js
+          grep -q 'src/main.js?v=2026-09-25-v05' index.html
+
+      - name: Validate Production v05 promoted visitor and generator changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/features/cards/compare.js
+          node --check src/features/cards/details.js
+          node --check src/features/cards/modal-keyboard.js
+          node --check src/features/content/home.js
+          node --check src/features/social/posts.js
+          node --check src/features/inventory/page.js
+          grep -q 'premiumShelf("Recently Viewed"' src/features/content/home.js
+          grep -q 'function handleCompareModalKeydown' src/features/cards/compare.js
+          grep -q 'document.addEventListener("keydown",handleCompareModalKeydown)' src/features/cards/compare.js
+          grep -q 'createModalKeyboardController' src/features/cards/details.js
+          ! grep -q 'class="details-desktop-contact-socials"' src/features/cards/details.js
+          grep -q 'class="detail-buy-cta"' src/features/cards/details.js
+          grep -q 'id="ebayDownloadImages"' src/features/social/posts.js
+          grep -q 'downloadSingleCardImagesZip(selected' src/features/social/posts.js
+          grep -q 'function currentPaginationFilterSignature()' src/features/inventory/page.js
+          grep -q 'home.js?v=2026-09-25-v05' src/app/register-features.js
+          grep -q 'compare.js?v=2026-09-25-v05' src/app/register-features.js
+          grep -q 'posts.js?v=2026-09-25-v05' src/app/register-features.js
+          grep -q 'details.js?v=2026-09-25-v05' src/app/register-features.js
+          grep -q 'details.js?v=2026-09-25-v05' src/app/initialize.js
+          test ! -e src/features/inventory/pagination.js
+          grep -q 'insights-dashboard.js?v=2026-09-25-v01' src/app/register-features.js
 
       - name: Validate Facebook group-friendly post generator
         shell: bash
@@ -276,8 +303,8 @@ jobs:
           grep -q '<option value="detailed" selected>Detailed listing</option>' src/features/social/posts.js
           grep -q 'templateModeInput?.value||"detailed"' src/features/social/posts.js
           grep -q 'posts.js?v=2026-09-25-v04' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-25-v04' src/main.js
-          grep -q 'src/main.js?v=2026-09-25-v04' index.html
+          grep -q 'register-features.js?v=2026-09-25-v05' src/main.js
+          grep -q 'src/main.js?v=2026-09-25-v05' index.html
 
       - name: Generate Production SEO card pages
         run: node tools/generate-seo.mjs --production
@@ -316,9 +343,9 @@ jobs:
       - name: Create Production release packages
         shell: bash
         env:
-          RELEASE_VERSION: 2026-09-25-v04
-          PREVIOUS_VERSION: 2026-09-25-v03
-          PREVIOUS_COMMIT: ab37e525c90eb8c0d16f8917779cc0d460c017a6
+          RELEASE_VERSION: 2026-09-25-v05
+          PREVIOUS_VERSION: 2026-09-25-v04
+          PREVIOUS_COMMIT: e557e6401ab39aa0b53e85b86c5c20bfd9de09d0
           BETA_PROMOTED: 2026-09-25-v04
         run: |
           set -euo pipefail
@@ -349,8 +376,8 @@ jobs:
         with:
           name: Collect-TCG-Production-2026-09-25-v04-packages
           path: |
-            release/Collect-TCG-Production-2026-09-25-v04-full.zip
-            release/Collect-TCG-Production-2026-09-25-v03-to-2026-09-25-v04-patch.zip
+            release/Collect-TCG-Production-2026-09-25-v05-full.zip
+            release/Collect-TCG-Production-2026-09-25-v04-to-2026-09-25-v05-patch.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -359,17 +386,17 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-manifests
-          MANIFEST="release-manifests/2026-09-25-v04.txt"
+          MANIFEST="release-manifests/2026-09-25-v05.txt"
           {
-            echo "Version: 2026-09-25-v04"
-            echo "Previous Production: 2026-09-25-v03"
-            echo "Beta promoted from: 2026-09-25-v04"
+            echo "Version: 2026-09-25-v05"
+            echo "Previous Production: 2026-09-25-v04"
+            echo "Beta promoted from: 2026-09-25-v09"
             echo "Source commit: $(git rev-parse HEAD)"
-            echo "Full ZIP: Collect-TCG-Production-2026-09-25-v04-full.zip"
-            echo "Patch ZIP: Collect-TCG-Production-2026-09-25-v03-to-2026-09-25-v04-patch.zip"
+            echo "Full ZIP: Collect-TCG-Production-2026-09-25-v05-full.zip"
+            echo "Patch ZIP: Collect-TCG-Production-2026-09-25-v04-to-2026-09-25-v05-patch.zip"
             echo
             sha256sum release/*.zip
           } > "$MANIFEST"
           git add "$MANIFEST"
-          git commit -m "Production 2026-09-25-v04: record package validation"
+          git commit -m "Production 2026-09-25-v05: record package validation"
           git push
