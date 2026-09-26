@@ -200,7 +200,7 @@ jobs:
           grep -q 'function relatedGradeAffinity' src/features/cards/related.js
           grep -Fq 'unique*100' src/features/inventory/filtering.js
           grep -q 'trendingCardScore(b)-appContext.trendingCardScore(a)' src/features/content/home.js
-          grep -q 'unique qualified collector interest' src/features/inventory/page.js
+          grep -Fq 'qualified view during the rolling 7-day window' src/features/inventory/page.js
           grep -q 'fetchDiscoverySourceSummary' src/services/analytics.js
           grep -q 'Where card interest starts' src/features/owner/insights-dashboard.js
           grep -q 'directional context while traffic is still small' src/features/owner/insights-dashboard.js
