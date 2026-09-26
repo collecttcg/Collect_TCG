@@ -234,9 +234,9 @@ jobs:
           grep -q 'notifications.js?v=2026-09-26-v02' src/app/register-features.js
           grep -q 'information.js?v=2026-09-26-v03' src/app/register-features.js
           grep -q 'collage.js?v=2026-09-26-v03' src/app/register-features.js
-          grep -q 'posts.js?v=2026-09-26-v04' src/app/register-features.js
+          grep -q 'posts.js?v=2026-09-26-v07' src/app/register-features.js
           test "$(grep -o 'appContext.isLiveLifecycle(card)' src/features/social/posts.js | wc -l | tr -d ' ')" -ge "2"
-          grep -q '01-foundation.css?v=2026-09-26-v04' index.html
+          grep -q '01-foundation.css?v=2026-09-26-v07' index.html
           test "$(grep -o 'https://www.ebay.com/usr/COLLECT_TCG_[1-4]' src/features/content/information.js | sort -u | wc -l | tr -d ' ')" = "4"
           ! grep -q 'official-ebay-footer-link' index.html
           test "$(grep -o 'appContext.isLiveLifecycle(card) &&' src/features/media/collage.js | wc -l | tr -d ' ')" -ge "2"
@@ -269,9 +269,9 @@ jobs:
           grep -q 'insights-dashboard.js?v=2026-09-25-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'startup.js?v=2026-09-24-v08' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-26-v06' src/main.js
+          grep -q 'register-features.js?v=2026-09-26-v07' src/main.js
           grep -q 'initialize.js?v=2026-09-26-v06' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v06' index.html
+          grep -q 'src/main.js?v=2026-09-26-v07' index.html
 
       - name: Validate Phase 4 owner sales intelligence
         shell: bash
@@ -283,8 +283,8 @@ jobs:
           grep -q 'insights-v20-performance-controls' src/features/owner/insights-dashboard.js
           grep -q 'data-insights-v20-pagination' src/features/owner/insights-dashboard.js
           grep -q 'insights-dashboard.js?v=2026-09-25-v01' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-26-v06' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v06' index.html
+          grep -q 'register-features.js?v=2026-09-26-v07' src/main.js
+          grep -q 'src/main.js?v=2026-09-26-v07' index.html
 
       - name: Validate Production v05 promoted visitor and generator changes
         shell: bash
@@ -307,7 +307,7 @@ jobs:
           grep -q 'function currentPaginationFilterSignature()' src/features/inventory/page.js
           grep -q 'home.js?v=2026-09-26-v05' src/app/register-features.js
           grep -q 'compare.js?v=2026-09-26-v05' src/app/register-features.js
-          grep -q 'posts.js?v=2026-09-26-v04' src/app/register-features.js
+          grep -q 'posts.js?v=2026-09-26-v07' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/initialize.js
           test ! -e src/features/inventory/pagination.js
@@ -329,9 +329,9 @@ jobs:
           grep -Fq 'more photos / video' src/features/social/posts.js
           grep -q '<option value="detailed" selected>Detailed listing</option>' src/features/social/posts.js
           grep -q 'templateModeInput?.value||"detailed"' src/features/social/posts.js
-          grep -q 'posts.js?v=2026-09-26-v04' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-26-v06' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v06' index.html
+          grep -q 'posts.js?v=2026-09-26-v07' src/app/register-features.js
+          grep -q 'register-features.js?v=2026-09-26-v07' src/main.js
+          grep -q 'src/main.js?v=2026-09-26-v07' index.html
 
       - name: Validate buyer privacy guards
         run: |
@@ -351,9 +351,9 @@ jobs:
           grep -q 'tiles.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/initialize.js
-          grep -q 'register-features.js?v=2026-09-26-v06' src/main.js
+          grep -q 'register-features.js?v=2026-09-26-v07' src/main.js
           grep -q 'initialize.js?v=2026-09-26-v06' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v06' index.html
+          grep -q 'src/main.js?v=2026-09-26-v07' index.html
 
       - name: Validate Production v06 Hidden Listings
         shell: bash
@@ -391,9 +391,29 @@ jobs:
           grep -q 'navigation.js?v=2026-09-26-v06' src/app/initialize.js
           grep -q 'routing.js?v=2026-09-26-v06' src/app/initialize.js
           grep -q 'filtering.js?v=2026-09-26-v06' src/app/initialize.js
-          grep -q 'register-features.js?v=2026-09-26-v06' src/main.js
+          grep -q 'register-features.js?v=2026-09-26-v07' src/main.js
           grep -q 'initialize.js?v=2026-09-26-v06' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v06' index.html
+          grep -q 'src/main.js?v=2026-09-26-v07' index.html
+          test ! -e src/features/inventory/pagination.js
+
+      - name: Validate Production v07 post preview prices
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/features/social/posts.js
+          grep -Fq 'function postGeneratorCardPricePreview(card)' src/features/social/posts.js
+          grep -Fq 'appContext.fmtMYR(card.price_myr)' src/features/social/posts.js
+          grep -Fq 'Math.round(Number(card.price_usd ?? card.price)).toLocaleString("en-US")' src/features/social/posts.js
+          grep -Fq 'appContext.fmtSGD(card.price_sgd)' src/features/social/posts.js
+          grep -Fq 'return pieces.length ? pieces.join(" / ") : "Please inquire";' src/features/social/posts.js
+          grep -Fq 'nfsMode ? "" : `<small class="fb-post-card-price">Price · ' src/features/social/posts.js
+          grep -Fq "appContext.postGeneratorCardPricePreview(selected)" src/features/social/posts.js
+          grep -Fq 'isGiveaway ? "" : `<small class="fb-post-card-price">Price · ' src/features/social/posts.js
+          grep -Fq '.fb-post-card-copy .fb-post-card-price' src/styles/01-foundation.css
+          grep -q 'posts.js?v=2026-09-26-v07' src/app/register-features.js
+          grep -q '01-foundation.css?v=2026-09-26-v07' index.html
+          grep -q 'register-features.js?v=2026-09-26-v07' src/main.js
+          grep -q 'src/main.js?v=2026-09-26-v07' index.html
           test ! -e src/features/inventory/pagination.js
 
       - name: Generate Production SEO card pages
@@ -433,10 +453,10 @@ jobs:
       - name: Create Production release packages
         shell: bash
         env:
-          RELEASE_VERSION: 2026-09-26-v06
-          PREVIOUS_VERSION: 2026-09-26-v05
-          PREVIOUS_COMMIT: ad69e55b4af8c515a6089e692f99e11a3e270984
-          BETA_PROMOTED: 2026-09-26-v13
+          RELEASE_VERSION: 2026-09-26-v07
+          PREVIOUS_VERSION: 2026-09-26-v06
+          PREVIOUS_COMMIT: fd689a2121fab341972cd1fd19db713125e33fe0
+          BETA_PROMOTED: 2026-09-26-v15
         run: |
           set -euo pipefail
           mkdir -p release
@@ -464,10 +484,10 @@ jobs:
       - name: Upload Production release packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-09-26-v06-packages
+          name: Collect-TCG-Production-2026-09-26-v07-packages
           path: |
-            release/Collect-TCG-Production-2026-09-26-v06-full.zip
-            release/Collect-TCG-Production-2026-09-26-v05-to-2026-09-26-v06-patch.zip
+            release/Collect-TCG-Production-2026-09-26-v07-full.zip
+            release/Collect-TCG-Production-2026-09-26-v06-to-2026-09-26-v07-patch.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -476,17 +496,17 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-manifests
-          MANIFEST="release-manifests/2026-09-26-v06.txt"
+          MANIFEST="release-manifests/2026-09-26-v07.txt"
           {
-            echo "Version: 2026-09-26-v06"
-            echo "Previous Production: 2026-09-26-v05"
-            echo "Beta promoted from: 2026-09-26-v13"
+            echo "Version: 2026-09-26-v07"
+            echo "Previous Production: 2026-09-26-v06"
+            echo "Beta promoted from: 2026-09-26-v15"
             echo "Source commit: $(git rev-parse HEAD)"
-            echo "Full ZIP: Collect-TCG-Production-2026-09-26-v06-full.zip"
-            echo "Patch ZIP: Collect-TCG-Production-2026-09-26-v05-to-2026-09-26-v06-patch.zip"
+            echo "Full ZIP: Collect-TCG-Production-2026-09-26-v07-full.zip"
+            echo "Patch ZIP: Collect-TCG-Production-2026-09-26-v06-to-2026-09-26-v07-patch.zip"
             echo
             sha256sum release/*.zip
           } > "$MANIFEST"
           git add "$MANIFEST"
-          git commit -m "Production 2026-09-26-v06: record package validation"
+          git commit -m "Production 2026-09-26-v07: record package validation"
           git push
