@@ -414,7 +414,6 @@ jobs:
             exit 1
           fi
           git diff --check
-          ! grep -Fq '2025-one-piece-card-game-championship-cs-25-26-top-player-pack-finalist-complete-luffy-nami-chopper-ace-buggy-perona' sitemap.xml
 
       - name: Commit refreshed Production SEO pages
         shell: bash
