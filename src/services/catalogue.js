@@ -23,6 +23,9 @@ function mergeOwnerOnlyCardFields(saved,source){
   }
 
 function dbToCard(row){
+    const legacyAvailability=appContext.normalizeFilterValue(row?.availability||"");
+    const legacyHidden=legacyAvailability==="hidden";
+    const legacyArchived=legacyAvailability==="archived";
     return {
       id: row.id,
       name: (row.name || "").toUpperCase(),
@@ -64,9 +67,13 @@ function dbToCard(row){
       })(),
       view_count: Number(row.view_count || 0),
       sold_at: row.sold_at || null,
-      lifecycle_status: appContext.LIFECYCLE_OPTIONS.includes(String(row.lifecycle_status||"").toLowerCase())
-        ? String(row.lifecycle_status).toLowerCase()
-        : "live",
+      lifecycle_status: legacyArchived
+        ? "archived"
+        : (legacyHidden
+          ? "draft"
+          : (appContext.LIFECYCLE_OPTIONS.includes(String(row.lifecycle_status||"").toLowerCase())
+            ? String(row.lifecycle_status).toLowerCase()
+            : "live")),
       created_at: row.created_at || null,
       updated_at: row.updated_at || null
     };
@@ -140,15 +147,18 @@ async function fetchPublicCards(){
     let light=true;
     let includeLanguageDetails=appContext.languageDetailsSupported!==false;
     let includeSoldAt=true;
+    let includeLifecycle=true;
     let result;
 
-    for(let attempt=0;attempt<4;attempt++){
+    for(let attempt=0;attempt<5;attempt++){
       const base=light ? appContext.CARD_PUBLIC_COLUMNS_LIGHT : appContext.CARD_PUBLIC_COLUMNS_BASE;
-      const columns=`${base}${includeLanguageDetails ? ",language_details" : ""}${includeSoldAt ? ",sold_at" : ""}`;
-      result=await appContext.supabaseClient
+      const columns=`${base}${includeLanguageDetails ? ",language_details" : ""}${includeSoldAt ? ",sold_at" : ""}${includeLifecycle ? ",lifecycle_status" : ""}`;
+      let query=appContext.supabaseClient
         .from("cards")
         .select(columns)
         .order("created_at",{ascending:true});
+      if(includeLifecycle) query=query.eq("lifecycle_status","live");
+      result=await query;
       if(!result.error) break;
 
       if(includeLanguageDetails && appContext.optionalColumnUnavailable(result.error,"language_details")){
@@ -159,6 +169,11 @@ async function fetchPublicCards(){
       if(includeSoldAt && appContext.optionalColumnUnavailable(result.error,"sold_at")){
         includeSoldAt=false;
         appContext.soldAtSupported=false;
+        continue;
+      }
+      if(includeLifecycle && appContext.optionalColumnUnavailable(result.error,"lifecycle_status")){
+        includeLifecycle=false;
+        appContext.lifecycleSupported=false;
         continue;
       }
       if(light && appContext.optionalColumnUnavailable(result.error,"thumbnail_url")){
@@ -173,6 +188,7 @@ async function fetchPublicCards(){
       appContext.thumbnailUrlSupported=light;
       appContext.soldAtSupported=includeSoldAt;
       appContext.languageDetailsSupported=includeLanguageDetails;
+      if(includeLifecycle) appContext.lifecycleSupported=true;
     }
     return result;
   }
@@ -314,7 +330,10 @@ async function loadCards(){
       return false;
     }
 
-    appContext.cards=(data||[]).map(appContext.dbToCard);
+    const loadedCards=(data||[]).map(appContext.dbToCard);
+    appContext.cards=appContext.isOwnerMode()
+      ? loadedCards
+      : loadedCards.filter(card=>appContext.isLiveLifecycle(card));
 
     // Collection custom order is stored separately so the existing Cards
     // schema and secure owner-card RPC do not need to change.
@@ -511,12 +530,34 @@ async function setCardLifecycle(card,status){
     const safeStatus=appContext.LIFECYCLE_OPTIONS.includes(status) ? status : "";
     if(!safeStatus) return false;
 
-    const candidate={...card,lifecycle_status:safeStatus};
-    const saved=await appContext.updateCardStorage(candidate);
-    if(!saved) return false;
+    try{
+      const {data,error}=await appContext.supabaseClient
+        .from("cards")
+        .update({lifecycle_status:safeStatus})
+        .eq("id",card.id)
+        .select("id,lifecycle_status")
+        .maybeSingle();
 
-    appContext.replaceCardInMemory(saved);
-    return true;
+      if(error){
+        console.error("Lifecycle update error:",error);
+        appContext.showToast(appContext.cardWriteErrorText(error,"update"));
+        return false;
+      }
+
+      const persisted=String(data?.lifecycle_status||"").toLowerCase();
+      if(!data?.id || persisted!==safeStatus){
+        console.error("Lifecycle update was not persisted as requested:",{id:card.id,requested:safeStatus,persisted});
+        appContext.showToast("Listing visibility was not saved. Please retry after the lifecycle migration is confirmed.");
+        return false;
+      }
+
+      appContext.replaceCardInMemory({...card,lifecycle_status:persisted,updated_at:new Date().toISOString()});
+      return true;
+    }catch(error){
+      console.error("Lifecycle update request failed:",error);
+      appContext.showToast(appContext.cardWriteErrorText(error,"update"));
+      return false;
+    }
   }
 
 async function deleteListingPermanently(card){
