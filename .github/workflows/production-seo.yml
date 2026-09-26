@@ -509,5 +509,5 @@ jobs:
             sha256sum release/*.zip
           } > "$MANIFEST"
           git add "$MANIFEST"
-          git commit -m "Production 2026-09-26-v07: record package validation"
+          git commit -m "Production 2026-09-26-v08: record package validation"
           git push
