@@ -16,7 +16,7 @@ function lifecycleCardRowHTML(card,status){
         <div class="lifecycle-actions">
           <button type="button" class="btn-ghost" data-life-edit="${appContext.escapeHtml(card.id)}">Edit</button>
           ${status==="draft"
-            ? `<button type="button" class="btn-primary" data-life-publish="${appContext.escapeHtml(card.id)}">Publish</button>
+            ? `<button type="button" class="btn-primary" data-life-publish="${appContext.escapeHtml(card.id)}">Unhide / Publish</button>
                <button type="button" class="btn-ghost" data-life-archive="${appContext.escapeHtml(card.id)}">Archive</button>`
             : `<button type="button" class="btn-primary" data-life-restore="${appContext.escapeHtml(card.id)}">Restore to Draft</button>`}
         </div>
@@ -104,6 +104,72 @@ function renderLifecycleManagerPage(){
         appContext.renderInventoryToolsPage();
       }
     }));
+  }
+
+function renderHiddenListingsPage(){
+    if(!appContext.requireOwner("open Hidden Listings")) return;
+
+    if(!appContext.lifecycleSupported){
+      appContext.view.innerHTML=`
+        <div class="page-head">
+          <div><div class="eyebrow">Owner · Hidden Listings</div><h2>Hidden Listings</h2>
+          <p>Secure hidden-listing support requires the supplied Supabase lifecycle migration.</p></div>
+        </div>
+        <div class="panel lifecycle-migration-needed">
+          <strong>Migration required</strong>
+          <span>Hidden listings must be protected by database lifecycle/RLS rules.</span>
+        </div>`;
+      return;
+    }
+
+    const drafts=appContext.cards.filter(card=>appContext.cardLifecycle(card)==="draft");
+    const compact=appContext.effectiveInventoryViewMode()==="compact";
+
+    appContext.view.innerHTML=`
+      <div class="page-head listing-page-head">
+        <div class="listing-page-title-copy">
+          <div class="eyebrow">Owner · Hidden Listings</div>
+          <h2>Hidden Listings</h2>
+          <p>Hidden from visitors and normal catalogue pages. Use the owner menu on any card to edit, unhide/publish, archive or delete it.</p>
+        </div>
+      </div>
+
+      <div class="inventory-display-tools">
+        <div class="inventory-result-summary">
+          <strong>${drafts.length.toLocaleString()}</strong>
+          <span>${drafts.length===1 ? "hidden listing" : "hidden listings"}</span>
+        </div>
+        <button type="button"
+                class="view-mode-toggle desktop-compact-view-toggle"
+                id="hiddenListingsViewToggle"
+                aria-pressed="${compact?"true":"false"}">
+          ${compact?"▦ Grid View":"☷ Compact View"}
+        </button>
+      </div>
+
+      ${drafts.length
+        ? `<div id="hiddenListingsGrid" class="${compact ? "grid compact-list" : "grid"}">${drafts.map(appContext.cardTileHTML).join("")}</div>`
+        : `<div class="empty-state inventory-no-results">
+             <div class="empty-icon">◌</div>
+             <h3>No hidden listings</h3>
+             <p>Listings you hide from visitors will appear here.</p>
+           </div>`}
+    `;
+
+    const grid=appContext.$("hiddenListingsGrid");
+    if(grid){
+      appContext.wireShimmer(grid);
+      appContext.wireCardActions(grid);
+    }
+
+    appContext.$("hiddenListingsViewToggle")?.addEventListener("click",()=>{
+      if(appContext.isMobileInventoryLayout()) return;
+      const next=appContext.getInventoryViewMode()==="compact" ? "grid" : "compact";
+      appContext.setInventoryViewMode(next);
+      appContext.renderHiddenListingsPage();
+    });
+
+    appContext.updateCompareTray();
   }
 
 function duplicateGradeKey(card){
@@ -675,5 +741,5 @@ function renderImageHealthPage(fromInventoryTools=false){
     updateSummary();
   }
 
-  Object.assign(appContext,{lifecycleCardRowHTML,renderLifecycleManagerPage,duplicateGradeKey,duplicateFingerprint,findDuplicateGroups,renderDuplicateDetectorPage,historyChangedFields,historyCardLabel,fetchEditHistory,undoHistoryEntry,renderEditHistoryPage,imageHealthSourceType,checkImageHealthSource,imageHealthIssuesForCard,renderImageHealthPage});
+  Object.assign(appContext,{lifecycleCardRowHTML,renderLifecycleManagerPage,renderHiddenListingsPage,duplicateGradeKey,duplicateFingerprint,findDuplicateGroups,renderDuplicateDetectorPage,historyChangedFields,historyCardLabel,fetchEditHistory,undoHistoryEntry,renderEditHistoryPage,imageHealthSourceType,checkImageHealthSource,imageHealthIssuesForCard,renderImageHealthPage});
 }
