@@ -227,7 +227,7 @@ jobs:
           test "$(grep -o 'appContext.isLiveLifecycle(card)' src/features/social/posts.js | wc -l | tr -d ' ')" -ge "2"
           grep -q '01-foundation.css?v=2026-09-26-v03' index.html
           test "$(grep -o 'https://www.ebay.com/usr/COLLECT_TCG_[1-4]' src/features/content/information.js | sort -u | wc -l | tr -d ' ')" = "4"
-          test "$(grep -o 'official-ebay-footer-link' index.html | wc -l | tr -d ' ')" = "0"
+          ! grep -q 'official-ebay-footer-link' index.html
           test "$(grep -o 'appContext.isLiveLifecycle(card) &&' src/features/media/collage.js | wc -l | tr -d ' ')" -ge "2"
           grep -q 'home.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
