@@ -211,14 +211,16 @@ async function runtimeConfig(){
 
 async function fetchCards(){
   const runtime=await runtimeConfig();
-  const light='id,name,card_code,year,game,language,era,availability,set_name,series,format,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,thumbnail_url,grading,created_at,updated_at';
-  const full='id,name,card_code,year,game,language,era,availability,set_name,series,format,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,images,grading,created_at,updated_at';
+  const light='id,name,card_code,year,game,language,era,availability,set_name,series,format,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,thumbnail_url,grading,lifecycle_status,created_at,updated_at';
+  const full='id,name,card_code,year,game,language,era,availability,set_name,series,format,rarity,condition,quantity,price,price_usd,price_myr,price_sgd,notes,images,grading,lifecycle_status,created_at,updated_at';
 
   async function fetchWithColumns(columns){
     const rows=[];
     for(let offset=0;;offset+=1000){
       const endpoint=new URL('/rest/v1/cards',runtime.url);
       endpoint.searchParams.set('select',columns);
+      endpoint.searchParams.set('lifecycle_status','eq.live');
+      endpoint.searchParams.set('availability','not.in.(Hidden,Archived)');
       endpoint.searchParams.set('order','created_at.asc');
       endpoint.searchParams.set('limit','1000');
       endpoint.searchParams.set('offset',String(offset));
@@ -242,7 +244,7 @@ async function fetchCards(){
     if(error?.status===400){
       try{return await fetchWithColumns(full);}
       catch(fullError){
-        if(fullError?.status!==401 && fullError?.status!==403) throw fullError;
+        if(![400,401,403].includes(fullError?.status)) throw fullError;
       }
     }else if(error?.status!==401 && error?.status!==403){
       throw error;
@@ -289,7 +291,16 @@ async function generate(){
     readSlugState()
   ]);
 
-  const liveCards=cards.filter(card=>card&&card.id&&card.name);
+  if(cards.some(card=>!Object.prototype.hasOwnProperty.call(card,'lifecycle_status'))){
+    throw new Error('SEO catalogue lifecycle_status is unavailable. Run 2026-09-26-v10-PUBLIC-HIDDEN-LISTING-GUARD.sql before regenerating public card pages.');
+  }
+
+  const liveCards=cards.filter(card=>{
+    if(!card||!card.id||!card.name) return false;
+    const lifecycle=String(card.lifecycle_status||'').toLowerCase();
+    const availability=String(card.availability||'').trim().toLowerCase();
+    return lifecycle==='live' && availability!=='hidden' && availability!=='archived';
+  });
   const nextState={version:1,cards:{}};
   const cardsDir=path.join(config.outputDir,'cards');
   await fs.rm(cardsDir,{recursive:true,force:true});
