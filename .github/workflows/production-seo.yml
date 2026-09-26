@@ -1,5 +1,4 @@
 name: Refresh Production SEO card pages
-# Production v07 repack after restoring the immutable v06 release manifest.
 
 on:
   workflow_dispatch:
@@ -11,9 +10,10 @@ on:
     paths:
       - '.github/workflows/production-seo.yml'
       - 'tools/generate-seo.mjs'
-      - '2026-09-24-v01-SEO-PUBLIC-CATALOG.sql'
-      - '2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql'
-      - '2026-09-24-v06-DISCOVERY-SUMMARY.sql'
+      - 'migrations/**'
+      - 'COLLECT_TCG_BASELINE.md'
+      - 'README.md'
+      - 'tools/check-production.mjs'
       - 'index.html'
       - 'src/app/register-features.js'
       - 'src/app/initialize.js'
@@ -31,7 +31,6 @@ on:
       - 'src/features/content/information.js'
       - 'src/features/owner/insights-dashboard.js'
       - 'src/features/social/posts.js'
-      - '2026-09-26-v05-PUBLIC-HIDDEN-LISTING-GUARD.sql'
       - 'src/features/cards/compare.js'
       - 'src/features/inventory/page.js'
       - 'src/features/inventory/filtering.js'
@@ -61,6 +60,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+
+      - name: Validate Production repository structure
+        run: node tools/check-production.mjs
 
       - name: Validate changed JavaScript
         shell: bash
@@ -188,12 +190,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -s 2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
-          grep -q 'create table if not exists public.card_discovery_views' 2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
-          grep -q 'enable row level security' 2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
-          grep -q 'revoke all on table public.card_discovery_views from anon, authenticated' 2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
-          grep -q 'create or replace function public.record_card_discovery_view' 2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
-          grep -q 'grant execute on function public.record_card_discovery_view' 2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
+          test -s migrations/2026/2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
+          grep -q 'create table if not exists public.card_discovery_views' migrations/2026/2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
+          grep -q 'enable row level security' migrations/2026/2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
+          grep -q 'revoke all on table public.card_discovery_views from anon, authenticated' migrations/2026/2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
+          grep -q 'create or replace function public.record_card_discovery_view' migrations/2026/2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
+          grep -q 'grant execute on function public.record_card_discovery_view' migrations/2026/2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
           grep -q 'recordQualifiedViewDiscoveryAttribution' src/services/analytics.js
           grep -q 'record_card_discovery_view' src/services/analytics.js
 
@@ -201,11 +203,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -s 2026-09-24-v06-DISCOVERY-SUMMARY.sql
-          grep -q 'create or replace function public.get_card_discovery_summary' 2026-09-24-v06-DISCOVERY-SUMMARY.sql
-          grep -q 'public.is_app_owner()' 2026-09-24-v06-DISCOVERY-SUMMARY.sql
-          grep -q 'revoke all on function public.get_card_discovery_summary' 2026-09-24-v06-DISCOVERY-SUMMARY.sql
-          grep -q 'grant execute on function public.get_card_discovery_summary' 2026-09-24-v06-DISCOVERY-SUMMARY.sql
+          test -s migrations/2026/2026-09-24-v06-DISCOVERY-SUMMARY.sql
+          grep -q 'create or replace function public.get_card_discovery_summary' migrations/2026/2026-09-24-v06-DISCOVERY-SUMMARY.sql
+          grep -q 'public.is_app_owner()' migrations/2026/2026-09-24-v06-DISCOVERY-SUMMARY.sql
+          grep -q 'revoke all on function public.get_card_discovery_summary' migrations/2026/2026-09-24-v06-DISCOVERY-SUMMARY.sql
+          grep -q 'grant execute on function public.get_card_discovery_summary' migrations/2026/2026-09-24-v06-DISCOVERY-SUMMARY.sql
           grep -q 'function relatedSeriesAffinity' src/features/cards/related.js
           grep -q 'function relatedGradeAffinity' src/features/cards/related.js
           grep -Fq 'unique*100' src/features/inventory/filtering.js
@@ -270,9 +272,9 @@ jobs:
           grep -q 'insights-dashboard.js?v=2026-09-25-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'startup.js?v=2026-09-24-v08' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-26-v08' src/main.js
+          grep -q 'register-features.js?v=2026-09-27-v01' src/main.js
           grep -q 'initialize.js?v=2026-09-26-v06' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v08' index.html
+          grep -q 'src/main.js?v=2026-09-27-v01' index.html
 
       - name: Validate Phase 4 owner sales intelligence
         shell: bash
@@ -284,8 +286,8 @@ jobs:
           grep -q 'insights-v20-performance-controls' src/features/owner/insights-dashboard.js
           grep -q 'data-insights-v20-pagination' src/features/owner/insights-dashboard.js
           grep -q 'insights-dashboard.js?v=2026-09-25-v01' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-26-v08' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v08' index.html
+          grep -q 'register-features.js?v=2026-09-27-v01' src/main.js
+          grep -q 'src/main.js?v=2026-09-27-v01' index.html
 
       - name: Validate Production v05 promoted visitor and generator changes
         shell: bash
@@ -331,8 +333,8 @@ jobs:
           grep -q '<option value="detailed" selected>Detailed listing</option>' src/features/social/posts.js
           grep -q 'templateModeInput?.value||"detailed"' src/features/social/posts.js
           grep -q 'posts.js?v=2026-09-26-v07' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-26-v08' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v08' index.html
+          grep -q 'register-features.js?v=2026-09-27-v01' src/main.js
+          grep -q 'src/main.js?v=2026-09-27-v01' index.html
 
       - name: Validate buyer privacy guards
         run: |
@@ -352,9 +354,9 @@ jobs:
           grep -q 'tiles.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/initialize.js
-          grep -q 'register-features.js?v=2026-09-26-v08' src/main.js
+          grep -q 'register-features.js?v=2026-09-27-v01' src/main.js
           grep -q 'initialize.js?v=2026-09-26-v06' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v08' index.html
+          grep -q 'src/main.js?v=2026-09-27-v01' index.html
 
       - name: Validate Production v06 Hidden Listings
         shell: bash
@@ -392,9 +394,9 @@ jobs:
           grep -q 'navigation.js?v=2026-09-26-v06' src/app/initialize.js
           grep -q 'routing.js?v=2026-09-26-v06' src/app/initialize.js
           grep -q 'filtering.js?v=2026-09-26-v06' src/app/initialize.js
-          grep -q 'register-features.js?v=2026-09-26-v08' src/main.js
+          grep -q 'register-features.js?v=2026-09-27-v01' src/main.js
           grep -q 'initialize.js?v=2026-09-26-v06' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v08' index.html
+          grep -q 'src/main.js?v=2026-09-27-v01' index.html
           test ! -e src/features/inventory/pagination.js
 
       - name: Validate Production v07 post preview prices
@@ -413,8 +415,8 @@ jobs:
           grep -Fq '.fb-post-card-copy .fb-post-card-price' src/styles/01-foundation.css
           grep -q 'posts.js?v=2026-09-26-v07' src/app/register-features.js
           grep -q '01-foundation.css?v=2026-09-26-v07' index.html
-          grep -q 'register-features.js?v=2026-09-26-v08' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v08' index.html
+          grep -q 'register-features.js?v=2026-09-27-v01' src/main.js
+          grep -q 'src/main.js?v=2026-09-27-v01' index.html
           test ! -e src/features/inventory/pagination.js
 
       - name: Generate Production SEO card pages
@@ -454,10 +456,10 @@ jobs:
       - name: Create Production release packages
         shell: bash
         env:
-          RELEASE_VERSION: 2026-09-26-v08
-          PREVIOUS_VERSION: 2026-09-26-v07
-          PREVIOUS_COMMIT: 310f184197148f41767393635ccfa4871d2cad68
-          BETA_PROMOTED: 2026-09-26-v16
+          RELEASE_VERSION: 2026-09-27-v01
+          PREVIOUS_VERSION: 2026-09-26-v08
+          PREVIOUS_COMMIT: 9a054025115c152219e25aae3d7944060063ccd0
+          BETA_PROMOTED: none-production-only-cleanup
         run: |
           set -euo pipefail
           mkdir -p release
@@ -485,10 +487,10 @@ jobs:
       - name: Upload Production release packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-09-26-v08-packages
+          name: Collect-TCG-Production-2026-09-27-v01-packages
           path: |
-            release/Collect-TCG-Production-2026-09-26-v08-full.zip
-            release/Collect-TCG-Production-2026-09-26-v07-to-2026-09-26-v08-patch.zip
+            release/Collect-TCG-Production-2026-09-27-v01-full.zip
+            release/Collect-TCG-Production-2026-09-26-v08-to-2026-09-27-v01-patch.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -497,17 +499,17 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-manifests
-          MANIFEST="release-manifests/2026-09-26-v08.txt"
+          MANIFEST="release-manifests/2026-09-27-v01.txt"
           {
-            echo "Version: 2026-09-26-v08"
-            echo "Previous Production: 2026-09-26-v07"
-            echo "Beta promoted from: 2026-09-26-v16"
+            echo "Version: 2026-09-27-v01"
+            echo "Previous Production: 2026-09-26-v08"
+            echo "Beta promoted from: none (Production-only cleanup; functional baseline remains Beta 2026-09-26-v16)"
             echo "Source commit: $(git rev-parse HEAD)"
-            echo "Full ZIP: Collect-TCG-Production-2026-09-26-v08-full.zip"
-            echo "Patch ZIP: Collect-TCG-Production-2026-09-26-v07-to-2026-09-26-v08-patch.zip"
+            echo "Full ZIP: Collect-TCG-Production-2026-09-27-v01-full.zip"
+            echo "Patch ZIP: Collect-TCG-Production-2026-09-26-v08-to-2026-09-27-v01-patch.zip"
             echo
             sha256sum release/*.zip
           } > "$MANIFEST"
           git add "$MANIFEST"
-          git commit -m "Production 2026-09-26-v08: record package validation"
+          git commit -m "Production 2026-09-27-v01: record package validation"
           git push
