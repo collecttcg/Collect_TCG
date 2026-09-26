@@ -270,9 +270,9 @@ jobs:
           grep -q 'insights-dashboard.js?v=2026-09-25-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'startup.js?v=2026-09-24-v08' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-26-v07' src/main.js
+          grep -q 'register-features.js?v=2026-09-26-v08' src/main.js
           grep -q 'initialize.js?v=2026-09-26-v06' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v07' index.html
+          grep -q 'src/main.js?v=2026-09-26-v08' index.html
 
       - name: Validate Phase 4 owner sales intelligence
         shell: bash
@@ -284,8 +284,8 @@ jobs:
           grep -q 'insights-v20-performance-controls' src/features/owner/insights-dashboard.js
           grep -q 'data-insights-v20-pagination' src/features/owner/insights-dashboard.js
           grep -q 'insights-dashboard.js?v=2026-09-25-v01' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-26-v07' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v07' index.html
+          grep -q 'register-features.js?v=2026-09-26-v08' src/main.js
+          grep -q 'src/main.js?v=2026-09-26-v08' index.html
 
       - name: Validate Production v05 promoted visitor and generator changes
         shell: bash
@@ -331,8 +331,8 @@ jobs:
           grep -q '<option value="detailed" selected>Detailed listing</option>' src/features/social/posts.js
           grep -q 'templateModeInput?.value||"detailed"' src/features/social/posts.js
           grep -q 'posts.js?v=2026-09-26-v07' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-26-v07' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v07' index.html
+          grep -q 'register-features.js?v=2026-09-26-v08' src/main.js
+          grep -q 'src/main.js?v=2026-09-26-v08' index.html
 
       - name: Validate buyer privacy guards
         run: |
@@ -352,9 +352,9 @@ jobs:
           grep -q 'tiles.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/initialize.js
-          grep -q 'register-features.js?v=2026-09-26-v07' src/main.js
+          grep -q 'register-features.js?v=2026-09-26-v08' src/main.js
           grep -q 'initialize.js?v=2026-09-26-v06' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v07' index.html
+          grep -q 'src/main.js?v=2026-09-26-v08' index.html
 
       - name: Validate Production v06 Hidden Listings
         shell: bash
@@ -392,9 +392,9 @@ jobs:
           grep -q 'navigation.js?v=2026-09-26-v06' src/app/initialize.js
           grep -q 'routing.js?v=2026-09-26-v06' src/app/initialize.js
           grep -q 'filtering.js?v=2026-09-26-v06' src/app/initialize.js
-          grep -q 'register-features.js?v=2026-09-26-v07' src/main.js
+          grep -q 'register-features.js?v=2026-09-26-v08' src/main.js
           grep -q 'initialize.js?v=2026-09-26-v06' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v07' index.html
+          grep -q 'src/main.js?v=2026-09-26-v08' index.html
           test ! -e src/features/inventory/pagination.js
 
       - name: Validate Production v07 post preview prices
@@ -413,8 +413,8 @@ jobs:
           grep -Fq '.fb-post-card-copy .fb-post-card-price' src/styles/01-foundation.css
           grep -q 'posts.js?v=2026-09-26-v07' src/app/register-features.js
           grep -q '01-foundation.css?v=2026-09-26-v07' index.html
-          grep -q 'register-features.js?v=2026-09-26-v07' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v07' index.html
+          grep -q 'register-features.js?v=2026-09-26-v08' src/main.js
+          grep -q 'src/main.js?v=2026-09-26-v08' index.html
           test ! -e src/features/inventory/pagination.js
 
       - name: Generate Production SEO card pages
@@ -454,10 +454,10 @@ jobs:
       - name: Create Production release packages
         shell: bash
         env:
-          RELEASE_VERSION: 2026-09-26-v07
-          PREVIOUS_VERSION: 2026-09-26-v06
+          RELEASE_VERSION: 2026-09-26-v08
+          PREVIOUS_VERSION: 2026-09-26-v07
           PREVIOUS_COMMIT: fd689a2121fab341972cd1fd19db713125e33fe0
-          BETA_PROMOTED: 2026-09-26-v15
+          BETA_PROMOTED: 2026-09-26-v16
         run: |
           set -euo pipefail
           mkdir -p release
@@ -485,10 +485,10 @@ jobs:
       - name: Upload Production release packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-09-26-v07-packages
+          name: Collect-TCG-Production-2026-09-26-v08-packages
           path: |
-            release/Collect-TCG-Production-2026-09-26-v07-full.zip
-            release/Collect-TCG-Production-2026-09-26-v06-to-2026-09-26-v07-patch.zip
+            release/Collect-TCG-Production-2026-09-26-v08-full.zip
+            release/Collect-TCG-Production-2026-09-26-v07-to-2026-09-26-v08-patch.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -497,14 +497,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-manifests
-          MANIFEST="release-manifests/2026-09-26-v07.txt"
+          MANIFEST="release-manifests/2026-09-26-v08.txt"
           {
-            echo "Version: 2026-09-26-v07"
-            echo "Previous Production: 2026-09-26-v06"
-            echo "Beta promoted from: 2026-09-26-v15"
+            echo "Version: 2026-09-26-v08"
+            echo "Previous Production: 2026-09-26-v07"
+            echo "Beta promoted from: 2026-09-26-v16"
             echo "Source commit: $(git rev-parse HEAD)"
-            echo "Full ZIP: Collect-TCG-Production-2026-09-26-v07-full.zip"
-            echo "Patch ZIP: Collect-TCG-Production-2026-09-26-v06-to-2026-09-26-v07-patch.zip"
+            echo "Full ZIP: Collect-TCG-Production-2026-09-26-v08-full.zip"
+            echo "Patch ZIP: Collect-TCG-Production-2026-09-26-v07-to-2026-09-26-v08-patch.zip"
             echo
             sha256sum release/*.zip
           } > "$MANIFEST"
