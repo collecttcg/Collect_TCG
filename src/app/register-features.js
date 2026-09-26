@@ -2,7 +2,7 @@ import { register as register0 } from '../features/core/utilities.js?v=2026-09-2
 import { register as register1 } from '../features/cards/favorites.js';
 import { register as register2 } from '../features/inventory/ordering.js';
 import { register as register3 } from '../services/auth.js?v=2026-09-26-v01';
-import { register as register4 } from '../features/media/collage.js';
+import { register as register4 } from '../features/media/collage.js?v=2026-09-26-v03';
 import { register as register5 } from '../features/cards/repository.js';
 import { register as register6 } from '../app/navigation.js';
 import { register as register7 } from '../ui/notifications.js?v=2026-09-26-v02';
@@ -30,7 +30,7 @@ import { register as register27 } from '../features/owner/insights.js';
 import { register as registerInsightsIntentRates } from '../features/owner/insights-intent-rates.js?v=2026-09-17-v16';
 import { register as registerInsightsDashboard } from '../features/owner/insights-dashboard.js?v=2026-09-25-v01';
 import { register as register28 } from '../features/content/reviews.js';
-import { register as register29 } from '../features/content/information.js';
+import { register as register29 } from '../features/content/information.js?v=2026-09-26-v03';
 import { register as register30 } from '../features/social/posts.js?v=2026-09-25-v05';
 import { register as register31 } from '../features/owner/quality.js';
 import { register as register32 } from '../features/owner/tools.js?v=2026-09-18-v09';
