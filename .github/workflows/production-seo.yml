@@ -456,7 +456,7 @@ jobs:
         env:
           RELEASE_VERSION: 2026-09-26-v08
           PREVIOUS_VERSION: 2026-09-26-v07
-          PREVIOUS_COMMIT: fd689a2121fab341972cd1fd19db713125e33fe0
+          PREVIOUS_COMMIT: 310f184197148f41767393635ccfa4871d2cad68
           BETA_PROMOTED: 2026-09-26-v16
         run: |
           set -euo pipefail
