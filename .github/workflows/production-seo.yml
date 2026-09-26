@@ -34,6 +34,9 @@ on:
       - 'src/features/cards/compare.js'
       - 'src/features/inventory/page.js'
       - 'src/features/inventory/filtering.js'
+      - 'src/features/owner/lifecycle.js'
+      - 'src/app/navigation.js'
+      - 'src/features/cards/repository.js'
       - 'src/features/cards/related.js'
       - 'src/main.js'
 
@@ -71,6 +74,9 @@ jobs:
           node --check src/features/media/collage.js
           node --check src/features/cards/related.js
           node --check src/features/inventory/filtering.js
+          node --check src/features/owner/lifecycle.js
+          node --check src/app/navigation.js
+          node --check src/features/cards/repository.js
           node --check src/features/inventory/page.js
           node --check src/features/owner/insights-dashboard.js
           node --check src/features/social/posts.js
@@ -99,6 +105,9 @@ jobs:
             'src/features/content/home.js',
             'src/features/cards/related.js',
             'src/features/inventory/filtering.js',
+            'src/features/owner/lifecycle.js',
+            'src/app/navigation.js',
+            'src/features/cards/repository.js',
             'src/features/inventory/page.js',
             'src/features/owner/insights-dashboard.js',
             'src/features/social/posts.js',
@@ -219,9 +228,9 @@ jobs:
           ! grep -q 'location.assign(clean)' src/app/routing.js
           grep -q 'history.back()' src/features/cards/details.js
           grep -q 'event.stopPropagation()' src/features/content/home.js
-          grep -q 'routing.js?v=2026-09-24-v07' src/app/initialize.js
+          grep -q 'routing.js?v=2026-09-26-v06' src/app/initialize.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/initialize.js
-          grep -q 'routing.js?v=2026-09-26-v02' src/app/register-features.js
+          grep -q 'routing.js?v=2026-09-26-v06' src/app/register-features.js
           grep -q 'notifications.js?v=2026-09-26-v02' src/app/register-features.js
           grep -q 'information.js?v=2026-09-26-v03' src/app/register-features.js
           grep -q 'collage.js?v=2026-09-26-v03' src/app/register-features.js
@@ -260,9 +269,9 @@ jobs:
           grep -q 'insights-dashboard.js?v=2026-09-25-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'startup.js?v=2026-09-24-v08' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-26-v05' src/main.js
-          grep -q 'initialize.js?v=2026-09-26-v01' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v05' index.html
+          grep -q 'register-features.js?v=2026-09-26-v06' src/main.js
+          grep -q 'initialize.js?v=2026-09-26-v06' src/main.js
+          grep -q 'src/main.js?v=2026-09-26-v06' index.html
 
       - name: Validate Phase 4 owner sales intelligence
         shell: bash
@@ -274,8 +283,8 @@ jobs:
           grep -q 'insights-v20-performance-controls' src/features/owner/insights-dashboard.js
           grep -q 'data-insights-v20-pagination' src/features/owner/insights-dashboard.js
           grep -q 'insights-dashboard.js?v=2026-09-25-v01' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-26-v05' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v05' index.html
+          grep -q 'register-features.js?v=2026-09-26-v06' src/main.js
+          grep -q 'src/main.js?v=2026-09-26-v06' index.html
 
       - name: Validate Production v05 promoted visitor and generator changes
         shell: bash
@@ -321,8 +330,8 @@ jobs:
           grep -q '<option value="detailed" selected>Detailed listing</option>' src/features/social/posts.js
           grep -q 'templateModeInput?.value||"detailed"' src/features/social/posts.js
           grep -q 'posts.js?v=2026-09-26-v04' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-26-v05' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v05' index.html
+          grep -q 'register-features.js?v=2026-09-26-v06' src/main.js
+          grep -q 'src/main.js?v=2026-09-26-v06' index.html
 
       - name: Validate buyer privacy guards
         run: |
@@ -342,39 +351,50 @@ jobs:
           grep -q 'tiles.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/initialize.js
-          grep -q 'register-features.js?v=2026-09-26-v05' src/main.js
-          grep -q 'initialize.js?v=2026-09-26-v01' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v05' index.html
+          grep -q 'register-features.js?v=2026-09-26-v06' src/main.js
+          grep -q 'initialize.js?v=2026-09-26-v06' src/main.js
+          grep -q 'src/main.js?v=2026-09-26-v06' index.html
 
-      - name: Validate Production v05 hidden-listing visibility
+      - name: Validate Production v06 Hidden Listings
         shell: bash
         run: |
           set -euo pipefail
           node --check src/features/inventory/filtering.js
-          node --check src/features/content/home.js
-          node --check src/features/inventory/page.js
-          node --check src/features/cards/compare.js
+          node --check src/features/cards/repository.js
+          node --check src/app/navigation.js
+          node --check src/app/routing.js
+          node --check src/features/owner/lifecycle.js
           node --check src/services/catalogue.js
           node --check tools/generate-seo.mjs
-          test -s 2026-09-26-v05-PUBLIC-HIDDEN-LISTING-GUARD.sql
-          grep -Fq 'appContext.isOwnerMode() && lifecycle==="draft"' src/features/inventory/filtering.js
-          grep -Fq 'if(lifecycle==="archived") return false;' src/features/inventory/filtering.js
-          grep -Fq '.filter(c=>appContext.isLiveLifecycle(c) && appContext.cardMatchesListingScope(c,"inventory"))' src/features/content/home.js
-          grep -Fq 'const visibleCards=appContext.cards.filter(card=>appContext.isLiveLifecycle(card));' src/features/inventory/page.js
-          grep -Fq '.filter(card=>card && appContext.isLiveLifecycle(card))' src/features/cards/compare.js
+          grep -Fq 'if(lifecycle!=="live") return false;' src/features/inventory/filtering.js
+          grep -Fq '"hidden-listings"' src/features/cards/repository.js
+          grep -Fq 'else if(route === "hidden-listings")' src/app/routing.js
+          grep -Fq 'appContext.renderHiddenListingsPage()' src/app/routing.js
+          grep -Fq 'function renderHiddenListingsPage()' src/features/owner/lifecycle.js
+          grep -Fq 'appContext.cardLifecycle(card)==="draft"' src/features/owner/lifecycle.js
+          grep -Fq 'drafts.map(appContext.cardTileHTML).join("")' src/features/owner/lifecycle.js
+          grep -Fq 'class="${compact ? "grid compact-list" : "grid"}"' src/features/owner/lifecycle.js
+          grep -Fq 'id="hiddenListingsViewToggle"' src/features/owner/lifecycle.js
+          grep -Fq 'appContext.wireShimmer(grid);' src/features/owner/lifecycle.js
+          grep -Fq 'appContext.wireCardActions(grid);' src/features/owner/lifecycle.js
+          grep -Fq 'appContext.getInventoryViewMode()==="compact"' src/features/owner/lifecycle.js
           grep -Fq 'loadedCards.filter(card=>appContext.isLiveLifecycle(card))' src/services/catalogue.js
-          grep -Fq '.update({lifecycle_status:safeStatus})' src/services/catalogue.js
-          grep -Fq '.select("id,lifecycle_status")' src/services/catalogue.js
-          grep -Fq "Object.prototype.hasOwnProperty.call(card,'lifecycle_status')" tools/generate-seo.mjs
           grep -Fq "endpoint.searchParams.set('lifecycle_status','eq.live');" tools/generate-seo.mjs
-          grep -Fq '30e149ab-dcee-4d7c-8bd9-ef928ddb6358' 2026-09-26-v05-PUBLIC-HIDDEN-LISTING-GUARD.sql
-          grep -q 'catalogue.js?v=2026-09-26-v05' src/app/register-features.js
-          grep -q 'home.js?v=2026-09-26-v05' src/app/register-features.js
-          grep -q 'filtering.js?v=2026-09-26-v05' src/app/register-features.js
-          grep -q 'page.js?v=2026-09-26-v05' src/app/register-features.js
-          grep -q 'compare.js?v=2026-09-26-v05' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-26-v05' src/main.js
-          grep -q 'src/main.js?v=2026-09-26-v05' index.html
+          test "$(grep -o 'href="#/hidden-listings"' index.html | wc -l | tr -d ' ')" = "3"
+          test "$(grep -o 'data-route="hidden-listings" class="owner-only' index.html | wc -l | tr -d ' ')" -ge "2"
+          grep -q 'repository.js?v=2026-09-26-v06' src/app/register-features.js
+          grep -q 'navigation.js?v=2026-09-26-v06' src/app/register-features.js
+          grep -q 'routing.js?v=2026-09-26-v06' src/app/register-features.js
+          grep -q 'filtering.js?v=2026-09-26-v06' src/app/register-features.js
+          grep -q 'lifecycle.js?v=2026-09-26-v06' src/app/register-features.js
+          grep -q 'repository.js?v=2026-09-26-v06' src/app/initialize.js
+          grep -q 'navigation.js?v=2026-09-26-v06' src/app/initialize.js
+          grep -q 'routing.js?v=2026-09-26-v06' src/app/initialize.js
+          grep -q 'filtering.js?v=2026-09-26-v06' src/app/initialize.js
+          grep -q 'register-features.js?v=2026-09-26-v06' src/main.js
+          grep -q 'initialize.js?v=2026-09-26-v06' src/main.js
+          grep -q 'src/main.js?v=2026-09-26-v06' index.html
+          test ! -e src/features/inventory/pagination.js
 
       - name: Generate Production SEO card pages
         run: node tools/generate-seo.mjs --production
@@ -414,10 +434,10 @@ jobs:
       - name: Create Production release packages
         shell: bash
         env:
-          RELEASE_VERSION: 2026-09-26-v05
-          PREVIOUS_VERSION: 2026-09-26-v04
-          PREVIOUS_COMMIT: 56e59a4bb53a2a69cbf6b09152787dc8f38b8da1
-          BETA_PROMOTED: 2026-09-26-v11
+          RELEASE_VERSION: 2026-09-26-v06
+          PREVIOUS_VERSION: 2026-09-26-v05
+          PREVIOUS_COMMIT: ad69e55b4af8c515a6089e692f99e11a3e270984
+          BETA_PROMOTED: 2026-09-26-v13
         run: |
           set -euo pipefail
           mkdir -p release
@@ -445,10 +465,10 @@ jobs:
       - name: Upload Production release packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-09-26-v05-packages
+          name: Collect-TCG-Production-2026-09-26-v06-packages
           path: |
-            release/Collect-TCG-Production-2026-09-26-v05-full.zip
-            release/Collect-TCG-Production-2026-09-26-v04-to-2026-09-26-v05-patch.zip
+            release/Collect-TCG-Production-2026-09-26-v06-full.zip
+            release/Collect-TCG-Production-2026-09-26-v05-to-2026-09-26-v06-patch.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -457,17 +477,17 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-manifests
-          MANIFEST="release-manifests/2026-09-26-v05.txt"
+          MANIFEST="release-manifests/2026-09-26-v06.txt"
           {
-            echo "Version: 2026-09-26-v05"
-            echo "Previous Production: 2026-09-26-v04"
-            echo "Beta promoted from: 2026-09-26-v11"
+            echo "Version: 2026-09-26-v06"
+            echo "Previous Production: 2026-09-26-v05"
+            echo "Beta promoted from: 2026-09-26-v13"
             echo "Source commit: $(git rev-parse HEAD)"
-            echo "Full ZIP: Collect-TCG-Production-2026-09-26-v05-full.zip"
-            echo "Patch ZIP: Collect-TCG-Production-2026-09-26-v04-to-2026-09-26-v05-patch.zip"
+            echo "Full ZIP: Collect-TCG-Production-2026-09-26-v06-full.zip"
+            echo "Patch ZIP: Collect-TCG-Production-2026-09-26-v05-to-2026-09-26-v06-patch.zip"
             echo
             sha256sum release/*.zip
           } > "$MANIFEST"
           git add "$MANIFEST"
-          git commit -m "Production 2026-09-26-v05: record package validation"
+          git commit -m "Production 2026-09-26-v06: record package validation"
           git push
