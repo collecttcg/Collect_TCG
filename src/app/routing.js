@@ -633,7 +633,22 @@ function router(){
         appContext.openDetailsModal(card);
       }else{
         appContext.closeDetailsModal(false);
-        appContext.showToast("Card not found");
+
+        // Public direct links to hidden/archived/missing listings should not
+        // leave a stale card URL in the address bar. Owner Mode keeps its
+        // existing ability to open non-live listings directly.
+        if(!appContext.isOwnerMode()){
+          try{
+            const inventoryUrl=new URL("#/inventory",appContext.siteRootUrl());
+            history.replaceState(null,"",inventoryUrl.pathname+inventoryUrl.search+inventoryUrl.hash);
+          }catch{
+            location.href=new URL("#/inventory",appContext.siteRootUrl()).toString();
+            return;
+          }
+          appContext.showToast("This listing is no longer available.",{prominent:true});
+        }else{
+          appContext.showToast("Card not found");
+        }
       }
     }
     else if(route === "analytics-exclude") appContext.renderAnalyticsExclusionPairingPage();
