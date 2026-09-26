@@ -296,7 +296,7 @@ jobs:
           grep -q 'function currentPaginationFilterSignature()' src/features/inventory/page.js
           grep -q 'home.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'compare.js?v=2026-09-25-v05' src/app/register-features.js
-          grep -q 'posts.js?v=2026-09-25-v05' src/app/register-features.js
+          grep -q 'posts.js?v=2026-09-26-v04' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/initialize.js
           test ! -e src/features/inventory/pagination.js
@@ -318,7 +318,7 @@ jobs:
           grep -Fq 'more photos / video' src/features/social/posts.js
           grep -q '<option value="detailed" selected>Detailed listing</option>' src/features/social/posts.js
           grep -q 'templateModeInput?.value||"detailed"' src/features/social/posts.js
-          grep -q 'posts.js?v=2026-09-25-v05' src/app/register-features.js
+          grep -q 'posts.js?v=2026-09-26-v04' src/app/register-features.js
           grep -q 'register-features.js?v=2026-09-26-v04' src/main.js
           grep -q 'src/main.js?v=2026-09-26-v04' index.html
 
