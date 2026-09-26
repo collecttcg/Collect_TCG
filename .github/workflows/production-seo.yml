@@ -1,4 +1,5 @@
 name: Refresh Production SEO card pages
+# Production v07 repack after restoring the immutable v06 release manifest.
 
 on:
   workflow_dispatch:
