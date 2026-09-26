@@ -1,4 +1,3 @@
-import { createInventoryPagination } from './pagination.js?v=2026-09-25-v07';
 /** V93 beta: features/inventory/page. Shared dependencies are explicit on appContext. */
 export function register(appContext){
 function syncQuickFilterUI(){
@@ -596,19 +595,12 @@ function renderInventoryPage(scope = "inventory"){
       shortcutValues
     }=appContext.inventoryFilterOptions(scopedCards);
 
-    // Inventory and Collection are discovery-first: show a small set of
-    // game families above one continuous grid. The grouped catalogue view is
-    // retained only while an owner is actively rearranging cards/games.
+    // families above one continuous grid. Collection/NFS deliberately keeps its
+    // existing expandable catalogue groups and owner ordering controls.
     function inventoryGameFamily(card){
       const game=collectionGameLabel(card);
       const normalized=appContext.normalizeFilterValue(game);
-      // Do not use broad terms such as "hyper battle" here: Hunter x Hunter
-      // also uses that phrase. One Piece belongs in this family only when its
-      // stored game label explicitly identifies it, plus the standalone Weekly
-      // Jump label that is part of the One Piece catalogue.
-      if(normalized.startsWith("one piece") || normalized==="weekly jump"){
-        return {key:"one-piece",label:"One Piece"};
-      }
+      if(normalized.startsWith("one piece") || normalized==="weekly jump") return {key:"one-piece",label:"One Piece"};
       return {key:collectionGameKey(game),label:game};
     }
 
@@ -616,14 +608,11 @@ function renderInventoryPage(scope = "inventory"){
       const groups=new Map();
       scopedCards.forEach(card=>{
         const family=inventoryGameFamily(card);
-        if(!groups.has(family.key)){
-          groups.set(family.key,{...family,cards:[],gameValues:new Set()});
-        }
+        if(!groups.has(family.key)) groups.set(family.key,{...family,cards:[],gameValues:new Set()});
         const group=groups.get(family.key);
         group.cards.push(card);
         group.gameValues.add(collectionGameLabel(card));
       });
-
       return Array.from(groups.values()).sort((a,b)=>{
         if(a.key==="one-piece") return -1;
         if(b.key==="one-piece") return 1;
@@ -644,33 +633,12 @@ function renderInventoryPage(scope = "inventory"){
       return values.length>0 && selected.length===values.length && values.every(value=>selected.includes(value));
     }
 
-    // Recognisable wordmarks lead the primary franchises. Keep other games
-    // useful immediately by falling back to their existing listing image.
     const inventoryGameLogos={
-      "one-piece":{
-        src:"https://cdn.brandfetch.io/id2IG2FqNi/w/562/h/145/theme/dark/logo.png?c=1bxid64Mup7aczewSAYMX&t=1781714425600",
-        alt:"One Piece Card Game",
-        className:"inventory-game-logo-one-piece"
-      },
-      "hunter x hunter hyper battle":{
-        src:"https://upload.wikimedia.org/wikipedia/commons/1/1f/Hunter_%C3%97_Hunter_logo.png",
-        alt:"Hunter × Hunter",
-        className:"inventory-game-logo-hunter"
-      },
-      "pokémon":{
-        src:"https://upload.wikimedia.org/wikipedia/commons/1/1a/Pok%C3%A9mon_Trading_Card_Game_logo.svg",
-        alt:"Pokémon Trading Card Game",
-        className:"inventory-game-logo-pokemon"
-      },
-      "pokemon":{
-        src:"https://upload.wikimedia.org/wikipedia/commons/1/1a/Pok%C3%A9mon_Trading_Card_Game_logo.svg",
-        alt:"Pokémon Trading Card Game"
-      },
-      "zatch bell!":{
-        src:"./assets/zatch-bell-card-battle-logo.webp",
-        alt:"Zatch Bell! The Card Battle",
-        className:"inventory-game-logo-zatch"
-      }
+      "one-piece":{src:"https://cdn.brandfetch.io/id2IG2FqNi/w/562/h/145/theme/dark/logo.png?c=1bxid64Mup7aczewSAYMX&t=1781714425600",alt:"One Piece Card Game",className:"inventory-game-logo-one-piece"},
+      "hunter x hunter hyper battle":{src:"https://upload.wikimedia.org/wikipedia/commons/1/1f/Hunter_%C3%97_Hunter_logo.png",alt:"Hunter × Hunter",className:"inventory-game-logo-hunter"},
+      "pokémon":{src:"https://upload.wikimedia.org/wikipedia/commons/1/1a/Pok%C3%A9mon_Trading_Card_Game_logo.svg",alt:"Pokémon Trading Card Game",className:"inventory-game-logo-pokemon"},
+      "pokemon":{src:"https://upload.wikimedia.org/wikipedia/commons/1/1a/Pok%C3%A9mon_Trading_Card_Game_logo.svg",alt:"Pokémon Trading Card Game",className:"inventory-game-logo-pokemon"},
+      "zatch bell!":{src:"https://raw.githubusercontent.com/collecttcg/Collect_TCG_Beta/main/beta/assets/zatch-bell-card-battle-logo.webp",alt:"Zatch Bell! The Card Battle",className:"inventory-game-logo-zatch"}
     };
 
     function inventoryGameBrowserHTML(){
@@ -678,48 +646,16 @@ function renderInventoryPage(scope = "inventory"){
       const selectedFamily=families.find(inventoryFamilyHasSelection);
       const allActive=!selectedFamily && !(appContext.pillFilterState.game?.size);
       const browserLabel=appContext.listingAvailabilityScope==="collection" ? "Collection" : "Inventory";
-      const allTile=`
-        <button type="button" class="inventory-game-tile ${allActive ? "active" : ""}" data-inventory-game-family="all" aria-pressed="${allActive ? "true" : "false"}">
-          <span class="inventory-game-art inventory-game-art-all" aria-hidden="true"><span>ALL</span></span>
-          <span class="inventory-game-tile-copy"><strong>All ${browserLabel}</strong><small>${scopedCards.length.toLocaleString()} ${scopedCards.length===1?"card":"cards"}</small></span>
-        </button>`;
-
+      const allTile=`<button type="button" class="inventory-game-tile ${allActive ? "active" : ""}" data-inventory-game-family="all" aria-pressed="${allActive ? "true" : "false"}"><span class="inventory-game-art inventory-game-art-all" aria-hidden="true"><span>ALL</span></span><span class="inventory-game-tile-copy"><strong>All ${browserLabel}</strong><small>${scopedCards.length.toLocaleString()} ${scopedCards.length===1?"card":"cards"}</small></span></button>`;
       const familyTiles=families.map(family=>{
         const active=inventoryFamilyHasSelection(family);
         const logo=inventoryGameLogos[family.key];
         const image=appContext.safeHttpUrl(appContext.getImages(family.cards[0])[0]||"");
-        return `
-          <button type="button" class="inventory-game-tile ${active ? "active" : ""}" data-inventory-game-family="${appContext.escapeHtml(family.key)}" aria-pressed="${active ? "true" : "false"}">
-            <span class="inventory-game-art ${logo ? "has-game-logo" : ""}" aria-hidden="true">
-              ${logo
-                ? `<img class="inventory-game-logo ${appContext.escapeHtml(logo.className||"")}" src="${appContext.escapeHtml(logo.src)}" alt="${appContext.escapeHtml(logo.alt)}" loading="lazy" decoding="async">`
-                : (image
-                ? `<img src="${appContext.escapeHtml(image)}" alt="" loading="lazy" decoding="async">`
-                : `<span>${appContext.escapeHtml(family.label.slice(0,3).toUpperCase())}</span>`)}
-            </span>
-            <span class="inventory-game-tile-copy"><strong>${appContext.escapeHtml(family.label)}</strong><small>${family.cards.length.toLocaleString()} ${family.cards.length===1?"card":"cards"}</small></span>
-          </button>`;
+        return `<button type="button" class="inventory-game-tile ${active ? "active" : ""}" data-inventory-game-family="${appContext.escapeHtml(family.key)}" aria-pressed="${active ? "true" : "false"}"><span class="inventory-game-art ${logo ? "has-game-logo" : ""}" aria-hidden="true">${logo ? `<img class="inventory-game-logo ${appContext.escapeHtml(logo.className||"")}" src="${appContext.escapeHtml(logo.src)}" alt="${appContext.escapeHtml(logo.alt)}" loading="lazy" decoding="async">` : (image ? `<img src="${appContext.escapeHtml(image)}" alt="" loading="lazy" decoding="async">` : `<span>${appContext.escapeHtml(family.label.slice(0,3).toUpperCase())}</span>`)}</span><span class="inventory-game-tile-copy"><strong>${appContext.escapeHtml(family.label)}</strong><small>${family.cards.length.toLocaleString()} ${family.cards.length===1?"card":"cards"}</small></span></button>`;
       }).join("");
-
       const onePiece=families.find(family=>family.key==="one-piece");
-      const seriesTiles=selectedFamily?.key==="one-piece" && onePiece
-        ? `<div class="inventory-game-series" aria-label="One Piece series">
-            <span class="inventory-game-series-label">One Piece series</span>
-            <button type="button" class="inventory-game-series-chip ${inventoryFamilyIsFullyActive(onePiece) ? "active" : ""}" data-inventory-game-series="all">All One Piece</button>
-            ${Array.from(onePiece.gameValues).sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:"base",numeric:true})).map(value=>{
-              const active=appContext.pillFilterState.game?.size===1 && appContext.selectedSetMatches(appContext.pillFilterState.game,value);
-              return `<button type="button" class="inventory-game-series-chip ${active ? "active" : ""}" data-inventory-game-series="${appContext.escapeHtml(value)}">${appContext.escapeHtml(value)}</button>`;
-            }).join("")}
-          </div>`
-        : "";
-
-      return `
-        <div class="inventory-game-browser-head">
-          <div><span class="eyebrow">Browse the vault</span><h3>${appContext.listingAvailabilityScope==="collection" ? "Browse Collection by game" : "Shop by game"}</h3></div>
-          <span>Choose a game to refine the grid</span>
-        </div>
-        <div class="inventory-game-tiles">${allTile}${familyTiles}</div>
-        ${seriesTiles}`;
+      const seriesTiles=selectedFamily?.key==="one-piece" && onePiece ? `<div class="inventory-game-series" aria-label="One Piece series"><span class="inventory-game-series-label">One Piece series</span><button type="button" class="inventory-game-series-chip ${inventoryFamilyIsFullyActive(onePiece) ? "active" : ""}" data-inventory-game-series="all">All One Piece</button>${Array.from(onePiece.gameValues).sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:"base",numeric:true})).map(value=>{const active=appContext.pillFilterState.game?.size===1 && appContext.selectedSetMatches(appContext.pillFilterState.game,value);return `<button type="button" class="inventory-game-series-chip ${active ? "active" : ""}" data-inventory-game-series="${appContext.escapeHtml(value)}">${appContext.escapeHtml(value)}</button>`;}).join("")}</div>` : "";
+      return `<div class="inventory-game-browser-head"><div><span class="eyebrow">Browse the vault</span><h3>${appContext.listingAvailabilityScope==="collection" ? "Browse Collection by game" : "Shop by game"}</h3></div><span>Choose a game to refine the grid</span></div><div class="inventory-game-tiles">${allTile}${familyTiles}</div>${seriesTiles}`;
     }
 
     function syncInventoryGameBrowser(){
@@ -733,54 +669,32 @@ function renderInventoryPage(scope = "inventory"){
       mount.innerHTML=inventoryGameBrowserHTML();
       const gameTiles=mount.querySelector(".inventory-game-tiles");
       const gameSeries=mount.querySelector(".inventory-game-series");
-      if(gameTiles && gameTilesScrollLeft){
-        requestAnimationFrame(()=>{gameTiles.scrollLeft=gameTilesScrollLeft;});
-      }
-      if(gameSeries && gameSeriesScrollLeft){
-        requestAnimationFrame(()=>{gameSeries.scrollLeft=gameSeriesScrollLeft;});
-      }
-
-      mount.querySelectorAll("[data-inventory-game-family]").forEach(button=>{
-        button.addEventListener("click",()=>{
-          const key=button.dataset.inventoryGameFamily;
-          const bucket=appContext.pillFilterState.game;
-          const family=families.find(item=>item.key===key);
-          if(key==="all" || (family && inventoryFamilyHasSelection(family))){
-            bucket.clear();
-          }else if(family){
-            bucket.clear();
-            family.gameValues.forEach(value=>bucket.add(value));
-          }
-          appContext.pillFilterState.series.clear();
-          appContext.updateListingUrlFromControls();
-          draw();
-        },{signal:inventorySignal});
-      });
-
-      mount.querySelectorAll("[data-inventory-game-series]").forEach(button=>{
-        button.addEventListener("click",()=>{
-          const viewportTop=window.scrollY;
-          const value=button.dataset.inventoryGameSeries;
-          const bucket=appContext.pillFilterState.game;
-          const onePiece=families.find(item=>item.key==="one-piece");
-          if(!onePiece) return;
-          if(value==="all"){
-            bucket.clear();
-            onePiece.gameValues.forEach(game=>bucket.add(game));
-          }else if(bucket.size===1 && appContext.selectedSetMatches(bucket,value)){
-            bucket.clear();
-          }else{
-            bucket.clear();
-            bucket.add(value);
-          }
-          appContext.pillFilterState.series.clear();
-          appContext.updateListingUrlFromControls();
-          draw();
-          requestAnimationFrame(()=>{
-            window.scrollTo({top:viewportTop,left:window.scrollX,behavior:"auto"});
-          });
-        },{signal:inventorySignal});
-      });
+      if(gameTiles && gameTilesScrollLeft) requestAnimationFrame(()=>{gameTiles.scrollLeft=gameTilesScrollLeft;});
+      if(gameSeries && gameSeriesScrollLeft) requestAnimationFrame(()=>{gameSeries.scrollLeft=gameSeriesScrollLeft;});
+      mount.querySelectorAll("[data-inventory-game-family]").forEach(button=>button.addEventListener("click",()=>{
+        const key=button.dataset.inventoryGameFamily;
+        const bucket=appContext.pillFilterState.game;
+        const family=families.find(item=>item.key===key);
+        if(key==="all" || (family && inventoryFamilyHasSelection(family))) bucket.clear();
+        else if(family){bucket.clear();family.gameValues.forEach(value=>bucket.add(value));}
+        appContext.pillFilterState.series.clear();
+        appContext.updateListingUrlFromControls();
+        draw();
+      },{signal:inventorySignal}));
+      mount.querySelectorAll("[data-inventory-game-series]").forEach(button=>button.addEventListener("click",()=>{
+        const viewportTop=window.scrollY;
+        const value=button.dataset.inventoryGameSeries;
+        const bucket=appContext.pillFilterState.game;
+        const onePiece=families.find(item=>item.key==="one-piece");
+        if(!onePiece) return;
+        if(value==="all"){bucket.clear();onePiece.gameValues.forEach(game=>bucket.add(game));}
+        else if(bucket.size===1 && appContext.selectedSetMatches(bucket,value)) bucket.clear();
+        else {bucket.clear();bucket.add(value);}
+        appContext.pillFilterState.series.clear();
+        appContext.updateListingUrlFromControls();
+        draw();
+        requestAnimationFrame(()=>{window.scrollTo({top:viewportTop,left:window.scrollX,behavior:"auto"});});
+      },{signal:inventorySignal}));
     }
 
     function closeAllOverviewFilterMenus(except=null){
@@ -1330,7 +1244,103 @@ function renderInventoryPage(scope = "inventory"){
       }).join("");
     }
 
-    let inventoryPagination=null;
+    let paginationFilterSignature=null;
+    let paginationFirstDraw=true;
+
+    function currentPaginationFilterSignature(){
+      const pillState={};
+      Object.entries(appContext.pillFilterState).forEach(([key,set])=>{
+        pillState[key]=Array.from(set||[]).map(appContext.normalizeFilterValue).sort();
+      });
+
+      return JSON.stringify({
+        q:String(appContext.$("search")?.value||"").trim(),
+        game:appContext.$("filterGame")?.value||"",
+        grade:appContext.$("filterGrade")?.value||"",
+        language:appContext.$("filterLanguage")?.value||"",
+        era:appContext.$("filterEra")?.value||"",
+        availability:appContext.$("filterAvailability")?.value||"",
+        series:appContext.$("filterSeries")?.value||"",
+        pmin:appContext.safePriceFilterValue(appContext.$("filterPriceMin")?.value),
+        pmax:appContext.safePriceFilterValue(appContext.$("filterPriceMax")?.value),
+        sort:appContext.$("sortBy")?.value||"",
+        quick:appContext.activeQuickFilter||"all",
+        pills:pillState
+      });
+    }
+
+    function paginationPageItems(current,total){
+      if(total<=7) return Array.from({length:total},(_,i)=>i+1);
+
+      const pages=new Set([1,total,current-1,current,current+1]);
+      if(current<=4){
+        [2,3,4,5].forEach(page=>pages.add(page));
+      }
+      if(current>=total-3){
+        [total-4,total-3,total-2,total-1].forEach(page=>pages.add(page));
+      }
+
+      const sorted=Array.from(pages)
+        .filter(page=>page>=1 && page<=total)
+        .sort((a,b)=>a-b);
+
+      const items=[];
+      sorted.forEach((page,index)=>{
+        if(index && page-sorted[index-1]>1) items.push("ellipsis");
+        items.push(page);
+      });
+      return items;
+    }
+
+    function paginationHTML(totalItems){
+      const totalPages=Math.max(1,Math.ceil(totalItems/appContext.listingPerPage));
+      const start=totalItems ? ((appContext.listingCurrentPage-1)*appContext.listingPerPage)+1 : 0;
+      const end=totalItems ? Math.min(appContext.listingCurrentPage*appContext.listingPerPage,totalItems) : 0;
+
+      const pages=paginationPageItems(appContext.listingCurrentPage,totalPages);
+      return `
+        <nav class="listing-pagination" aria-label="Listing pages">
+          <div class="listing-pagination-summary">
+            <strong>Showing ${start.toLocaleString()}–${end.toLocaleString()}</strong>
+            of ${totalItems.toLocaleString()} listings
+            · Page ${appContext.listingCurrentPage.toLocaleString()} of ${totalPages.toLocaleString()}
+          </div>
+          <div class="listing-pagination-pages">
+            <button type="button"
+                    class="listing-page-btn"
+                    data-page-direction="prev"
+                    aria-label="Previous page"
+                    ${appContext.listingCurrentPage<=1?"disabled":""}>‹</button>
+
+            ${pages.map(page=>page==="ellipsis"
+              ? `<span class="listing-page-ellipsis" aria-hidden="true">…</span>`
+              : `<button type="button"
+                         class="listing-page-btn ${page===appContext.listingCurrentPage?"active":""}"
+                         data-listing-page="${page}"
+                         ${page===appContext.listingCurrentPage?'aria-current="page"':""}>${page}</button>`
+            ).join("")}
+
+            <button type="button"
+                    class="listing-page-btn"
+                    data-page-direction="next"
+                    aria-label="Next page"
+                    ${appContext.listingCurrentPage>=totalPages?"disabled":""}>›</button>
+          </div>
+        </nav>
+      `;
+    }
+
+    function renderPagination(totalItems){
+      const totalPages=Math.max(1,Math.ceil(totalItems/appContext.listingPerPage));
+      appContext.listingCurrentPage=Math.min(Math.max(1,appContext.listingCurrentPage),totalPages);
+
+      ["listingPaginationTop","listingPaginationBottom"].forEach(id=>{
+        const mount=appContext.$(id);
+        if(!mount) return;
+        mount.hidden=totalItems<=appContext.listingPerPage;
+        mount.innerHTML=totalItems>appContext.listingPerPage ? paginationHTML(totalItems) : "";
+      });
+    }
 
     function scrollToListingStart(){
       const target=appContext.$("listingPaginationTop") || appContext.$("invGrid");
@@ -1345,7 +1355,58 @@ function renderInventoryPage(scope = "inventory"){
       const drawGeneration=++inventoryDrawGeneration;
       const grid=appContext.$("invGrid");
 
-      inventoryPagination?.syncFilterPage();
+      const nextFilterSignature=currentPaginationFilterSignature();
+      if(paginationFirstDraw){
+        paginationFirstDraw=false;
+        paginationFilterSignature=nextFilterSignature;
+      }else if(nextFilterSignature!==paginationFilterSignature){
+        paginationFilterSignature=nextFilterSignature;
+        if(appContext.listingCurrentPage!==1){
+          appContext.listingCurrentPage=1;
+          appContext.updateListingUrlFromControls();
+        }
+      }
+
+      updateActiveFilterIndicators();
+      syncPillFilterSummary();
+      syncInventoryGameBrowser();
+      if(grid) grid.setAttribute("aria-busy","false");
+
+      if(appContext.cards.length===0){
+        appContext.captureFilteredResultsBrowseContext([]);
+        const mobileResultCount=appContext.$("stickyMobileResultCount");
+        if(mobileResultCount) mobileResultCount.textContent="0";
+        const desktopResultCount=appContext.$("inventoryResultCount");
+        if(desktopResultCount) desktopResultCount.textContent="0";
+        const compactMobileResultCount=appContext.$("inventoryMobileCompactResultCount");
+        if(compactMobileResultCount) compactMobileResultCount.textContent="0";
+        const footerResultCount=appContext.$("mobileFilterFooterResultCount");
+        if(footerResultCount) footerResultCount.textContent="0";
+        renderPagination(0);
+        ["listingPaginationTop","listingPaginationBottom"].forEach(id=>{ const el=appContext.$(id); if(el) el.hidden=true; });
+        grid.className="";
+        grid.innerHTML=`<div class="empty-state">${appContext.EMPTY_ICON}<h2>No listings yet</h2><p>The catalogue is currently empty.</p></div>`;
+        return;
+      }
+
+      if(appContext.activeQuickFilter==="trending" && appContext.trending7dBackendState!=="available"){
+        appContext.captureFilteredResultsBrowseContext([]);
+        const desktopResultCount=appContext.$("inventoryResultCount");
+        if(desktopResultCount) desktopResultCount.textContent="0";
+        const compactMobileResultCount=appContext.$("inventoryMobileCompactResultCount");
+        if(compactMobileResultCount) compactMobileResultCount.textContent="0";
+        renderPagination(0);
+        ["listingPaginationTop","listingPaginationBottom"].forEach(id=>{ const el=appContext.$(id); if(el) el.hidden=true; });
+        grid.className="";
+        if(appContext.trending7dBackendState==="error"){
+          grid.setAttribute("aria-busy","false");
+          grid.innerHTML=`<div class="empty-state inventory-no-results"><div class="empty-icon">↗</div><h3>Trending is temporarily unavailable</h3><p>We could not load the shared 7-day Trending leaderboard. Please try again shortly.</p></div>`;
+        }else{
+          grid.setAttribute("aria-busy","true");
+          grid.innerHTML=`<div class="empty-state inventory-no-results"><div class="empty-icon">↻</div><h3>Loading 7-day Trending…</h3><p>Ranking cards by unique qualified collector interest from the last 7 days.</p></div>`;
+        }
+        return;
+      }
 
       const list=appContext.getFiltered();
       appContext.captureFilteredResultsBrowseContext(list);
@@ -1358,7 +1419,7 @@ function renderInventoryPage(scope = "inventory"){
       const footerResultCount=appContext.$("mobileFilterFooterResultCount");
       if(footerResultCount) footerResultCount.textContent=list.length.toLocaleString();
       if(list.length===0 && appContext.activeQuickFilter==="trending"){
-        inventoryPagination.render(0);
+        renderPagination(0);
         ["listingPaginationTop","listingPaginationBottom"].forEach(id=>{ const el=appContext.$(id); if(el) el.hidden=true; });
         grid.className="";
         grid.innerHTML=`<div class="empty-state inventory-no-results"><div class="empty-icon">↗</div><h3>No trending cards in the last 7 days</h3><p>No matching listing received a qualified view during the rolling 7-day window.</p></div>`;
@@ -1372,7 +1433,7 @@ function renderInventoryPage(scope = "inventory"){
 
         const noScopeCards=scopedCards.length===0;
 
-        inventoryPagination.render(0);
+        renderPagination(0);
         ["listingPaginationTop","listingPaginationBottom"].forEach(id=>{ const el=appContext.$(id); if(el) el.hidden=true; });
         grid.className="";
         grid.innerHTML=appContext.inventoryNoResultsHTML({
@@ -1392,10 +1453,8 @@ function renderInventoryPage(scope = "inventory"){
       }
 
       if(["collection","inventory"].includes(appContext.listingAvailabilityScope)){
-        // Catalogue views remain continuous so discovery filters never split
-        // a selected game across pagination pages. Inventory and Collection
-        // both use the game-browser + continuous-grid layout, temporarily
-        // restoring grouped headers only while an owner is rearranging.
+        // Grouped catalogue views remain continuous so one Game category is
+        // never split across pagination pages.
         appContext.listingCurrentPage=1;
         ["listingPaginationTop","listingPaginationBottom"].forEach(id=>{
           const mount=appContext.$(id);
@@ -1421,7 +1480,7 @@ function renderInventoryPage(scope = "inventory"){
           appContext.updateListingUrlFromControls();
         }
 
-        inventoryPagination.render(list.length);
+        renderPagination(list.length);
 
         const pageStart=(appContext.listingCurrentPage-1)*appContext.listingPerPage;
         const pageEnd=Math.min(pageStart+appContext.listingPerPage,list.length);
@@ -2124,31 +2183,103 @@ function renderInventoryPage(scope = "inventory"){
       }
     },{signal:inventorySignal});
 
-    function currentPaginationFilterSignature(){
-      const pillState={};
-      Object.entries(appContext.pillFilterState).forEach(([key,set])=>{
-        pillState[key]=Array.from(set||[]).map(appContext.normalizeFilterValue).sort();
+    function changeListingPerPage(value){
+      appContext.listingPerPage=appContext.setSavedListingPerPage(Number(value));
+      appContext.listingCurrentPage=1;
+
+      // Keep desktop and mobile controls synchronized. The desktop control is
+      // hidden on phones but still exists in the page markup.
+      ["listingPerPageSelect","mobileListingPerPageSelect"].forEach(id=>{
+        const select=appContext.$(id);
+        if(select && Number(select.value)!==appContext.listingPerPage){
+          select.value=String(appContext.listingPerPage);
+        }
       });
-      return JSON.stringify({
-        q:String(appContext.$("search")?.value||"").trim(),
-        game:appContext.$("filterGame")?.value||"",
-        grade:appContext.$("filterGrade")?.value||"",
-        language:appContext.$("filterLanguage")?.value||"",
-        era:appContext.$("filterEra")?.value||"",
-        availability:appContext.$("filterAvailability")?.value||"",
-        series:appContext.$("filterSeries")?.value||"",
-        pmin:appContext.safePriceFilterValue(appContext.$("filterPriceMin")?.value),
-        pmax:appContext.safePriceFilterValue(appContext.$("filterPriceMax")?.value),
-        sort:appContext.$("sortBy")?.value||"",
-        quick:appContext.activeQuickFilter||"all",
-        pills:pillState
-      });
+
+      appContext.updateListingUrlFromControls();
+      draw();
     }
 
-    inventoryPagination=createInventoryPagination(appContext,{draw,getFilterSignature:currentPaginationFilterSignature,scrollToListingStart});
-    appContext.$("listingPerPageSelect")?.addEventListener("change",e=>inventoryPagination.changePerPage(e.target.value));
-    appContext.$("mobileListingPerPageSelect")?.addEventListener("change",e=>inventoryPagination.changePerPage(e.target.value));
-    const handlePaginationClick=e=>inventoryPagination.handleClick(e);
+    appContext.$("listingPerPageSelect")?.addEventListener("change",e=>{
+      changeListingPerPage(e.target.value);
+    });
+
+    appContext.$("mobileListingPerPageSelect")?.addEventListener("change",e=>{
+      changeListingPerPage(e.target.value);
+    });
+
+    const handlePaginationClick=e=>{
+      const button=e.target.closest(".listing-page-btn");
+      if(!button || button.disabled) return;
+
+      const list=appContext.getFiltered();
+      const totalPages=Math.max(1,Math.ceil(list.length/appContext.listingPerPage));
+      let nextPage=appContext.listingCurrentPage;
+
+      if(button.dataset.pageDirection==="prev"){
+        nextPage=Math.max(1,appContext.listingCurrentPage-1);
+      }else if(button.dataset.pageDirection==="next"){
+        nextPage=Math.min(totalPages,appContext.listingCurrentPage+1);
+      }else if(button.dataset.listingPage){
+        nextPage=appContext.safeListingPage(button.dataset.listingPage);
+      }
+
+      nextPage=Math.min(Math.max(1,nextPage),totalPages);
+      if(nextPage===appContext.listingCurrentPage) return;
+
+      const fromBottom=!!button.closest("#listingPaginationBottom");
+      try{button.blur();}catch{}
+
+      appContext.listingCurrentPage=nextPage;
+      appContext.updateListingUrlFromControls();
+      draw();
+
+      if(fromBottom){
+        const scrollToNewListingTop=()=>{
+          const heading=document.querySelector(".listing-page-head");
+          if(!heading) return;
+
+          const shell=document.querySelector(".shell");
+          const mobileShellScroll=
+            window.matchMedia("(max-width:800px)").matches &&
+            shell &&
+            getComputedStyle(shell).overflowY!=="visible";
+
+          if(mobileShellScroll){
+            // Mobile uses .shell as the real scrolling viewport.
+            const shellRect=shell.getBoundingClientRect();
+            const headingRect=heading.getBoundingClientRect();
+            const target=
+              shell.scrollTop +
+              (headingRect.top-shellRect.top) -
+              6;
+
+            shell.scrollTo({
+              top:Math.max(0,target),
+              left:0,
+              behavior:"auto"
+            });
+          }else{
+            // Desktop/laptop use the normal document viewport.
+            const target=
+              window.scrollY +
+              heading.getBoundingClientRect().top -
+              6;
+
+            window.scrollTo({
+              top:Math.max(0,target),
+              left:window.scrollX,
+              behavior:"auto"
+            });
+          }
+        };
+
+        // draw() updates the listing synchronously, but run once immediately
+        // and once after layout paint for image/font/mobile viewport settling.
+        scrollToNewListingTop();
+        requestAnimationFrame(scrollToNewListingTop);
+      }
+    };
 
     appContext.$("listingPaginationTop")?.addEventListener("click",handlePaginationClick);
     appContext.$("listingPaginationBottom")?.addEventListener("click",handlePaginationClick);
@@ -2362,12 +2493,7 @@ function renderInventoryPage(scope = "inventory"){
     appContext.$("quickFilters").querySelectorAll(".quick-filter").forEach(btn=>{
       btn.addEventListener("click", async ()=>{
         if(collectionRearrangeMode && ["collection","inventory"].includes(appContext.listingAvailabilityScope)) return;
-        const nextQuickFilter=btn.dataset.quick;
-        // Quick filters toggle on repeat click: select a category, then return
-        // to All by tapping that same active category again.
-        appContext.activeQuickFilter=(nextQuickFilter===appContext.activeQuickFilter && nextQuickFilter!=="all")
-          ? "all"
-          : nextQuickFilter;
+        appContext.activeQuickFilter = btn.dataset.quick;
         appContext.syncQuickFilterUI();
         appContext.updateListingUrlFromControls();
 
