@@ -23,10 +23,10 @@ function isLiveLifecycle(card){
 function cardMatchesListingScope(card, scope = appContext.listingAvailabilityScope){
     const lifecycle=appContext.cardLifecycle(card);
 
-    // Public visitors only ever see live listings. Verified owners may also
-    // browse Draft listings directly in the normal Inventory/Reserved/Sold/NFS
-    // pages so newly added hidden cards remain easy to manage. Archived items
-    // stay in the dedicated owner lifecycle tools.
+    // Public visitors and Buyer Preview only see live listings. Verified Owner
+    // Mode may also show Draft listings in normal listing scopes so they remain
+    // manageable and can be edited or published again. Archived listings stay
+    // in the dedicated lifecycle tools.
     if(lifecycle==="archived") return false;
     if(lifecycle!=="live" && !(appContext.isOwnerMode() && lifecycle==="draft")) return false;
 
