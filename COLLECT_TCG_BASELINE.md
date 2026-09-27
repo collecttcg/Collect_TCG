@@ -5,10 +5,10 @@ Last reconciled against GitHub: 2026-09-27
 ## Repositories
 
 - Production: `collecttcg/Collect_TCG`
-- Beta: `collecttcg/Collect_TCG_Beta`
+- Development: `collecttcg/Collect_TCG_Dev`
 - Default branch: `main`
 
-Beta is development. Production is protected. Production changes require explicit approval.
+Development is the working environment. Production is protected. Production changes require explicit approval.
 
 Repository inspection and current release manifests take precedence if an external change occurs after reconciliation.
 
@@ -18,25 +18,28 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Beta: `2026-09-27-v04`
+Latest Development: `2026-09-27-v05`
 
-Latest Production: `2026-09-27-v05`
+Latest Production: `2026-09-27-v06`
 
-Previous Production: `2026-09-27-v04`
+Previous Production: `2026-09-27-v05`
 
 Production functional baseline last promoted from Beta: `2026-09-27-v02`
 
-Beta promoted from for Production `2026-09-27-v05`: none — Production dependency localization only.
+Development version promoted from for Production `2026-09-27-v06`: none — Production terminology/baseline sync only.
 
 Important promotion state:
+- Development repository rename is complete: `collecttcg/Collect_TCG_Dev`.
+- Current Development release: `2026-09-27-v05`.
+- Historical Beta version names and release records remain unchanged.
 - Production includes the validated Beta v16 clone fix.
 - Beta v18 new-card Custom Order insertion behavior is **not promoted to Production**.
 - Beta v19 Beta-repository cleanup/structure changes are **not application-code promotion**.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
 
-## Production 2026-09-27-v05
+## Production 2026-09-27-v06
 
-Purpose: remove Production's runtime dependency on the Development/Beta repository before its planned rename, without changing the visible Zatch Bell logo or other application behavior.
+Purpose: reconcile Production documentation and validation after the Development repository was renamed to `collecttcg/Collect_TCG_Dev`; no application behavior changes.
 
 Changes:
 - Production SQL migration history is centralized under `migrations/2026/` without changing migration filenames or SQL content.
@@ -47,13 +50,13 @@ Changes:
 - Generated SEO pages/manifests remain intentional and retained.
 - No database migration is newly required or reapplied by this release.
 - Filtered rearranging is supported in Production Inventory/Collection Custom Order: visible cards can be reordered while hidden/non-matching cards keep their existing global slots; game-category order is not rewritten from a filtered view.
-- Beta v18 automatic new-card insertion behavior remains excluded from Production.
+- Historical Beta v18 automatic new-card insertion behavior remains excluded from Production.
 - `production-last-known-good` is the managed rollback branch. Before v04 it was manually advanced to validated/deployed Production `2026-09-27-v03` final HEAD `784ee1ac25bfb2b742c444bed395a0d3ad7387f1`; v04 and later advance it automatically after successful Pages deployment.
 - The Production release workflow itself waits for the final package-validation commit's GitHub Pages deployment and advances `production-last-known-good` only after that exact deployment succeeds.
 - The candidate must descend from the current last-known-good branch, preventing older/replayed releases from moving the rollback point backwards.
 - The recommended external disaster-recovery repository is `collecttcg/Collect_TCG_Backup`; repository creation is a one-time GitHub admin action and is not yet completed.
 - Repository backup does not include live Supabase data; database backup is a separate concern.
-- The Zatch Bell game-browser logo is now stored locally at `assets/zatch-bell-card-battle-logo.webp`; Production no longer loads it from the Development/Beta repository.
+- The Zatch Bell game-browser logo is now stored locally at `assets/zatch-bell-card-battle-logo.webp`; Production no longer loads it from the Development repository.
 
 ## Production repository structure
 

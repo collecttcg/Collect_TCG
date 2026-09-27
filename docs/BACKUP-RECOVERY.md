@@ -69,7 +69,7 @@ If the Production repository itself becomes unavailable or unusable:
 2. Verify the mirrored Production version/commit against its release manifest.
 3. Restore the snapshot into Production.
 4. Validate Production independently before deployment.
-5. Do not restore newer Development/Beta-only behavior unless it was part of the backed-up validated Production release.
+5. Do not restore newer Development-only behavior unless it was part of the backed-up validated Production release.
 
 ## Database limitation
 

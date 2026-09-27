@@ -38,7 +38,7 @@ Historical SQL migration filenames are preserved. Their presence in the reposito
 
 ## Current Production release
 
-`2026-09-27-v05` — localizes the Zatch Bell game-browser logo in Production so the site no longer depends on the Development/Beta repository URL. No Beta application behavior is promoted.
+`2026-09-27-v06` — reconciles Production documentation and validation with the renamed Development repository `collecttcg/Collect_TCG_Dev`. No application behavior changes.
 
 ## Recovery
 

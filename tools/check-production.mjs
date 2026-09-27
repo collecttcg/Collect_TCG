@@ -58,9 +58,9 @@ const baselinePath=path.join(root,'COLLECT_TCG_BASELINE.md');
 if(!fs.existsSync(baselinePath)) throw new Error('Missing COLLECT_TCG_BASELINE.md');
 const baseline=fs.readFileSync(baselinePath,'utf8');
 for(const marker of [
-  'Latest Production: `2026-09-27-v05`',
-  'Latest Beta: `2026-09-27-v04`',
-  'Beta promoted from for Production `2026-09-27-v05`: none',
+  'Latest Production: `2026-09-27-v06`',
+  'Latest Development: `2026-09-27-v05`',
+  'Development version promoted from for Production `2026-09-27-v06`: none',
   'QR Generator',
   'migrations/2026/'
 ]){
@@ -104,6 +104,6 @@ console.log('Validated filtered custom-order merge.');
 const inventoryPageSource=fs.readFileSync(path.join(root,'src/features/inventory/page.js'),'utf8');
 const zatchLogoPath=path.join(root,'assets/zatch-bell-card-battle-logo.webp');
 if(!fs.existsSync(zatchLogoPath)) throw new Error('Missing local Zatch Bell game-browser logo.');
-if(inventoryPageSource.includes('raw.githubusercontent.com/collecttcg/Collect_TCG_Beta')) throw new Error('Production must not depend on Collect_TCG_Beta runtime assets.');
+if(inventoryPageSource.includes('raw.githubusercontent.com/collecttcg/Collect_TCG_Beta') || inventoryPageSource.includes('raw.githubusercontent.com/collecttcg/Collect_TCG_Dev')) throw new Error('Production must not depend on Development repository runtime assets.');
 if(!inventoryPageSource.includes('./assets/zatch-bell-card-battle-logo.webp')) throw new Error('Production Zatch Bell logo is not wired to its local asset.');
 console.log('Validated Production-local Zatch Bell logo dependency.');
