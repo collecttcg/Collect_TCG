@@ -58,9 +58,9 @@ const baselinePath=path.join(root,'COLLECT_TCG_BASELINE.md');
 if(!fs.existsSync(baselinePath)) throw new Error('Missing COLLECT_TCG_BASELINE.md');
 const baseline=fs.readFileSync(baselinePath,'utf8');
 for(const marker of [
-  'Latest Production: `2026-09-27-v03`',
+  'Latest Production: `2026-09-27-v04`',
   'Latest Beta: `2026-09-27-v03`',
-  'Beta promoted from for Production `2026-09-27-v03`: none',
+  'Beta promoted from for Production `2026-09-27-v04`: none',
   'QR Generator',
   'migrations/2026/'
 ]){
@@ -75,14 +75,14 @@ const insights=fs.readFileSync(path.join(root,'src/features/owner/insights-dashb
 if(!insights.includes('27-insights-dashboard.css')) throw new Error('Owner Insights stylesheet wiring missing.');
 if(!fs.existsSync(path.join(root,'src/styles/27-insights-dashboard.css'))) throw new Error('Owner Insights stylesheet missing.');
 
-for(const rel of ['docs/BACKUP-RECOVERY.md','.github/workflows/backup-last-known-good.yml']){
-  if(!fs.existsSync(path.join(root,rel))) throw new Error('Missing Production recovery file: '+rel);
-}
-const backupWorkflow=fs.readFileSync(path.join(root,'.github/workflows/backup-last-known-good.yml'),'utf8');
-if(!backupWorkflow.includes('production-last-known-good')) throw new Error('Last-known-good workflow target missing.');
-if(!backupWorkflow.includes('workflow_run')) throw new Error('Last-known-good workflow must wait for completed deployment.');
-if(!backupWorkflow.includes("github.event.workflow_run.conclusion == 'success'")) throw new Error('Last-known-good workflow must require successful Pages deployment.');
-if(!backupWorkflow.includes('git merge-base --is-ancestor')) throw new Error('Last-known-good workflow must prevent rollback to older history.');
+if(!fs.existsSync(path.join(root,'docs/BACKUP-RECOVERY.md'))) throw new Error('Missing Production recovery documentation.');
+if(fs.existsSync(path.join(root,'.github/workflows/backup-last-known-good.yml'))) throw new Error('Retired backup workflow returned.');
+const releaseWorkflow=fs.readFileSync(path.join(root,'.github/workflows/production-seo.yml'),'utf8');
+if(!releaseWorkflow.includes('Confirm Pages deployment and advance last-known-good')) throw new Error('Pages-gated last-known-good step missing.');
+if(!releaseWorkflow.includes('actions/runs?head_sha=')) throw new Error('Release workflow must query Pages status for the exact final commit.');
+if(!releaseWorkflow.includes('Pages deployment failed with conclusion')) throw new Error('Release workflow must fail when Pages deployment fails.');
+if(!releaseWorkflow.includes('git merge-base --is-ancestor')) throw new Error('Last-known-good advancement must prevent rollback to older history.');
+if(!releaseWorkflow.includes('HEAD:refs/heads/production-last-known-good')) throw new Error('Last-known-good branch update missing.');
 
 console.log(`Checked ${jsCount} JavaScript files, imports, HTML assets, migrations and Production structure.`);
 

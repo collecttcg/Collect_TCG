@@ -20,13 +20,13 @@ Repository inspection and current release manifests take precedence if an extern
 
 Latest Beta: `2026-09-27-v03`
 
-Latest Production: `2026-09-27-v03`
+Latest Production: `2026-09-27-v04`
 
-Previous Production: `2026-09-27-v02`
+Previous Production: `2026-09-27-v03`
 
 Production functional baseline last promoted from Beta: `2026-09-27-v02`
 
-Beta promoted from for Production `2026-09-27-v03`: none — Production recovery infrastructure only.
+Beta promoted from for Production `2026-09-27-v04`: none — Production recovery infrastructure fix only.
 
 Important promotion state:
 - Production includes the validated Beta v16 clone fix.
@@ -34,9 +34,9 @@ Important promotion state:
 - Beta v19 Beta-repository cleanup/structure changes are **not application-code promotion**.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
 
-## Production 2026-09-27-v03
+## Production 2026-09-27-v04
 
-Purpose: add layered Production rollback/recovery infrastructure without changing application behavior.
+Purpose: complete the layered Production rollback/recovery infrastructure without changing application behavior.
 
 Changes:
 - Production SQL migration history is centralized under `migrations/2026/` without changing migration filenames or SQL content.
@@ -48,9 +48,9 @@ Changes:
 - No database migration is newly required or reapplied by this release.
 - Filtered rearranging is supported in Production Inventory/Collection Custom Order: visible cards can be reordered while hidden/non-matching cards keep their existing global slots; game-category order is not rewritten from a filtered view.
 - Beta v18 automatic new-card insertion behavior remains excluded from Production.
-- `production-last-known-good` is the managed rollback branch. It initially points to validated Production `2026-09-27-v02` final HEAD `f5bc0cdbc26fcb22678f7444dd19b462db7ee20a`.
-- `.github/workflows/backup-last-known-good.yml` advances that branch only after the final Production package-validation commit deploys successfully through GitHub Pages.
-- Old workflow reruns cannot move the rollback branch backwards because the candidate must descend from the current last-known-good branch.
+- `production-last-known-good` is the managed rollback branch. Before v04 it was manually advanced to validated/deployed Production `2026-09-27-v03` final HEAD `784ee1ac25bfb2b742c444bed395a0d3ad7387f1`; v04 and later advance it automatically after successful Pages deployment.
+- The Production release workflow itself waits for the final package-validation commit's GitHub Pages deployment and advances `production-last-known-good` only after that exact deployment succeeds.
+- The candidate must descend from the current last-known-good branch, preventing older/replayed releases from moving the rollback point backwards.
 - The recommended external disaster-recovery repository is `collecttcg/Collect_TCG_Backup`; repository creation is a one-time GitHub admin action and is not yet completed.
 - Repository backup does not include live Supabase data; database backup is a separate concern.
 

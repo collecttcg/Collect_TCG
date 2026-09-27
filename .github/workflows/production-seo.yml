@@ -9,7 +9,6 @@ on:
       - main
     paths:
       - '.github/workflows/production-seo.yml'
-      - '.github/workflows/backup-last-known-good.yml'
       - 'docs/BACKUP-RECOVERY.md'
       - 'tools/generate-seo.mjs'
       - 'migrations/**'
@@ -43,6 +42,7 @@ on:
       - 'src/main.js'
 
 permissions:
+  actions: read
   contents: write
 
 concurrency:
@@ -71,7 +71,6 @@ jobs:
         run: |
           set -euo pipefail
           test -s docs/BACKUP-RECOVERY.md
-          test -s .github/workflows/backup-last-known-good.yml
           git ls-remote --exit-code origin refs/heads/production-last-known-good
 
       - name: Validate changed JavaScript
@@ -462,14 +461,14 @@ jobs:
             git push
           fi
 
-      # Production v03 backup/recovery infrastructure from completed v02; no Beta application promotion.
+      # Production v04 completes last-known-good automation after validated v03; no Beta application promotion.
       - name: Create Production release packages
         shell: bash
         env:
-          RELEASE_VERSION: 2026-09-27-v03
-          PREVIOUS_VERSION: 2026-09-27-v02
-          PREVIOUS_COMMIT: f5bc0cdbc26fcb22678f7444dd19b462db7ee20a
-          BETA_PROMOTED: none-production-recovery-infrastructure
+          RELEASE_VERSION: 2026-09-27-v04
+          PREVIOUS_VERSION: 2026-09-27-v03
+          PREVIOUS_COMMIT: 784ee1ac25bfb2b742c444bed395a0d3ad7387f1
+          BETA_PROMOTED: none-production-recovery-infrastructure-fix
         run: |
           set -euo pipefail
           mkdir -p release
@@ -497,10 +496,10 @@ jobs:
       - name: Upload Production release packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-09-27-v03-packages
+          name: Collect-TCG-Production-2026-09-27-v04-packages
           path: |
-            release/Collect-TCG-Production-2026-09-27-v03-full.zip
-            release/Collect-TCG-Production-2026-09-27-v02-to-2026-09-27-v03-patch.zip
+            release/Collect-TCG-Production-2026-09-27-v04-full.zip
+            release/Collect-TCG-Production-2026-09-27-v03-to-2026-09-27-v04-patch.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -509,17 +508,68 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-manifests
-          MANIFEST="release-manifests/2026-09-27-v03.txt"
+          MANIFEST="release-manifests/2026-09-27-v04.txt"
           {
-            echo "Version: 2026-09-27-v03"
-            echo "Previous Production: 2026-09-27-v02"
-            echo "Beta promoted from: none (Production recovery infrastructure only)"
+            echo "Version: 2026-09-27-v04"
+            echo "Previous Production: 2026-09-27-v03"
+            echo "Beta promoted from: none (Production recovery infrastructure fix only)"
             echo "Source commit: $(git rev-parse HEAD)"
-            echo "Full ZIP: Collect-TCG-Production-2026-09-27-v03-full.zip"
-            echo "Patch ZIP: Collect-TCG-Production-2026-09-27-v02-to-2026-09-27-v03-patch.zip"
+            echo "Full ZIP: Collect-TCG-Production-2026-09-27-v04-full.zip"
+            echo "Patch ZIP: Collect-TCG-Production-2026-09-27-v03-to-2026-09-27-v04-patch.zip"
             echo
             sha256sum release/*.zip
           } > "$MANIFEST"
           git add "$MANIFEST"
-          git commit -m "Production 2026-09-27-v03: record package validation"
+          git commit -m "Production 2026-09-27-v04: record package validation"
           git push
+
+      - name: Confirm Pages deployment and advance last-known-good
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TARGET_SHA="$(git rev-parse HEAD)"
+          echo "Waiting for GitHub Pages deployment of ${TARGET_SHA}"
+
+          for attempt in $(seq 1 60); do
+            RESPONSE="$(curl -fsSL \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${TARGET_SHA}&per_page=50")"
+
+            STATE="$(printf '%s' "${RESPONSE}" | jq -r '[.workflow_runs[] | select(.name=="pages build and deployment")] | sort_by(.created_at) | last // empty | [.status,.conclusion] | @tsv')"
+
+            if [[ -z "${STATE}" ]]; then
+              sleep 5
+              continue
+            fi
+
+            STATUS="${STATE%%$'\t'*}"
+            CONCLUSION="${STATE#*$'\t'}"
+
+            if [[ "${STATUS}" == "completed" ]]; then
+              if [[ "${CONCLUSION}" != "success" ]]; then
+                echo "Pages deployment failed with conclusion: ${CONCLUSION}" >&2
+                exit 1
+              fi
+
+              git fetch origin production-last-known-good:refs/remotes/origin/production-last-known-good || true
+              if git rev-parse --verify refs/remotes/origin/production-last-known-good >/dev/null 2>&1; then
+                if ! git merge-base --is-ancestor refs/remotes/origin/production-last-known-good HEAD; then
+                  echo "Refusing to move production-last-known-good backwards or across rewritten history." >&2
+                  exit 1
+                fi
+              fi
+
+              git push --force origin HEAD:refs/heads/production-last-known-good
+              echo "production-last-known-good advanced to ${TARGET_SHA}"
+              exit 0
+            fi
+
+            sleep 5
+          done
+
+          echo "Timed out waiting for Pages deployment of ${TARGET_SHA}" >&2
+          exit 1

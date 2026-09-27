@@ -11,19 +11,18 @@ Collect TCG uses layered recovery instead of treating a second repository as the
 
 ## Current last-known-good
 
-At creation, `production-last-known-good` points to validated Production `2026-09-27-v02` final HEAD:
+Before Production v04, `production-last-known-good` was manually advanced to validated and successfully deployed Production `2026-09-27-v03` final HEAD:
 
-`f5bc0cdbc26fcb22678f7444dd19b462db7ee20a`
+`784ee1ac25bfb2b742c444bed395a0d3ad7387f1`
 
-The branch is advanced automatically by `.github/workflows/backup-last-known-good.yml` only when:
+The branch is advanced by the final step of `.github/workflows/production-seo.yml` only when:
 
-- GitHub Pages completed successfully;
-- the deployed commit is on `main`;
-- the commit message is the final `Production YYYY-MM-DD-vNN: record package validation` commit;
-- the matching release manifest exists and has the required release/package metadata; and
-- the candidate is a descendant of the current last-known-good branch, preventing an old workflow rerun from rolling the backup backwards.
+- all Production validation and package steps passed;
+- the final `Production YYYY-MM-DD-vNN: record package validation` commit was created;
+- GitHub Pages reports **success for that exact final commit SHA**; and
+- the candidate is a descendant of the current last-known-good branch, preventing older/replayed releases from rolling the backup backwards.
 
-A failed validation, package job, or Pages deployment does not advance the branch.
+A failed validation, package job, manifest step, or Pages deployment causes release completion to fail and does not advance the branch.
 
 ## Normal rollback
 

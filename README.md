@@ -38,7 +38,7 @@ Historical SQL migration filenames are preserved. Their presence in the reposito
 
 ## Current Production release
 
-`2026-09-27-v03` — adds Production last-known-good rollback/recovery infrastructure. Application behavior remains the validated v02 behavior; no Beta application changes are promoted.
+`2026-09-27-v04` — completes Production last-known-good rollback/recovery automation. Application behavior remains unchanged; no Beta application changes are promoted.
 
 ## Recovery
 
