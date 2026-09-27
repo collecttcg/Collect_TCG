@@ -38,7 +38,7 @@ Historical SQL migration filenames are preserved. Their presence in the reposito
 
 ## Current Production release
 
-`2026-09-27-v07` — promotes validated Development `2026-09-27-v09` application behavior, including inventory pagination/order updates and current Owner Insights, while retaining Production-only SEO, QR and rollback safeguards.
+`2026-09-27-v08` — promotes validated Development `2026-09-27-v25` watermark and compact continuous Add/Edit editor behavior while retaining Production-only SEO, QR Generator, analytics and rollback safeguards.
 
 ## Recovery
 
