@@ -18,13 +18,13 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-27-v25`
+Latest Development: `2026-09-27-v27`
 
-Latest Production: `2026-09-27-v08`
+Latest Production: `2026-09-27-v09`
 
-Previous Production: `2026-09-27-v07`
+Previous Production: `2026-09-27-v08`
 
-Production functional baseline last promoted from Development: `2026-09-27-v25`
+Production functional baseline last promoted from Development: `2026-09-27-v27`
 
 Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v25`.
 
@@ -36,6 +36,28 @@ Important promotion state:
 - Development v25 validated application delta is promoted in Production v08. Production retains the v07 inventory/order, routing and Owner Insights baseline while adding the approved QR/CTA inventory watermark renderer and compact continuous Add/Edit owner editor.
 - Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
+
+## Production 2026-09-27-v09
+
+Previous Production: `2026-09-27-v08`
+
+Development promoted from: `2026-09-27-v27`
+
+Purpose: promote the validated Development v26-v27 global Bulk Images workflow while preserving Production-only SEO, rollback, QR Generator and analytics behavior.
+
+Changes:
+- Adds `Inventory Tools → Bulk Edit → Bulk Images — All Listings` for Owner Mode.
+- `Use Originals · All Photos` applies the saved original to every photo in every loaded listing with images.
+- `CTA + QR only · All Photos` regenerates the website-only CTA/QR version from each saved clean original across every listing.
+- `Logo + CTA + QR · All Photos` remains available globally.
+- Bulk Edit no longer shows per-listing selection controls; the selective high-quality reprocess UI remains under `Inventory Tools → Quality`.
+- Superseded owned watermark files are cleaned only after reversible metadata and public image URLs save successfully.
+- Production QR Generator registration, Production SEO/canonical URLs, Production analytics behavior and rollback safeguards remain Production-specific.
+- Development-only `analytics_test` behavior remains excluded from Production.
+
+SQL required: No.
+
+Validation status: in progress. Independent Production syntax/import/assets, Owner/privacy/regression, global Bulk Images, package integrity, Pages deployment and rollback-anchor checks are required before completion.
 
 ## Production 2026-09-27-v08
 
