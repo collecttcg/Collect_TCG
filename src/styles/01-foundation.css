@@ -18574,3 +18574,550 @@ body.light-mode .inventory-game-tile{background:#fffdf8;}
 
 /* Owner QR generator: reusable links without storing a separate QR record. */
 .qr-generator-panel{max-width:760px;display:grid;gap:14px;}.qr-generator-panel label{display:grid;gap:4px;}.qr-generator-panel label span{color:var(--muted);font-size:12px;}.qr-generator-entry{display:flex;gap:8px;}.qr-generator-entry input{min-width:0;flex:1;}.qr-generator-result{display:grid;justify-items:center;gap:14px;padding:20px;border:1px solid var(--border);border-radius:12px;background:var(--surface-soft,rgba(255,255,255,.025));}.qr-generator-code{display:grid;place-items:center;padding:12px;border-radius:10px;background:#fff;line-height:0;}.qr-generator-code canvas,.qr-generator-code img{display:block;max-width:min(100%,360px);height:auto;}.qr-generator-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;}@media(max-width:600px){.qr-generator-entry{flex-direction:column;}.qr-generator-entry button{width:100%;}.qr-generator-code canvas,.qr-generator-code img{max-width:260px;}}
+
+
+/* =========================================================
+   ADD / EDIT PHOTO PREVIEW — KEEP IMAGE FULLY VISIBLE
+   Controls are a footer, never an overlay on the photo.
+   ========================================================= */
+.image-gallery-preview .image-preview-box[data-image-index]{
+  aspect-ratio:auto !important;
+  min-height:0 !important;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:flex-start;
+}
+
+.image-gallery-preview .image-preview-box[data-image-index] > img{
+  width:100% !important;
+  height:430px !important;
+  max-height:none !important;
+  flex:0 0 430px;
+  object-fit:contain !important;
+  object-position:center !important;
+}
+
+@media(max-width:700px){
+  .image-gallery-preview .image-preview-box[data-image-index] > img{
+    height:300px !important;
+    flex-basis:300px;
+  }
+}
+
+@media(max-width:430px){
+  .image-gallery-preview .image-preview-box[data-image-index] > img{
+    height:480px !important;
+    flex-basis:480px;
+  }
+}
+
+.image-gallery-preview .image-preview-box[data-image-index] .image-preview-watermark-actions{
+  position:static;
+  left:auto;
+  right:auto;
+  bottom:auto;
+  z-index:auto;
+  flex:0 0 auto;
+  width:auto;
+  margin:0;
+  border-radius:0 0 10px 10px;
+  background:var(--surface-2);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+}
+
+.image-gallery-preview .image-preview-box[data-image-index] .image-number{
+  top:7px !important;
+  bottom:auto !important;
+  left:40px !important;
+}
+
+
+/* =========================================================
+   ADD / EDIT OWNER WORKSPACE — WIDE DESKTOP LAYOUT
+   ========================================================= */
+@media(min-width:901px){
+  #editForm.modal{
+    width:min(94vw,1180px);
+    max-width:1180px;
+    padding:28px 30px;
+  }
+
+  #addForm.form-card{
+    width:min(100%,1180px);
+    max-width:1180px;
+    padding:28px 30px;
+  }
+
+  #editForm .image-gallery-preview,
+  #addForm .image-gallery-preview{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:16px !important;
+  }
+
+  #editForm .image-gallery-preview .image-preview-box[data-image-index] > img,
+  #addForm .image-gallery-preview .image-preview-box[data-image-index] > img{
+    height:380px !important;
+    flex-basis:380px;
+  }
+
+  #editFieldsMount > :not(.image-field),
+  #addForm > :not(.image-field){
+    max-width:900px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  #editFieldsMount > .image-field,
+  #addForm > .image-field{
+    width:100%;
+  }
+}
+
+@media(min-width:701px) and (max-width:900px){
+  #editForm.modal{
+    width:min(96vw,820px);
+    max-width:820px;
+  }
+
+  #addForm.form-card{
+    width:100%;
+    max-width:820px;
+  }
+
+  #editForm .image-gallery-preview,
+  #addForm .image-gallery-preview{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
+
+/* =========================================================
+   ADD / EDIT OWNER WORKSPACE V24 — RESPONSIVE TABBED EDITOR
+   ========================================================= */
+#editForm .owner-editor-tabs,
+#addForm .owner-editor-tabs{
+  display:flex;
+  gap:8px;
+  width:100%;
+  margin:4px 0 18px;
+  padding:5px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--surface-2);
+  position:sticky;
+  top:8px;
+  z-index:30;
+}
+
+#editForm .owner-editor-tab,
+#addForm .owner-editor-tab{
+  flex:1;
+  min-height:44px;
+  border:1px solid transparent;
+  border-radius:9px;
+  background:transparent;
+  color:var(--text-muted);
+  font-size:14px;
+  font-weight:800;
+  letter-spacing:.02em;
+  cursor:pointer;
+}
+
+#editForm .owner-editor-tab.is-active,
+#addForm .owner-editor-tab.is-active{
+  color:var(--accent);
+  border-color:rgba(255,193,7,.38);
+  background:rgba(255,193,7,.08);
+}
+
+#editForm .owner-editor-panel,
+#addForm .owner-editor-panel{
+  width:100%;
+  min-width:0;
+}
+
+#editFieldsMount > .owner-editor-tabs,
+#editFieldsMount > .owner-editor-panel,
+#addForm > .owner-editor-tabs,
+#addForm > .owner-editor-panel{
+  max-width:none !important;
+  margin-left:0 !important;
+  margin-right:0 !important;
+}
+
+#editForm [data-owner-editor-panel="details"],
+#addForm [data-owner-editor-panel="details"]{
+  max-width:960px;
+  margin:0 auto;
+}
+
+#editForm .owner-editor-section-heading,
+#addForm .owner-editor-section-heading{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:16px;
+  margin:26px 0 13px;
+  padding:0 0 9px;
+  border-bottom:1px solid rgba(255,193,7,.22);
+}
+
+#editForm .owner-editor-section-heading:first-child,
+#addForm .owner-editor-section-heading:first-child{
+  margin-top:2px;
+}
+
+#editForm .owner-editor-section-heading span,
+#addForm .owner-editor-section-heading span{
+  color:var(--accent);
+  font-size:17px;
+  font-weight:900;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+
+#editForm .owner-editor-section-heading small,
+#addForm .owner-editor-section-heading small{
+  color:var(--text-muted);
+  font-size:12.5px;
+  line-height:1.35;
+  text-align:right;
+}
+
+#editForm .field > label,
+#addForm .field > label{
+  font-size:13.5px;
+  font-weight:750;
+  letter-spacing:.045em;
+}
+
+#editForm input,
+#editForm select,
+#editForm textarea,
+#addForm input,
+#addForm select,
+#addForm textarea{
+  font-size:16px;
+}
+
+#editForm .hint,
+#addForm .hint,
+#editForm .image-gallery-note,
+#addForm .image-gallery-note{
+  font-size:13px;
+  line-height:1.45;
+}
+
+#editForm .image-field,
+#addForm .image-field{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+#editForm .image-controls,
+#addForm .image-controls{
+  display:contents;
+}
+
+#editForm .image-watermark-all-actions,
+#addForm .image-watermark-all-actions{order:1;}
+
+#editForm .psa-image-privacy-control,
+#addForm .psa-image-privacy-control{order:2;}
+
+#editForm .image-controls > input[type="file"],
+#addForm .image-controls > input[type="file"]{order:3;}
+
+#editForm .image-url-row,
+#addForm .image-url-row{order:4;}
+
+#editForm .image-gallery-preview,
+#addForm .image-gallery-preview{order:5;}
+
+#editForm .image-gallery-note,
+#addForm .image-gallery-note{order:6;}
+
+#editForm .image-watermark-all-actions strong,
+#addForm .image-watermark-all-actions strong{
+  font-size:14px;
+}
+
+#editForm .image-watermark-all-actions span,
+#addForm .image-watermark-all-actions span{
+  font-size:12.5px;
+}
+
+#editForm .image-watermark-all-buttons button,
+#addForm .image-watermark-all-buttons button{
+  min-height:40px;
+  font-size:12.5px;
+  padding:9px 13px;
+}
+
+#editForm .image-preview-watermark-actions button,
+#addForm .image-preview-watermark-actions button{
+  min-height:34px;
+  font-size:12px;
+  padding:7px 9px;
+}
+
+#editForm .image-preview-watermark-status,
+#addForm .image-preview-watermark-status{
+  font-size:11.5px;
+}
+
+#editForm > .modal-actions,
+#addForm > .modal-actions{
+  position:sticky;
+  bottom:0;
+  z-index:35;
+  margin:24px -30px -28px;
+  padding:14px 30px;
+  border-top:1px solid var(--border);
+  background:rgba(18,20,25,.96);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+
+#editForm > .modal-actions button,
+#addForm > .modal-actions button,
+#addForm > .modal-actions a{
+  min-height:44px;
+  font-size:14px;
+  font-weight:800;
+  padding:10px 18px;
+}
+
+@media(min-width:1201px){
+  #editForm.modal{
+    width:min(95vw,1240px);
+    max-width:1240px;
+  }
+
+  #addForm.form-card{
+    width:min(100%,1240px);
+    max-width:1240px;
+  }
+
+  #editForm .image-gallery-preview,
+  #addForm .image-gallery-preview{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:18px !important;
+  }
+}
+
+@media(min-width:701px) and (max-width:1200px){
+  #editForm.modal{
+    width:min(96vw,940px);
+    max-width:940px;
+  }
+
+  #addForm.form-card{
+    width:min(100%,940px);
+    max-width:940px;
+  }
+
+  #editForm .image-gallery-preview,
+  #addForm .image-gallery-preview{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
+@media(max-width:700px){
+  #editForm .owner-editor-tabs,
+  #addForm .owner-editor-tabs{
+    top:4px;
+    margin-bottom:14px;
+  }
+
+  #editForm .owner-editor-tab,
+  #addForm .owner-editor-tab{
+    min-height:46px;
+    font-size:14px;
+  }
+
+  #editForm [data-owner-editor-panel="details"],
+  #addForm [data-owner-editor-panel="details"]{
+    max-width:none;
+  }
+
+  #editForm .owner-editor-section-heading,
+  #addForm .owner-editor-section-heading{
+    display:block;
+    margin-top:22px;
+  }
+
+  #editForm .owner-editor-section-heading span,
+  #addForm .owner-editor-section-heading span{
+    display:block;
+    font-size:16px;
+  }
+
+  #editForm .owner-editor-section-heading small,
+  #addForm .owner-editor-section-heading small{
+    display:block;
+    margin-top:3px;
+    font-size:12px;
+    text-align:left;
+  }
+
+  #editForm .field-row,
+  #addForm .field-row{
+    flex-direction:column;
+  }
+
+  #editForm .field > label,
+  #addForm .field > label{
+    font-size:13px;
+  }
+
+  #editForm input,
+  #editForm select,
+  #editForm textarea,
+  #addForm input,
+  #addForm select,
+  #addForm textarea{
+    font-size:16px;
+  }
+
+  #editForm .image-gallery-preview,
+  #addForm .image-gallery-preview{
+    grid-template-columns:1fr !important;
+  }
+
+  #editForm > .modal-actions,
+  #addForm > .modal-actions{
+    margin:20px -16px -16px;
+    padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+  }
+
+  #editForm > .modal-actions button,
+  #addForm > .modal-actions button,
+  #addForm > .modal-actions a{
+    flex:1;
+    justify-content:center;
+  }
+}
+
+
+/* =========================================================
+   ADD / EDIT OWNER WORKSPACE V25 — COMPACT CONTINUOUS EDITOR
+   Photos and details share one scroll flow; v24 tabs are retired.
+   ========================================================= */
+@media(min-width:1001px){
+  #editForm.modal{
+    width:min(92vw,1100px) !important;
+    max-width:1100px !important;
+    padding:22px 24px !important;
+  }
+
+  #addForm.form-card{
+    width:min(100%,1100px) !important;
+    max-width:1100px !important;
+    padding:22px 24px !important;
+  }
+
+  #editForm .image-gallery-preview,
+  #addForm .image-gallery-preview{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:14px !important;
+  }
+
+  #editForm .image-gallery-preview .image-preview-box[data-image-index] > img,
+  #addForm .image-gallery-preview .image-preview-box[data-image-index] > img{
+    height:350px !important;
+    flex-basis:350px !important;
+  }
+}
+
+@media(min-width:701px) and (max-width:1000px){
+  #editForm.modal{
+    width:min(94vw,860px) !important;
+    max-width:860px !important;
+    padding:22px !important;
+  }
+
+  #addForm.form-card{
+    width:min(100%,860px) !important;
+    max-width:860px !important;
+    padding:22px !important;
+  }
+
+  #editForm .image-gallery-preview,
+  #addForm .image-gallery-preview{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
+#editForm .owner-editor-section-heading,
+#addForm .owner-editor-section-heading{
+  margin:20px 0 10px;
+  padding-bottom:7px;
+}
+
+#editForm .owner-editor-section-heading span,
+#addForm .owner-editor-section-heading span{
+  font-size:15.5px;
+}
+
+#editForm .owner-editor-section-heading small,
+#addForm .owner-editor-section-heading small{
+  font-size:12px;
+}
+
+#editForm .field > label,
+#addForm .field > label{
+  font-size:13px;
+}
+
+#editForm input,
+#editForm select,
+#editForm textarea,
+#addForm input,
+#addForm select,
+#addForm textarea{
+  font-size:15.5px;
+}
+
+#editForm .hint,
+#addForm .hint,
+#editForm .image-gallery-note,
+#addForm .image-gallery-note{
+  font-size:12.5px;
+}
+
+#editForm > .modal-actions,
+#addForm > .modal-actions{
+  margin-top:18px;
+  padding-top:10px;
+  padding-bottom:10px;
+}
+
+#editForm > .modal-actions button,
+#addForm > .modal-actions button,
+#addForm > .modal-actions a{
+  min-height:40px;
+  font-size:13.5px;
+  padding:8px 16px;
+}
+
+@media(max-width:700px){
+  #editForm.modal,
+  #addForm.form-card{
+    padding-left:14px !important;
+    padding-right:14px !important;
+  }
+
+  #editForm .owner-editor-section-heading,
+  #addForm .owner-editor-section-heading{
+    margin-top:18px;
+  }
+
+  #editForm .image-gallery-preview,
+  #addForm .image-gallery-preview{
+    grid-template-columns:1fr !important;
+  }
+}
