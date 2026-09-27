@@ -98,147 +98,96 @@ function loadWatermarkLogo(){
     return appContext.watermarkLogoPromise;
   }
 
-function drawWebsiteWatermark(ctx, canvas){
-    const watermarkText = appContext.CARD_WATERMARK_URL;
-    if(!watermarkText) return;
 
-    const shortSide = Math.min(canvas.width, canvas.height);
-    const bannerMargin = Math.max(18, Math.round(shortSide * 0.024));
-    const bannerHeight = Math.max(40, Math.min(96, Math.round(shortSide * 0.088)));
-    const bannerRadius = Math.round(bannerHeight / 2);
-    const borderWidth = Math.max(1.6, Math.round(shortSide * 0.0032));
-    const bannerWidth = Math.min(
-      canvas.width - bannerMargin * 2,
-      Math.max(240, Math.round(canvas.width * 0.82))
-    );
-    const bannerX = Math.round((canvas.width - bannerWidth) / 2);
-    const bannerY = Math.round(canvas.height - bannerMargin - bannerHeight);
-    const innerPadX = Math.max(16, Math.round(bannerHeight * 0.40));
-    const iconSize = Math.max(18, Math.round(bannerHeight * 0.44));
-    const iconGap = Math.max(10, Math.round(bannerHeight * 0.22));
-    const rightAccentWidth = Math.max(20, Math.round(bannerHeight * 0.42));
-    const textLeft = bannerX + innerPadX + iconSize + iconGap;
-    const textRight = bannerX + bannerWidth - innerPadX - rightAccentWidth;
-    const maxTextWidth = Math.max(100, textRight - textLeft);
-    let fontSize = Math.max(12, Math.min(30, Math.round(shortSide * 0.032)));
-    const prefix = /^https:\/\//i.test(watermarkText) ? "https://" : "";
-    const rest = prefix ? watermarkText.slice(prefix.length) : watermarkText;
+function loadWebsiteWatermarkBanner(){
+    if(appContext.websiteWatermarkBannerPromise) return appContext.websiteWatermarkBannerPromise;
 
-    function roundedRect(x,y,w,h,r){
-      ctx.beginPath();
-      if(typeof ctx.roundRect === "function"){
-        ctx.roundRect(x,y,w,h,r);
-      }else{
-        ctx.moveTo(x + r, y);
-        ctx.lineTo(x + w - r, y);
-        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-        ctx.lineTo(x + w, y + h - r);
-        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-        ctx.lineTo(x + r, y + h);
-        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-        ctx.lineTo(x, y + r);
-        ctx.quadraticCurveTo(x, y, x + r, y);
-        ctx.closePath();
-      }
+    appContext.websiteWatermarkBannerPromise = new Promise((resolve,reject)=>{
+      const banner = new Image();
+      banner.onload = ()=>resolve(banner);
+      banner.onerror = ()=>{
+        appContext.websiteWatermarkBannerPromise = null;
+        reject(new Error("website watermark banner unavailable"));
+      };
+      banner.src = appContext.CARD_WATERMARK_BANNER;
+    });
+
+    return appContext.websiteWatermarkBannerPromise;
+  }
+
+function createWebsiteWatermarkQrCanvas(text,size=256){
+    if(!text || typeof document==="undefined" || typeof QRCode!=="function") return null;
+
+    const holder=document.createElement("div");
+    holder.setAttribute("aria-hidden","true");
+    holder.style.cssText="position:fixed;left:-10000px;top:-10000px;width:1px;height:1px;overflow:hidden;pointer-events:none;";
+    document.body.appendChild(holder);
+
+    try{
+      new QRCode(holder,{
+        text:String(text),
+        width:size,
+        height:size,
+        colorDark:"#000000",
+        colorLight:"#ffffff",
+        correctLevel:QRCode.CorrectLevel.M
+      });
+
+      const source=holder.querySelector("canvas");
+      if(!source) return null;
+
+      const copy=document.createElement("canvas");
+      copy.width=source.width;
+      copy.height=source.height;
+      const copyCtx=copy.getContext("2d");
+      if(!copyCtx) return null;
+      copyCtx.drawImage(source,0,0);
+      return copy;
+    }catch(error){
+      console.warn("Could not generate website watermark QR code:",error);
+      return null;
+    }finally{
+      holder.remove();
     }
+  }
+
+function drawWebsiteWatermark(ctx, canvas, banner){
+    const watermarkUrl=appContext.CARD_WATERMARK_URL;
+    if(!watermarkUrl || !banner) return;
+
+    // The complete user-approved 1113×242 artwork is rendered as one layer.
+    // Only the QR interior is regenerated so the destination remains functional.
+    const sourceW=1113;
+    const sourceH=242;
+    const shortSide=Math.min(canvas.width,canvas.height);
+    const margin=Math.max(8,Math.round(shortSide*0.012));
+    const bannerWidth=Math.min(canvas.width-margin*2,Math.max(280,Math.round(canvas.width*0.82)));
+    const bannerHeight=Math.round(bannerWidth*sourceH/sourceW);
+    const bannerX=Math.round((canvas.width-bannerWidth)/2);
+    const bannerY=Math.max(margin,Math.round(canvas.height-margin-bannerHeight));
+    const scale=bannerWidth/sourceW;
 
     ctx.save();
-    ctx.imageSmoothingEnabled = true;
-    if("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
-    ctx.textBaseline = "middle";
+    ctx.imageSmoothingEnabled=true;
+    if("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality="high";
 
-    // Outer glow and dark gold-framed banner inspired by the promo-style URL tag.
-    ctx.shadowColor = "rgba(255,191,47,0.52)";
-    ctx.shadowBlur = Math.max(12, Math.round(shortSide * 0.030));
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-    roundedRect(bannerX, bannerY, bannerWidth, bannerHeight, bannerRadius);
-    ctx.fillStyle = "rgba(12,10,8,0.84)";
-    ctx.fill();
+    ctx.drawImage(banner,bannerX,bannerY,bannerWidth,bannerHeight);
 
-    ctx.shadowColor = "transparent";
-    roundedRect(bannerX, bannerY, bannerWidth, bannerHeight, bannerRadius);
-    ctx.lineWidth = borderWidth;
-    ctx.strokeStyle = "rgba(255,198,56,0.94)";
-    ctx.stroke();
-
-    roundedRect(
-      bannerX + borderWidth * 1.5,
-      bannerY + borderWidth * 1.5,
-      bannerWidth - borderWidth * 3,
-      bannerHeight - borderWidth * 3,
-      Math.max(8, bannerRadius - borderWidth * 2)
-    );
-    ctx.lineWidth = Math.max(1, borderWidth * 0.75);
-    ctx.strokeStyle = "rgba(255,221,132,0.34)";
-    ctx.stroke();
-
-    // Left globe icon.
-    const iconCx = bannerX + innerPadX + iconSize / 2;
-    const iconCy = bannerY + bannerHeight / 2;
-    const iconR = iconSize / 2;
-    ctx.strokeStyle = "rgba(255,208,92,0.96)";
-    ctx.lineWidth = Math.max(1.3, iconR * 0.16);
-    ctx.beginPath();
-    ctx.arc(iconCx, iconCy, iconR, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(iconCx - iconR * 0.92, iconCy);
-    ctx.lineTo(iconCx + iconR * 0.92, iconCy);
-    ctx.moveTo(iconCx, iconCy - iconR * 0.92);
-    ctx.lineTo(iconCx, iconCy + iconR * 0.92);
-    ctx.moveTo(iconCx - iconR * 0.58, iconCy - iconR * 0.78);
-    ctx.quadraticCurveTo(iconCx - iconR * 0.12, iconCy, iconCx - iconR * 0.58, iconCy + iconR * 0.78);
-    ctx.moveTo(iconCx + iconR * 0.58, iconCy - iconR * 0.78);
-    ctx.quadraticCurveTo(iconCx + iconR * 0.12, iconCy, iconCx + iconR * 0.58, iconCy + iconR * 0.78);
-    ctx.stroke();
-
-    // Right sparkle accent.
-    const accentCx = bannerX + bannerWidth - innerPadX - rightAccentWidth / 2;
-    const accentCy = bannerY + bannerHeight / 2;
-    const accentR = Math.max(5, Math.round(iconR * 0.56));
-    ctx.strokeStyle = "rgba(255,208,92,0.95)";
-    ctx.lineWidth = Math.max(1.1, accentR * 0.22);
-    ctx.beginPath();
-    ctx.moveTo(accentCx - accentR, accentCy);
-    ctx.lineTo(accentCx + accentR, accentCy);
-    ctx.moveTo(accentCx, accentCy - accentR);
-    ctx.lineTo(accentCx, accentCy + accentR);
-    ctx.moveTo(accentCx - accentR * 0.72, accentCy - accentR * 0.72);
-    ctx.lineTo(accentCx + accentR * 0.72, accentCy + accentR * 0.72);
-    ctx.moveTo(accentCx + accentR * 0.72, accentCy - accentR * 0.72);
-    ctx.lineTo(accentCx - accentR * 0.72, accentCy + accentR * 0.72);
-    ctx.stroke();
-
-    const applyFont = ()=>{
-      ctx.font = `800 ${fontSize}px Inter, Arial, sans-serif`;
-    };
-    applyFont();
-    while(fontSize > 10){
-      const totalWidth = ctx.measureText(prefix).width + ctx.measureText(rest).width;
-      if(totalWidth <= maxTextWidth) break;
-      fontSize -= 1;
-      applyFont();
+    const qrCanvas=createWebsiteWatermarkQrCanvas(watermarkUrl,360);
+    if(qrCanvas){
+      // Approved artwork QR interior: preserve its surrounding gold/black frame.
+      const qrX=bannerX+885*scale;
+      const qrY=bannerY+27*scale;
+      const qrSize=166*scale;
+      ctx.fillStyle="#ffffff";
+      ctx.fillRect(qrX,qrY,qrSize,qrSize);
+      ctx.drawImage(qrCanvas,qrX,qrY,qrSize,qrSize);
     }
 
-    const prefixWidth = ctx.measureText(prefix).width;
-    const restWidth = ctx.measureText(rest).width;
-    const totalWidth = Math.min(maxTextWidth, prefixWidth + restWidth);
-    let textX = textLeft + Math.max(0, (maxTextWidth - totalWidth) / 2);
-    const textY = bannerY + bannerHeight / 2;
-
-    if(prefix){
-      ctx.textAlign = "left";
-      ctx.fillStyle = "rgba(255,255,255,0.98)";
-      ctx.fillText(prefix, textX, textY, maxTextWidth);
-      textX += prefixWidth;
-    }
-    ctx.fillStyle = "rgba(255,198,56,0.98)";
-    ctx.fillText(rest, textX, textY, Math.max(0, maxTextWidth - (textX - textLeft)));
     ctx.restore();
   }
 
-function drawWatermark(ctx, canvas, logo){
+function drawWatermark(ctx, canvas, logo, banner){
     // The watermark logo is preprocessed into a transparent canvas so its white background is removed.
 
     const margin = Math.max(12, Math.round(Math.min(canvas.width, canvas.height) * 0.024));
@@ -286,7 +235,7 @@ function drawWatermark(ctx, canvas, logo){
     ctx.drawImage(logo, x, y, targetWidth, targetHeight);
     ctx.restore();
 
-    appContext.drawWebsiteWatermark(ctx, canvas);
+    appContext.drawWebsiteWatermark(ctx, canvas, banner);
 
   }
 
@@ -429,10 +378,14 @@ async function renderCardImage(img, maxDim = 1800, quality = 0.94, applyWatermar
       }
 
       if(applyWatermark==="website"){
-        appContext.drawWebsiteWatermark(ctx, canvas);
+        const banner = await appContext.loadWebsiteWatermarkBanner();
+        appContext.drawWebsiteWatermark(ctx, canvas, banner);
       }else{
-        const logo = await appContext.loadWatermarkLogo();
-        appContext.drawWatermark(ctx, canvas, logo);
+        const [logo,banner] = await Promise.all([
+          appContext.loadWatermarkLogo(),
+          appContext.loadWebsiteWatermarkBanner()
+        ]);
+        appContext.drawWatermark(ctx, canvas, logo, banner);
       }
     }
 
@@ -975,7 +928,7 @@ function setupCardImageRecovery(){
     },true);
   }
 
-  Object.assign(appContext,{isNearWhiteBackgroundPixel,createTransparentWatermarkLogo,loadWatermarkLogo,drawWebsiteWatermark,drawWatermark,shouldApplySoldDownloadWatermark,drawSoldDownloadWatermark,canvasToBlob,loadImageElementFromSource,renderSoldDownloadBlob,renderCardImage,renderWatermarkedImage,rotateCardImageSource,loadImageFromDataUrl,normalizedImageMime,imageExtensionMatchesMime,verifyImageDecodes,validateOwnerImageFile,resizeImageFile,processCardImageUrl,applyWatermarkToCardImageSource,applyWebsiteWatermarkToCardImageSource,watermarkImageUrl,applyPsaPrivacyMaskToCardImageSource,isPendingCardImage,dataUrlToImageBlob,cardStorageExtensionForMime,uploadPendingCardImage,removeCardStoragePaths,cardStoragePathFromUrl,prepareCardImagesForStorage,cleanupRemovedCardStorageImages,cardImageStorageErrorText,setupCardImageRecovery});
+  Object.assign(appContext,{isNearWhiteBackgroundPixel,createTransparentWatermarkLogo,loadWatermarkLogo,loadWebsiteWatermarkBanner,drawWebsiteWatermark,drawWatermark,shouldApplySoldDownloadWatermark,drawSoldDownloadWatermark,canvasToBlob,loadImageElementFromSource,renderSoldDownloadBlob,renderCardImage,renderWatermarkedImage,rotateCardImageSource,loadImageFromDataUrl,normalizedImageMime,imageExtensionMatchesMime,verifyImageDecodes,validateOwnerImageFile,resizeImageFile,processCardImageUrl,applyWatermarkToCardImageSource,applyWebsiteWatermarkToCardImageSource,watermarkImageUrl,applyPsaPrivacyMaskToCardImageSource,isPendingCardImage,dataUrlToImageBlob,cardStorageExtensionForMime,uploadPendingCardImage,removeCardStoragePaths,cardStoragePathFromUrl,prepareCardImagesForStorage,cleanupRemovedCardStorageImages,cardImageStorageErrorText,setupCardImageRecovery});
 }
 
 /** State and event initialization; called in preserved startup order. */
