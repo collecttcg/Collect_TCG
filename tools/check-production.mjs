@@ -59,7 +59,7 @@ if(!fs.existsSync(baselinePath)) throw new Error('Missing COLLECT_TCG_BASELINE.m
 const baseline=fs.readFileSync(baselinePath,'utf8');
 for(const marker of [
   'Latest Production: `2026-09-27-v03`',
-  'Latest Beta: `2026-09-26-v20`',
+  'Latest Beta: `2026-09-27-v03`',
   'Beta promoted from for Production `2026-09-27-v03`: none',
   'QR Generator',
   'migrations/2026/'
