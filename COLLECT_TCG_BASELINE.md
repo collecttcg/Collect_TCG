@@ -57,7 +57,17 @@ Changes:
 
 SQL required: No.
 
-Validation status: in progress. Independent Production syntax/import/assets, Owner/privacy/regression, global Bulk Images, package integrity, Pages deployment and rollback-anchor checks are required before completion.
+Validation status: completed successfully. Production repository structure and rollback anchor, changed JavaScript syntax, imports/assets, routing/conversion/Owner/privacy regressions, retained v05-v08 behavior, v09 global Bulk Images behavior, SEO generation, full/patch ZIP integrity, final GitHub Pages deployment and rollback-anchor advancement all passed.
+
+Release records:
+- Source commit: `77d672aa932db6a7b760cc3176f61b875fa32f7e`
+- Final package-validation / last-known-good commit: `840ba48e1f39481229790da0871cccd396b2ac46`
+- Full ZIP: `Collect-TCG-Production-2026-09-27-v09-full.zip`
+  - SHA-256: `6c1970c56584f5bb18d327f3bb265a4d5eaec5ef6f1a8bfd033e204964a64697`
+- Patch ZIP: `Collect-TCG-Production-2026-09-27-v08-to-2026-09-27-v09-patch.zip`
+  - SHA-256: `4a9e742b7e603d2276b89c05c65a4113d14baacc0cebcda54d49df919b449290`
+
+Validation limitation: interactive desktop/mobile/Safari browser testing was not available in the current tool environment; browser behavior was not manually exercised.
 
 ## Production 2026-09-27-v08
 
