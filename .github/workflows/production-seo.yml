@@ -42,6 +42,8 @@ on:
       - 'src/features/owner/add.js'
       - 'src/features/owner/insights-intent-rates.js'
       - 'src/features/owner/tools.js'
+      - 'src/features/owner/image-maintenance.js'
+      - 'src/features/owner/bulk-status.js'
       - 'src/styles/27-insights-dashboard.css'
       - 'src/features/inventory/filtering.js'
       - 'src/features/owner/lifecycle.js'
@@ -299,9 +301,9 @@ jobs:
           grep -q 'insights-dashboard.js?v=2026-09-27-v07' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'startup.js?v=2026-09-24-v08' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-27-v08' src/main.js
-          grep -q 'initialize.js?v=2026-09-27-v08' src/main.js
-          grep -q 'src/main.js?v=2026-09-27-v08' index.html
+          grep -q 'register-features.js?v=2026-09-27-v09' src/main.js
+          grep -q 'initialize.js?v=2026-09-27-v09' src/main.js
+          grep -q 'src/main.js?v=2026-09-27-v09' index.html
 
       - name: Validate Phase 4 owner sales intelligence
         shell: bash
@@ -313,8 +315,8 @@ jobs:
           grep -q 'insights-v20-performance-controls' src/features/owner/insights-dashboard.js
           grep -q 'data-insights-v20-pagination' src/features/owner/insights-dashboard.js
           grep -q 'insights-dashboard.js?v=2026-09-27-v07' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-27-v08' src/main.js
-          grep -q 'src/main.js?v=2026-09-27-v08' index.html
+          grep -q 'register-features.js?v=2026-09-27-v09' src/main.js
+          grep -q 'src/main.js?v=2026-09-27-v09' index.html
 
       - name: Validate Production v05 promoted visitor and generator changes
         shell: bash
@@ -359,8 +361,8 @@ jobs:
           grep -q '<option value="detailed" selected>Detailed listing</option>' src/features/social/posts.js
           grep -q 'templateModeInput?.value||"detailed"' src/features/social/posts.js
           grep -q 'posts.js?v=2026-09-26-v07' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-27-v08' src/main.js
-          grep -q 'src/main.js?v=2026-09-27-v08' index.html
+          grep -q 'register-features.js?v=2026-09-27-v09' src/main.js
+          grep -q 'src/main.js?v=2026-09-27-v09' index.html
 
       - name: Validate buyer privacy guards
         run: |
@@ -380,9 +382,9 @@ jobs:
           grep -q 'tiles.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/initialize.js
-          grep -q 'register-features.js?v=2026-09-27-v08' src/main.js
-          grep -q 'initialize.js?v=2026-09-27-v08' src/main.js
-          grep -q 'src/main.js?v=2026-09-27-v08' index.html
+          grep -q 'register-features.js?v=2026-09-27-v09' src/main.js
+          grep -q 'initialize.js?v=2026-09-27-v09' src/main.js
+          grep -q 'src/main.js?v=2026-09-27-v09' index.html
 
       - name: Validate Production v06 Hidden Listings
         shell: bash
@@ -420,9 +422,9 @@ jobs:
           grep -q 'navigation.js?v=2026-09-26-v06' src/app/initialize.js
           grep -q 'routing.js?v=2026-09-27-v08' src/app/initialize.js
           grep -q 'filtering.js?v=2026-09-27-v07' src/app/initialize.js
-          grep -q 'register-features.js?v=2026-09-27-v08' src/main.js
-          grep -q 'initialize.js?v=2026-09-27-v08' src/main.js
-          grep -q 'src/main.js?v=2026-09-27-v08' index.html
+          grep -q 'register-features.js?v=2026-09-27-v09' src/main.js
+          grep -q 'initialize.js?v=2026-09-27-v09' src/main.js
+          grep -q 'src/main.js?v=2026-09-27-v09' index.html
 
       - name: Validate Production v07 post preview prices
         shell: bash
@@ -440,8 +442,8 @@ jobs:
           grep -Fq '.fb-post-card-copy .fb-post-card-price' src/styles/01-foundation.css
           grep -q 'posts.js?v=2026-09-26-v07' src/app/register-features.js
           grep -q '01-foundation.css?v=2026-09-27-v08' index.html
-          grep -q 'register-features.js?v=2026-09-27-v08' src/main.js
-          grep -q 'src/main.js?v=2026-09-27-v08' index.html
+          grep -q 'register-features.js?v=2026-09-27-v09' src/main.js
+          grep -q 'src/main.js?v=2026-09-27-v09' index.html
 
       - name: Validate Production v07 promoted Development behavior
         shell: bash
@@ -468,9 +470,9 @@ jobs:
           grep -q 'page.js?v=2026-09-27-v07' src/app/register-features.js
           grep -q 'insights-dashboard.js?v=2026-09-27-v07' src/app/register-features.js
           grep -q 'add.js?v=2026-09-27-v07' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-27-v08' src/main.js
-          grep -q 'initialize.js?v=2026-09-27-v08' src/main.js
-          grep -q 'src/main.js?v=2026-09-27-v08' index.html
+          grep -q 'register-features.js?v=2026-09-27-v09' src/main.js
+          grep -q 'initialize.js?v=2026-09-27-v09' src/main.js
+          grep -q 'src/main.js?v=2026-09-27-v09' index.html
           grep -q '01-foundation.css?v=2026-09-27-v08' index.html
 
       - name: Validate Production v08 promoted Development v25 editor and watermark
@@ -495,9 +497,9 @@ jobs:
           grep -q 'owner/qr-generator.js?v=2026-09-27-v01' src/app/register-features.js
           grep -q 'registerQrGenerator(appContext)' src/app/register-features.js
           ! grep -q 'analytics_test' src/services/analytics.js
-          grep -q 'register-features.js?v=2026-09-27-v08' src/main.js
-          grep -q 'initialize.js?v=2026-09-27-v08' src/main.js
-          grep -q 'src/main.js?v=2026-09-27-v08' index.html
+          grep -q 'register-features.js?v=2026-09-27-v09' src/main.js
+          grep -q 'initialize.js?v=2026-09-27-v09' src/main.js
+          grep -q 'src/main.js?v=2026-09-27-v09' index.html
           grep -q '01-foundation.css?v=2026-09-27-v08' index.html
 
       - name: Generate Production SEO card pages
@@ -533,14 +535,49 @@ jobs:
             git push
           fi
 
-      # Production v08 promotes validated Development 2026-09-27-v25 application behavior.
+      - name: Validate Production v09 promoted Development v27 global Bulk Images
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/features/owner/image-maintenance.js
+          node --check src/features/owner/tools.js
+          node --check src/features/owner/bulk-status.js
+          node --check src/app/register-features.js
+          node --check src/app/initialize.js
+          node --check src/main.js
+          grep -Fq 'bulk:["prices","metadata","status","images","psa","missing-certs"]' src/features/owner/tools.js
+          grep -Fq '["images","Bulk Images"]' src/features/owner/tools.js
+          grep -Fq 'mode==="bulk" && submode==="images"' src/features/owner/bulk-status.js
+          grep -Fq 'renderImageReprocessPage(true)' src/features/owner/bulk-status.js
+          grep -Fq 'Bulk Images — All Listings' src/features/owner/image-maintenance.js
+          grep -Fq 'One action applies to every photo in every inventory listing. No listing selection is required.' src/features/owner/image-maintenance.js
+          grep -Fq 'const eligibleCount=appContext.cards.filter(card=>appContext.getImages(card).length).length;' src/features/owner/image-maintenance.js
+          grep -Fq 'if(fromBulkEdit) return;' src/features/owner/image-maintenance.js
+          grep -Fq 'CTA + QR only · All Photos' src/features/owner/image-maintenance.js
+          grep -Fq 'Use Originals · All Photos' src/features/owner/image-maintenance.js
+          grep -Fq 'applyWebsiteWatermarkToCardImageSource(original,1800,0.94)' src/features/owner/image-maintenance.js
+          grep -Fq 'owner/tools.js?v=2026-09-27-v09' src/app/register-features.js
+          grep -Fq 'owner/bulk-status.js?v=2026-09-27-v09' src/app/register-features.js
+          grep -Fq 'owner/image-maintenance.js?v=2026-09-27-v09' src/app/register-features.js
+          grep -Fq 'owner/qr-generator.js?v=2026-09-27-v01' src/app/register-features.js
+          grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
+          grep -Fq 'owner/tools.js?v=2026-09-27-v09' src/app/initialize.js
+          grep -Fq 'owner/image-maintenance.js?v=2026-09-27-v09' src/app/initialize.js
+          grep -Fq 'register-features.js?v=2026-09-27-v09' src/main.js
+          grep -Fq 'initialize.js?v=2026-09-27-v09' src/main.js
+          grep -Fq 'src/main.js?v=2026-09-27-v09' index.html
+          ! grep -Fq 'analytics_test' src/services/analytics.js
+          ! grep -Fq 'isDevelopmentAnalyticsTestSession' src/services/analytics.js
+          git diff --check
+
+      # Production v09 promotes validated Development 2026-09-27-v27 application behavior.
       - name: Create Production release packages
         shell: bash
         env:
-          RELEASE_VERSION: 2026-09-27-v08
-          PREVIOUS_VERSION: 2026-09-27-v07
-          PREVIOUS_COMMIT: 712fa7ba485e9987ee1cb487210de6ecf5613e6b
-          DEVELOPMENT_PROMOTED: 2026-09-27-v25
+          RELEASE_VERSION: 2026-09-27-v09
+          PREVIOUS_VERSION: 2026-09-27-v08
+          PREVIOUS_COMMIT: 86f4929c33d92f8da825e378eab029694e50cba5
+          DEVELOPMENT_PROMOTED: 2026-09-27-v27
         run: |
           set -euo pipefail
           mkdir -p release
@@ -568,10 +605,10 @@ jobs:
       - name: Upload Production release packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-09-27-v08-packages
+          name: Collect-TCG-Production-2026-09-27-v09-packages
           path: |
-            release/Collect-TCG-Production-2026-09-27-v08-full.zip
-            release/Collect-TCG-Production-2026-09-27-v07-to-2026-09-27-v08-patch.zip
+            release/Collect-TCG-Production-2026-09-27-v09-full.zip
+            release/Collect-TCG-Production-2026-09-27-v08-to-2026-09-27-v09-patch.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -580,19 +617,19 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-manifests
-          MANIFEST="release-manifests/2026-09-27-v08.txt"
+          MANIFEST="release-manifests/2026-09-27-v09.txt"
           {
-            echo "Version: 2026-09-27-v08"
-            echo "Previous Production: 2026-09-27-v07"
-            echo "Development promoted from: 2026-09-27-v25"
+            echo "Version: 2026-09-27-v09"
+            echo "Previous Production: 2026-09-27-v08"
+            echo "Development promoted from: 2026-09-27-v27"
             echo "Source commit: $(git rev-parse HEAD)"
-            echo "Full ZIP: Collect-TCG-Production-2026-09-27-v08-full.zip"
-            echo "Patch ZIP: Collect-TCG-Production-2026-09-27-v07-to-2026-09-27-v08-patch.zip"
+            echo "Full ZIP: Collect-TCG-Production-2026-09-27-v09-full.zip"
+            echo "Patch ZIP: Collect-TCG-Production-2026-09-27-v08-to-2026-09-27-v09-patch.zip"
             echo
             sha256sum release/*.zip
           } > "$MANIFEST"
           git add "$MANIFEST"
-          git commit -m "Production 2026-09-27-v08: record package validation"
+          git commit -m "Production 2026-09-27-v09: record package validation"
           git push
 
       - name: Confirm Pages deployment and advance last-known-good
