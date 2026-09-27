@@ -18,28 +18,48 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-27-v09`
+Latest Development: `2026-09-27-v25`
 
-Latest Production: `2026-09-27-v07`
+Latest Production: `2026-09-27-v08`
 
-Previous Production: `2026-09-27-v06`
+Previous Production: `2026-09-27-v07`
 
-Production functional baseline last promoted from Development: `2026-09-27-v09`
+Production functional baseline last promoted from Development: `2026-09-27-v25`
 
-Development version promoted from for Production `2026-09-27-v07`: `2026-09-27-v09`.
+Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v25`.
 
 Important promotion state:
 - Development repository rename is complete: `collecttcg/Collect_TCG_Dev`.
-- Current Development release: `2026-09-27-v09`.
+- Current Development release: `2026-09-27-v25`.
 - Historical Beta version names and release records remain unchanged.
 - Production includes the validated Beta v16 clone fix.
-- Development v09 validated functional delta is promoted in Production v07, including v18 new-card Custom Order insertion, inventory pagination/order behavior, newer filtering/routing, Owner Insights action queue and retained tool/style updates.
+- Development v25 validated application delta is promoted in Production v08. Production retains the v07 inventory/order, routing and Owner Insights baseline while adding the approved QR/CTA inventory watermark renderer and compact continuous Add/Edit owner editor.
 - Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
 
+## Production 2026-09-27-v08
+
+Previous Production: `2026-09-27-v07`
+
+Development promoted from: `2026-09-27-v25`
+
+Purpose: promote the validated Development v25 watermark and compact continuous Add/Edit editor while preserving Production-only SEO, rollback, QR Generator and analytics behavior.
+
+Changes:
+- Adds the approved `assets/collect-tcg-inventory-watermark-approved.png` banner used by the reversible owner image watermark flow.
+- Inventory watermark generation uses the approved CTA artwork with a regenerated functional QR destination.
+- Add/Edit remains one continuous scroll flow with Photos first and Card Details immediately below; the v24 tab experiment is not promoted.
+- Large desktop Add/Edit is capped at 1100px, uses a compact 350px photo stage, and uses 3/2/1 photo columns across large desktop/medium/mobile breakpoints.
+- Existing PSA privacy, rotation, image ordering/storage, watermark reversibility, Owner Mode, Supabase/RLS and public inventory behavior are preserved.
+- Production QR Generator registration, Production SEO/canonical URLs, Production analytics behavior and rollback safeguards remain Production-specific.
+- Development-only `analytics_test` behavior remains excluded from Production.
+- No SQL migration is required.
+
+Validation status: automated Production validation/package/deployment workflow pending for this promotion commit. Browser/Safari interactive testing is unavailable in the current tool environment; responsive behavior is covered by the validated Development implementation and static/workflow checks.
+
 ## Production 2026-09-27-v07
 
-Previous Production: `2026-09-27-v06`
+Previous Production: `2026-09-27-v07`
 
 Development promoted from: `2026-09-27-v09`
 
