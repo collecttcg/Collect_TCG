@@ -58,9 +58,9 @@ const baselinePath=path.join(root,'COLLECT_TCG_BASELINE.md');
 if(!fs.existsSync(baselinePath)) throw new Error('Missing COLLECT_TCG_BASELINE.md');
 const baseline=fs.readFileSync(baselinePath,'utf8');
 for(const marker of [
-  'Latest Production: `2026-09-27-v02`',
+  'Latest Production: `2026-09-27-v03`',
   'Latest Beta: `2026-09-26-v20`',
-  'Beta promoted from for Production `2026-09-27-v02`: `2026-09-27-v02`',
+  'Beta promoted from for Production `2026-09-27-v03`: none',
   'QR Generator',
   'migrations/2026/'
 ]){
@@ -74,6 +74,15 @@ if(!registry.includes('registerQrGenerator(appContext)')) throw new Error('QR Ge
 const insights=fs.readFileSync(path.join(root,'src/features/owner/insights-dashboard.js'),'utf8');
 if(!insights.includes('27-insights-dashboard.css')) throw new Error('Owner Insights stylesheet wiring missing.');
 if(!fs.existsSync(path.join(root,'src/styles/27-insights-dashboard.css'))) throw new Error('Owner Insights stylesheet missing.');
+
+for(const rel of ['docs/BACKUP-RECOVERY.md','.github/workflows/backup-last-known-good.yml']){
+  if(!fs.existsSync(path.join(root,rel))) throw new Error('Missing Production recovery file: '+rel);
+}
+const backupWorkflow=fs.readFileSync(path.join(root,'.github/workflows/backup-last-known-good.yml'),'utf8');
+if(!backupWorkflow.includes('production-last-known-good')) throw new Error('Last-known-good workflow target missing.');
+if(!backupWorkflow.includes('workflow_run')) throw new Error('Last-known-good workflow must wait for completed deployment.');
+if(!backupWorkflow.includes("github.event.workflow_run.conclusion == 'success'")) throw new Error('Last-known-good workflow must require successful Pages deployment.');
+if(!backupWorkflow.includes('git merge-base --is-ancestor')) throw new Error('Last-known-good workflow must prevent rollback to older history.');
 
 console.log(`Checked ${jsCount} JavaScript files, imports, HTML assets, migrations and Production structure.`);
 

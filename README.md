@@ -38,7 +38,11 @@ Historical SQL migration filenames are preserved. Their presence in the reposito
 
 ## Current Production release
 
-`2026-09-27-v02` — promotes validated Beta `2026-09-27-v02` filtered card rearranging only. Hidden/non-matching cards keep their global Custom Order slots; filtered views do not rewrite game-category order. Beta v18 automatic new-card insertion remains excluded.
+`2026-09-27-v03` — adds Production last-known-good rollback/recovery infrastructure. Application behavior remains the validated v02 behavior; no Beta application changes are promoted.
+
+## Recovery
+
+The `production-last-known-good` branch tracks the latest validated Production release whose final package-validation commit successfully deployed through GitHub Pages. See `docs/BACKUP-RECOVERY.md` for rollback and separate backup-repository procedures.
 
 ## About
 
