@@ -638,7 +638,7 @@ function renderInventoryPage(scope = "inventory"){
       "hunter x hunter hyper battle":{src:"https://upload.wikimedia.org/wikipedia/commons/1/1f/Hunter_%C3%97_Hunter_logo.png",alt:"Hunter × Hunter",className:"inventory-game-logo-hunter"},
       "pokémon":{src:"https://upload.wikimedia.org/wikipedia/commons/1/1a/Pok%C3%A9mon_Trading_Card_Game_logo.svg",alt:"Pokémon Trading Card Game",className:"inventory-game-logo-pokemon"},
       "pokemon":{src:"https://upload.wikimedia.org/wikipedia/commons/1/1a/Pok%C3%A9mon_Trading_Card_Game_logo.svg",alt:"Pokémon Trading Card Game",className:"inventory-game-logo-pokemon"},
-      "zatch bell!":{src:"https://raw.githubusercontent.com/collecttcg/Collect_TCG_Beta/main/beta/assets/zatch-bell-card-battle-logo.webp",alt:"Zatch Bell! The Card Battle",className:"inventory-game-logo-zatch"}
+      "zatch bell!":{src:"./assets/zatch-bell-card-battle-logo.webp",alt:"Zatch Bell! The Card Battle",className:"inventory-game-logo-zatch"}
     };
 
     function inventoryGameBrowserHTML(){

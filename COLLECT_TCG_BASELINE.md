@@ -18,15 +18,15 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Beta: `2026-09-27-v03`
+Latest Beta: `2026-09-27-v04`
 
-Latest Production: `2026-09-27-v04`
+Latest Production: `2026-09-27-v05`
 
-Previous Production: `2026-09-27-v03`
+Previous Production: `2026-09-27-v04`
 
 Production functional baseline last promoted from Beta: `2026-09-27-v02`
 
-Beta promoted from for Production `2026-09-27-v04`: none — Production recovery infrastructure fix only.
+Beta promoted from for Production `2026-09-27-v05`: none — Production dependency localization only.
 
 Important promotion state:
 - Production includes the validated Beta v16 clone fix.
@@ -34,9 +34,9 @@ Important promotion state:
 - Beta v19 Beta-repository cleanup/structure changes are **not application-code promotion**.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
 
-## Production 2026-09-27-v04
+## Production 2026-09-27-v05
 
-Purpose: complete the layered Production rollback/recovery infrastructure without changing application behavior.
+Purpose: remove Production's runtime dependency on the Development/Beta repository before its planned rename, without changing the visible Zatch Bell logo or other application behavior.
 
 Changes:
 - Production SQL migration history is centralized under `migrations/2026/` without changing migration filenames or SQL content.
@@ -53,6 +53,7 @@ Changes:
 - The candidate must descend from the current last-known-good branch, preventing older/replayed releases from moving the rollback point backwards.
 - The recommended external disaster-recovery repository is `collecttcg/Collect_TCG_Backup`; repository creation is a one-time GitHub admin action and is not yet completed.
 - Repository backup does not include live Supabase data; database backup is a separate concern.
+- The Zatch Bell game-browser logo is now stored locally at `assets/zatch-bell-card-battle-logo.webp`; Production no longer loads it from the Development/Beta repository.
 
 ## Production repository structure
 

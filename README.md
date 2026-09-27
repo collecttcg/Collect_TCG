@@ -38,7 +38,7 @@ Historical SQL migration filenames are preserved. Their presence in the reposito
 
 ## Current Production release
 
-`2026-09-27-v04` — completes Production last-known-good rollback/recovery automation. Application behavior remains unchanged; no Beta application changes are promoted.
+`2026-09-27-v05` — localizes the Zatch Bell game-browser logo in Production so the site no longer depends on the Development/Beta repository URL. No Beta application behavior is promoted.
 
 ## Recovery
 
