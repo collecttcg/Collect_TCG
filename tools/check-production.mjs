@@ -58,9 +58,9 @@ const baselinePath=path.join(root,'COLLECT_TCG_BASELINE.md');
 if(!fs.existsSync(baselinePath)) throw new Error('Missing COLLECT_TCG_BASELINE.md');
 const baseline=fs.readFileSync(baselinePath,'utf8');
 for(const marker of [
-  'Latest Production: `2026-09-27-v01`',
+  'Latest Production: `2026-09-27-v02`',
   'Latest Beta: `2026-09-26-v20`',
-  'Beta promoted from for Production `2026-09-27-v01`: none',
+  'Beta promoted from for Production `2026-09-27-v02`: `2026-09-27-v02`',
   'QR Generator',
   'migrations/2026/'
 ]){
@@ -76,3 +76,18 @@ if(!insights.includes('27-insights-dashboard.css')) throw new Error('Owner Insig
 if(!fs.existsSync(path.join(root,'src/styles/27-insights-dashboard.css'))) throw new Error('Owner Insights stylesheet missing.');
 
 console.log(`Checked ${jsCount} JavaScript files, imports, HTML assets, migrations and Production structure.`);
+
+
+const orderingModule=await import('../src/features/inventory/ordering.js?production-check=2026-09-27-v02');
+const orderApp={safeCardId:value=>String(value||'').trim()};
+orderingModule.register(orderApp);
+const mergeIds=['a','b','c','d','e','f'];
+const merged=orderApp.mergeFilteredCustomOrder(mergeIds,['e','c','a']);
+if(JSON.stringify(merged)!==JSON.stringify(['e','b','c','d','a','f'])){
+  throw new Error('Production filtered custom-order merge changed hidden card slots.');
+}
+const pageSource=fs.readFileSync(path.join(root,'src/features/inventory/page.js'),'utf8');
+if(pageSource.includes('Clear Collection filters before rearranging')) throw new Error('Filtered rearranging is still blocked.');
+if(!pageSource.includes('mergeFilteredCustomOrder(collectionFullCustomCardIds(),visibleIds)')) throw new Error('Filtered reorder merge wiring missing.');
+if(!pageSource.includes('function collectionCanRearrangeGameGroups()')) throw new Error('Filtered game-order guard missing.');
+console.log('Validated filtered custom-order merge.');

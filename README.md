@@ -38,7 +38,7 @@ Historical SQL migration filenames are preserved. Their presence in the reposito
 
 ## Current Production release
 
-`2026-09-27-v01` — repository cleanup/structure release based on Production `2026-09-26-v08`. No Beta-only v18/v19/v20 application behavior is promoted by this release.
+`2026-09-27-v02` — promotes validated Beta `2026-09-27-v02` filtered card rearranging only. Hidden/non-matching cards keep their global Custom Order slots; filtered views do not rewrite game-category order. Beta v18 automatic new-card insertion remains excluded.
 
 ## About
 

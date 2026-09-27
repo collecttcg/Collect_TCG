@@ -20,13 +20,13 @@ Repository inspection and current release manifests take precedence if an extern
 
 Latest Beta: `2026-09-26-v20`
 
-Latest Production: `2026-09-27-v01`
+Latest Production: `2026-09-27-v02`
 
-Previous Production: `2026-09-26-v08`
+Previous Production: `2026-09-27-v01`
 
-Production functional baseline was last promoted from Beta: `2026-09-26-v16`
+Production functional baseline last promoted from Beta: `2026-09-27-v02`
 
-Beta promoted from for Production `2026-09-27-v01`: none — Production-only repository cleanup.
+Beta promoted from for Production `2026-09-27-v02`: `2026-09-27-v02` — filtered card rearranging only.
 
 Important promotion state:
 - Production includes the validated Beta v16 clone fix.
@@ -34,9 +34,9 @@ Important promotion state:
 - Beta v19 Beta-repository cleanup/structure changes are **not application-code promotion**.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
 
-## Production 2026-09-27-v01
+## Production 2026-09-27-v02
 
-Purpose: clean and normalize the Production repository without promoting newer Beta application behavior.
+Purpose: promote the validated Beta `2026-09-27-v02` filtered card rearranging behavior only, while preserving the existing Production functional baseline and excluding unrelated Beta-only application changes.
 
 Changes:
 - Production SQL migration history is centralized under `migrations/2026/` without changing migration filenames or SQL content.
@@ -45,7 +45,9 @@ Changes:
 - Owner Insights SQL help text uses the Production migration filenames/paths.
 - Production repository validation checks JavaScript syntax/imports, HTML assets, migration placement/history, baseline presence, QR wiring and Insights CSS.
 - Generated SEO pages/manifests remain intentional and retained.
-- No database migration is newly required or reapplied by this cleanup.
+- No database migration is newly required or reapplied by this release.
+- Filtered rearranging is supported in Production Inventory/Collection Custom Order: visible cards can be reordered while hidden/non-matching cards keep their existing global slots; game-category order is not rewritten from a filtered view.
+- Beta v18 automatic new-card insertion behavior remains excluded from this Production promotion.
 
 ## Production repository structure
 
