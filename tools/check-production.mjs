@@ -58,9 +58,9 @@ const baselinePath=path.join(root,'COLLECT_TCG_BASELINE.md');
 if(!fs.existsSync(baselinePath)) throw new Error('Missing COLLECT_TCG_BASELINE.md');
 const baseline=fs.readFileSync(baselinePath,'utf8');
 for(const marker of [
-  'Latest Production: `2026-09-27-v06`',
-  'Latest Development: `2026-09-27-v05`',
-  'Development version promoted from for Production `2026-09-27-v06`: none',
+  'Latest Production: `2026-09-27-v07`',
+  'Latest Development: `2026-09-27-v09`',
+  'Development version promoted from for Production `2026-09-27-v07`: `2026-09-27-v09`',
   'QR Generator',
   'migrations/2026/'
 ]){
@@ -87,7 +87,7 @@ if(!releaseWorkflow.includes('HEAD:refs/heads/production-last-known-good')) thro
 console.log(`Checked ${jsCount} JavaScript files, imports, HTML assets, migrations and Production structure.`);
 
 
-const orderingModule=await import('../src/features/inventory/ordering.js?production-check=2026-09-27-v02');
+const orderingModule=await import('../src/features/inventory/ordering.js?production-check=2026-09-27-v07');
 const orderApp={safeCardId:value=>String(value||'').trim()};
 orderingModule.register(orderApp);
 const mergeIds=['a','b','c','d','e','f'];
@@ -107,3 +107,15 @@ if(!fs.existsSync(zatchLogoPath)) throw new Error('Missing local Zatch Bell game
 if(inventoryPageSource.includes('raw.githubusercontent.com/collecttcg/Collect_TCG_Beta') || inventoryPageSource.includes('raw.githubusercontent.com/collecttcg/Collect_TCG_Dev')) throw new Error('Production must not depend on Development repository runtime assets.');
 if(!inventoryPageSource.includes('./assets/zatch-bell-card-battle-logo.webp')) throw new Error('Production Zatch Bell logo is not wired to its local asset.');
 console.log('Validated Production-local Zatch Bell logo dependency.');
+
+if(!fs.existsSync(path.join(root,'src/features/inventory/pagination.js'))) throw new Error('Promoted Inventory pagination module missing.');
+if(!pageSource.includes('createInventoryPagination')) throw new Error('Inventory pagination wiring missing.');
+const orderingSource=fs.readFileSync(path.join(root,'src/features/inventory/ordering.js'),'utf8');
+if(!orderingSource.includes('function insertNewInventoryCardIntoCustomOrder')) throw new Error('New-card Custom Order insertion behavior missing.');
+const addSource=fs.readFileSync(path.join(root,'src/features/owner/add.js'),'utf8');
+if(!addSource.includes('insertNewInventoryCardIntoCustomOrder(saved)')) throw new Error('Add flow is not wired to new-card Custom Order insertion.');
+if(insights.includes('2026-09-17-v18-COUNTRY-CARD-DEMAND.sql') || insights.includes('2026-09-24-v08-DISCOVERY-SUMMARY.sql')) throw new Error('Development SQL-help filename leaked into Production Insights.');
+if(!insights.includes('salesActionQueueRows') || !insights.includes('What to act on next')) throw new Error('Promoted Owner Insights sales action queue missing.');
+const analyticsSource=fs.readFileSync(path.join(root,'src/services/analytics.js'),'utf8');
+if(analyticsSource.includes('analytics_test') || analyticsSource.includes('isDevelopmentAnalyticsTestSession')) throw new Error('Development-only analytics test bypass leaked into Production.');
+console.log('Validated Production v07 promoted Development behavior and Production-only boundaries.');

@@ -309,6 +309,11 @@ async function openCardRoute(cardId,discoverySource=""){
           );
         }catch{}
 
+        // Internal browsing must never reload a generated static card page.
+        // Change only the address/history entry, then open the already-loaded
+        // card directly. The full router is intentionally NOT called here:
+        // rerendering Home/Inventory underneath the modal adds visible churn
+        // and is unnecessary when the current page is already in memory.
         let pushedCleanUrl=false;
         try{
           const cleanUrl=new URL(clean,location.href);
@@ -328,6 +333,8 @@ async function openCardRoute(cardId,discoverySource=""){
           return;
         }
 
+        // If History API cannot represent the clean URL, stay inside the SPA.
+        // Never fall back to a full-document navigation for an internal card click.
         const fallbackTarget=appContext.cardShareHash(id);
         if(location.hash===fallbackTarget){
           appContext.openDetailsModal(card);
@@ -390,6 +397,7 @@ function currentRoute(){
     const h = location.hash.replace(/^#\/?/, "");
     const hashRoute=(h.split("?")[0] || "").trim();
     if(hashRoute) return hashRoute;
+
     const spaCardId=appContext.safeCardId(
       history.state && typeof history.state==="object"
         ? history.state.collectTcgSpaCardId
@@ -400,7 +408,9 @@ function currentRoute(){
     const seoCardId=appContext.safeCardId(
       document.querySelector('meta[name="collect-tcg-card-id"]')?.content || ""
     );
-    return seoCardId ? `card/${seoCardId}` : "home";
+    if(seoCardId) return `card/${seoCardId}`;
+
+    return "home";
   }
 
 function currentHashParams(){
@@ -488,7 +498,7 @@ function updateListingUrlFromControls(){
     const sort = appContext.safeUrlFilterText(appContext.$("sortBy")?.value, 24);
     const defaultSort = route === "sold"
       ? "recent-sold"
-      : (route === "collection" ? "custom" : "name");
+      : (["inventory","collection"].includes(route) ? "custom" : "name");
     if(sort && sort !== defaultSort) params.set("sort", sort);
 
     if(appContext.activeQuickFilter && appContext.activeQuickFilter !== "all"){
@@ -739,8 +749,7 @@ function router(){
 
 function updateSidebarFooter(){
     // "Listings" means listing records, not inventory quantity.
-    const count=appContext.$("sfCount");
-    if(count) count.textContent=appContext.cards.filter(appContext.isLiveLifecycle).length.toLocaleString();
+    appContext.$("sfCount").textContent=appContext.cards.filter(appContext.isLiveLifecycle).length.toLocaleString();
   }
 
   Object.assign(appContext,{safeListingBrowseHash,normalizeCardDiscoverySource,rememberCardDiscoverySource,getCardDiscoverySource,currentCardDiscoverySource,clearFilteredResultsBrowseContext,captureFilteredResultsBrowseContext,getFilteredResultsBrowseContext,getFilteredResultNavigation,listingRouteFromHash,currentListingDomScope,canPreserveCurrentListing,canReusePreservedListing,setNavigationActiveRoute,rememberReturnScroll,restoreReturnScrollIfReady,cardShareHash,captureInsightsDetailsReturnState,restoreInsightsDetailsReturnState,openInsightsCardDetails,openCardRoute,getCollectionStats,updateStatusNavCounts,currentRoute,currentHashParams,scrollListingPageHeaderIntoView,consumeHomeViewAllScrollTarget,safeUrlFilterText,safePriceFilterValue,listingRouteForScope,updateListingUrlFromControls,router,updateSidebarFooter});

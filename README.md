@@ -38,7 +38,7 @@ Historical SQL migration filenames are preserved. Their presence in the reposito
 
 ## Current Production release
 
-`2026-09-27-v06` — reconciles Production documentation and validation with the renamed Development repository `collecttcg/Collect_TCG_Dev`. No application behavior changes.
+`2026-09-27-v07` — promotes validated Development `2026-09-27-v09` application behavior, including inventory pagination/order updates and current Owner Insights, while retaining Production-only SEO, QR and rollback safeguards.
 
 ## Recovery
 

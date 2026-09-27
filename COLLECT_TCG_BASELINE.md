@@ -18,28 +18,32 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-27-v05`
+Latest Development: `2026-09-27-v09`
 
-Latest Production: `2026-09-27-v06`
+Latest Production: `2026-09-27-v07`
 
-Previous Production: `2026-09-27-v05`
+Previous Production: `2026-09-27-v06`
 
-Production functional baseline last promoted from Beta: `2026-09-27-v02`
+Production functional baseline last promoted from Development: `2026-09-27-v09`
 
-Development version promoted from for Production `2026-09-27-v06`: none — Production terminology/baseline sync only.
+Development version promoted from for Production `2026-09-27-v07`: `2026-09-27-v09`.
 
 Important promotion state:
 - Development repository rename is complete: `collecttcg/Collect_TCG_Dev`.
-- Current Development release: `2026-09-27-v05`.
+- Current Development release: `2026-09-27-v09`.
 - Historical Beta version names and release records remain unchanged.
 - Production includes the validated Beta v16 clone fix.
-- Beta v18 new-card Custom Order insertion behavior is **not promoted to Production**.
-- Beta v19 Beta-repository cleanup/structure changes are **not application-code promotion**.
+- Development v09 validated functional delta is promoted in Production v07, including v18 new-card Custom Order insertion, inventory pagination/order behavior, newer filtering/routing, Owner Insights action queue and retained tool/style updates.
+- Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
 
-## Production 2026-09-27-v06
+## Production 2026-09-27-v07
 
-Purpose: reconcile Production documentation and validation after the Development repository was renamed to `collecttcg/Collect_TCG_Dev`; no application behavior changes.
+Previous Production: `2026-09-27-v06`
+
+Development promoted from: `2026-09-27-v09`
+
+Purpose: promote the validated Development v09 application delta while preserving Production-only SEO, rollback, QR Generator and analytics behavior.
 
 Changes:
 - Production SQL migration history is centralized under `migrations/2026/` without changing migration filenames or SQL content.
@@ -50,11 +54,14 @@ Changes:
 - Generated SEO pages/manifests remain intentional and retained.
 - No database migration is newly required or reapplied by this release.
 - Filtered rearranging is supported in Production Inventory/Collection Custom Order: visible cards can be reordered while hidden/non-matching cards keep their existing global slots; game-category order is not rewritten from a filtered view.
-- Historical Beta v18 automatic new-card insertion behavior remains excluded from Production.
+- Newly added Inventory cards now enter the existing Custom Order by slab/raw-condition/sealed grouping without reordering existing cards.
 - `production-last-known-good` is the managed rollback branch. Before v04 it was manually advanced to validated/deployed Production `2026-09-27-v03` final HEAD `784ee1ac25bfb2b742c444bed395a0d3ad7387f1`; v04 and later advance it automatically after successful Pages deployment.
 - The Production release workflow itself waits for the final package-validation commit's GitHub Pages deployment and advances `production-last-known-good` only after that exact deployment succeeds.
 - The candidate must descend from the current last-known-good branch, preventing older/replayed releases from moving the rollback point backwards.
 - The recommended external disaster-recovery repository is `collecttcg/Collect_TCG_Backup`; repository creation is a one-time GitHub admin action and is not yet completed.
+- Inventory pagination and the newer filtered/custom-order behavior are now part of Production.
+- Owner Insights includes the validated sales action queue and current Production SQL-help filenames.
+- The Development-only `analytics_test` query bypass remains excluded from Production.
 - Repository backup does not include live Supabase data; database backup is a separate concern.
 - The Zatch Bell game-browser logo is now stored locally at `assets/zatch-bell-card-battle-logo.webp`; Production no longer loads it from the Development repository.
 

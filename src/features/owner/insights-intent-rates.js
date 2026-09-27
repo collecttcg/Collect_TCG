@@ -27,6 +27,8 @@ export function register(appContext){
   if(typeof originalFetchInsights==="function"){
     appContext.fetchInsights=async function(start,end,options){
       const rows=await originalFetchInsights.call(appContext,start,end,options);
+      // The current-period Insights request is the non-silent call. The silent
+      // request is the previous period used only for trend comparison.
       if(!options?.silent && insightsOverview()){
         currentViewRows=Array.isArray(rows)?rows:[];
         scheduleEnhancement();
