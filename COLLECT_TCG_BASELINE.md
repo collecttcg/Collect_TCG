@@ -55,7 +55,15 @@ Changes:
 - Development-only `analytics_test` behavior remains excluded from Production.
 - No SQL migration is required.
 
-Validation status: automated Production validation/package/deployment workflow pending for this promotion commit. Browser/Safari interactive testing is unavailable in the current tool environment; responsive behavior is covered by the validated Development implementation and static/workflow checks.
+Validation status: completed successfully. Production repository structure, rollback anchor, changed JavaScript syntax, relative imports/assets, discovery/routing, Owner/privacy guards, retained v07 behavior, v08 watermark/editor behavior, SEO generation, full/patch ZIP integrity and final GitHub Pages deployment passed. Browser/Safari interactive testing was unavailable in the current tool environment; responsive behavior was statically/workflow validated.
+
+Release records:
+- Source commit: `5fa8e4eea3ba8708c87a76c16f22861e6e809898`
+- Final package-validation / last-known-good commit: `7e4fdb224d901e747c4d5639d9bfc7952d852d33`
+- Full ZIP: `Collect-TCG-Production-2026-09-27-v08-full.zip`
+  - SHA-256: `8a9a188a1b7b86a867f9deabd509eda435956a407743daa407f3d9f84cadc023`
+- Patch ZIP: `Collect-TCG-Production-2026-09-27-v07-to-2026-09-27-v08-patch.zip`
+  - SHA-256: `90ce775a4022a084ab22366bdcce764eef43b8d34b62dbe4c952bb9490909725`
 
 ## Production 2026-09-27-v07
 
