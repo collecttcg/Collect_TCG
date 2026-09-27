@@ -740,6 +740,7 @@ function renderInventoryToolsPage(){
     else if(submode==="recent") appContext.renderRecentlyEditedOwnerPage(true);
     else if(submode==="history") appContext.renderEditHistoryPage();
     else if(submode==="audit") appContext.renderCatalogueAuditPage();
+    else if(mode==="bulk" && submode==="images") appContext.renderImageReprocessPage(true);
     else if(submode==="images") appContext.renderImageHealthPage(true);
     else if(submode==="duplicates") appContext.renderDuplicateDetectorPage();
     else if(submode==="reprocess") appContext.renderImageReprocessPage();
