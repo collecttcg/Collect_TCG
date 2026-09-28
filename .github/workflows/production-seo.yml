@@ -260,9 +260,9 @@ jobs:
           ! grep -q 'location.assign(clean)' src/app/routing.js
           grep -q 'history.back()' src/features/cards/details.js
           grep -q 'event.stopPropagation()' src/features/content/home.js
-          grep -q 'routing.js?v=2026-09-27-v08' src/app/initialize.js
+          grep -q 'routing.js?v=2026-09-28-v04' src/app/initialize.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/initialize.js
-          grep -q 'routing.js?v=2026-09-27-v08' src/app/register-features.js
+          grep -q 'routing.js?v=2026-09-28-v04' src/app/register-features.js
           grep -q 'notifications.js?v=2026-09-26-v02' src/app/register-features.js
           grep -q 'information.js?v=2026-09-26-v03' src/app/register-features.js
           grep -q 'collage.js?v=2026-09-26-v03' src/app/register-features.js
@@ -415,12 +415,12 @@ jobs:
           test "$(grep -o 'data-route="hidden-listings" class="owner-only' index.html | wc -l | tr -d ' ')" -ge "2"
           grep -q 'repository.js?v=2026-09-26-v06' src/app/register-features.js
           grep -q 'navigation.js?v=2026-09-26-v06' src/app/register-features.js
-          grep -q 'routing.js?v=2026-09-27-v08' src/app/register-features.js
+          grep -q 'routing.js?v=2026-09-28-v04' src/app/register-features.js
           grep -q 'filtering.js?v=2026-09-28-v02' src/app/register-features.js
           grep -q 'lifecycle.js?v=2026-09-26-v06' src/app/register-features.js
           grep -q 'repository.js?v=2026-09-26-v06' src/app/initialize.js
           grep -q 'navigation.js?v=2026-09-26-v06' src/app/initialize.js
-          grep -q 'routing.js?v=2026-09-27-v08' src/app/initialize.js
+          grep -q 'routing.js?v=2026-09-28-v04' src/app/initialize.js
           grep -q 'filtering.js?v=2026-09-28-v02' src/app/initialize.js
           grep -q 'register-features.js?v=2026-09-28-v04' src/main.js
           grep -q 'initialize.js?v=2026-09-28-v04' src/main.js
