@@ -38,7 +38,7 @@ Historical SQL migration filenames are preserved. Their presence in the reposito
 
 ## Current Production release
 
-`2026-09-28-v05` — promotes validated Development `2026-09-28-v05` Newly Added inventory quick filter while retaining Production-only SEO, QR Generator, analytics and rollback safeguards.
+`2026-09-29-v01` — promotes validated Development `2026-09-28-v07` eBay Description editor sizing and format-aware condition disclosures while retaining Production-only SEO, QR Generator, analytics and rollback safeguards.
 
 ## Recovery
 

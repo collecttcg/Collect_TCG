@@ -18,24 +18,48 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-28-v05`
+Latest Development: `2026-09-28-v07`
 
-Latest Production: `2026-09-28-v05`
+Latest Production: `2026-09-29-v01`
 
-Previous Production: `2026-09-28-v04`
+Previous Production: `2026-09-28-v05`
 
-Production functional baseline last promoted from Development: `2026-09-28-v05`
+Production functional baseline last promoted from Development: `2026-09-28-v07`
 
 Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v25`.
 
 Important promotion state:
 - Development repository rename is complete: `collecttcg/Collect_TCG_Dev`.
-- Current Development release: `2026-09-28-v05`.
+- Current Development release: `2026-09-28-v07`.
 - Historical Beta version names and release records remain unchanged.
 - Production includes the validated Beta v16 clone fix.
 - Development v25 validated application delta is promoted in Production v08. Production retains the v07 inventory/order, routing and Owner Insights baseline while adding the approved QR/CTA inventory watermark renderer and compact continuous Add/Edit owner editor.
 - Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
+
+## Production 2026-09-29-v01
+
+Previous Production: `2026-09-28-v05`
+
+Development promoted from: `2026-09-28-v07`
+
+Purpose: promote the validated Development v06-v07 eBay Listing Generator improvements.
+
+Changes:
+- Enlarges the eBay Description editor to 14 rows while Item Specifics remains at 8 rows and vertical resizing remains available.
+- Adds a universal statement that only cards/items shown and described are included and that photos form part of the condition assessment.
+- Notes that minor imperfections may not be fully visible because of lighting, reflections, camera angle or display differences.
+- Raw listings state that condition is subjective and does not guarantee a PSA/BGS/CGC/other grading result.
+- Graded listings state that the shown grade is assigned by the stated grading company and that the holder/slab may have minor handling marks that do not affect the assigned grade.
+- Sealed listings state that outer packaging may have minor wear, dents, scratches, loose wrapping or other imperfections.
+- Invites buyers to request additional condition information/close-ups before purchase and reminds them to verify the delivery address.
+- Existing eBay title, item-specific, copy, image ZIP, card selection and Owner Mode behavior remain retained.
+- Production-specific SEO/canonical behavior, QR Generator, analytics boundaries, owner/private-route protections and rollback safeguards remain retained.
+- Development-only repository structure and `analytics_test` behavior remain excluded.
+
+SQL required: No.
+
+Validation status: promotion candidate committed; independent Production validation, package integrity, Pages deployment and rollback-anchor advancement pending.
 
 ## Production 2026-09-28-v05
 
