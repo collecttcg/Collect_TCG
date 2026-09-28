@@ -38,7 +38,7 @@ Historical SQL migration filenames are preserved. Their presence in the reposito
 
 ## Current Production release
 
-`2026-09-27-v09` — promotes validated Development `2026-09-27-v27` global Bulk Images behavior across all listings while retaining Production-only SEO, QR Generator, analytics and rollback safeguards.
+`2026-09-28-v01` — promotes validated Development `2026-09-27-v28` game-aware new-card Inventory ordering while retaining Production-only SEO, QR Generator, analytics and rollback safeguards.
 
 ## Recovery
 
