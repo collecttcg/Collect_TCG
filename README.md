@@ -38,7 +38,7 @@ Historical SQL migration filenames are preserved. Their presence in the reposito
 
 ## Current Production release
 
-`2026-09-28-v02` — promotes validated Development `2026-09-28-v02` Sold owner-menu and buyer sold-date ordering fixes while retaining Production-only SEO, QR Generator, analytics and rollback safeguards.
+`2026-09-28-v03` — promotes validated Development `2026-09-28-v03` saved manual USD/SGD Edit-price preservation while retaining Production-only SEO, QR Generator, analytics and rollback safeguards.
 
 ## Recovery
 
