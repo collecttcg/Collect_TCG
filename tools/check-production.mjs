@@ -58,9 +58,9 @@ const baselinePath=path.join(root,'COLLECT_TCG_BASELINE.md');
 if(!fs.existsSync(baselinePath)) throw new Error('Missing COLLECT_TCG_BASELINE.md');
 const baseline=fs.readFileSync(baselinePath,'utf8');
 for(const marker of [
-  'Latest Production: `2026-09-27-v09`',
-  'Latest Development: `2026-09-27-v27`',
-  'Development promoted from: `2026-09-27-v27`',
+  'Latest Production: `2026-09-28-v01`',
+  'Latest Development: `2026-09-27-v28`',
+  'Development promoted from: `2026-09-27-v28`',
   'QR Generator',
   'migrations/2026/'
 ]){
@@ -87,7 +87,7 @@ if(!releaseWorkflow.includes('HEAD:refs/heads/production-last-known-good')) thro
 console.log(`Checked ${jsCount} JavaScript files, imports, HTML assets, migrations and Production structure.`);
 
 
-const orderingModule=await import('../src/features/inventory/ordering.js?production-check=2026-09-27-v09');
+const orderingModule=await import('../src/features/inventory/ordering.js?production-check=2026-09-28-v01');
 const orderApp={safeCardId:value=>String(value||'').trim()};
 orderingModule.register(orderApp);
 const mergeIds=['a','b','c','d','e','f'];
@@ -112,10 +112,44 @@ if(!fs.existsSync(path.join(root,'src/features/inventory/pagination.js'))) throw
 if(!pageSource.includes('createInventoryPagination')) throw new Error('Inventory pagination wiring missing.');
 const orderingSource=fs.readFileSync(path.join(root,'src/features/inventory/ordering.js'),'utf8');
 if(!orderingSource.includes('function insertNewInventoryCardIntoCustomOrder')) throw new Error('New-card Custom Order insertion behavior missing.');
+if(!orderingSource.includes('function inventoryNewCardGameKey(card)')) throw new Error('Game-aware new-card placement helper missing.');
+if(!orderingSource.includes('function compareInventoryNewCardPlacement(a,b)')) throw new Error('Grade/condition new-card comparator missing.');
+
+orderApp.normalizeFilterValue=value=>String(value||'').trim().toLowerCase();
+orderApp.effectiveFormat=card=>String(card?.format||'Raw');
+orderApp.cardMatchesListingScope=(card,scope)=>scope==='inventory' && card?.availability!=='Collection (NFS)';
+orderApp.inventoryCardOrderById=new Map();
+orderApp.inventoryGameOrderByKey=new Map();
+const orderIds=Array.from({length:8},(_,index)=>`00000000-0000-4000-8000-${String(index+1).padStart(12,'0')}`);
+const orderExisting=[
+  {id:orderIds[0],name:'OPCG PSA 10',game:'One Piece Card Game',format:'Graded',grading:[{company:'PSA',grade:'10'}]},
+  {id:orderIds[1],name:'OPCG NM',game:'One Piece Card Game',format:'Raw',condition:'NM',grading:[]},
+  {id:orderIds[2],name:'OPCG Sealed',game:'One Piece Card Game',format:'Sealed',condition:'SEALED',grading:[]},
+  {id:orderIds[3],name:'Hyper Battle PSA 9',game:'One Piece Hyper Battle',format:'Graded',grading:[{company:'PSA',grade:'9'}]},
+  {id:orderIds[4],name:'Hyper Battle LP',game:'One Piece Hyper Battle',format:'Raw',condition:'LP',grading:[]},
+  {id:orderIds[5],name:'Hyper Battle Sealed',game:'One Piece Hyper Battle',format:'Sealed',condition:'SEALED',grading:[]}
+];
+orderExisting.forEach((card,index)=>orderApp.inventoryCardOrderById.set(card.id,index+1));
+orderApp.inventoryGameOrderByKey.set(orderApp.normalizeFilterValue('One Piece Card Game'),1);
+orderApp.inventoryGameOrderByKey.set(orderApp.normalizeFilterValue('One Piece Hyper Battle'),2);
+const hpZoro={id:orderIds[6],name:'Zoro C401',game:'One Piece Hyper Battle',format:'Raw',condition:'HP',grading:[],availability:'Available'};
+orderApp.cards=[...orderExisting,hpZoro];
+const hpOrder=orderApp.inventoryCustomOrderWithNewCard(hpZoro);
+if(JSON.stringify(hpOrder)!==JSON.stringify([orderIds[0],orderIds[1],orderIds[2],orderIds[3],orderIds[4],orderIds[6],orderIds[5]])){
+  throw new Error('Hyper Battle HP card did not stay inside the Hyper Battle block.');
+}
+const psa10={id:orderIds[7],name:'Hyper Battle PSA 10',game:'One Piece Hyper Battle',format:'Graded',grading:[{company:'PSA',grade:'10'}],availability:'Available'};
+orderApp.cards=[...orderExisting,psa10];
+const gradeOrder=orderApp.inventoryCustomOrderWithNewCard(psa10);
+if(JSON.stringify(gradeOrder)!==JSON.stringify([orderIds[0],orderIds[1],orderIds[2],orderIds[7],orderIds[3],orderIds[4],orderIds[5]])){
+  throw new Error('Higher graded Hyper Battle card was not inserted ahead of the lower grade.');
+}
+console.log('Validated game-aware new-card Inventory insertion.');
+
 const addSource=fs.readFileSync(path.join(root,'src/features/owner/add.js'),'utf8');
 if(!addSource.includes('insertNewInventoryCardIntoCustomOrder(saved)')) throw new Error('Add flow is not wired to new-card Custom Order insertion.');
 if(insights.includes('2026-09-17-v18-COUNTRY-CARD-DEMAND.sql') || insights.includes('2026-09-24-v08-DISCOVERY-SUMMARY.sql')) throw new Error('Development SQL-help filename leaked into Production Insights.');
 if(!insights.includes('salesActionQueueRows') || !insights.includes('What to act on next')) throw new Error('Promoted Owner Insights sales action queue missing.');
 const analyticsSource=fs.readFileSync(path.join(root,'src/services/analytics.js'),'utf8');
 if(analyticsSource.includes('analytics_test') || analyticsSource.includes('isDevelopmentAnalyticsTestSession')) throw new Error('Development-only analytics test bypass leaked into Production.');
-console.log('Validated Production v09 promoted Development behavior and Production-only boundaries.');
+console.log('Validated Production 2026-09-28-v01 promoted Development behavior and Production-only boundaries.');
