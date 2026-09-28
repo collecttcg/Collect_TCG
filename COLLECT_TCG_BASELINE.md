@@ -55,7 +55,19 @@ Changes:
 
 SQL required: Yes — `migrations/2026/2026-09-28-v02-PUBLIC-SOLD-ORDER.sql`. Rerunnable. User confirmed the equivalent v02 migration was applied to the shared Supabase environment on 2026-09-28.
 
-Validation status: in progress.
+Validation status: completed successfully. Production repository structure and rollback anchor, changed JavaScript syntax, imports/assets, routing/discovery/conversion behavior, Owner/privacy/Hidden Listings guards, retained v05-v09 and v01 behavior, the v02 Sold owner-menu/public Sold-order contract, SEO generation, full/patch ZIP integrity, final GitHub Pages deployment and rollback-anchor advancement all passed.
+
+Release records:
+- Source commit: `9a23e61573b5d3323dce0067de25b6ae639d5c31`
+- Final package-validation / last-known-good commit: `782edb135e31d867fe0abe73bbe4a7a3a582089b`
+- Full ZIP: `Collect-TCG-Production-2026-09-28-v02-full.zip`
+  - SHA-256: `15f68bd228007d333922b73436fcabdb3a45e68a5105e415ae8291acc8cfb199`
+- Patch ZIP: `Collect-TCG-Production-2026-09-28-v01-to-2026-09-28-v02-patch.zip`
+  - SHA-256: `685fcd4a9b7becfedcbd443a79e721b889815f60b6ac187196895409e7317a28`
+
+Validation limitations:
+- SQL application is user-confirmed; the live public RPC response and rendered Production Buyer Preview ordering were not manually exercised.
+- Interactive desktop/mobile/Safari browser testing was not performed; live Production was not manually opened to avoid contaminating Insights.
 
 ## Production 2026-09-28-v01
 
