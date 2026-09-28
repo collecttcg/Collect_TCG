@@ -18,7 +18,7 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-28-v04`
+Latest Development: `2026-09-28-v05`
 
 Latest Production: `2026-09-28-v05`
 
