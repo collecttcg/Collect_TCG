@@ -54,7 +54,18 @@ Changes:
 
 SQL required: No.
 
-Validation status: promotion candidate committed; independent Production validation, package integrity, Pages deployment and rollback-anchor advancement pending.
+Validation status: completed successfully. Production repository structure, changed JavaScript syntax, imports/assets/references, inventory filtering, dedicated Newly Added pill/order/URL behavior, generated SEO, v04 private-route privacy protections, retained v09 and 2026-09-28-v01-v03 behavior, package creation/integrity, final GitHub Pages deployment and rollback-anchor advancement all passed.
+
+Release records:
+- Source/generated commit: `d39274328b225c687a2d2c4263ab9b57442f6e20`
+- Final package-validation / last-known-good commit: `bb1929c9db47f1b687131607edb7ce5e76e0cb62`
+- Workflow run: `36394569205`
+- Full ZIP: `Collect-TCG-Production-2026-09-28-v05-full.zip`
+  - SHA-256: `1568d3310417c5d04ef53be44990afcb574b53600b7ae2adf7ba467635899631`
+- Patch ZIP: `Collect-TCG-Production-2026-09-28-v04-to-2026-09-28-v05-patch.zip`
+  - SHA-256: `c89317485dc8fb2c7f513195e516498272b1e21e506c6ce111d98f101655cf7a`
+
+Validation limitation: interactive desktop/mobile/Safari browser testing was not performed; live Production was not manually opened to avoid contaminating Insights.
 
 ## Production 2026-09-28-v04
 
