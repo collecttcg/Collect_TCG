@@ -1,6 +1,6 @@
 # Collect TCG Current Baseline
 
-Last reconciled against GitHub: 2026-09-27
+Last reconciled against GitHub: 2026-09-28
 
 ## Repositories
 
@@ -18,24 +18,44 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-27-v27`
+Latest Development: `2026-09-27-v28`
 
-Latest Production: `2026-09-27-v09`
+Latest Production: `2026-09-28-v01`
 
-Previous Production: `2026-09-27-v08`
+Previous Production: `2026-09-27-v09`
 
-Production functional baseline last promoted from Development: `2026-09-27-v27`
+Production functional baseline last promoted from Development: `2026-09-27-v28`
 
 Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v25`.
 
 Important promotion state:
 - Development repository rename is complete: `collecttcg/Collect_TCG_Dev`.
-- Current Development release: `2026-09-27-v25`.
+- Current Development release: `2026-09-27-v28`.
 - Historical Beta version names and release records remain unchanged.
 - Production includes the validated Beta v16 clone fix.
 - Development v25 validated application delta is promoted in Production v08. Production retains the v07 inventory/order, routing and Owner Insights baseline while adding the approved QR/CTA inventory watermark renderer and compact continuous Add/Edit owner editor.
 - Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
+
+## Production 2026-09-28-v01
+
+Previous Production: `2026-09-27-v09`
+
+Development promoted from: `2026-09-27-v28`
+
+Purpose: promote the validated Development v28 game-aware new-card Inventory insertion fix while preserving Production-specific SEO, rollback, QR Generator and analytics behavior.
+
+Changes:
+- Newly added Inventory cards are inserted inside their own exact `game` category instead of one global graded/raw/sealed bucket across all games.
+- Within that game/category, new-card placement is: Graded first with highest numeric grade first, then Raw M → NM → LP → MP → HP → DMG → N/A, then Sealed.
+- Existing cards retain their relative Custom Order; this release does not globally rearrange existing Inventory cards.
+- Brand-new game/categories use the saved Inventory game-group order where available.
+- Production QR Generator registration, SEO/canonical URLs, analytics behavior and rollback safeguards remain Production-specific.
+- Development-only `analytics_test` behavior remains excluded from Production.
+
+SQL required: No.
+
+Validation status: in progress.
 
 ## Production 2026-09-27-v09
 
