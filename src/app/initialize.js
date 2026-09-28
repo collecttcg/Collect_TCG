@@ -1,5 +1,5 @@
 /** Preserve the V92 initialization order across the feature modules. */
-import { initialize as initialize0 } from '../features/core/utilities.js';
+import { initialize as initialize0 } from '../features/core/utilities.js?v=2026-09-28-v04';
 import { initialize as initialize1 } from '../features/cards/favorites.js';
 import { initialize as initialize2 } from '../features/inventory/ordering.js?v=2026-09-28-v01';
 import { initialize as initialize3 } from '../features/media/collage.js';
