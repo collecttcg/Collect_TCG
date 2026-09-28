@@ -59,7 +59,18 @@ Changes:
 
 SQL required: No.
 
-Validation status: promotion candidate committed; independent Production validation, package integrity, Pages deployment and rollback-anchor advancement pending.
+Validation status: completed successfully. Production repository structure, changed JavaScript syntax, imports/assets/references, the 14-row Description editor, executed raw/graded/sealed description-generation cases, retained eBay generator behavior, v05 Newly Added, private-route/privacy protections, generated SEO, Sold/currency/order regressions, package creation/integrity, final GitHub Pages deployment and rollback-anchor advancement all passed.
+
+Release records:
+- Source/generated commit: `7fe7ce3639ca223e4f2945c0d8aba5ccfa957c94`
+- Final package-validation / last-known-good commit: `e77adad3e4ca43e3a2af4b543c996f056e45a855`
+- Workflow run: `36441268992`
+- Full ZIP: `Collect-TCG-Production-2026-09-29-v01-full.zip`
+  - SHA-256: `c61acf3058121929bc883ef10152a67b95fcb6b6e20c4e279386541057eab9d0`
+- Patch ZIP: `Collect-TCG-Production-2026-09-28-v05-to-2026-09-29-v01-patch.zip`
+  - SHA-256: `9168cf194d7c71ac63f467339450cc20ab9e0b676eb5921b0298f1765b6922f8`
+
+Validation limitation: interactive desktop/mobile/Safari browser testing was not performed; live Production was not manually opened to avoid contaminating Insights.
 
 ## Production 2026-09-28-v05
 
