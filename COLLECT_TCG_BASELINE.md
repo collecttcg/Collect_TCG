@@ -55,7 +55,22 @@ Changes:
 
 SQL required: No.
 
-Validation status: in progress.
+Validation status: completed successfully. Production repository structure and rollback anchor, changed JavaScript syntax, imports/assets, routing/discovery/conversion behavior, Owner/privacy/Hidden Listings guards, retained v05-v09, v01 and v02 behavior, the dedicated saved manual USD/SGD regression scenario, SEO generation, full/patch ZIP integrity, final GitHub Pages deployment and rollback-anchor advancement all passed.
+
+Dedicated currency scenario exercised:
+- Open Edit with MYR 1000, saved USD 333 and saved SGD 444: loading the FX rate preserves USD 333 / SGD 444.
+- Change MYR to 2000: automatic conversion resumes and updates the test values to USD 500 / SGD 600.
+
+Release records:
+- Source commit: `27a148fdd5ba221631b7b15eeffeabbc8c75a11b`
+- Final package-validation / last-known-good commit: `56a4ee2fcae7e72a73f16a36994ac005f719bd97`
+- Workflow run: `36376063768`
+- Full ZIP: `Collect-TCG-Production-2026-09-28-v03-full.zip`
+  - SHA-256: `c4e42738d5a9782165dee4d729eeb74a816dd5c4c9c39ec397dae03bcdae35a0`
+- Patch ZIP: `Collect-TCG-Production-2026-09-28-v02-to-2026-09-28-v03-patch.zip`
+  - SHA-256: `6efea2812a20a88a9a01ca8f429f11edcd8e46be879748cc28de56ed3e09ad11`
+
+Validation limitation: interactive desktop/mobile/Safari browser testing was not performed; live Production was not manually opened to avoid contaminating Insights.
 
 ## Production 2026-09-28-v02
 
