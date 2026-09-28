@@ -18,24 +18,44 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-27-v28`
+Latest Development: `2026-09-28-v02`
 
-Latest Production: `2026-09-28-v01`
+Latest Production: `2026-09-28-v02`
 
-Previous Production: `2026-09-27-v09`
+Previous Production: `2026-09-28-v01`
 
-Production functional baseline last promoted from Development: `2026-09-27-v28`
+Production functional baseline last promoted from Development: `2026-09-28-v02`
 
 Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v25`.
 
 Important promotion state:
 - Development repository rename is complete: `collecttcg/Collect_TCG_Dev`.
-- Current Development release: `2026-09-27-v28`.
+- Current Development release: `2026-09-28-v02`.
 - Historical Beta version names and release records remain unchanged.
 - Production includes the validated Beta v16 clone fix.
 - Development v25 validated application delta is promoted in Production v08. Production retains the v07 inventory/order, routing and Owner Insights baseline while adding the approved QR/CTA inventory watermark renderer and compact continuous Add/Edit owner editor.
 - Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
+
+## Production 2026-09-28-v02
+
+Previous Production: `2026-09-28-v01`
+
+Development promoted from: `2026-09-28-v02` (cumulative Development v01-v02 behavior)
+
+Purpose: promote the validated Sold-page Owner menu placement and buyer/public sold-date ordering fixes while preserving Production-specific SEO, QR Generator, analytics and rollback behavior.
+
+Changes:
+- Desktop Owner Mode Sold/Reserved cards keep the `...` quick-action menu in the standard top-right corner; the grade/condition overlay moves below it only in Owner Mode.
+- Public Sold/Reserved card presentation remains unchanged by the owner-menu fix.
+- Buyer/public Sold ordering uses a privacy-safe chronological Sold rank so `Recently Sold` matches Owner Mode's true `sold_at` chronology without exposing the private timestamp.
+- Existing timestamp fallbacks remain available if the Sold-rank RPC is unavailable.
+- Production QR Generator registration, SEO/canonical behavior, analytics boundaries and rollback safeguards remain Production-specific.
+- Development-only `analytics_test` behavior remains excluded from Production.
+
+SQL required: Yes — `migrations/2026/2026-09-28-v02-PUBLIC-SOLD-ORDER.sql`. Rerunnable. User confirmed the equivalent v02 migration was applied to the shared Supabase environment on 2026-09-28.
+
+Validation status: in progress.
 
 ## Production 2026-09-28-v01
 
