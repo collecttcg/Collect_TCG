@@ -56,7 +56,18 @@ Changes:
 
 SQL required: Yes — `migrations/2026/2026-09-28-v04-PRIVATE-CARD-ROUTES.sql`. Rerunnable. User confirmed the shared Supabase migration was applied on 2026-09-28 before Production promotion.
 
-Validation status: promotion candidate committed; independent Production validation, package integrity, Pages deployment and rollback-anchor advancement pending.
+Validation status: completed successfully. Production repository structure and rollback anchor, changed JavaScript syntax, imports/assets, discovery/routing/conversion behavior, buyer/privacy/Hidden Listings guards, SEO generation, dedicated v04 private clean-route privacy checks, retained v05-v09 and 2026-09-28-v01-v03 behavior, package creation/integrity, final GitHub Pages deployment and rollback-anchor advancement all passed. The dedicated private-route check verified every generated owner route is absent from the public SEO map and sitemap, has a static shell, carries `noindex,nofollow,noarchive`, contains its routing card ID, and contains no JSON-LD or Open Graph image metadata.
+
+Release records:
+- Source/generated commit: `efcedbb52da3d23ba9bd152611ee4b8b9754ced8`
+- Final package-validation / last-known-good commit: `c4c3b1373d4643a961e5b7d1cd7116a36eba28dc`
+- Workflow run: `36387002355`
+- Full ZIP: `Collect-TCG-Production-2026-09-28-v04-full.zip`
+  - SHA-256: `f8e30536a5e60e5d8c35091fa0ee9253450102196a8b9f14e69e34b736ec5d4b`
+- Patch ZIP: `Collect-TCG-Production-2026-09-28-v03-to-2026-09-28-v04-patch.zip`
+  - SHA-256: `65d0bbbf42cd2b7d1a05bd83a9ccf9c72f3470ad90c63997e1ff91c10724b8db`
+
+Validation limitation: interactive desktop/mobile/Safari browser testing was not performed; live Production was not manually opened to avoid contaminating Insights.
 
 ## Production 2026-09-28-v03
 
