@@ -55,7 +55,17 @@ Changes:
 
 SQL required: No.
 
-Validation status: in progress.
+Validation status: completed successfully after correcting one stale workflow cache assertion. Production repository structure and rollback anchor, changed JavaScript syntax, imports/assets, routing/discovery/conversion behavior, Owner/privacy/Hidden Listings guards, retained v05-v09 behavior, game-aware new-card insertion scenarios, SEO generation, full/patch ZIP integrity, final GitHub Pages deployment and rollback-anchor advancement all passed.
+
+Release records:
+- Source commit: `dbce984ba2aa8aa2eabc07a1f75246c4ba6844f2`
+- Final package-validation / last-known-good commit: `debec515c5d01bda15d4987f5c8e2a9ef331bfca`
+- Full ZIP: `Collect-TCG-Production-2026-09-28-v01-full.zip`
+  - SHA-256: `dfc5f1fed8df683f1c2aa9ac0b73381e1da346a8f3a355b12a3d089fdff1f9a0`
+- Patch ZIP: `Collect-TCG-Production-2026-09-27-v09-to-2026-09-28-v01-patch.zip`
+  - SHA-256: `83c5e43f244ddf5cc56b93cdb1d6569304dfed07d021ecf91022dfd48696bb64`
+
+Validation limitation: interactive desktop/mobile/Safari browser testing was not performed; Production was not manually opened for live testing to avoid contaminating Insights.
 
 ## Production 2026-09-27-v09
 
