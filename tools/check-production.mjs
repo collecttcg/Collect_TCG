@@ -58,8 +58,8 @@ const baselinePath=path.join(root,'COLLECT_TCG_BASELINE.md');
 if(!fs.existsSync(baselinePath)) throw new Error('Missing COLLECT_TCG_BASELINE.md');
 const baseline=fs.readFileSync(baselinePath,'utf8');
 for(const marker of [
-  'Latest Production: `2026-09-28-v03`',
-  'Latest Development: `2026-09-28-v03`',
+  'Latest Production: `2026-09-28-v04`',
+  'Latest Development: `2026-09-28-v04`',
   'Development promoted from: `2026-09-27-v28`',
   'QR Generator',
   'migrations/2026/'
@@ -87,7 +87,7 @@ if(!releaseWorkflow.includes('HEAD:refs/heads/production-last-known-good')) thro
 console.log(`Checked ${jsCount} JavaScript files, imports, HTML assets, migrations and Production structure.`);
 
 
-const orderingModule=await import('../src/features/inventory/ordering.js?production-check=2026-09-28-v03');
+const orderingModule=await import('../src/features/inventory/ordering.js?production-check=2026-09-28-v04');
 const orderApp={safeCardId:value=>String(value||'').trim()};
 orderingModule.register(orderApp);
 const mergeIds=['a','b','c','d','e','f'];
@@ -152,4 +152,4 @@ if(insights.includes('2026-09-17-v18-COUNTRY-CARD-DEMAND.sql') || insights.inclu
 if(!insights.includes('salesActionQueueRows') || !insights.includes('What to act on next')) throw new Error('Promoted Owner Insights sales action queue missing.');
 const analyticsSource=fs.readFileSync(path.join(root,'src/services/analytics.js'),'utf8');
 if(analyticsSource.includes('analytics_test') || analyticsSource.includes('isDevelopmentAnalyticsTestSession')) throw new Error('Development-only analytics test bypass leaked into Production.');
-console.log('Validated Production 2026-09-28-v03 promoted Development behavior and Production-only boundaries.');
+console.log('Validated Production 2026-09-28-v04 promoted Development behavior and Production-only boundaries.');

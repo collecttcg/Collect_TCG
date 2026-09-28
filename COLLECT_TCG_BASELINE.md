@@ -18,24 +18,45 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-28-v03`
+Latest Development: `2026-09-28-v04`
 
-Latest Production: `2026-09-28-v03`
+Latest Production: `2026-09-28-v04`
 
-Previous Production: `2026-09-28-v02`
+Previous Production: `2026-09-28-v03`
 
-Production functional baseline last promoted from Development: `2026-09-28-v03`
+Production functional baseline last promoted from Development: `2026-09-28-v04`
 
 Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v25`.
 
 Important promotion state:
 - Development repository rename is complete: `collecttcg/Collect_TCG_Dev`.
-- Current Development release: `2026-09-28-v03`.
+- Current Development release: `2026-09-28-v04`.
 - Historical Beta version names and release records remain unchanged.
 - Production includes the validated Beta v16 clone fix.
 - Development v25 validated application delta is promoted in Production v08. Production retains the v07 inventory/order, routing and Owner Insights baseline while adding the approved QR/CTA inventory watermark renderer and compact continuous Add/Edit owner editor.
 - Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
+
+## Production 2026-09-28-v04
+
+Previous Production: `2026-09-28-v03`
+
+Development promoted from: `2026-09-28-v04`
+
+Purpose: promote the validated Development v04 owner-only clean name-based routes for Hidden/Draft and Archived listings without making those listings public SEO content.
+
+Changes:
+- Public/live listings retain the existing full SEO generation, public `seo-slugs.json` and sitemap behavior.
+- Hidden/Draft and Archived listings receive generic clean `/cards/<slug>/` route shells for authenticated Owner Mode.
+- Private route shells contain only the card ID needed for Owner routing, use `noindex,nofollow,noarchive`, contain no card JSON-LD/Open Graph card metadata, and are excluded from the public sitemap and public slug map.
+- Owner Mode lazily loads the separate `owner-card-routes.json` map only when needed for a non-live card.
+- Buyer Preview/public users do not gain access to Hidden/Archived card data; existing Supabase RLS and router guards remain authoritative.
+- Production-specific SEO/canonical behavior, QR Generator registration, analytics boundaries and rollback safeguards remain retained.
+- Development-only repository structure and `analytics_test` behavior remain excluded from Production.
+
+SQL required: Yes — `migrations/2026/2026-09-28-v04-PRIVATE-CARD-ROUTES.sql`. Rerunnable. User confirmed the shared Supabase migration was applied on 2026-09-28 before Production promotion.
+
+Validation status: promotion candidate committed; independent Production validation, package integrity, Pages deployment and rollback-anchor advancement pending.
 
 ## Production 2026-09-28-v03
 
