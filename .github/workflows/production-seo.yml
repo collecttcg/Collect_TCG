@@ -680,8 +680,6 @@ jobs:
       # Production 2026-09-28-v03 promotes validated Development 2026-09-28-v03.
       # Production-specific analytics, QR Generator, SEO and rollback behavior remain retained.
 
-      # including the cumulative Development v01 Sold owner-menu fix.
-
       - name: Create Production release packages
         shell: bash
         env:
