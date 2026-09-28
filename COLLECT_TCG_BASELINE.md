@@ -20,22 +20,41 @@ Repository inspection and current release manifests take precedence if an extern
 
 Latest Development: `2026-09-28-v04`
 
-Latest Production: `2026-09-28-v04`
+Latest Production: `2026-09-28-v05`
 
-Previous Production: `2026-09-28-v03`
+Previous Production: `2026-09-28-v04`
 
-Production functional baseline last promoted from Development: `2026-09-28-v04`
+Production functional baseline last promoted from Development: `2026-09-28-v05`
 
 Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v25`.
 
 Important promotion state:
 - Development repository rename is complete: `collecttcg/Collect_TCG_Dev`.
-- Current Development release: `2026-09-28-v04`.
+- Current Development release: `2026-09-28-v05`.
 - Historical Beta version names and release records remain unchanged.
 - Production includes the validated Beta v16 clone fix.
 - Development v25 validated application delta is promoted in Production v08. Production retains the v07 inventory/order, routing and Owner Insights baseline while adding the approved QR/CTA inventory watermark renderer and compact continuous Add/Edit owner editor.
 - Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
+
+## Production 2026-09-28-v05
+
+Previous Production: `2026-09-28-v04`
+
+Development promoted from: `2026-09-28-v05`
+
+Purpose: promote the validated Development v05 visible **Newly Added** inventory quick-filter pill immediately beside Trending.
+
+Changes:
+- Adds `Newly Added` directly after `Trending` in the Inventory/Collection quick-filter row.
+- Reuses the existing `quick=new` behavior and existing seven-day `isNewCard(card, 7)` rule.
+- Existing filters/search continue composing with the quick filter.
+- Production-specific SEO/canonical behavior, QR Generator, analytics boundaries, owner/private-route protections and rollback safeguards remain retained.
+- Development-only repository structure and `analytics_test` behavior remain excluded from Production.
+
+SQL required: No.
+
+Validation status: promotion candidate committed; independent Production validation, package integrity, Pages deployment and rollback-anchor advancement pending.
 
 ## Production 2026-09-28-v04
 
