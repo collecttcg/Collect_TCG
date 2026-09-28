@@ -466,7 +466,7 @@ jobs:
           ! grep -q 'isDevelopmentAnalyticsTestSession' src/services/analytics.js
           grep -q 'owner/qr-generator.js?v=2026-09-27-v01' src/app/register-features.js
           grep -q 'registerQrGenerator(appContext)' src/app/register-features.js
-          grep -q 'ordering.js?v=2026-09-27-v07' src/app/register-features.js
+          grep -q 'ordering.js?v=2026-09-28-v01' src/app/register-features.js
           grep -q 'page.js?v=2026-09-27-v07' src/app/register-features.js
           grep -q 'insights-dashboard.js?v=2026-09-27-v07' src/app/register-features.js
           grep -q 'add.js?v=2026-09-27-v07' src/app/register-features.js
