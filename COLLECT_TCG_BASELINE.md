@@ -26,7 +26,7 @@ Previous Production: `2026-09-29-v07`
 
 Production functional baseline last promoted from Development: `2026-09-29-v12`
 
-Production package-validation HEAD: `56336f79bd1d94ef79238a70280528f15c66302b`
+Production package-validation HEAD: `d12d2d106c56a91f59f1a9757f8d27c87d1eb723`
 
 Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v25`.
 
@@ -57,9 +57,22 @@ Changes:
 
 SQL required: No.
 
-Validation status: promotion implemented; independent Production validation, packaging and Pages/rollback confirmation in progress.
+Validation status: completed successfully. Production independently validated the Development v12 Card List title-order promotion while preserving Game-first Card Drop and the retained Single Card/eBay/Carousell behavior. Repository-wide JavaScript syntax/import/asset checks, consolidated CSS validation, Production QR Generator and analytics/privacy boundaries, retained CHECK FULL INVENTORY watermark behavior, SEO generator syntax/self-test/generation/privacy checks, package creation, ZIP integrity checks, package manifest recording and the exact package-validation GitHub Pages deployment all passed. `production-last-known-good` advanced only after that exact commit deployed successfully.
 
-Validation limitation: live Production will not be manually opened to avoid contaminating Insights. Interactive desktop/mobile/Safari browser testing has not been performed.
+Release records:
+- Promotion source commit: `5b97ff5f6128855c52ed6c259b7ce91be256a32b`
+- Release configuration commit: `6ac4d5dfbba36a557640c44fee800dbc9e9e39be`
+- Generated/package source commit: `d88ad51d88425b128f2d13dbbf6a85ede081a8d5`
+- Package-validation / last-known-good commit: `d12d2d106c56a91f59f1a9757f8d27c87d1eb723`
+- Successful Production workflow: `36565251337`
+- Successful package-validation Pages run: `36565293389`
+- Package artifact: `11031137989`
+- Full ZIP: `Collect-TCG-Production-2026-09-29-v08-full.zip`
+  - SHA-256: `35773892b88febf12740cce1e32393a401f0d7ef14fe6c23d702ec8d93c0dbb0`
+- Patch ZIP: `Collect-TCG-Production-2026-09-29-v07-to-2026-09-29-v08-patch.zip`
+  - SHA-256: `85067456f353495e8be8d5951afec4758bb841687c869e64cc1f521493b8aa09`
+
+Validation limitation: live Production was not manually opened, to avoid contaminating Insights. Interactive desktop/mobile/Safari browser testing was not performed; executable/static validation and Production Pages deployment completed successfully.
 
 ## Production 2026-09-29-v07
 
