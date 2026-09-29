@@ -18,13 +18,13 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-29-v05`
+Latest Development: `2026-09-29-v07`
 
-Latest Production: `2026-09-29-v03`
+Latest Production: `2026-09-29-v04`
 
-Previous Production: `2026-09-29-v02`
+Previous Production: `2026-09-29-v03`
 
-Production functional baseline last promoted from Development: `2026-09-29-v05`
+Production functional baseline last promoted from Development: `2026-09-29-v07`
 
 Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v25`.
 
@@ -36,6 +36,27 @@ Important promotion state:
 - Development v25 validated application delta is promoted in Production v08. Production retains the v07 inventory/order, routing and Owner Insights baseline while adding the approved QR/CTA inventory watermark renderer and compact continuous Add/Edit owner editor.
 - Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
+
+## Production 2026-09-29-v04
+
+Previous Production: `2026-09-29-v03`
+
+Development promoted from: `2026-09-29-v07`
+
+Purpose: promote the validated Development v06-v07 responsive website QR/CTA watermark sizing while preserving Production-specific behavior.
+
+Changes:
+- Square and portrait images retain the existing 82% image-width target.
+- Landscape images now shrink progressively from 82% at 1:1 to 62% at 5:4 (1.25:1).
+- Images at 5:4, 4:3, 16:9 and wider retain the 62% minimum width target, with the existing 24% image-height cap still acting as a second safeguard.
+- Representative 1080-wide results remain aligned with Development v07: 1:1 ≈ 886×193 px; ~1.10:1 ≈ 798×174 px; 1.20:1 ≈ 713×155 px; 4:3 ≈ 670×146 px; 16:9 ≈ 670×146 px.
+- The approved banner artwork, QR replacement coordinates, bottom placement and source image remain unchanged.
+- Production-specific Owner/session behavior, QR Generator, SEO/canonical behavior, analytics boundaries, privacy and rollback safeguards remain retained.
+- Development-only analytics-test behavior remains excluded from Production.
+
+SQL required: No.
+
+Validation status: promotion implemented; independent Production validation pending.
 
 ## Production 2026-09-29-v03
 

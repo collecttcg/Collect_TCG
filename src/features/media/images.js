@@ -166,10 +166,14 @@ function drawWebsiteWatermark(ctx, canvas, banner){
     // restrictive for sufficiently wide images; portrait behavior stays at
     // the existing 82% width target.
     const widthTarget=Math.round(canvas.width*0.82);
+    const aspectRatio=canvas.width/canvas.height;
+    const landscapeProgress=Math.max(0,Math.min(1,(aspectRatio-1)/0.25));
+    const responsiveWidthRatio=0.82-(0.20*landscapeProgress);
+    const responsiveWidthTarget=Math.round(canvas.width*responsiveWidthRatio);
     const heightCappedWidth=Math.round(canvas.height*0.24*sourceW/sourceH);
     const bannerWidth=Math.min(
       canvas.width-margin*2,
-      Math.max(280,Math.min(widthTarget,heightCappedWidth))
+      Math.max(280,Math.min(widthTarget,responsiveWidthTarget,heightCappedWidth))
     );
     const bannerHeight=Math.round(bannerWidth*sourceH/sourceW);
     const bannerX=Math.round((canvas.width-bannerWidth)/2);

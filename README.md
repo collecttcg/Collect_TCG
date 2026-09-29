@@ -38,7 +38,7 @@ Historical SQL migration filenames are preserved. Their presence in the reposito
 
 ## Current Production release
 
-`2026-09-29-v03` — promotes validated Development `2026-09-29-v05` landscape-aware website QR/CTA watermark sizing while retaining the Production v02 owner-route/session baseline, Production-only SEO, QR Generator, analytics and rollback safeguards.
+`2026-09-29-v04` — promotes validated Development `2026-09-29-v07` responsive website QR/CTA watermark sizing while retaining the Production v03 owner-route/session baseline, Production-only SEO, QR Generator, analytics and rollback safeguards.
 
 ## Recovery
 
