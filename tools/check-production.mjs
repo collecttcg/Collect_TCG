@@ -58,9 +58,9 @@ const baselinePath=path.join(root,'COLLECT_TCG_BASELINE.md');
 if(!fs.existsSync(baselinePath)) throw new Error('Missing COLLECT_TCG_BASELINE.md');
 const baseline=fs.readFileSync(baselinePath,'utf8');
 for(const marker of [
-  'Latest Production: `2026-09-29-v05`',
-  'Latest Development: `2026-09-29-v08`',
-  'Development promoted from: `2026-09-27-v28`',
+  'Latest Production: `2026-09-29-v06`',
+  'Latest Development: `2026-09-29-v10`',
+  'Development promoted from: `2026-09-29-v10`',
   'QR Generator',
   'migrations/2026/'
 ]){
@@ -174,3 +174,20 @@ for(const marker of ['Generate FB Post','Generate Carousell Post','Generate eBay
 if(!postsSource.includes('currentHashParams().get("card")')) throw new Error('Requested generator card preselection missing.');
 if(analyticsSource.includes('analytics_test') || startupSource.includes('isDevelopmentAnalyticsTestSession')) throw new Error('Development analytics-test behavior leaked into Production.');
 console.log('Validated Production 2026-09-29-v02 owner generator/session promotion.');
+const initializer=fs.readFileSync(path.join(root,'src/app/initialize.js'),'utf8');
+const policySource=fs.readFileSync(path.join(root,'src/services/contact-intent-policy.js'),'utf8');
+const utilitiesSource=fs.readFileSync(path.join(root,'src/features/core/utilities.js'),'utf8');
+const enhancementSource=fs.readFileSync(path.join(root,'src/ui/enhancement-2.js'),'utf8');
+if(!initializer.includes("export { initializeApp } from './register-features.js?v=2026-09-29-v06'")) throw new Error('Refactored initializer facade missing.');
+if((registry.match(/posts\.js\?v=2026-09-29-v10/g)||[]).length!==1) throw new Error('Post Generator module must be registered exactly once.');
+if(analyticsSource.includes('function insightContactMetrics(')||analyticsSource.includes('function insightInterestScore(')) throw new Error('Superseded analytics contact scoring returned.');
+if(!policySource.includes('function insightContactMetrics(')||!policySource.includes('function insightInterestScore(')) throw new Error('Canonical contact-intent scoring policy missing.');
+if(utilitiesSource.includes('appContext.RARITY_LIST =')||utilitiesSource.includes('appContext.INDEX_KEY =')) throw new Error('Removed dead utility state returned.');
+if(routingSource.includes('appContext.CARD_IMAGE_TYPES =')) throw new Error('Removed dead routing state returned.');
+if(enhancementSource.includes('window.collectOpenContactChooser')||enhancementSource.includes('window.collectCloseContactChooser')) throw new Error('Removed dead contact chooser globals returned.');
+if(!fs.existsSync(path.join(root,'src/features/inventory/page-shell.js'))) throw new Error('Refactored Inventory page shell missing.');
+if(!fs.existsSync(path.join(root,'src/features/owner/insights-extension-host.js'))) throw new Error('Insights extension host missing.');
+for(const rel of ['src/features/social/posts-card-list.js','src/features/social/posts-giveaway.js','src/features/social/posts-marketplace.js']) if(!fs.existsSync(path.join(root,rel))) throw new Error('Split Post Generator module missing: '+rel);
+if(fs.readdirSync(path.join(root,'src/styles')).filter(name=>name.endsWith('.css')&&name!=='27-insights-dashboard.css').sort().join(',')!=='01-foundation.css,02-components.css') throw new Error('Legacy global CSS files remain after consolidation.');
+console.log('Validated promoted v09 refactor contracts and Production boundaries.');
+

@@ -18,9 +18,9 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-29-v08`
+Latest Development: `2026-09-29-v10`
 
-Latest Production: `2026-09-29-v05`
+Latest Production: `2026-09-29-v06`
 
 Previous Production: `2026-09-29-v04`
 
@@ -36,6 +36,28 @@ Important promotion state:
 - Development v25 validated application delta is promoted in Production v08. Production retains the v07 inventory/order, routing and Owner Insights baseline while adding the approved QR/CTA inventory watermark renderer and compact continuous Add/Edit owner editor.
 - Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
+
+## Production 2026-09-29-v06
+
+Previous Production: `2026-09-29-v05`
+
+Development promoted from: `2026-09-29-v10`
+
+Purpose: promote the validated Development v09 repository refactor and v10 Game-first Post Generator titles while preserving Production-specific behavior.
+
+Changes:
+- Promotes the v09 behavior-preserving module/CSS refactor: consolidated global CSS, split Post Generator/Inventory modules, shared Insights extension host, single canonical contact-intent scoring implementation, dead-state cleanup and single feature-module registration.
+- Promotes v10 Game-first generated titles for Single Card WTS/NFS, copy/listing titles, eBay, Carousell, Card List and Card Drop when game data exists.
+- Giveaway headings remain unchanged because giveaway records do not provide a Game field.
+- Production-only QR Generator remains a separate registered module.
+- Production SEO/canonical/indexing behavior, Production migration-help filenames, analytics/privacy boundaries and last-known-good rollback protection are preserved.
+- Development-only `analytics_test` behavior is excluded.
+
+SQL required: No.
+
+Validation status: implementation prepared; independent Production validation and packaging in progress.
+
+Validation limitation: live Production will not be manually opened to avoid contaminating Insights; interactive desktop/mobile/Safari testing is not performed in this promotion workflow.
 
 ## Production 2026-09-29-v05
 
