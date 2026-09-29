@@ -56,7 +56,19 @@ Changes:
 
 SQL required: No.
 
-Validation status: promotion implemented; independent Production validation pending.
+Validation status: completed successfully. The first Production workflow attempt stopped on one stale retained v08 watermark cache assertion; the assertion was corrected and the full validation chain reran successfully. Changed JavaScript syntax, Production imports/assets/repository structure, retained QR Generator and analytics boundaries, prior watermark/editor behavior, eBay generator behavior, owner/session restoration, private-route/privacy protections, generated SEO, and the dedicated v03 landscape/portrait sizing cases all passed. The dedicated v03 executable check confirmed the supplied 1080×607 landscape case is reduced and capped while a representative portrait image retains the existing 82% width sizing. Release packaging, final GitHub Pages deployment and last-known-good advancement completed successfully. Downloaded release ZIPs passed independent `unzip -t` integrity checks and SHA-256 matched the manifest.
+
+Release records:
+- Source/generated commit: `488f5d47faab8e7a8dbf03f99b755d74e06f4925`
+- Package-validation / last-known-good commit: `9a24962ad3c330da356469e117e7921030ef1322`
+- Workflow run: `36526339872`
+- Package-validation Pages run: `36526373945`
+- Full ZIP: `Collect-TCG-Production-2026-09-29-v03-full.zip`
+  - SHA-256: `8ac9446955885e8b624a55618dc26070e9d9609a44a876894fae67c47bdba9c7`
+- Patch ZIP: `Collect-TCG-Production-2026-09-29-v02-to-2026-09-29-v03-patch.zip`
+  - SHA-256: `fb7283356ffb75cffbf3a69d230ee1fefdd9db2335b6fc994ca9452db5e968c4`
+
+Validation limitation: interactive desktop/mobile/Safari browser testing was not performed. Live Production was not manually opened, to avoid contaminating Insights.
 
 ## Production 2026-09-29-v02
 
