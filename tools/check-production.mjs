@@ -180,7 +180,7 @@ const policySource=fs.readFileSync(path.join(root,'src/services/contact-intent-p
 const utilitiesSource=fs.readFileSync(path.join(root,'src/features/core/utilities.js'),'utf8');
 const enhancementSource=fs.readFileSync(path.join(root,'src/ui/enhancement-2.js'),'utf8');
 if(!initializer.includes("export { initializeApp } from './register-features.js?v=2026-09-30-v01'")) throw new Error('Refactored initializer facade missing.');
-if((registry.match(/posts\.js\?v=2026-09-29-v14/g)||[]).length!==1) throw new Error('Post Generator module must be registered exactly once.');
+if((registry.match(/posts\.js\?v=2026-09-30-v01/g)||[]).length!==1) throw new Error('Post Generator module must be registered exactly once.');
 if(analyticsSource.includes('function insightContactMetrics(')||analyticsSource.includes('function insightInterestScore(')) throw new Error('Superseded analytics contact scoring returned.');
 if(!policySource.includes('function insightContactMetrics(')||!policySource.includes('function insightInterestScore(')) throw new Error('Canonical contact-intent scoring policy missing.');
 if(utilitiesSource.includes('appContext.RARITY_LIST =')||utilitiesSource.includes('appContext.INDEX_KEY =')) throw new Error('Removed dead utility state returned.');
