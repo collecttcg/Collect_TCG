@@ -296,11 +296,11 @@ jobs:
           grep -q 'const directCardEntry=' src/app/startup.js
           grep -q 'Promise.allSettled' src/app/startup.js
           grep -q 'analytics.js?v=2026-09-24-v08' src/app/register-features.js
-          grep -q 'catalogue.js?v=2026-09-28-v02' src/app/register-features.js
-          grep -q 'tiles.js?v=2026-09-26-v01' src/app/register-features.js
+          grep -q 'catalogue.js?v=2026-09-29-v02' src/app/register-features.js
+          grep -q 'tiles.js?v=2026-09-29-v02' src/app/register-features.js
           grep -q 'insights-dashboard.js?v=2026-09-27-v07' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
-          grep -q 'startup.js?v=2026-09-24-v08' src/app/register-features.js
+          grep -q 'startup.js?v=2026-09-29-v02' src/app/register-features.js
           grep -q 'register-features.js?v=2026-09-29-v02' src/main.js
           grep -q 'initialize.js?v=2026-09-28-v04' src/main.js
           grep -q 'src/main.js?v=2026-09-29-v02' index.html
@@ -377,9 +377,9 @@ jobs:
           grep -Fq 'el.style.setProperty("display","none","important")' src/services/auth.js
           grep -Fq 'appContext.isOwnerMode() ? `<div class="detail-item owner-only owner-private-analytics">' src/features/cards/details.js
           grep -Fq 'appContext.isOwnerMode() ? `<div class="owner-only owner-private-analytics clean-owner-views"' src/features/cards/tiles.js
-          grep -q 'auth.js?v=2026-09-26-v01' src/app/register-features.js
+          grep -q 'auth.js?v=2026-09-29-v02' src/app/register-features.js
           grep -q 'home.js?v=2026-09-26-v05' src/app/register-features.js
-          grep -q 'tiles.js?v=2026-09-26-v01' src/app/register-features.js
+          grep -q 'tiles.js?v=2026-09-29-v02' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
           grep -q 'details.js?v=2026-09-26-v01' src/app/initialize.js
           grep -q 'register-features.js?v=2026-09-29-v02' src/main.js
@@ -661,8 +661,8 @@ jobs:
           grep -Fq "lower(coalesce(c.availability::text,'')) = 'sold'" migrations/2026/2026-09-28-v02-PUBLIC-SOLD-ORDER.sql
           grep -Fq 'grant execute on function public.get_public_sold_order() to anon' migrations/2026/2026-09-28-v02-PUBLIC-SOLD-ORDER.sql
           ! grep -Eq 'returns table[^(]*\([^)]*sold_at' migrations/2026/2026-09-28-v02-PUBLIC-SOLD-ORDER.sql
-          grep -Fq 'catalogue.js?v=2026-09-28-v02' src/app/register-features.js
-          grep -Fq 'catalogue.js?v=2026-09-28-v02' src/app/initialize.js
+          grep -Fq 'catalogue.js?v=2026-09-29-v02' src/app/register-features.js
+          grep -Fq 'catalogue.js?v=2026-09-29-v02' src/app/initialize.js
           grep -Fq 'filtering.js?v=2026-09-28-v02' src/app/register-features.js
           grep -Fq 'filtering.js?v=2026-09-28-v02' src/app/initialize.js
           grep -Fq 'register-features.js?v=2026-09-29-v02' src/main.js
