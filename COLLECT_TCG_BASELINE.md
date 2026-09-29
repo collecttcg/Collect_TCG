@@ -18,24 +18,44 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-29-v07`
+Latest Development: `2026-09-29-v08`
 
-Latest Production: `2026-09-29-v04`
+Latest Production: `2026-09-29-v05`
 
-Previous Production: `2026-09-29-v03`
+Previous Production: `2026-09-29-v04`
 
-Production functional baseline last promoted from Development: `2026-09-29-v07`
+Production functional baseline last promoted from Development: `2026-09-29-v08`
 
 Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v25`.
 
 Important promotion state:
 - Development repository rename is complete: `collecttcg/Collect_TCG_Dev`.
-- Current Development release: `2026-09-29-v07`.
+- Current Development release: `2026-09-29-v08`.
 - Historical Beta version names and release records remain unchanged.
 - Production includes the validated Beta v16 clone fix.
 - Development v25 validated application delta is promoted in Production v08. Production retains the v07 inventory/order, routing and Owner Insights baseline while adding the approved QR/CTA inventory watermark renderer and compact continuous Add/Edit owner editor.
 - Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
+
+## Production 2026-09-29-v05
+
+Previous Production: `2026-09-29-v04`
+
+Development promoted from: `2026-09-29-v08`
+
+Purpose: promote the validated Development v08 Post Generator lowercase hashtag normalization while preserving Production-specific behavior.
+
+Changes:
+- All generated Post Generator hashtag fields are normalized to lowercase.
+- Legacy `#TCGCollector` defaults become `#tcgcollector`.
+- Saved/custom hashtags are lowercased before generated output.
+- Applies to single-card WTS/NFS posts, Giveaway posts, and Card List/Card Drop posts.
+- Post titles, descriptions, language, sales footers, Contact to Buy, inventory, Owner Mode, giveaway entry logic, Production analytics, SEO/canonical behavior, QR Generator, privacy and rollback safeguards are otherwise unchanged.
+- Development-only `analytics_test` behavior remains excluded from Production.
+
+SQL required: No.
+
+Validation status: implementation committed; independent Production validation pending.
 
 ## Production 2026-09-29-v04
 
