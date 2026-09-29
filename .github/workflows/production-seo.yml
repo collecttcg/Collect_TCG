@@ -5,52 +5,15 @@ on:
   schedule:
     - cron: '37 3 * * *'
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - '.github/workflows/production-seo.yml'
-      - 'docs/BACKUP-RECOVERY.md'
-      - 'tools/generate-seo.mjs'
+      - 'tools/**'
       - 'migrations/**'
       - 'COLLECT_TCG_BASELINE.md'
       - 'README.md'
-      - 'tools/check-production.mjs'
       - 'index.html'
-      - 'src/app/register-features.js'
-      - 'src/app/initialize.js'
-      - 'src/app/startup.js'
-      - 'src/app/routing.js'
-      - 'src/ui/notifications.js'
-      - 'src/services/analytics.js'
-      - 'src/services/catalogue.js'
-      - 'src/features/core/utilities.js'
-      - 'src/features/cards/details.js'
-      - 'src/features/cards/tiles.js'
-      - 'src/features/content/home.js'
-      - 'src/styles/01-foundation.css'
-      - 'src/features/media/collage.js'
-      - 'src/features/media/images.js'
-      - 'src/features/owner/forms.js'
-      - 'assets/collect-tcg-inventory-watermark-approved.png'
-      - 'src/features/content/information.js'
-      - 'src/features/owner/insights-dashboard.js'
-      - 'src/features/social/posts.js'
-      - 'src/features/cards/compare.js'
-      - 'src/features/inventory/page.js'
-      - 'src/features/inventory/ordering.js'
-      - 'src/features/inventory/pagination.js'
-      - 'src/features/owner/add.js'
-      - 'src/features/owner/insights-intent-rates.js'
-      - 'src/features/owner/tools.js'
-      - 'src/features/owner/image-maintenance.js'
-      - 'src/features/owner/bulk-status.js'
-      - 'src/styles/27-insights-dashboard.css'
-      - 'src/features/inventory/filtering.js'
-      - 'src/features/owner/lifecycle.js'
-      - 'src/app/navigation.js'
-      - 'src/features/cards/repository.js'
-      - 'src/features/cards/related.js'
-      - 'src/main.js'
+      - 'src/**'
 
 permissions:
   actions: read
@@ -68,443 +31,28 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Validate Production repository structure
-        run: node tools/check-production.mjs
-
       - name: Validate rollback anchor
         shell: bash
         run: |
           set -euo pipefail
           test -s docs/BACKUP-RECOVERY.md
           git ls-remote --exit-code origin refs/heads/production-last-known-good
-
-      - name: Validate changed JavaScript
-        shell: bash
+      - name: Validate Production repository and JavaScript
+        run: node tools/check-production.mjs
+      - name: Validate consolidated CSS
+        run: node tools/check-css.mjs
+      - name: Validate Game-first Post Generator titles
+        run: node tools/check-post-generator-titles.mjs
+      - name: Validate SEO generator syntax and self-test
         run: |
-          set -euo pipefail
           node --check tools/generate-seo.mjs
-          node --check src/features/core/utilities.js
-          node --check src/features/cards/details.js
-          node --check src/features/cards/tiles.js
-          node --check src/features/content/home.js
-          node --check src/features/content/information.js
-          node --check src/features/media/collage.js
-          node --check src/features/media/images.js
-          node --check src/features/owner/forms.js
-          node --check src/features/cards/related.js
-          node --check src/features/inventory/filtering.js
-          node --check src/features/owner/lifecycle.js
-          node --check src/app/navigation.js
-          node --check src/features/cards/repository.js
-          node --check src/features/inventory/page.js
-          node --check src/features/inventory/ordering.js
-          node --check src/features/inventory/pagination.js
-          node --check src/features/owner/add.js
-          node --check src/features/owner/insights-intent-rates.js
-          node --check src/features/owner/tools.js
-          node --check src/features/owner/insights-dashboard.js
-          node --check src/features/social/posts.js
-          node --check src/app/routing.js
-          node --check src/ui/notifications.js
-          node --check src/services/analytics.js
-          node --check src/services/catalogue.js
-          node --check src/app/startup.js
-          node --check src/app/register-features.js
-          node --check src/app/initialize.js
-          node --check src/main.js
           node tools/generate-seo.mjs --self-test
-
-      - name: Validate imports and HTML assets
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          import path from 'node:path';
-
-          const files=[
-            'src/features/core/utilities.js',
-            'src/features/cards/details.js',
-            'src/features/cards/tiles.js',
-            'src/features/content/home.js',
-            'src/features/cards/related.js',
-            'src/features/inventory/filtering.js',
-            'src/features/owner/lifecycle.js',
-            'src/app/navigation.js',
-            'src/features/cards/repository.js',
-            'src/features/inventory/page.js',
-            'src/features/owner/insights-dashboard.js',
-            'src/features/social/posts.js',
-            'src/app/routing.js',
-            'src/features/media/images.js',
-            'src/features/owner/forms.js',
-            'src/services/analytics.js',
-            'src/services/catalogue.js',
-            'src/app/startup.js',
-            'src/app/register-features.js',
-            'src/app/initialize.js',
-            'src/main.js'
-          ];
-
-          for(const file of files){
-            const source=fs.readFileSync(file,'utf8');
-            const dir=path.dirname(file);
-            const matches=[...source.matchAll(/(?:from\s*|import\s*)['"]([^'"]+)['"]/g)];
-            for(const match of matches){
-              const spec=match[1];
-              if(!spec.startsWith('.')) continue;
-              const clean=spec.split(/[?#]/)[0];
-              const target=path.resolve(dir,clean);
-              if(!fs.existsSync(target)){
-                throw new Error(`Missing relative import from ${file}: ${spec}`);
-              }
-            }
-          }
-
-          const html=fs.readFileSync('index.html','utf8');
-          for(const match of html.matchAll(/(?:src|href)=["']([^"']+)["']/g)){
-            const ref=match[1];
-            if(!ref || /^(?:https?:|data:|mailto:|tel:|#|\/\/)/i.test(ref)) continue;
-            const clean=ref.split(/[?#]/)[0];
-            if(!clean || clean==='/' || clean.startsWith('/')) continue;
-            const target=path.resolve(clean.replace(/^\.\//,''));
-            if(!fs.existsSync(target)){
-              throw new Error(`Missing local HTML asset: ${ref}`);
-            }
-          }
-          console.log('Production imports and local HTML assets verified.');
-          NODE
-
-      - name: Validate Phase 2A discovery routing
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-
-          const routing=fs.readFileSync('src/app/routing.js','utf8');
-          const home=fs.readFileSync('src/features/content/home.js','utf8');
-          const tiles=fs.readFileSync('src/features/cards/tiles.js','utf8');
-          const details=fs.readFileSync('src/features/cards/details.js','utf8');
-
-          const requireMatch=(source,pattern,label)=>{
-            if(!pattern.test(source)) throw new Error(`Missing Phase 2A behavior: ${label}`);
-          };
-          const requireNoMatch=(source,pattern,label)=>{
-            if(pattern.test(source)) throw new Error(`Legacy behavior remains: ${label}`);
-          };
-
-          requireMatch(routing,/function rememberCardDiscoverySource\(cardId,source\)/,'discovery source storage');
-          requireMatch(routing,/function currentCardDiscoverySource\(\)/,'discovery source detection');
-          requireMatch(routing,/openCardRoute\(cardId,discoverySource=""\)/,'discovery-aware card routing');
-          requireMatch(routing,/history\.pushState\(state,"",cleanUrl\.pathname\+cleanUrl\.search\+cleanUrl\.hash\)/,'clean card SPA navigation');
-          requireNoMatch(routing,/location\.assign\(clean\)/,'full-page clean card navigation');
-          requireNoMatch(home,/home-collector-spotlight-media" href="#\/card\//,'Spotlight hash card link');
-          requireMatch(home,/data-spotlight-card-id/,'Spotlight routed card id');
-          requireMatch(home,/source:"recently-added"/,'Recently Added source');
-          requireMatch(home,/source:"trending"/,'Trending source');
-          requireMatch(tiles,/data-discovery-source="related"/,'Related Cards source');
-          requireMatch(tiles,/openCardRoute\(card\.id,tile\.dataset\.discoverySource\|\|""\)/,'tile discovery propagation');
-          requireMatch(details,/rememberCardDiscoverySource\(id,el\.dataset\.discoverySource\|\|"related"\)/,'Related click context');
-          console.log('Production Phase 2A discovery routing verified.');
-          NODE
-
-      - name: Validate Phase 2B1 discovery attribution
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -s migrations/2026/2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
-          grep -q 'create table if not exists public.card_discovery_views' migrations/2026/2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
-          grep -q 'enable row level security' migrations/2026/2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
-          grep -q 'revoke all on table public.card_discovery_views from anon, authenticated' migrations/2026/2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
-          grep -q 'create or replace function public.record_card_discovery_view' migrations/2026/2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
-          grep -q 'grant execute on function public.record_card_discovery_view' migrations/2026/2026-09-24-v05-DISCOVERY-ATTRIBUTION.sql
-          grep -q 'recordQualifiedViewDiscoveryAttribution' src/services/analytics.js
-          grep -q 'record_card_discovery_view' src/services/analytics.js
-
-      - name: Validate Phase 2 completion
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -s migrations/2026/2026-09-24-v06-DISCOVERY-SUMMARY.sql
-          grep -q 'create or replace function public.get_card_discovery_summary' migrations/2026/2026-09-24-v06-DISCOVERY-SUMMARY.sql
-          grep -q 'public.is_app_owner()' migrations/2026/2026-09-24-v06-DISCOVERY-SUMMARY.sql
-          grep -q 'revoke all on function public.get_card_discovery_summary' migrations/2026/2026-09-24-v06-DISCOVERY-SUMMARY.sql
-          grep -q 'grant execute on function public.get_card_discovery_summary' migrations/2026/2026-09-24-v06-DISCOVERY-SUMMARY.sql
-          grep -q 'function relatedSeriesAffinity' src/features/cards/related.js
-          grep -q 'function relatedGradeAffinity' src/features/cards/related.js
-          grep -Fq 'unique*100' src/features/inventory/filtering.js
-          grep -q 'trendingCardScore(b)-appContext.trendingCardScore(a)' src/features/content/home.js
-          grep -Fq 'qualified view during the rolling 7-day window' src/features/inventory/page.js
-          grep -q 'fetchDiscoverySourceSummary' src/services/analytics.js
-          grep -q 'Where card interest starts' src/features/owner/insights-dashboard.js
-          grep -q 'directional context while traffic is still small' src/features/owner/insights-dashboard.js
-
-      - name: Validate fast clean-card navigation
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/app/routing.js
-          node --check src/features/cards/details.js
-          node --check src/features/content/home.js
-          node --check src/app/initialize.js
-          grep -Fq 'history.pushState(state,"",cleanUrl.pathname+cleanUrl.search+cleanUrl.hash)' src/app/routing.js
-          grep -q 'state.collectTcgSpaCardId=id' src/app/routing.js
-          grep -q 'window.addEventListener("popstate", appContext.router)' src/app/routing.js
-          ! grep -q 'location.assign(clean)' src/app/routing.js
-          grep -q 'history.back()' src/features/cards/details.js
-          grep -q 'event.stopPropagation()' src/features/content/home.js
-          grep -q 'routing.js?v=2026-09-28-v04' src/app/initialize.js
-          grep -q 'details.js?v=2026-09-26-v01' src/app/initialize.js
-          grep -q 'routing.js?v=2026-09-28-v04' src/app/register-features.js
-          grep -q 'notifications.js?v=2026-09-26-v02' src/app/register-features.js
-          grep -q 'information.js?v=2026-09-26-v03' src/app/register-features.js
-          grep -q 'collage.js?v=2026-09-26-v03' src/app/register-features.js
-          grep -q 'posts.js?v=2026-09-29-v05' src/app/register-features.js
-          test "$(grep -o 'appContext.isLiveLifecycle(card)' src/features/social/posts.js | wc -l | tr -d ' ')" -ge "2"
-          grep -q '01-foundation.css?v=2026-09-28-v02' index.html
-          test "$(grep -o 'https://www.ebay.com/usr/COLLECT_TCG_[1-4]' src/features/content/information.js | sort -u | wc -l | tr -d ' ')" = "4"
-          ! grep -q 'official-ebay-footer-link' index.html
-          test "$(grep -o 'appContext.isLiveLifecycle(card) &&' src/features/media/collage.js | wc -l | tr -d ' ')" -ge "2"
-          grep -q 'home.js?v=2026-09-26-v05' src/app/register-features.js
-          grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
-
-      - name: Validate Phase 3 conversion and performance
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/features/cards/details.js
-          node --check src/services/analytics.js
-          node --check src/services/catalogue.js
-          node --check src/features/cards/tiles.js
-          node --check src/features/owner/insights-dashboard.js
-          node --check src/app/startup.js
-          grep -q 'function contactCardReferenceLines' src/features/cards/details.js
-          grep -q 'recordCardEngagement(card.id,"inquiry_copy",platform)' src/features/cards/details.js
-          grep -q 'fetchOwnerCardConversionSummary' src/services/analytics.js
-          grep -q 'ownerCardConversionSummaryCache = new Map' src/services/analytics.js
-          grep -q 'data-owner-conversion="intent-rate"' src/features/cards/details.js
-          grep -q 'cardImageLoadPromises.get(id)' src/services/catalogue.js
-          grep -q 'preloadCardDetailsMedia' src/features/cards/tiles.js
-          grep -q 'Saved without contact' src/features/owner/insights-dashboard.js
-          grep -q 'const directCardEntry=' src/app/startup.js
-          grep -q 'Promise.allSettled' src/app/startup.js
-          grep -q 'analytics.js?v=2026-09-24-v08' src/app/register-features.js
-          grep -q 'catalogue.js?v=2026-09-29-v02' src/app/register-features.js
-          grep -q 'tiles.js?v=2026-09-29-v02' src/app/register-features.js
-          grep -q 'insights-dashboard.js?v=2026-09-27-v07' src/app/register-features.js
-          grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
-          grep -q 'startup.js?v=2026-09-29-v02' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -q 'initialize.js?v=2026-09-29-v02' src/main.js
-          grep -q 'src/main.js?v=2026-09-29-v05' index.html
-
-      - name: Validate Phase 4 owner sales intelligence
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/features/owner/insights-dashboard.js
-          grep -q 'function cardPerformanceRows' src/features/owner/insights-dashboard.js
-          grep -q 'const pageSize=10' src/features/owner/insights-dashboard.js
-          grep -q 'insights-v20-performance-controls' src/features/owner/insights-dashboard.js
-          grep -q 'data-insights-v20-pagination' src/features/owner/insights-dashboard.js
-          grep -q 'insights-dashboard.js?v=2026-09-27-v07' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -q 'src/main.js?v=2026-09-29-v05' index.html
-
-      - name: Validate Production v05 promoted visitor and generator changes
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/features/cards/compare.js
-          node --check src/features/cards/details.js
-          node --check src/features/cards/modal-keyboard.js
-          node --check src/features/content/home.js
-          node --check src/features/social/posts.js
-          node --check src/features/inventory/page.js
-          grep -q 'premiumShelf("Recently Viewed"' src/features/content/home.js
-          grep -q 'function handleCompareModalKeydown' src/features/cards/compare.js
-          grep -q 'document.addEventListener("keydown",handleCompareModalKeydown)' src/features/cards/compare.js
-          grep -q 'createModalKeyboardController' src/features/cards/details.js
-          ! grep -q 'class="details-desktop-contact-socials"' src/features/cards/details.js
-          grep -q 'class="detail-buy-cta"' src/features/cards/details.js
-          grep -q 'id="ebayDownloadImages"' src/features/social/posts.js
-          grep -q 'downloadSingleCardImagesZip(selected' src/features/social/posts.js
-          grep -q 'function currentPaginationFilterSignature()' src/features/inventory/page.js
-          grep -q 'home.js?v=2026-09-26-v05' src/app/register-features.js
-          grep -q 'compare.js?v=2026-09-26-v05' src/app/register-features.js
-          grep -q 'posts.js?v=2026-09-29-v05' src/app/register-features.js
-          grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
-          grep -q 'details.js?v=2026-09-26-v01' src/app/initialize.js
-          grep -q 'insights-dashboard.js?v=2026-09-27-v07' src/app/register-features.js
-
-      - name: Validate Facebook group-friendly post generator
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/features/social/posts.js
-          grep -q 'function facebookGroupSalesCopy' src/features/social/posts.js
-          grep -q 'function facebookGroupSalesFooterLines' src/features/social/posts.js
-          grep -q 'Group-friendly (short)' src/features/social/posts.js
-          grep -q 'Detailed listing' src/features/social/posts.js
-          grep -Fq 'Price & full details:' src/features/social/posts.js
-          grep -Fq 'groupCopy.price' src/features/social/posts.js
-          ! grep -Fq 'groupFriendly ? groupCopy.price : text.priceRefer' src/features/social/posts.js
-          grep -Fq 'Worldwide shipping available' src/features/social/posts.js
-          grep -Fq 'more photos / video' src/features/social/posts.js
-          grep -q '<option value="detailed" selected>Detailed listing</option>' src/features/social/posts.js
-          grep -q 'templateModeInput?.value||"detailed"' src/features/social/posts.js
-          grep -q 'posts.js?v=2026-09-29-v05' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -q 'src/main.js?v=2026-09-29-v05' index.html
-
-      - name: Validate buyer privacy guards
-        run: |
-          set -euo pipefail
-          node --check src/services/auth.js
-          node --check src/features/content/home.js
-          node --check src/features/cards/details.js
-          node --check src/features/cards/tiles.js
-          grep -Fq 'appContext.isOwnerMode() && trending && views>0' src/features/content/home.js
-          grep -Fq 'home-premium-interest owner-only owner-private-analytics' src/features/content/home.js
-          grep -Fq 'document.querySelectorAll(".owner-private-analytics")' src/services/auth.js
-          grep -Fq 'el.style.setProperty("display","none","important")' src/services/auth.js
-          grep -Fq 'appContext.isOwnerMode() ? `<div class="detail-item owner-only owner-private-analytics">' src/features/cards/details.js
-          grep -Fq 'appContext.isOwnerMode() ? `<div class="owner-only owner-private-analytics clean-owner-views"' src/features/cards/tiles.js
-          grep -q 'auth.js?v=2026-09-29-v02' src/app/register-features.js
-          grep -q 'home.js?v=2026-09-26-v05' src/app/register-features.js
-          grep -q 'tiles.js?v=2026-09-29-v02' src/app/register-features.js
-          grep -q 'details.js?v=2026-09-26-v01' src/app/register-features.js
-          grep -q 'details.js?v=2026-09-26-v01' src/app/initialize.js
-          grep -q 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -q 'initialize.js?v=2026-09-29-v02' src/main.js
-          grep -q 'src/main.js?v=2026-09-29-v05' index.html
-
-      - name: Validate Production v06 Hidden Listings
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/features/inventory/filtering.js
-          node --check src/features/cards/repository.js
-          node --check src/app/navigation.js
-          node --check src/app/routing.js
-          node --check src/features/owner/lifecycle.js
-          node --check src/services/catalogue.js
-          node --check tools/generate-seo.mjs
-          grep -Fq 'if(lifecycle!=="live") return false;' src/features/inventory/filtering.js
-          grep -Fq '"hidden-listings"' src/features/cards/repository.js
-          grep -Fq 'else if(route === "hidden-listings")' src/app/routing.js
-          grep -Fq 'appContext.renderHiddenListingsPage()' src/app/routing.js
-          grep -Fq 'function renderHiddenListingsPage()' src/features/owner/lifecycle.js
-          grep -Fq 'appContext.cardLifecycle(card)==="draft"' src/features/owner/lifecycle.js
-          grep -Fq 'drafts.map(appContext.cardTileHTML).join("")' src/features/owner/lifecycle.js
-          grep -Fq 'class="${compact ? "grid compact-list" : "grid"}"' src/features/owner/lifecycle.js
-          grep -Fq 'id="hiddenListingsViewToggle"' src/features/owner/lifecycle.js
-          grep -Fq 'appContext.wireShimmer(grid);' src/features/owner/lifecycle.js
-          grep -Fq 'appContext.wireCardActions(grid);' src/features/owner/lifecycle.js
-          grep -Fq 'appContext.getInventoryViewMode()==="compact"' src/features/owner/lifecycle.js
-          grep -Fq 'loadedCards.filter(card=>appContext.isLiveLifecycle(card))' src/services/catalogue.js
-          grep -Fq "endpoint.searchParams.set('lifecycle_status','eq.live');" tools/generate-seo.mjs
-          test "$(grep -o 'href="#/hidden-listings"' index.html | wc -l | tr -d ' ')" = "3"
-          test "$(grep -o 'data-route="hidden-listings" class="owner-only' index.html | wc -l | tr -d ' ')" -ge "2"
-          grep -q 'repository.js?v=2026-09-26-v06' src/app/register-features.js
-          grep -q 'navigation.js?v=2026-09-26-v06' src/app/register-features.js
-          grep -q 'routing.js?v=2026-09-28-v04' src/app/register-features.js
-          grep -q 'filtering.js?v=2026-09-28-v02' src/app/register-features.js
-          grep -q 'lifecycle.js?v=2026-09-26-v06' src/app/register-features.js
-          grep -q 'repository.js?v=2026-09-26-v06' src/app/initialize.js
-          grep -q 'navigation.js?v=2026-09-26-v06' src/app/initialize.js
-          grep -q 'routing.js?v=2026-09-28-v04' src/app/initialize.js
-          grep -q 'filtering.js?v=2026-09-28-v02' src/app/initialize.js
-          grep -q 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -q 'initialize.js?v=2026-09-29-v02' src/main.js
-          grep -q 'src/main.js?v=2026-09-29-v05' index.html
-
-      - name: Validate Production v07 post preview prices
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/features/social/posts.js
-          grep -Fq 'function postGeneratorCardPricePreview(card)' src/features/social/posts.js
-          grep -Fq 'appContext.fmtMYR(card.price_myr)' src/features/social/posts.js
-          grep -Fq 'Math.round(Number(card.price_usd ?? card.price)).toLocaleString("en-US")' src/features/social/posts.js
-          grep -Fq 'appContext.fmtSGD(card.price_sgd)' src/features/social/posts.js
-          grep -Fq 'return pieces.length ? pieces.join(" / ") : "Please inquire";' src/features/social/posts.js
-          grep -Fq 'nfsMode ? "" : `<small class="fb-post-card-price">Price · ' src/features/social/posts.js
-          grep -Fq "appContext.postGeneratorCardPricePreview(selected)" src/features/social/posts.js
-          grep -Fq 'isGiveaway ? "" : `<small class="fb-post-card-price">Price · ' src/features/social/posts.js
-          grep -Fq '.fb-post-card-copy .fb-post-card-price' src/styles/01-foundation.css
-          grep -q 'posts.js?v=2026-09-29-v05' src/app/register-features.js
-          grep -q '01-foundation.css?v=2026-09-28-v02' index.html
-          grep -q 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -q 'src/main.js?v=2026-09-29-v05' index.html
-
-      - name: Validate Production v07 promoted Development behavior
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/features/inventory/ordering.js
-          node --check src/features/inventory/page.js
-          node --check src/features/inventory/pagination.js
-          node --check src/features/owner/add.js
-          node --check src/features/owner/insights-dashboard.js
-          grep -q 'function insertNewInventoryCardIntoCustomOrder' src/features/inventory/ordering.js
-          grep -Fq 'insertNewInventoryCardIntoCustomOrder(saved)' src/features/owner/add.js
-          grep -q 'createInventoryPagination' src/features/inventory/page.js
-          grep -q 'function pageItems' src/features/inventory/pagination.js
-          grep -q 'salesActionQueueRows' src/features/owner/insights-dashboard.js
-          grep -q 'What to act on next' src/features/owner/insights-dashboard.js
-          grep -q 'migrations/2026/2026-09-17-v05-COUNTRY-CARD-DEMAND.sql' src/features/owner/insights-dashboard.js
-          grep -q 'migrations/2026/2026-09-24-v06-DISCOVERY-SUMMARY.sql' src/features/owner/insights-dashboard.js
-          ! grep -q 'analytics_test' src/services/analytics.js
-          ! grep -q 'isDevelopmentAnalyticsTestSession' src/services/analytics.js
-          grep -q 'owner/qr-generator.js?v=2026-09-27-v01' src/app/register-features.js
-          grep -q 'registerQrGenerator(appContext)' src/app/register-features.js
-          grep -q 'ordering.js?v=2026-09-28-v01' src/app/register-features.js
-          grep -q 'page.js?v=2026-09-28-v05' src/app/register-features.js
-          grep -q 'insights-dashboard.js?v=2026-09-27-v07' src/app/register-features.js
-          grep -q 'add.js?v=2026-09-27-v07' src/app/register-features.js
-          grep -q 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -q 'initialize.js?v=2026-09-29-v02' src/main.js
-          grep -q 'src/main.js?v=2026-09-29-v05' index.html
-          grep -q '01-foundation.css?v=2026-09-28-v02' index.html
-
-      - name: Validate Production v08 promoted Development v25 editor and watermark
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/features/media/images.js
-          node --check src/features/owner/forms.js
-          node --check src/app/routing.js
-          test -s assets/collect-tcg-inventory-watermark-approved.png
-          grep -q 'CARD_WATERMARK_BANNER = "./assets/collect-tcg-inventory-watermark-approved.png"' src/app/routing.js
-          grep -q 'function loadWebsiteWatermarkBanner' src/features/media/images.js
-          grep -q 'function createWebsiteWatermarkQrCanvas' src/features/media/images.js
-          grep -q 'CTA + QR only all photos' src/features/owner/forms.js
-          grep -q 'owner-editor-section-heading' src/features/owner/forms.js
-          ! grep -q 'owner-editor-tab' src/features/owner/forms.js
-          grep -Fq 'width:min(92vw,1100px) !important' src/styles/01-foundation.css
-          grep -Fq 'height:350px !important' src/styles/01-foundation.css
-          grep -Fq 'grid-template-columns:repeat(3,minmax(0,1fr)) !important' src/styles/01-foundation.css
-          grep -q 'features/media/images.js?v=2026-09-29-v04' src/app/register-features.js
-          grep -q 'features/owner/forms.js?v=2026-09-28-v03' src/app/register-features.js
-          grep -q 'owner/qr-generator.js?v=2026-09-27-v01' src/app/register-features.js
-          grep -q 'registerQrGenerator(appContext)' src/app/register-features.js
-          ! grep -q 'analytics_test' src/services/analytics.js
-          grep -q 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -q 'initialize.js?v=2026-09-29-v02' src/main.js
-          grep -q 'src/main.js?v=2026-09-29-v05' index.html
-          grep -q '01-foundation.css?v=2026-09-28-v02' index.html
-
       - name: Generate Production SEO card pages
         run: node tools/generate-seo.mjs --production
-
       - name: Validate generated Production SEO files
         shell: bash
         run: |
@@ -512,6 +60,7 @@ jobs:
           test -s sitemap.xml
           test -s robots.txt
           test -s seo-slugs.json
+          test -s owner-card-routes.json
           grep -q 'Allow: /' robots.txt
           grep -q '<urlset' sitemap.xml
           grep -q 'index,follow,max-image-preview:large' cards/*/index.html
@@ -519,50 +68,12 @@ jobs:
             echo "UUID found in public card URL" >&2
             exit 1
           fi
+          ! grep -Fq 'analytics_test' src/services/analytics.js
+          ! grep -Fq 'isDevelopmentAnalyticsTestSession' src/app/startup.js
+          grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
+          grep -Fq 'collecttcg.github.io/Collect_TCG/' index.html
+          grep -Fq 'index,follow,max-image-preview:large' index.html
           git diff --check
-
-
-      - name: Validate Production 2026-09-28-v04 private clean routes
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -s migrations/2026/2026-09-28-v04-PRIVATE-CARD-ROUTES.sql
-          test -s owner-card-routes.json
-          grep -Fq 'get_private_card_routes' tools/generate-seo.mjs
-          grep -Fq 'renderPrivateCardRoutePage' tools/generate-seo.mjs
-          grep -Fq 'owner-card-routes.json' tools/generate-seo.mjs
-          grep -Fq 'loadOwnerCardRouteSlugMap' src/features/core/utilities.js
-          grep -Fq 'loadOwnerCardRouteSlugMap' src/app/routing.js
-          grep -Fq 'utilities.js?v=2026-09-28-v04' src/app/register-features.js
-          grep -Fq 'routing.js?v=2026-09-28-v04' src/app/register-features.js
-          grep -Fq 'utilities.js?v=2026-09-28-v04' src/app/initialize.js
-          grep -Fq 'routing.js?v=2026-09-28-v04' src/app/initialize.js
-          grep -Fq 'security definer' migrations/2026/2026-09-28-v04-PRIVATE-CARD-ROUTES.sql
-          grep -Fq "lower(coalesce(c.lifecycle_status::text,'live')) in ('draft','archived')" migrations/2026/2026-09-28-v04-PRIVATE-CARD-ROUTES.sql
-          grep -Fq "lower(coalesce(c.availability::text,'')) in ('hidden','archived')" migrations/2026/2026-09-28-v04-PRIVATE-CARD-ROUTES.sql
-          grep -Fq 'grant execute on function public.get_private_card_routes() to anon' migrations/2026/2026-09-28-v04-PRIVATE-CARD-ROUTES.sql
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          const owner=JSON.parse(fs.readFileSync('owner-card-routes.json','utf8'));
-          const publicMap=JSON.parse(fs.readFileSync('seo-slugs.json','utf8'));
-          const sitemap=fs.readFileSync('sitemap.xml','utf8');
-          for(const [id,value] of Object.entries(owner.cards||{})){
-            const slug=String(value?.slug||'').trim();
-            if(!slug) throw new Error('Private route missing slug for '+id);
-            if(publicMap.cards?.[id]) throw new Error('Private card leaked into public SEO map: '+id);
-            if(sitemap.includes('/cards/'+slug+'/')) throw new Error('Private route leaked into sitemap: '+slug);
-            const file='cards/'+slug+'/index.html';
-            if(!fs.existsSync(file)) throw new Error('Private route shell missing: '+file);
-            const html=fs.readFileSync(file,'utf8');
-            if(!html.includes('noindex,nofollow,noarchive')) throw new Error('Private route noindex guard missing: '+slug);
-            if(!html.includes('content="'+id+'"')) throw new Error('Private route card ID missing: '+slug);
-            if(/application\/ld\+json/i.test(html)) throw new Error('Private route leaked JSON-LD: '+slug);
-            if(/property=["']og:image["']/i.test(html)) throw new Error('Private route leaked OG image: '+slug);
-          }
-          console.log('Production private clean-route privacy verified for '+Object.keys(owner.cards||{}).length+' routes.');
-          NODE
-          git diff --check
-
       - name: Commit refreshed Production SEO pages
         shell: bash
         run: |
@@ -576,450 +87,57 @@ jobs:
             git commit -m "chore: refresh Production SEO card pages [skip ci]"
             git push
           fi
-
-      - name: Validate Production v09 promoted Development v27 global Bulk Images
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/features/owner/image-maintenance.js
-          node --check src/features/owner/tools.js
-          node --check src/features/owner/bulk-status.js
-          node --check src/app/register-features.js
-          node --check src/app/initialize.js
-          node --check src/main.js
-          grep -Fq 'bulk:["prices","metadata","status","images","psa","missing-certs"]' src/features/owner/tools.js
-          grep -Fq '["images","Bulk Images"]' src/features/owner/tools.js
-          grep -Fq 'mode==="bulk" && submode==="images"' src/features/owner/bulk-status.js
-          grep -Fq 'renderImageReprocessPage(true)' src/features/owner/bulk-status.js
-          grep -Fq 'Bulk Images — All Listings' src/features/owner/image-maintenance.js
-          grep -Fq 'One action applies to every photo in every inventory listing. No listing selection is required.' src/features/owner/image-maintenance.js
-          grep -Fq 'const eligibleCount=appContext.cards.filter(card=>appContext.getImages(card).length).length;' src/features/owner/image-maintenance.js
-          grep -Fq 'if(fromBulkEdit) return;' src/features/owner/image-maintenance.js
-          grep -Fq 'CTA + QR only · All Photos' src/features/owner/image-maintenance.js
-          grep -Fq 'Use Originals · All Photos' src/features/owner/image-maintenance.js
-          grep -Fq 'applyWebsiteWatermarkToCardImageSource(original,1800,0.94)' src/features/owner/image-maintenance.js
-          grep -Fq 'owner/tools.js?v=2026-09-27-v09' src/app/register-features.js
-          grep -Fq 'owner/bulk-status.js?v=2026-09-27-v09' src/app/register-features.js
-          grep -Fq 'owner/image-maintenance.js?v=2026-09-27-v09' src/app/register-features.js
-          grep -Fq 'owner/qr-generator.js?v=2026-09-27-v01' src/app/register-features.js
-          grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
-          grep -Fq 'owner/tools.js?v=2026-09-27-v09' src/app/initialize.js
-          grep -Fq 'owner/image-maintenance.js?v=2026-09-27-v09' src/app/initialize.js
-          grep -Fq 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -Fq 'initialize.js?v=2026-09-29-v02' src/main.js
-          grep -Fq 'src/main.js?v=2026-09-29-v05' index.html
-          ! grep -Fq 'analytics_test' src/services/analytics.js
-          ! grep -Fq 'isDevelopmentAnalyticsTestSession' src/services/analytics.js
-          git diff --check
-
-      - name: Validate Production 2026-09-28-v01 promoted Development v28 game-aware ordering
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/features/inventory/ordering.js
-          node --check src/app/register-features.js
-          node --check src/app/initialize.js
-          node --check src/main.js
-          grep -Fq 'function inventoryNewCardGameKey(card)' src/features/inventory/ordering.js
-          grep -Fq 'function inventoryNewCardOrderDescriptor(card)' src/features/inventory/ordering.js
-          grep -Fq 'function compareInventoryNewCardPlacement(a,b)' src/features/inventory/ordering.js
-          grep -Fq 'const newGameKey=appContext.inventoryNewCardGameKey(newCard);' src/features/inventory/ordering.js
-          grep -Fq 'if(appContext.inventoryNewCardGameKey(card)===newGameKey)' src/features/inventory/ordering.js
-          grep -Fq 'Math.max(...grades)' src/features/inventory/ordering.js
-          grep -Fq 'const rawRank={M:0,NM:1,LP:2,MP:3,HP:4,DMG:5,NA:6};' src/features/inventory/ordering.js
-          grep -Fq 'ordering.js?v=2026-09-28-v01' src/app/register-features.js
-          grep -Fq 'ordering.js?v=2026-09-28-v01' src/app/initialize.js
-          grep -Fq 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -Fq 'initialize.js?v=2026-09-29-v02' src/main.js
-          grep -Fq 'src/main.js?v=2026-09-29-v05' index.html
-          grep -Fq 'owner/qr-generator.js?v=2026-09-27-v01' src/app/register-features.js
-          grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
-          ! grep -Fq 'analytics_test' src/services/analytics.js
-          ! grep -Fq 'isDevelopmentAnalyticsTestSession' src/services/analytics.js
-          git diff --check
-
-      - name: Validate Production 2026-09-28-v02 promoted Development v01-v02 Sold behavior
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/services/catalogue.js
-          node --check src/features/inventory/filtering.js
-          node --check src/app/register-features.js
-          node --check src/app/initialize.js
-          node --check src/main.js
-          test -s migrations/2026/2026-09-28-v02-PUBLIC-SOLD-ORDER.sql
-          grep -Fq 'DESKTOP OWNER MENU — KEEP TOP-RIGHT ON SOLD/RESERVED' src/styles/01-foundation.css
-          grep -Fq 'body.owner-mode .card:has(.status-corner-sold) .quick-card-actions' src/styles/01-foundation.css
-          grep -Fq 'body.owner-mode .card:has(.status-corner-sold) .overview-grade-overlay-right' src/styles/01-foundation.css
-          grep -Fq 'function fetchPublicSoldOrder()' src/services/catalogue.js
-          grep -Fq 'rpc("get_public_sold_order")' src/services/catalogue.js
-          grep -Fq 'sold_order: Number.isFinite(Number(row.sold_order))' src/services/catalogue.js
-          grep -Fq 'const ao=Number(a.sold_order)||0;' src/features/inventory/filtering.js
-          grep -Fq 'const at = Date.parse(a.sold_at || a.updated_at || a.created_at || "") || 0;' src/features/inventory/filtering.js
-          grep -Fq 'security definer' migrations/2026/2026-09-28-v02-PUBLIC-SOLD-ORDER.sql
-          grep -Fq "coalesce(c.lifecycle_status::text,'live') = 'live'" migrations/2026/2026-09-28-v02-PUBLIC-SOLD-ORDER.sql
-          grep -Fq "lower(coalesce(c.availability::text,'')) = 'sold'" migrations/2026/2026-09-28-v02-PUBLIC-SOLD-ORDER.sql
-          grep -Fq 'grant execute on function public.get_public_sold_order() to anon' migrations/2026/2026-09-28-v02-PUBLIC-SOLD-ORDER.sql
-          ! grep -Eq 'returns table[^(]*\([^)]*sold_at' migrations/2026/2026-09-28-v02-PUBLIC-SOLD-ORDER.sql
-          grep -Fq 'catalogue.js?v=2026-09-29-v02' src/app/register-features.js
-          grep -Fq 'catalogue.js?v=2026-09-29-v02' src/app/initialize.js
-          grep -Fq 'filtering.js?v=2026-09-28-v02' src/app/register-features.js
-          grep -Fq 'filtering.js?v=2026-09-28-v02' src/app/initialize.js
-          grep -Fq 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -Fq 'initialize.js?v=2026-09-29-v02' src/main.js
-          grep -Fq 'src/main.js?v=2026-09-29-v05' index.html
-          grep -Fq '01-foundation.css?v=2026-09-28-v02' index.html
-          grep -Fq 'owner/qr-generator.js?v=2026-09-27-v01' src/app/register-features.js
-          grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
-          ! grep -Fq 'analytics_test' src/services/analytics.js
-          ! grep -Fq 'isDevelopmentAnalyticsTestSession' src/services/analytics.js
-          git diff --check
-
-      - name: Validate Production 2026-09-28-v03 saved manual currency preservation
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/features/owner/forms.js
-          node --check src/app/register-features.js
-          node --check src/app/initialize.js
-          node --check src/main.js
-          grep -Fq 'let manualUsd=usd.value.trim()!=="";' src/features/owner/forms.js
-          grep -Fq 'let manualSgd=sgd.value.trim()!=="";' src/features/owner/forms.js
-          grep -Fq 'manualUsd=false;' src/features/owner/forms.js
-          grep -Fq 'manualSgd=false;' src/features/owner/forms.js
-          grep -Fq 'owner/forms.js?v=2026-09-28-v03' src/app/register-features.js
-          grep -Fq 'owner/forms.js?v=2026-09-28-v03' src/app/initialize.js
-          grep -Fq 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -Fq 'initialize.js?v=2026-09-29-v02' src/main.js
-          grep -Fq 'src/main.js?v=2026-09-29-v05' index.html
-          grep -Fq 'owner/qr-generator.js?v=2026-09-27-v01' src/app/register-features.js
-          grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
-          ! grep -Fq 'analytics_test' src/services/analytics.js
-          ! grep -Fq 'isDevelopmentAnalyticsTestSession' src/services/analytics.js
-          node --input-type=module <<'NODE'
-          import assert from 'node:assert/strict';
-          import {register,initialize} from './src/features/owner/forms.js';
-          const app={};
-          register(app);
-          initialize(app);
-          const control=value=>({value:String(value),dataset:{},listeners:{},addEventListener(type,handler){this.listeners[type]=handler;}});
-          const myr=control(1000),usd=control(333),sgd=control(444);
-          app.controls={editPriceMYR:myr,editPriceUSD:usd,editPriceSGD:sgd};
-          app.$=id=>app.controls[id];
-          app.fetchCurrentMyrFxRates=async()=>({usdPerMyr:0.25,sgdPerMyr:0.30,fetchedAt:Date.now(),source:'production-test'});
-          app.updateFxRateStatus=()=>{};
-          app.wireAutoCurrencyConversion('edit');
-          await new Promise(resolve=>setImmediate(resolve));
-          assert.equal(usd.value,'333');
-          assert.equal(sgd.value,'444');
-          myr.value='2000';
-          myr.listeners.input();
-          assert.equal(usd.value,'500');
-          assert.equal(sgd.value,'600');
-          NODE
-          git diff --check
-
-
-      - name: Validate Production 2026-09-28-v05 Newly Added quick filter
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/features/inventory/page.js
-          node --check src/features/inventory/filtering.js
-          node --check src/app/register-features.js
-          node --check src/main.js
-          grep -Fq '["trending","🔥 Trending","Trending"],' src/features/inventory/page.js
-          grep -Fq '["new","Newly Added","Newly Added"]' src/features/inventory/page.js
-          grep -Fq 'new:"Newly Added"' src/features/inventory/page.js
-          grep -Fq 'function isNewCard(card, days = 7)' src/features/inventory/filtering.js
-          grep -Fq 'activeQuickFilter === "new" && !appContext.isNewCard(c)' src/features/inventory/filtering.js
-          grep -Fq '["all","new","graded","raw","sealed","championship","vintage","trending"].includes(requestedQuick)' src/features/inventory/page.js
-          grep -Fq 'page.js?v=2026-09-28-v05' src/app/register-features.js
-          grep -Fq 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -Fq 'src/main.js?v=2026-09-29-v05' index.html
-          git diff --check
-
-      - name: Validate Production 2026-09-29-v01 eBay generator promotion
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/features/social/posts.js
-          node --check src/app/register-features.js
-          node --check src/main.js
-          grep -Fq '<textarea id="ebaySpecificsOutput" rows="8" readonly></textarea>' src/features/social/posts.js
-          grep -Fq '<textarea id="ebayDescriptionOutput" class="fb-post-output" rows="14" readonly></textarea>' src/features/social/posts.js
-          grep -Fq 'Only the cards/items shown and described in this listing are included.' src/features/social/posts.js
-          grep -Fq 'Raw card condition is a subjective assessment and does not guarantee any specific grade from PSA, BGS, CGC, or any other grading company.' src/features/social/posts.js
-          grep -Fq 'The holder/slab may have minor surface marks, scratches, or other signs of handling that do not affect the card' src/features/social/posts.js
-          grep -Fq 'Factory-sealed products may have minor wear, dents, scratches, loose wrapping, or other imperfections to the outer packaging.' src/features/social/posts.js
-          grep -Fq 'posts.js?v=2026-09-29-v05' src/app/register-features.js
-          grep -Fq 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -Fq 'src/main.js?v=2026-09-29-v05' index.html
-          ! grep -Fq 'analytics_test' src/services/analytics.js
-          ! grep -Fq 'isDevelopmentAnalyticsTestSession' src/services/analytics.js
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          import assert from 'node:assert/strict';
-          const source=fs.readFileSync('src/features/social/posts.js','utf8');
-          const start=source.indexOf('function ebayListingDescription(card){');
-          const end=source.indexOf('function renderEbayListingGeneratorPage(){',start);
-          assert.ok(start>=0 && end>start);
-          const functionSource=source.slice(start,end);
-          let format='raw';
-          const appContext={
-            cardListFormat:()=>format,
-            ebayItemSpecifics:()=>'SPECIFICS',
-            compactGeneratedPostSpacing:value=>value
-          };
-          const ebayListingDescription=Function('appContext',functionSource+'; return ebayListingDescription;')(appContext);
-          const card={name:'TEST CARD',card_code:'T-001'};
-          format='raw';
-          const raw=ebayListingDescription(card);
-          assert.match(raw,/photos form part of the item description and condition assessment/);
-          assert.match(raw,/Raw card condition is a subjective assessment/);
-          assert.doesNotMatch(raw,/holder\/slab/i);
-          assert.doesNotMatch(raw,/Factory-sealed products/i);
-          format='graded';
-          const graded=ebayListingDescription(card);
-          assert.match(graded,/grade shown is the grade assigned by the stated grading company/);
-          assert.match(graded,/holder\/slab may have minor surface marks/i);
-          assert.doesNotMatch(graded,/Raw card condition is a subjective assessment/);
-          format='sealed';
-          const sealed=ebayListingDescription(card);
-          assert.match(sealed,/Factory-sealed products may have minor wear/);
-          assert.doesNotMatch(sealed,/Raw card condition is a subjective assessment/);
-          assert.match(sealed,/Please ensure your delivery address is correct before completing your purchase/);
-          NODE
-          git diff --check
-
-      - name: Validate Production 2026-09-29-v02 owner generator and route restoration promotion
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/services/auth.js
-          node --check src/app/startup.js
-          node --check src/services/catalogue.js
-          node --check src/app/production-runtime.js
-          node --check src/features/cards/tiles.js
-          node --check src/features/social/posts.js
-          node --check src/app/register-features.js
-          node --check src/app/initialize.js
-          node --check src/main.js
-          grep -Fq 'data-action="carousell-post"' src/features/cards/tiles.js
-          grep -Fq 'data-action="ebay-post"' src/features/cards/tiles.js
-          grep -Fq 'openOwnerPostGenerator("single",card.id)' src/features/cards/tiles.js
-          grep -Fq 'openOwnerPostGenerator("carousell",card.id)' src/features/cards/tiles.js
-          grep -Fq 'openOwnerPostGenerator("ebay",card.id)' src/features/cards/tiles.js
-          grep -Fq 'function openOwnerPostGenerator(mode,cardId)' src/services/auth.js
-          grep -Fq 'window.open(url.toString(),"_blank")' src/services/auth.js
-          grep -Fq 'async function verifyOwnerSessionResult(session)' src/services/auth.js
-          grep -Fq 'Owner verification failed; retrying once:' src/services/auth.js
-          ! sed -n '/function applyOwnerMode()/,/function requireOwner(/p' src/services/auth.js | grep -Fq 'goToRoute("inventory")'
-          grep -Fq 'ownerPostHandoffRequested && !appContext.isOwnerMode()' src/app/startup.js
-          grep -Fq 'Secure owner card read failed; retrying once:' src/services/catalogue.js
-          grep -Fq 'persistSession:true' src/app/production-runtime.js
-          grep -Fq 'autoRefreshToken:true' src/app/production-runtime.js
-          grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
-          ! grep -Fq 'analytics_test' src/services/analytics.js
-          ! grep -Fq 'isDevelopmentAnalyticsTestSession' src/app/startup.js
-          grep -Fq 'auth.js?v=2026-09-29-v02' src/app/register-features.js
-          grep -Fq 'catalogue.js?v=2026-09-29-v02' src/app/register-features.js
-          grep -Fq 'tiles.js?v=2026-09-29-v02' src/app/register-features.js
-          grep -Fq 'posts.js?v=2026-09-29-v05' src/app/register-features.js
-          grep -Fq 'startup.js?v=2026-09-29-v02' src/app/register-features.js
-          grep -Fq 'catalogue.js?v=2026-09-29-v02' src/app/initialize.js
-          grep -Fq 'startup.js?v=2026-09-29-v02' src/app/initialize.js
-          grep -Fq 'production-runtime.js?v=2026-09-29-v02' src/main.js
-          grep -Fq 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -Fq 'initialize.js?v=2026-09-29-v02' src/main.js
-          grep -Fq 'src/main.js?v=2026-09-29-v05' index.html
-          node tools/check-production.mjs
-          git diff --check
-
-      - name: Validate Production 2026-09-29-v03 landscape website watermark promotion
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/features/media/images.js
-          node --check src/app/register-features.js
-          node --check src/main.js
-          grep -Fq 'const widthTarget=Math.round(canvas.width*0.82);' src/features/media/images.js
-          grep -Fq 'const heightCappedWidth=Math.round(canvas.height*0.24*sourceW/sourceH);' src/features/media/images.js
-          grep -Fq 'Math.max(280,Math.min(widthTarget,responsiveWidthTarget,heightCappedWidth))' src/features/media/images.js
-          grep -Fq 'images.js?v=2026-09-29-v04' src/app/register-features.js
-          grep -Fq 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -Fq 'src/main.js?v=2026-09-29-v05' index.html
-          ! grep -Fq 'analytics_test' src/services/analytics.js
-          ! grep -Fq 'isDevelopmentAnalyticsTestSession' src/app/startup.js
-          grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
-          node - <<'NODE'
-          const sourceW=1113, sourceH=242;
-          const banner=(w,h)=>{
-            const shortSide=Math.min(w,h);
-            const margin=Math.max(8,Math.round(shortSide*0.012));
-            const widthTarget=Math.round(w*0.82);
-            const aspectRatio=w/h;
-            const landscapeProgress=Math.max(0,Math.min(1,(aspectRatio-1)/0.25));
-            const responsiveWidthRatio=0.82-(0.20*landscapeProgress);
-            const responsiveWidthTarget=Math.round(w*responsiveWidthRatio);
-            const heightCappedWidth=Math.round(h*0.24*sourceW/sourceH);
-            const bw=Math.min(w-margin*2,Math.max(280,Math.min(widthTarget,responsiveWidthTarget,heightCappedWidth)));
-            return {w:bw,h:Math.round(bw*sourceH/sourceW)};
-          };
-          const landscape=banner(1080,607);
-          const portrait=banner(1080,1512);
-          if(landscape.w>=Math.round(1080*0.82)) throw new Error('Landscape banner was not reduced');
-          if(landscape.h>Math.round(607*0.24)+1) throw new Error('Landscape banner exceeds height cap');
-          if(portrait.w!==Math.round(1080*0.82)) throw new Error('Portrait banner sizing changed');
-          if(landscape.w<600 || landscape.w>700) throw new Error('Landscape banner unexpected size');
-          console.log(JSON.stringify({landscape,portrait}));
-          NODE
-          node tools/check-production.mjs
-          git diff --check
-
-      - name: Validate Production 2026-09-29-v04 responsive watermark promotion
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/features/media/images.js
-          node --check src/app/register-features.js
-          node --check src/main.js
-          grep -Fq 'const aspectRatio=canvas.width/canvas.height;' src/features/media/images.js
-          grep -Fq 'const landscapeProgress=Math.max(0,Math.min(1,(aspectRatio-1)/0.25));' src/features/media/images.js
-          grep -Fq 'const responsiveWidthRatio=0.82-(0.20*landscapeProgress);' src/features/media/images.js
-          grep -Fq 'Math.max(280,Math.min(widthTarget,responsiveWidthTarget,heightCappedWidth))' src/features/media/images.js
-          grep -Fq 'images.js?v=2026-09-29-v04' src/app/register-features.js
-          grep -Fq 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -Fq 'src/main.js?v=2026-09-29-v05' index.html
-          ! grep -Fq 'analytics_test' src/services/analytics.js
-          ! grep -Fq 'isDevelopmentAnalyticsTestSession' src/app/startup.js
-          grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
-          node - <<'NODE'
-          const sourceW=1113, sourceH=242;
-          const banner=(w,h)=>{
-            const shortSide=Math.min(w,h);
-            const margin=Math.max(8,Math.round(shortSide*0.012));
-            const widthTarget=Math.round(w*0.82);
-            const aspectRatio=w/h;
-            const landscapeProgress=Math.max(0,Math.min(1,(aspectRatio-1)/0.25));
-            const responsiveWidthRatio=0.82-(0.20*landscapeProgress);
-            const responsiveWidthTarget=Math.round(w*responsiveWidthRatio);
-            const heightCappedWidth=Math.round(h*0.24*sourceW/sourceH);
-            const bw=Math.min(w-margin*2,Math.max(280,Math.min(widthTarget,responsiveWidthTarget,heightCappedWidth)));
-            return {w:bw,h:Math.round(bw*sourceH/sourceW)};
-          };
-          const cases={portrait:banner(1080,1512),square:banner(1080,1080),slightLandscape:banner(1080,981),mediumLandscape:banner(1080,900),landscape43:banner(1080,810),landscapeWide:banner(1080,607)};
-          const expected={portrait:{w:886,h:193},square:{w:886,h:193},slightLandscape:{w:798,h:174},mediumLandscape:{w:713,h:155},landscape43:{w:670,h:146},landscapeWide:{w:670,h:146}};
-          for(const [name,value] of Object.entries(expected)){
-            const actual=cases[name];
-            if(actual.w!==value.w || actual.h!==value.h) throw new Error(name+' sizing regression: '+JSON.stringify(actual));
-          }
-          if(!(cases.square.w>cases.slightLandscape.w && cases.slightLandscape.w>cases.mediumLandscape.w && cases.mediumLandscape.w>cases.landscape43.w)) throw new Error('Landscape interpolation is not progressive');
-          console.log(JSON.stringify(cases));
-          NODE
-          node tools/check-production.mjs
-          git diff --check
-
-      # Production 2026-09-29-v04 promotes validated Development 2026-09-29-v07.
-      # Production-specific analytics, QR Generator, SEO and rollback behavior remain retained.
-
-      - name: Validate Production 2026-09-29-v05 lowercase Post Generator hashtag promotion
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check src/features/social/posts.js
-          node --check src/app/register-features.js
-          node --check src/main.js
-          grep -Fq 'function normalizePostHashtags(value)' src/features/social/posts.js
-          grep -Fq 'return String(value||"").trim().toLowerCase();' src/features/social/posts.js
-          grep -Fq '#tcg #onepiece #onepiecetcg #onepiececardgame #tcgcollector' src/features/social/posts.js
-          ! grep -Fq '#TCGCollector' src/features/social/posts.js
-          grep -Fq 'posts.js?v=2026-09-29-v05' src/app/register-features.js
-          grep -Fq 'register-features.js?v=2026-09-29-v05' src/main.js
-          grep -Fq 'src/main.js?v=2026-09-29-v05' index.html
-          ! grep -Fq 'analytics_test' src/services/analytics.js
-          ! grep -Fq 'isDevelopmentAnalyticsTestSession' src/app/startup.js
-          grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
-          node --input-type=module <<'NODE'
-          const normalizePostHashtags=value=>String(value||"").trim().toLowerCase();
-          const cases=[
-            ['#tcg #onepiece #onepiecetcg #onepiececardgame #TCGCollector','#tcg #onepiece #onepiecetcg #onepiececardgame #tcgcollector'],
-            ['#OnePiece #TCG #PSA10','#onepiece #tcg #psa10'],
-            ['  #Gundam #Carddass  ','#gundam #carddass']
-          ];
-          for(const [input,expected] of cases){
-            const actual=normalizePostHashtags(input);
-            if(actual!==expected) throw new Error('Production hashtag normalization regression: '+JSON.stringify({input,actual,expected}));
-          }
-          console.log('Production Post Generator lowercase hashtag cases passed');
-          NODE
-          node tools/check-production.mjs
-          git diff --check
-
-      # Production 2026-09-29-v05 promotes validated Development 2026-09-29-v08.
-      # Production-specific analytics, QR Generator, SEO, privacy and rollback behavior remain retained.
-
       - name: Create Production release packages
         shell: bash
         env:
-          RELEASE_VERSION: 2026-09-29-v05
-          PREVIOUS_VERSION: 2026-09-29-v04
-          PREVIOUS_COMMIT: 6263329a8949d4dcae97cb8600d49a67029adb95
-          DEVELOPMENT_PROMOTED: 2026-09-29-v08
+          RELEASE_VERSION: 2026-09-29-v06
+          PREVIOUS_VERSION: 2026-09-29-v05
+          PREVIOUS_COMMIT: a78291b8db368282a764e89e9f93b555f74a1fed
+          DEVELOPMENT_PROMOTED: 2026-09-29-v10
         run: |
           set -euo pipefail
           mkdir -p release
           FULL="release/Collect-TCG-Production-${RELEASE_VERSION}-full.zip"
           PATCH="release/Collect-TCG-Production-${PREVIOUS_VERSION}-to-${RELEASE_VERSION}-patch.zip"
-
           git archive --format=zip --output="${FULL}" HEAD
-
           rm -rf .release-patch
           mkdir -p .release-patch
           while IFS= read -r -d '' file; do
             mkdir -p ".release-patch/$(dirname "$file")"
             cp -a "$file" ".release-patch/$file"
           done < <(git diff --name-only --diff-filter=ACMRT -z "${PREVIOUS_COMMIT}" HEAD)
-
           git diff --name-only --diff-filter=D "${PREVIOUS_COMMIT}" HEAD > .release-patch/PATCH-DELETIONS.txt
-          (
-            cd .release-patch
-            zip -qr "../${PATCH}" .
-          )
-
+          (cd .release-patch && zip -qr "../${PATCH}" .)
           unzip -tq "${FULL}"
           unzip -tq "${PATCH}"
-
       - name: Upload Production release packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-09-29-v05-packages
+          name: Collect-TCG-Production-2026-09-29-v06-packages
           path: |
-            release/Collect-TCG-Production-2026-09-29-v05-full.zip
-            release/Collect-TCG-Production-2026-09-29-v04-to-2026-09-29-v05-patch.zip
+            release/Collect-TCG-Production-2026-09-29-v06-full.zip
+            release/Collect-TCG-Production-2026-09-29-v05-to-2026-09-29-v06-patch.zip
           if-no-files-found: error
           retention-days: 30
-
       - name: Record Production package validation manifest
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p release-manifests
-          MANIFEST="release-manifests/2026-09-29-v05.txt"
+          MANIFEST="release-manifests/2026-09-29-v06.txt"
           {
-            echo "Version: 2026-09-29-v05"
-            echo "Previous Production: 2026-09-29-v04"
-            echo "Development promoted from: 2026-09-29-v08"
+            echo "Version: 2026-09-29-v06"
+            echo "Previous Production: 2026-09-29-v05"
+            echo "Development promoted from: 2026-09-29-v10"
             echo "Source commit: $(git rev-parse HEAD)"
-            echo "Full ZIP: Collect-TCG-Production-2026-09-29-v05-full.zip"
-            echo "Patch ZIP: Collect-TCG-Production-2026-09-29-v04-to-2026-09-29-v05-patch.zip"
+            echo "Full ZIP: Collect-TCG-Production-2026-09-29-v06-full.zip"
+            echo "Patch ZIP: Collect-TCG-Production-2026-09-29-v05-to-2026-09-29-v06-patch.zip"
             echo
             sha256sum release/*.zip
           } > "$MANIFEST"
           git add "$MANIFEST"
-          git commit -m "Production 2026-09-29-v05: record package validation"
+          git commit -m "Production 2026-09-29-v06: record package validation"
           git push
-
       - name: Confirm Pages deployment and advance last-known-good
         shell: bash
         env:
@@ -1028,30 +146,17 @@ jobs:
           set -euo pipefail
           TARGET_SHA="$(git rev-parse HEAD)"
           echo "Waiting for GitHub Pages deployment of ${TARGET_SHA}"
-
           for attempt in $(seq 1 60); do
-            RESPONSE="$(curl -fsSL \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${GH_TOKEN}" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${TARGET_SHA}&per_page=50")"
-
+            RESPONSE="$(curl -fsSL -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GH_TOKEN}" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${TARGET_SHA}&per_page=50")"
             STATE="$(printf '%s' "${RESPONSE}" | jq -r '[.workflow_runs[] | select(.name=="pages build and deployment")] | sort_by(.created_at) | last // empty | [.status,.conclusion] | @tsv')"
-
-            if [[ -z "${STATE}" ]]; then
-              sleep 5
-              continue
-            fi
-
+            if [[ -z "${STATE}" ]]; then sleep 5; continue; fi
             STATUS="${STATE%%$'\t'*}"
             CONCLUSION="${STATE#*$'\t'}"
-
             if [[ "${STATUS}" == "completed" ]]; then
               if [[ "${CONCLUSION}" != "success" ]]; then
                 echo "Pages deployment failed with conclusion: ${CONCLUSION}" >&2
                 exit 1
               fi
-
               git fetch origin production-last-known-good:refs/remotes/origin/production-last-known-good || true
               if git rev-parse --verify refs/remotes/origin/production-last-known-good >/dev/null 2>&1; then
                 if ! git merge-base --is-ancestor refs/remotes/origin/production-last-known-good HEAD; then
@@ -1059,14 +164,11 @@ jobs:
                   exit 1
                 fi
               fi
-
               git push --force origin HEAD:refs/heads/production-last-known-good
               echo "production-last-known-good advanced to ${TARGET_SHA}"
               exit 0
             fi
-
             sleep 5
           done
-
           echo "Timed out waiting for Pages deployment of ${TARGET_SHA}" >&2
           exit 1
