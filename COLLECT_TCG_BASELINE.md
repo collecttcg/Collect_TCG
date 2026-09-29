@@ -57,7 +57,19 @@ Changes:
 
 SQL required: No.
 
-Validation status: implementation committed; Production workflow/package/Pages validation pending.
+Validation status: completed successfully. Changed JavaScript syntax, Production imports/assets/repository structure, direct FB/Carousell/eBay owner generator actions, selected-card preselection, separate-tab handoff behavior, persisted-session-first owner-route restoration, transient owner-verification retry, owner catalogue retry, Production QR registration and analytics boundaries all passed. The full retained Production regression chain, generated SEO, package creation/integrity, package-validation GitHub Pages deployment and last-known-good advancement passed. Two initial workflow attempts stopped on stale retained cache assertions; those assertions were corrected before release completion. Downloaded release ZIPs passed independent `unzip -t` integrity checks and SHA-256 matched the manifest.
+
+Release records:
+- Source/generated commit: `ef5f98396bb680944e392294cc7aa078d981c3be`
+- Final package-validation / last-known-good commit: `826165b8457c15f837aab3a496792d60fee11436`
+- Workflow run: `36503031004`
+- Package-validation Pages run: `36503072570`
+- Full ZIP: `Collect-TCG-Production-2026-09-29-v02-full.zip`
+  - SHA-256: `2b2719a9752d7a17071b8ed1fd293aa87a9275a9bf806f8e48aa28d4fa76b622`
+- Patch ZIP: `Collect-TCG-Production-2026-09-29-v01-to-2026-09-29-v02-patch.zip`
+  - SHA-256: `fc08d51cf95e63b79a8fb4e75e9c0a54d815a77d552d487b92a63e012e48c896`
+
+Validation limitation: interactive authenticated desktop/mobile/Safari browser testing was not performed; live Production was not manually opened to avoid contaminating Insights.
 
 ## Production 2026-09-29-v01
 
