@@ -55,9 +55,20 @@ Changes:
 
 SQL required: No.
 
-Validation status: implementation prepared; independent Production validation and packaging in progress.
+Validation status: completed successfully. Production independently validated the promoted v09 refactor and v10 Game-first Post Generator behavior while retaining Production-only QR Generator, SEO/canonical/indexing, migration-help filenames, analytics/privacy boundaries and rollback protection. Production repository/JavaScript/import/asset checks, consolidated CSS validation, executable Game-first generator checks, SEO generator self-test/generation/privacy checks, package creation, ZIP integrity checks, package manifest recording and the package-validation GitHub Pages deployment all passed. `production-last-known-good` advanced only after the exact package-validation commit deployed successfully.
 
-Validation limitation: live Production will not be manually opened to avoid contaminating Insights; interactive desktop/mobile/Safari testing is not performed in this promotion workflow.
+Release records:
+- Promoted source/generated commit: `8ced48c068ff7387bad8ac767ab9796d85a80665`
+- Package-validation / last-known-good commit: `800b33c3f60d6cfa3ead907bd14b99499de529a6`
+- Successful Production workflow: `36557772098`
+- Successful package-validation Pages run: `36557812883`
+- Package artifact: `11028520417`
+- Full ZIP: `Collect-TCG-Production-2026-09-29-v06-full.zip`
+  - SHA-256: `d42596d7aef99f8136ad91bf6b82af3c16efbc8fe89c9d302117b22f96ec1684`
+- Patch ZIP: `Collect-TCG-Production-2026-09-29-v05-to-2026-09-29-v06-patch.zip`
+  - SHA-256: `1e168a70d36c4c1fff83f778e58541acde1340634fd8aba99ba670064b3f8be3`
+
+Validation limitation: live Production was not manually opened, to avoid contaminating Insights. Interactive desktop/mobile/Safari browser testing was not performed; executable/static validation and Production Pages deployment completed successfully.
 
 ## Production 2026-09-29-v05
 
