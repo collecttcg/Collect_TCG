@@ -26,6 +26,8 @@ Previous Production: `2026-09-29-v06`
 
 Production functional baseline last promoted from Development: `2026-09-29-v11`
 
+Production package-validation HEAD: `56336f79bd1d94ef79238a70280528f15c66302b`
+
 Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v25`.
 
 Important promotion state:
@@ -55,9 +57,21 @@ Changes:
 
 SQL required: No.
 
-Validation status: implementation committed; independent Production validation, packaging and Pages deployment in progress.
+Validation status: completed successfully. Production independently validated the promoted Development v11 watermark CTA while retaining Production-only QR Generator, SEO/canonical/indexing, migration-help filenames, analytics/privacy boundaries and rollback protection. Repository-wide JavaScript syntax/import/asset checks, consolidated CSS validation, retained Game-first Post Generator checks, the dedicated CHECK FULL INVENTORY watermark CTA contract, SEO generator syntax/self-test/generation/privacy checks, package creation, ZIP integrity checks, package manifest recording and the package-validation GitHub Pages deployment all passed. `production-last-known-good` advanced only after the exact package-validation commit deployed successfully.
 
-Validation limitation: live Production will not be manually opened to avoid contaminating Insights; interactive desktop/mobile/Safari browser testing is not performed in this promotion workflow.
+Release records:
+- Promotion source commit: `0d8b587f1058b40125d56ccb60e70a0c95d73acf`
+- Generated/package source commit: `9140a8f96c8bf8d6dcd7dc2c675ce4cd801ef6a4`
+- Package-validation / last-known-good commit: `56336f79bd1d94ef79238a70280528f15c66302b`
+- Successful Production workflow: `36560953626`
+- Successful package-validation Pages run: `36560991979`
+- Package artifact: `11030360233`
+- Full ZIP: `Collect-TCG-Production-2026-09-29-v07-full.zip`
+  - SHA-256: `8a37f0e9eb7f50c1a1cafb74c24d749776aaa9dd4207b6768d3fb333fc8da673`
+- Patch ZIP: `Collect-TCG-Production-2026-09-29-v06-to-2026-09-29-v07-patch.zip`
+  - SHA-256: `ec22a35375a955a997920dc266768146423c1216e959b02b3787f9d2a29a595b`
+
+Validation limitation: live Production was not manually opened, to avoid contaminating Insights. Interactive desktop/mobile/Safari browser testing was not performed; executable/static validation and Production Pages deployment completed successfully.
 
 ## Production 2026-09-29-v06
 
