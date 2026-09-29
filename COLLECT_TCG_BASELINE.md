@@ -56,7 +56,19 @@ Changes:
 
 SQL required: No.
 
-Validation status: promotion implemented; independent Production validation pending.
+Validation status: completed successfully. Production independently validated the Development v06-v07 responsive watermark sizing while retaining Production v03 owner/session behavior and Production-only QR Generator, SEO/canonical, analytics, privacy and rollback behavior. Changed JavaScript syntax, Production imports/assets/repository structure, retained regression checks, generated SEO, the dedicated v04 portrait/square/slight-landscape/medium-landscape/4:3/wide-landscape sizing cases, release packaging, ZIP integrity/hash recording, final GitHub Pages deployment and last-known-good advancement all completed successfully.
+
+Release records:
+- Source/generated commit: `2b794dab76c2e93837ee825f87ffe623b316e36a`
+- Package-validation / last-known-good commit: `6263329a8949d4dcae97cb8600d49a67029adb95`
+- Workflow run: `36530869538`
+- Package-validation Pages run: `36530913512`
+- Full ZIP: `Collect-TCG-Production-2026-09-29-v04-full.zip`
+  - SHA-256: `cb63a13f914f37e65785ad8c47ba895d6aa016cd2b412759e725da6970746283`
+- Patch ZIP: `Collect-TCG-Production-2026-09-29-v03-to-2026-09-29-v04-patch.zip`
+  - SHA-256: `e3063992443c2cb64dd021d47ca61f29f9692a44b5687a58c3195d4219db3508`
+
+Validation limitation: interactive desktop/mobile/Safari browser testing was not performed. Live Production was not manually opened, to avoid contaminating Insights.
 
 ## Production 2026-09-29-v03
 
