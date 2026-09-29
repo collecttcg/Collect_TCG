@@ -56,6 +56,8 @@ function cardTileHTML(c, renderIndex=999){
               <button type="button" data-action="edit" data-id="${appContext.escapeHtml(c.id)}">Edit</button>
               <button type="button" data-action="clone" data-id="${appContext.escapeHtml(c.id)}">Clone</button>
               <button type="button" data-action="fb-post" data-id="${appContext.escapeHtml(c.id)}">Generate FB Post</button>
+              ${appContext.cardLifecycle(c)!=="archived" ? `<button type="button" data-action="carousell-post" data-id="${appContext.escapeHtml(c.id)}">Generate Carousell Post</button>` : ""}
+              ${appContext.isLiveLifecycle(c) ? `<button type="button" data-action="ebay-post" data-id="${appContext.escapeHtml(c.id)}">Generate eBay Post</button>` : ""}
               <div class="quick-card-menu-separator"></div>
               ${appContext.normalizeFilterValue(c.availability)!=="available" ? `<button type="button" data-action="availability" data-status="Available" data-id="${appContext.escapeHtml(c.id)}">Mark Available</button>` : ""}
               ${appContext.normalizeFilterValue(c.availability)!=="reserved" ? `<button type="button" data-action="availability" data-status="Reserved" data-id="${appContext.escapeHtml(c.id)}">Mark Reserved</button>` : ""}
@@ -389,16 +391,13 @@ function wireCardActions(container){
           appContext.openCloneOptions(card);
         }else if(action==="fb-post"){
           if(!appContext.requireOwner("generate Facebook post")) return;
-
-          // Stay in the same tab. Save the exact current listing URL + scroll
-          // position first, then navigate to the Single Card Post Generator.
-          // Browser Back will return to this exact listing state and restore
-          // the previous scroll position.
-          const returnHash=location.hash||"#/inventory";
-          appContext.rememberReturnScroll(returnHash);
-
-          location.hash=
-            `#/fb-tools?mode=single&card=${encodeURIComponent(card.id)}`;
+          appContext.openOwnerPostGenerator("single",card.id);
+        }else if(action==="carousell-post"){
+          if(!appContext.requireOwner("generate Carousell post")) return;
+          appContext.openOwnerPostGenerator("carousell",card.id);
+        }else if(action==="ebay-post"){
+          if(!appContext.requireOwner("generate eBay post")) return;
+          appContext.openOwnerPostGenerator("ebay",card.id);
         }else if(action==="availability"){
           if(!appContext.requireOwner("change card availability")) return;
           const status=String(btn.dataset.status||"");

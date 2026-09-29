@@ -6,7 +6,7 @@ import { initialize as initialize3 } from '../features/media/collage.js';
 import { initialize as initialize4 } from '../features/cards/repository.js?v=2026-09-26-v06';
 import { initialize as initialize5 } from '../app/navigation.js?v=2026-09-26-v06';
 import { initialize as initialize6 } from '../features/cards/pricing.js';
-import { initialize as initialize7 } from '../services/catalogue.js?v=2026-09-28-v02';
+import { initialize as initialize7 } from '../services/catalogue.js?v=2026-09-29-v02';
 import { initialize as initialize8 } from '../features/content/giveaways-data.js';
 import { initialize as initialize9 } from '../features/content/showcase-data.js';
 import { initialize as initialize10 } from '../services/analytics.js?v=2026-09-24-v08';
@@ -32,7 +32,7 @@ import { initialize as initialize29 } from '../features/owner/add.js';
 import { initialize as initialize30 } from '../features/cards/details.js?v=2026-09-26-v01';
 import { initialize as initialize31 } from '../features/owner/editor.js';
 import { initialize as initialize32 } from '../app/theme.js';
-import { initialize as initialize33 } from '../app/startup.js?v=2026-09-24-v08';
+import { initialize as initialize33 } from '../app/startup.js?v=2026-09-29-v02';
 
 export function initializeApp(appContext,runtime){
   initialize0(appContext,runtime);

@@ -58,8 +58,8 @@ const baselinePath=path.join(root,'COLLECT_TCG_BASELINE.md');
 if(!fs.existsSync(baselinePath)) throw new Error('Missing COLLECT_TCG_BASELINE.md');
 const baseline=fs.readFileSync(baselinePath,'utf8');
 for(const marker of [
-  'Latest Production: `2026-09-29-v01`',
-  'Latest Development: `2026-09-28-v07`',
+  'Latest Production: `2026-09-29-v02`',
+  'Latest Development: `2026-09-29-v04`',
   'Development promoted from: `2026-09-27-v28`',
   'QR Generator',
   'migrations/2026/'
@@ -87,7 +87,7 @@ if(!releaseWorkflow.includes('HEAD:refs/heads/production-last-known-good')) thro
 console.log(`Checked ${jsCount} JavaScript files, imports, HTML assets, migrations and Production structure.`);
 
 
-const orderingModule=await import('../src/features/inventory/ordering.js?production-check=2026-09-29-v01');
+const orderingModule=await import('../src/features/inventory/ordering.js?production-check=2026-09-29-v02');
 const orderApp={safeCardId:value=>String(value||'').trim()};
 orderingModule.register(orderApp);
 const mergeIds=['a','b','c','d','e','f'];
@@ -152,4 +152,25 @@ if(insights.includes('2026-09-17-v18-COUNTRY-CARD-DEMAND.sql') || insights.inclu
 if(!insights.includes('salesActionQueueRows') || !insights.includes('What to act on next')) throw new Error('Promoted Owner Insights sales action queue missing.');
 const analyticsSource=fs.readFileSync(path.join(root,'src/services/analytics.js'),'utf8');
 if(analyticsSource.includes('analytics_test') || analyticsSource.includes('isDevelopmentAnalyticsTestSession')) throw new Error('Development-only analytics test bypass leaked into Production.');
-console.log('Validated Production 2026-09-29-v01 promoted Development behavior and Production-only boundaries.');
+console.log('Validated retained Production behavior and Production-only boundaries.');
+
+const authSource=fs.readFileSync(path.join(root,'src/services/auth.js'),'utf8');
+const startupSource=fs.readFileSync(path.join(root,'src/app/startup.js'),'utf8');
+const catalogueSource=fs.readFileSync(path.join(root,'src/services/catalogue.js'),'utf8');
+const runtimeSource=fs.readFileSync(path.join(root,'src/app/production-runtime.js'),'utf8');
+const tilesSource=fs.readFileSync(path.join(root,'src/features/cards/tiles.js'),'utf8');
+const postsSource=fs.readFileSync(path.join(root,'src/features/social/posts.js'),'utf8');
+const routingSource=fs.readFileSync(path.join(root,'src/app/routing.js'),'utf8');
+const applyOwnerModeSource=authSource.slice(authSource.indexOf('function applyOwnerMode()'),authSource.indexOf('function requireOwner('));
+if(applyOwnerModeSource.includes('goToRoute("inventory")')) throw new Error('Owner UI application still redirects owner-only routes before auth settles.');
+if(!authSource.includes('async function verifyOwnerSessionResult(session)')) throw new Error('Owner verification result helper missing.');
+if(!authSource.includes('Owner verification failed; retrying once:')) throw new Error('Transient owner verification retry missing.');
+if(!authSource.includes('function openOwnerPostGenerator(mode,cardId)')) throw new Error('Separate-tab owner post generator helper missing.');
+if(!startupSource.includes('ownerPostHandoffRequested && !appContext.isOwnerMode()')) throw new Error('Persisted-session-first generator startup guard missing.');
+if(!catalogueSource.includes('Secure owner card read failed; retrying once:')) throw new Error('Owner catalogue retry missing.');
+if(!runtimeSource.includes('persistSession:true') || !runtimeSource.includes('autoRefreshToken:true')) throw new Error('Explicit Production auth persistence/refresh config missing.');
+if(!routingSource.includes('appContext.isOwnerOnlyRoute(route) && !appContext.isOwnerMode()')) throw new Error('Central owner-only route guard missing.');
+for(const marker of ['Generate FB Post','Generate Carousell Post','Generate eBay Post']) if(!tilesSource.includes(marker)) throw new Error('Generator quick action missing: '+marker);
+if(!postsSource.includes('currentHashParams().get("card")')) throw new Error('Requested generator card preselection missing.');
+if(analyticsSource.includes('analytics_test') || startupSource.includes('isDevelopmentAnalyticsTestSession')) throw new Error('Development analytics-test behavior leaked into Production.');
+console.log('Validated Production 2026-09-29-v02 owner generator/session promotion.');

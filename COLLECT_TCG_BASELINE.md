@@ -18,24 +18,46 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-28-v07`
+Latest Development: `2026-09-29-v04`
 
-Latest Production: `2026-09-29-v01`
+Latest Production: `2026-09-29-v02`
 
-Previous Production: `2026-09-28-v05`
+Previous Production: `2026-09-29-v01`
 
-Production functional baseline last promoted from Development: `2026-09-28-v07`
+Production functional baseline last promoted from Development: `2026-09-29-v04`
 
 Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v25`.
 
 Important promotion state:
 - Development repository rename is complete: `collecttcg/Collect_TCG_Dev`.
-- Current Development release: `2026-09-28-v07`.
+- Current Development release: `2026-09-29-v04`.
 - Historical Beta version names and release records remain unchanged.
 - Production includes the validated Beta v16 clone fix.
 - Development v25 validated application delta is promoted in Production v08. Production retains the v07 inventory/order, routing and Owner Insights baseline while adding the approved QR/CTA inventory watermark renderer and compact continuous Add/Edit owner editor.
 - Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
+
+## Production 2026-09-29-v02
+
+Previous Production: `2026-09-29-v01`
+
+Development promoted from: `2026-09-29-v04`
+
+Purpose: promote the validated Development 2026-09-29-v01 through v04 owner generator and owner-route/session-restoration improvements.
+
+Changes:
+- Adds direct Facebook, Carousell and eBay generator shortcuts to owner card quick actions while preserving existing listing eligibility.
+- Opens card Post Generators in a separate tab and carries the selected card into the existing generator.
+- Restores the persisted Supabase Owner session before final owner-only route enforcement on refresh/new-tab startup.
+- Retries a transient owner verification once after a server-confirmed user/session check and retries owner-card loading once before the existing fail-closed public fallback.
+- Makes the central router the single owner-only route gate; UI state application no longer redirects Insights/Post Generator Tools prematurely.
+- Makes Production browser auth persistence/auto-refresh configuration explicit.
+- Retains Production-only QR Generator registration, SEO/canonical behavior, analytics boundaries and rollback safeguards.
+- Excludes Development-only repository structure and `analytics_test` behavior.
+
+SQL required: No.
+
+Validation status: implementation committed; Production workflow/package/Pages validation pending.
 
 ## Production 2026-09-29-v01
 

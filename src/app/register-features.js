@@ -1,13 +1,13 @@
 import { register as register0 } from '../features/core/utilities.js?v=2026-09-28-v04';
 import { register as register1 } from '../features/cards/favorites.js';
 import { register as register2 } from '../features/inventory/ordering.js?v=2026-09-28-v01';
-import { register as register3 } from '../services/auth.js?v=2026-09-26-v01';
+import { register as register3 } from '../services/auth.js?v=2026-09-29-v02';
 import { register as register4 } from '../features/media/collage.js?v=2026-09-26-v03';
 import { register as register5 } from '../features/cards/repository.js?v=2026-09-26-v06';
 import { register as register6 } from '../app/navigation.js?v=2026-09-26-v06';
 import { register as register7 } from '../ui/notifications.js?v=2026-09-26-v02';
 import { register as register8 } from '../features/cards/pricing.js';
-import { register as register9 } from '../services/catalogue.js?v=2026-09-28-v02';
+import { register as register9 } from '../services/catalogue.js?v=2026-09-29-v02';
 import { register as register10 } from '../features/content/giveaways-data.js';
 import { register as register11 } from '../features/content/showcase-data.js';
 import { register as register12 } from '../services/analytics.js?v=2026-09-24-v08';
@@ -21,7 +21,7 @@ import { register as register18 } from '../features/content/home.js?v=2026-09-26
 import { register as register19 } from '../features/inventory/filtering.js?v=2026-09-28-v02';
 import { register as register20 } from '../features/cards/related.js?v=2026-09-24-v06';
 import { register as register21 } from '../features/cards/compare.js?v=2026-09-26-v05';
-import { register as register22 } from '../features/cards/tiles.js?v=2026-09-26-v01';
+import { register as register22 } from '../features/cards/tiles.js?v=2026-09-29-v02';
 import { register as register23 } from '../features/inventory/page.js?v=2026-09-28-v05';
 import { register as register24 } from '../features/content/giveaways.js';
 import { register as register25 } from '../features/content/showcase.js';
@@ -31,7 +31,7 @@ import { register as registerInsightsIntentRates } from '../features/owner/insig
 import { register as registerInsightsDashboard } from '../features/owner/insights-dashboard.js?v=2026-09-27-v07';
 import { register as register28 } from '../features/content/reviews.js';
 import { register as register29 } from '../features/content/information.js?v=2026-09-26-v03';
-import { register as register30 } from '../features/social/posts.js?v=2026-09-29-v01';
+import { register as register30 } from '../features/social/posts.js?v=2026-09-29-v02';
 import { register as register31 } from '../features/owner/quality.js';
 import { register as register32 } from '../features/owner/tools.js?v=2026-09-27-v09';
 import { register as register33 } from '../features/owner/bulk-status.js?v=2026-09-27-v09';
@@ -46,7 +46,7 @@ import { register as register40 } from '../features/owner/add.js?v=2026-09-27-v0
 import { register as register41 } from '../features/cards/details.js?v=2026-09-26-v01';
 import { register as register42 } from '../features/owner/editor.js';
 import { register as register43 } from '../app/theme.js';
-import { register as register44 } from '../app/startup.js?v=2026-09-24-v08';
+import { register as register44 } from '../app/startup.js?v=2026-09-29-v02';
 
 export function registerFeatures(appContext){
   register0(appContext);
