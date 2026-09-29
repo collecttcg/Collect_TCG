@@ -58,9 +58,9 @@ const baselinePath=path.join(root,'COLLECT_TCG_BASELINE.md');
 if(!fs.existsSync(baselinePath)) throw new Error('Missing COLLECT_TCG_BASELINE.md');
 const baseline=fs.readFileSync(baselinePath,'utf8');
 for(const marker of [
-  'Latest Production: `2026-09-29-v06`',
-  'Latest Development: `2026-09-29-v10`',
-  'Development promoted from: `2026-09-29-v10`',
+  'Latest Production: `2026-09-29-v07`',
+  'Latest Development: `2026-09-29-v11`',
+  'Development promoted from: `2026-09-29-v11`',
   'QR Generator',
   'migrations/2026/'
 ]){
@@ -178,7 +178,7 @@ const initializer=fs.readFileSync(path.join(root,'src/app/initialize.js'),'utf8'
 const policySource=fs.readFileSync(path.join(root,'src/services/contact-intent-policy.js'),'utf8');
 const utilitiesSource=fs.readFileSync(path.join(root,'src/features/core/utilities.js'),'utf8');
 const enhancementSource=fs.readFileSync(path.join(root,'src/ui/enhancement-2.js'),'utf8');
-if(!initializer.includes("export { initializeApp } from './register-features.js?v=2026-09-29-v06'")) throw new Error('Refactored initializer facade missing.');
+if(!initializer.includes("export { initializeApp } from './register-features.js?v=2026-09-29-v07'")) throw new Error('Refactored initializer facade missing.');
 if((registry.match(/posts\.js\?v=2026-09-29-v10/g)||[]).length!==1) throw new Error('Post Generator module must be registered exactly once.');
 if(analyticsSource.includes('function insightContactMetrics(')||analyticsSource.includes('function insightInterestScore(')) throw new Error('Superseded analytics contact scoring returned.');
 if(!policySource.includes('function insightContactMetrics(')||!policySource.includes('function insightInterestScore(')) throw new Error('Canonical contact-intent scoring policy missing.');
@@ -190,4 +190,22 @@ if(!fs.existsSync(path.join(root,'src/features/owner/insights-extension-host.js'
 for(const rel of ['src/features/social/posts-card-list.js','src/features/social/posts-giveaway.js','src/features/social/posts-marketplace.js']) if(!fs.existsSync(path.join(root,rel))) throw new Error('Split Post Generator module missing: '+rel);
 if(fs.readdirSync(path.join(root,'src/styles')).filter(name=>name.endsWith('.css')&&name!=='27-insights-dashboard.css').sort().join(',')!=='01-foundation.css,02-components.css') throw new Error('Legacy global CSS files remain after consolidation.');
 console.log('Validated promoted v09 refactor contracts and Production boundaries.');
+
+const imageSource=fs.readFileSync(path.join(root,'src/features/media/images.js'),'utf8');
+for(const marker of [
+  'function drawWebsiteWatermarkCta(ctx,banner,bannerX,bannerY,scale)',
+  'const label="CHECK FULL INVENTORY"',
+  'drawWebsiteWatermarkCta(ctx,banner,bannerX,bannerY,scale);',
+  'const sourceW=1113;',
+  'const sourceH=242;',
+  'const qrX=bannerX+885*scale;',
+  'const qrY=bannerY+27*scale;',
+  'const qrSize=166*scale;'
+]){
+  if(!imageSource.includes(marker)) throw new Error('Production watermark CTA contract missing: '+marker);
+}
+if(!registry.includes("images.js?v=2026-09-29-v07")) throw new Error('Production watermark module cache-buster missing.');
+if(!html.includes('src/main.js?v=2026-09-29-v07')) throw new Error('Production main cache-buster missing.');
+console.log('Validated Production 2026-09-29-v07 CHECK FULL INVENTORY watermark CTA contract.');
+
 

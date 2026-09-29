@@ -1,6 +1,6 @@
 # Collect TCG Current Baseline
 
-Last reconciled against GitHub: 2026-09-28
+Last reconciled against GitHub: 2026-09-29
 
 ## Repositories
 
@@ -18,24 +18,46 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-29-v10`
+Latest Development: `2026-09-29-v11`
 
-Latest Production: `2026-09-29-v06`
+Latest Production: `2026-09-29-v07`
 
-Previous Production: `2026-09-29-v04`
+Previous Production: `2026-09-29-v06`
 
-Production functional baseline last promoted from Development: `2026-09-29-v08`
+Production functional baseline last promoted from Development: `2026-09-29-v11`
 
 Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v25`.
 
 Important promotion state:
 - Development repository rename is complete: `collecttcg/Collect_TCG_Dev`.
-- Current Development release: `2026-09-29-v08`.
+- Current Development release: `2026-09-29-v11`.
 - Historical Beta version names and release records remain unchanged.
 - Production includes the validated Beta v16 clone fix.
 - Development v25 validated application delta is promoted in Production v08. Production retains the v07 inventory/order, routing and Owner Insights baseline while adding the approved QR/CTA inventory watermark renderer and compact continuous Add/Edit owner editor.
 - Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
+
+## Production 2026-09-29-v07
+
+Previous Production: `2026-09-29-v06`
+
+Development promoted from: `2026-09-29-v11`
+
+Purpose: promote the validated Development v11 inventory image watermark CTA wording while preserving the approved watermark layout and Production-specific behavior.
+
+Changes:
+- Rendered website watermark CTA changes from the baked artwork wording “CHECK PRICE • AVAILABILITY” to “CHECK FULL INVENTORY”.
+- The approved 1113×242 banner remains canonical; only its CTA text band is replaced during canvas rendering.
+- Logo, tagline, URL treatment, QR frame/decorations, dynamically regenerated QR interior, banner dimensions and responsive placement are preserved.
+- Applies to both Logo + CTA + QR and CTA + QR-only watermark paths through the shared website watermark renderer.
+- Production-only QR Generator, SEO/canonical/indexing behavior, migration-help filenames, analytics/privacy boundaries and last-known-good rollback protection are preserved.
+- Development-only repository structure and `analytics_test` behavior are excluded.
+
+SQL required: No.
+
+Validation status: implementation committed; independent Production validation, packaging and Pages deployment in progress.
+
+Validation limitation: live Production will not be manually opened to avoid contaminating Insights; interactive desktop/mobile/Safari browser testing is not performed in this promotion workflow.
 
 ## Production 2026-09-29-v06
 
