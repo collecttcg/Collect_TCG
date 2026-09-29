@@ -90,10 +90,10 @@ jobs:
       - name: Create Production release packages
         shell: bash
         env:
-          RELEASE_VERSION: 2026-09-29-v10
-          PREVIOUS_VERSION: 2026-09-29-v09
-          PREVIOUS_COMMIT: 86ce84330e9d0f6ff24febff528bd4137738388a
-          DEVELOPMENT_PROMOTED: 2026-09-29-v14
+          RELEASE_VERSION: 2026-09-30-v01
+          PREVIOUS_VERSION: 2026-09-29-v10
+          PREVIOUS_COMMIT: 6569b823f5df48f306d4177f8f22446e6e1ed9ac
+          DEVELOPMENT_PROMOTED: 2026-09-30-v01
         run: |
           set -euo pipefail
           mkdir -p release
@@ -113,10 +113,10 @@ jobs:
       - name: Upload Production release packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-09-29-v10-packages
+          name: Collect-TCG-Production-2026-09-30-v01-packages
           path: |
-            release/Collect-TCG-Production-2026-09-29-v10-full.zip
-            release/Collect-TCG-Production-2026-09-29-v09-to-2026-09-29-v10-patch.zip
+            release/Collect-TCG-Production-2026-09-30-v01-full.zip
+            release/Collect-TCG-Production-2026-09-29-v10-to-2026-09-30-v01-patch.zip
           if-no-files-found: error
           retention-days: 30
       - name: Record Production package validation manifest
@@ -124,19 +124,19 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-manifests
-          MANIFEST="release-manifests/2026-09-29-v10.txt"
+          MANIFEST="release-manifests/2026-09-30-v01.txt"
           {
-            echo "Version: 2026-09-29-v10"
-            echo "Previous Production: 2026-09-29-v09"
-            echo "Development promoted from: 2026-09-29-v14"
+            echo "Version: 2026-09-30-v01"
+            echo "Previous Production: 2026-09-29-v10"
+            echo "Development promoted from: 2026-09-30-v01"
             echo "Source commit: $(git rev-parse HEAD)"
-            echo "Full ZIP: Collect-TCG-Production-2026-09-29-v10-full.zip"
-            echo "Patch ZIP: Collect-TCG-Production-2026-09-29-v09-to-2026-09-29-v10-patch.zip"
+            echo "Full ZIP: Collect-TCG-Production-2026-09-30-v01-full.zip"
+            echo "Patch ZIP: Collect-TCG-Production-2026-09-29-v10-to-2026-09-30-v01-patch.zip"
             echo
             sha256sum release/*.zip
           } > "$MANIFEST"
           git add "$MANIFEST"
-          git commit -m "Production 2026-09-29-v10: record package validation"
+          git commit -m "Production 2026-09-30-v01: record package validation"
           git push
       - name: Confirm Pages deployment and advance last-known-good
         shell: bash
