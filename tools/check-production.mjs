@@ -68,6 +68,7 @@ for(const marker of [
 }
 
 const registry=fs.readFileSync(path.join(root,'src/app/register-features.js'),'utf8');
+const mainSource=fs.readFileSync(path.join(root,'src/main.js'),'utf8');
 if(!registry.includes("owner/qr-generator.js?v=2026-09-27-v01")) throw new Error('QR Generator module is not registered.');
 if(!registry.includes('registerQrGenerator(appContext)')) throw new Error('QR Generator registration call is missing.');
 
