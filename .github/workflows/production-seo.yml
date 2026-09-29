@@ -492,7 +492,7 @@ jobs:
           grep -Fq 'width:min(92vw,1100px) !important' src/styles/01-foundation.css
           grep -Fq 'height:350px !important' src/styles/01-foundation.css
           grep -Fq 'grid-template-columns:repeat(3,minmax(0,1fr)) !important' src/styles/01-foundation.css
-          grep -q 'features/media/images.js?v=2026-09-27-v08' src/app/register-features.js
+          grep -q 'features/media/images.js?v=2026-09-29-v03' src/app/register-features.js
           grep -q 'features/owner/forms.js?v=2026-09-28-v03' src/app/register-features.js
           grep -q 'owner/qr-generator.js?v=2026-09-27-v01' src/app/register-features.js
           grep -q 'registerQrGenerator(appContext)' src/app/register-features.js
