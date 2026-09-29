@@ -55,7 +55,19 @@ Changes:
 
 SQL required: No.
 
-Validation status: implementation committed; independent Production validation pending.
+Validation status: completed successfully. Production independently validated the Development v08 lowercase hashtag promotion while retaining Production v04 responsive watermark behavior and Production-only QR Generator, SEO/canonical, analytics, privacy and rollback behavior. Repository-wide JavaScript/import/asset checks, retained regression checks, dedicated mixed-case hashtag normalization cases, release packaging, ZIP integrity/hash recording, final GitHub Pages deployment and last-known-good advancement all completed successfully.
+
+Release records:
+- Source/generated commit: `08697e84285c7b34393e81164ff35860d39db116`
+- Package-validation / last-known-good commit: `a78291b8db368282a764e89e9f93b555f74a1fed`
+- Workflow run: `36532079910`
+- Package-validation Pages run: `36532133330`
+- Full ZIP: `Collect-TCG-Production-2026-09-29-v05-full.zip`
+  - SHA-256: `5cf063c453721a93993493c4ef8ecb11609150c8a0524da3848f23c979ea3e4e`
+- Patch ZIP: `Collect-TCG-Production-2026-09-29-v04-to-2026-09-29-v05-patch.zip`
+  - SHA-256: `c0404c8bb4fe4b1b08c2074f7e0bba87af3dd7f72569d6983979472402cd1c4b`
+
+Validation limitation: interactive desktop/mobile/Safari browser testing was not performed. Live Production was not manually opened, to avoid contaminating Insights.
 
 ## Production 2026-09-29-v04
 
