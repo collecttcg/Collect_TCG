@@ -223,7 +223,6 @@ if(!mainSource.includes("register-features.js?v=2026-09-29-v10") || !mainSource.
 console.log('Validated Production 2026-09-29-v09 Mark Sold click timestamp contract.');
 
 if(!registry.includes("posts.js?v=2026-09-29-v14")) throw new Error('Production v10 posts cache-buster missing.');
-const postsSource=fs.readFileSync(path.join(root,'src/features/social/posts.js'),'utf8');
 const marketplaceSource=fs.readFileSync(path.join(root,'src/features/social/posts-marketplace.js'),'utf8');
 if(!postsSource.includes('posts-marketplace.js?v=2026-09-29-v14')) throw new Error('Production v10 marketplace cache-buster missing.');
 if(!marketplaceSource.includes('id="ebayPrepareListing" disabled>Prepare eBay Listing</button>')) throw new Error('Production v10 Prepare eBay Listing button missing.');
