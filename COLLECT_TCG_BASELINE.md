@@ -18,13 +18,13 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-29-v13`
+Latest Development: `2026-09-29-v14`
 
-Latest Production: `2026-09-29-v09`
+Latest Production: `2026-09-29-v10`
 
-Previous Production: `2026-09-29-v08`
+Previous Production: `2026-09-29-v09`
 
-Production functional baseline last promoted from Development: `2026-09-29-v13`
+Production functional baseline last promoted from Development: `2026-09-29-v14`
 
 Production package-validation HEAD: `86ce84330e9d0f6ff24febff528bd4137738388a`
 
@@ -32,12 +32,34 @@ Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v
 
 Important promotion state:
 - Development repository rename is complete: `collecttcg/Collect_TCG_Dev`.
-- Current Development release: `2026-09-29-v13`.
+- Current Development release: `2026-09-29-v14`.
 - Historical Beta version names and release records remain unchanged.
 - Production includes the validated Beta v16 clone fix.
 - Development v25 validated application delta is promoted in Production v08. Production retains the v07 inventory/order, routing and Owner Insights baseline while adding the approved QR/CTA inventory watermark renderer and compact continuous Add/Edit owner editor.
 - Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
+
+## Production 2026-09-29-v10
+
+Previous Production: `2026-09-29-v09`
+
+Development promoted from: `2026-09-29-v14`
+
+Purpose: add the validated Development v14 one-step **Prepare eBay Listing** action to Production.
+
+Changes:
+- Adds a primary `Prepare eBay Listing` button to the Owner eBay Listing Generator.
+- The action copies the same combined Title + Item Specifics + Description payload as `Copy All`.
+- If the selected card has images, it also creates/downloads the existing image ZIP and reports included/skipped results.
+- If the card has no images, preparation succeeds as a copy-only action.
+- Existing eBay individual copy, image download and Open Card actions remain available.
+- Production-only QR Generator, CHECK FULL INVENTORY watermark, SEO/canonical/indexing, analytics/privacy boundaries and rollback protection are preserved.
+
+SQL required: No.
+
+Validation status: implementation committed; independent Production validation, packaging and Pages/rollback confirmation in progress.
+
+Validation limitation: live Production will not be manually opened to avoid contaminating Insights. Interactive desktop/mobile/Safari browser testing has not been performed.
 
 ## Production 2026-09-29-v09
 
