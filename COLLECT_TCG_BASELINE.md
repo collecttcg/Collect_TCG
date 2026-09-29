@@ -26,7 +26,7 @@ Previous Production: `2026-09-29-v08`
 
 Production functional baseline last promoted from Development: `2026-09-29-v13`
 
-Production package-validation HEAD: `d12d2d106c56a91f59f1a9757f8d27c87d1eb723`
+Production package-validation HEAD: `86ce84330e9d0f6ff24febff528bd4137738388a`
 
 Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v25`.
 
@@ -56,9 +56,23 @@ Changes:
 
 SQL required: No. The existing `sold_at` field is reused.
 
-Validation status: implementation committed; independent Production validation, packaging and Pages/rollback confirmation in progress.
+Validation status: completed successfully. Production independently validated the Development v13 Mark Sold behavior while retaining Production-only QR Generator, CHECK FULL INVENTORY watermark, SEO/canonical/indexing, analytics/privacy boundaries and rollback protection. The Development executable regression confirmed Mark Sold stamps a fresh click-time timestamp and leaving Sold clears the local sold date. Production repository-wide JavaScript/import/asset checks, consolidated CSS validation, retained Post Generator checks, dedicated Mark Sold timestamp/cache contracts, SEO generator syntax/self-test/generation/privacy checks, package creation, ZIP integrity checks, package manifest recording and the exact package-validation GitHub Pages deployment all passed. `production-last-known-good` advanced only after that exact commit deployed successfully.
 
-Validation limitation: live Production will not be manually opened to avoid contaminating Insights. Interactive desktop/mobile/Safari browser testing has not been performed.
+Release records:
+- Promotion/source commit: `9f14ae50750486a11cd058ee963c141941a64c38`
+- Release configuration commit: `833fdd7b80768ab9354bceed49dadd3f6c97c0dc`
+- Validation-script correction commit: `b1287386c7bf62e01f50445721409588421a6625`
+- Generated/package source commit: `1b616a8e08c70e020ce5b67d0a149f1695861c2d`
+- Package-validation / last-known-good commit: `86ce84330e9d0f6ff24febff528bd4137738388a`
+- Successful Production workflow: `36579324774`
+- Successful package-validation Pages run: `36579394709`
+- Package artifact: `11038751308`
+- Full ZIP: `Collect-TCG-Production-2026-09-29-v09-full.zip`
+  - SHA-256: `5bc12126d35272ee0b0d21fadcfa1f043f57fc37847d4be88bb633a1c8e99ec3`
+- Patch ZIP: `Collect-TCG-Production-2026-09-29-v08-to-2026-09-29-v09-patch.zip`
+  - SHA-256: `378e81db0746d3aa632351b617bb9c5cf59fb826973c32e9aa5703b177867147`
+
+Validation limitation: live Production was not manually opened, to avoid contaminating Insights. Interactive desktop/mobile/Safari browser testing was not performed; executable/static validation and Production Pages deployment completed successfully.
 
 ## Production 2026-09-29-v08
 
