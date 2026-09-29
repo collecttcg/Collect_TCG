@@ -58,9 +58,9 @@ const baselinePath=path.join(root,'COLLECT_TCG_BASELINE.md');
 if(!fs.existsSync(baselinePath)) throw new Error('Missing COLLECT_TCG_BASELINE.md');
 const baseline=fs.readFileSync(baselinePath,'utf8');
 for(const marker of [
-  'Latest Production: `2026-09-29-v07`',
-  'Latest Development: `2026-09-29-v11`',
-  'Development promoted from: `2026-09-29-v11`',
+  'Latest Production: `2026-09-29-v08`',
+  'Latest Development: `2026-09-29-v12`',
+  'Development promoted from: `2026-09-29-v12`',
   'QR Generator',
   'migrations/2026/'
 ]){
@@ -178,8 +178,8 @@ const initializer=fs.readFileSync(path.join(root,'src/app/initialize.js'),'utf8'
 const policySource=fs.readFileSync(path.join(root,'src/services/contact-intent-policy.js'),'utf8');
 const utilitiesSource=fs.readFileSync(path.join(root,'src/features/core/utilities.js'),'utf8');
 const enhancementSource=fs.readFileSync(path.join(root,'src/ui/enhancement-2.js'),'utf8');
-if(!initializer.includes("export { initializeApp } from './register-features.js?v=2026-09-29-v07'")) throw new Error('Refactored initializer facade missing.');
-if((registry.match(/posts\.js\?v=2026-09-29-v10/g)||[]).length!==1) throw new Error('Post Generator module must be registered exactly once.');
+if(!initializer.includes("export { initializeApp } from './register-features.js?v=2026-09-29-v08'")) throw new Error('Refactored initializer facade missing.');
+if((registry.match(/posts\.js\?v=2026-09-29-v12/g)||[]).length!==1) throw new Error('Post Generator module must be registered exactly once.');
 if(analyticsSource.includes('function insightContactMetrics(')||analyticsSource.includes('function insightInterestScore(')) throw new Error('Superseded analytics contact scoring returned.');
 if(!policySource.includes('function insightContactMetrics(')||!policySource.includes('function insightInterestScore(')) throw new Error('Canonical contact-intent scoring policy missing.');
 if(utilitiesSource.includes('appContext.RARITY_LIST =')||utilitiesSource.includes('appContext.INDEX_KEY =')) throw new Error('Removed dead utility state returned.');
@@ -205,7 +205,12 @@ for(const marker of [
   if(!imageSource.includes(marker)) throw new Error('Production watermark CTA contract missing: '+marker);
 }
 if(!registry.includes("images.js?v=2026-09-29-v07")) throw new Error('Production watermark module cache-buster missing.');
-if(!html.includes('src/main.js?v=2026-09-29-v07')) throw new Error('Production main cache-buster missing.');
-console.log('Validated Production 2026-09-29-v07 CHECK FULL INVENTORY watermark CTA contract.');
+if(!html.includes('src/main.js?v=2026-09-29-v08')) throw new Error('Production main cache-buster missing.');
+console.log('Validated retained Production CHECK FULL INVENTORY watermark CTA contract.');
+const cardListSource=fs.readFileSync(path.join(root,'src/features/social/posts-card-list.js'),'utf8');
+if(!cardListSource.includes('`${text.cardList}  [${prefs.language==="en"?"UPDATE":"更新"} : ${appContext.fbCardListDateLabel()}]`')) throw new Error('Production v08 Card List heading order missing.');
+if(!cardListSource.includes('`${cardListGameTitle(availableCards)} WTS【CARD LIST】')) throw new Error('Production v08 Card List WTS Game placement missing.');
+if(!cardListSource.includes('`${cardListGameTitle(cards)} ${text.cardDrop} ·')) throw new Error('Production v08 Card Drop Game-first behavior changed.');
+console.log('Validated Production 2026-09-29-v08 Card List title-order promotion.');
 
 

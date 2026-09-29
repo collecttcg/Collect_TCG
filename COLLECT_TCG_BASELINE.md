@@ -18,13 +18,13 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-29-v11`
+Latest Development: `2026-09-29-v12`
 
-Latest Production: `2026-09-29-v07`
+Latest Production: `2026-09-29-v08`
 
-Previous Production: `2026-09-29-v06`
+Previous Production: `2026-09-29-v07`
 
-Production functional baseline last promoted from Development: `2026-09-29-v11`
+Production functional baseline last promoted from Development: `2026-09-29-v12`
 
 Production package-validation HEAD: `56336f79bd1d94ef79238a70280528f15c66302b`
 
@@ -32,12 +32,34 @@ Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v
 
 Important promotion state:
 - Development repository rename is complete: `collecttcg/Collect_TCG_Dev`.
-- Current Development release: `2026-09-29-v11`.
+- Current Development release: `2026-09-29-v12`.
 - Historical Beta version names and release records remain unchanged.
 - Production includes the validated Beta v16 clone fix.
 - Development v25 validated application delta is promoted in Production v08. Production retains the v07 inventory/order, routing and Owner Insights baseline while adding the approved QR/CTA inventory watermark renderer and compact continuous Add/Edit owner editor.
 - Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
+
+## Production 2026-09-29-v08
+
+Previous Production: `2026-09-29-v07`
+
+Development promoted from: `2026-09-29-v12`
+
+Purpose: promote the validated Development v12 Card List Post Generator title-order revert while preserving Game-first behavior everywhere else that was retained by Development v12 and preserving Production-specific behavior.
+
+Changes:
+- Card List first line returns to the localized Card List heading and update date without a Game prefix.
+- Card List WTS title line places the Game label immediately before `WTS【CARD LIST】`, matching the pre-v10 Card List format.
+- Card Drop remains Game-first.
+- Single Card WTS/NFS, listing title, eBay and Carousell Game-first behavior remains unchanged.
+- Production-only QR Generator, CHECK FULL INVENTORY watermark, SEO/canonical/indexing behavior, migration-help filenames, analytics/privacy boundaries and last-known-good rollback protection are preserved.
+- Development-only repository structure and `analytics_test` behavior are excluded.
+
+SQL required: No.
+
+Validation status: promotion implemented; independent Production validation, packaging and Pages/rollback confirmation in progress.
+
+Validation limitation: live Production will not be manually opened to avoid contaminating Insights. Interactive desktop/mobile/Safari browser testing has not been performed.
 
 ## Production 2026-09-29-v07
 
