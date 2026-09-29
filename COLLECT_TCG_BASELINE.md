@@ -26,7 +26,7 @@ Previous Production: `2026-09-29-v10`
 
 Production functional baseline last promoted from Development: `2026-09-30-v01`
 
-Production package-validation HEAD: `6569b823f5df48f306d4177f8f22446e6e1ed9ac`
+Production package-validation HEAD: `b4a83f9b016d8b1024fad244ae15886ea2b041f0`
 
 Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v25`.
 
@@ -55,9 +55,19 @@ Changes:
 
 SQL required: No.
 
-Validation status: implementation committed; independent Production validation, packaging and Pages/rollback confirmation in progress.
+Validation status: completed successfully. Production independently validated the promoted Development v01 button placement while retaining the existing Prepare eBay Listing behavior and Production-only QR Generator, CHECK FULL INVENTORY watermark, SEO/canonical/indexing, analytics/privacy boundaries and rollback protection. Rollback-anchor validation, repository/JavaScript checks, consolidated CSS, retained Post Generator title checks, the dedicated Prepare eBay Listing placement/cache contracts, SEO generator syntax/self-test/generation/privacy checks, package creation, ZIP integrity, artifact upload, manifest recording and the exact package-validation GitHub Pages deployment all passed. `production-last-known-good` advanced only after that exact deployment succeeded.
 
-Validation limitation: live Production will not be manually opened to avoid contaminating Insights. Interactive desktop/mobile/Safari browser testing has not been performed.
+Release records:
+- Promotion commit: `9cd3743dc94ac51e8137837feaecf9aee1428e6f`
+- Validation-contract correction commit: `be9ba0d56e722a9c1c62c30c36306f199831b6f1`
+- Generated/package source commit: `85acf4fea719503822e3e640c37e288d62c8e1fb`
+- Package-validation / last-known-good commit: `b4a83f9b016d8b1024fad244ae15886ea2b041f0`
+- Successful Production workflow: `36591138346`
+- Successful package-validation Pages run: `36591191870`
+- Full ZIP SHA256: `e8fe6dc347d75d41c868e99501b5aadbfbf22ca37bffe607a4621a73d82e1f9e`
+- Patch ZIP SHA256: `738696e3ff1c3fa1f78c96123c0464698f7a23710eb680dab5375e458ffa4caf`
+
+Validation limitation: live Production was not manually opened to avoid contaminating Insights. Interactive desktop/mobile/Safari browser testing was not performed.
 
 ## Production 2026-09-29-v10
 
