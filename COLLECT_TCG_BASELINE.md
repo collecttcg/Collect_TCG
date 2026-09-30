@@ -18,13 +18,13 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-30-v01`
+Latest Development: `2026-09-30-v02`
 
-Latest Production: `2026-09-30-v01`
+Latest Production: `2026-09-30-v02`
 
-Previous Production: `2026-09-29-v10`
+Previous Production: `2026-09-30-v01`
 
-Production functional baseline last promoted from Development: `2026-09-30-v01`
+Production functional baseline last promoted from Development: `2026-09-30-v02`
 
 Production package-validation HEAD: `b4a83f9b016d8b1024fad244ae15886ea2b041f0`
 
@@ -32,12 +32,32 @@ Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v
 
 Important promotion state:
 - Development repository rename is complete: `collecttcg/Collect_TCG_Dev`.
-- Current Development release: `2026-09-30-v01`.
+- Current Development release: `2026-09-30-v02`.
 - Historical Beta version names and release records remain unchanged.
 - Production includes the validated Beta v16 clone fix.
 - Development v25 validated application delta is promoted in Production v08. Production retains the v07 inventory/order, routing and Owner Insights baseline while adding the approved QR/CTA inventory watermark renderer and compact continuous Add/Edit owner editor.
 - Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
+
+## Production 2026-09-30-v02
+
+Previous Production: `2026-09-30-v01`
+
+Development promoted from: `2026-09-30-v02`
+
+Purpose: promote the validated Development v02 WTS-first Generate Post Details title refinement.
+
+Changes:
+- Changes only the single-card Generate Post Details WTS title from `[GAME] WTS【FORMAT】【ERA】 ...` to `WTS [GAME]【FORMAT】【ERA】 ...`.
+- Exact regression example: `WTS ONE PIECE HYPER BATTLE【DMG】【VINTAGE】 2001 CARDDASS GRAND BOX DX ACE C531`.
+- Card List, Card Drop, NFS, eBay, Carousell and Giveaway title formats remain unchanged.
+- Production-only QR Generator, CHECK FULL INVENTORY watermark, SEO/canonical/indexing, analytics/privacy boundaries and rollback protection are preserved.
+
+SQL required: No.
+
+Validation status: promotion committed; independent Production validation, packaging and Pages/rollback confirmation in progress.
+
+Validation limitation: live Production will not be manually opened to avoid contaminating Insights. Interactive desktop/mobile/Safari browser testing has not been performed.
 
 ## Production 2026-09-30-v01
 
