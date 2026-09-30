@@ -26,7 +26,7 @@ Previous Production: `2026-09-30-v02`
 
 Production functional baseline last promoted from Development: `2026-09-30-v03`
 
-Production package-validation HEAD: `ab81e7c4fde29ff1851427846bf8902dbe7045fb`
+Production package-validation HEAD: `a30f219a57623bb4cdead48f2370910c2018659f`
 
 Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v25`.
 
@@ -56,9 +56,18 @@ Changes:
 
 SQL required: No.
 
-Validation status: promotion implemented; independent Production validation and packaging in progress.
+Validation status: completed successfully. Production independently validated the promoted Development v03 Raw-condition Card Information change while preserving Production-only QR Generator, CHECK FULL INVENTORY watermark, retained Post Generator behavior, SEO/canonical/indexing, analytics/privacy boundaries and rollback protection. Rollback-anchor validation, repository/JavaScript checks including the dedicated Raw-condition/details-cache contract, consolidated CSS, retained Post Generator title checks, SEO generator syntax/self-test/generation/privacy checks, package creation, ZIP integrity, artifact upload, manifest recording and the exact package-validation GitHub Pages deployment all passed. `production-last-known-good` advanced to the exact package-validation commit.
 
-Validation limitation: live Production will not be manually opened to avoid contaminating Insights. Interactive desktop/mobile/Safari browser testing has not been performed.
+Release records:
+- Promotion commit: `aa21e3a3db535c57d4900798c0f7149772bfddb2`
+- Generated/package source commit: `2c2590628cc0addca15f05f43cd6efbf3de162cb`
+- Package-validation / last-known-good commit: `a30f219a57623bb4cdead48f2370910c2018659f`
+- Successful Production workflow: `36676161303`
+- Successful package-validation Pages run: `36676190624`
+- Full ZIP SHA256: `e5d500f6626d8eaf661a4ce681bc6a9c57459fcd89794ecf5f5f2255bea699fb`
+- Patch ZIP SHA256: `6420f417b393ab9931ade2b359714fba95ba0c54f606d1ce8174b591b74de86e`
+
+Validation limitation: live Production was not manually opened to avoid contaminating Insights. Interactive desktop/mobile/Safari browser testing was not performed; desktop/mobile coverage for this field is statically verified from the shared card-details renderer.
 
 ## Production 2026-09-30-v02
 
