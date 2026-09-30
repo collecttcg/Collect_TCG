@@ -18,13 +18,13 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-30-v02`
+Latest Development: `2026-09-30-v03`
 
-Latest Production: `2026-09-30-v02`
+Latest Production: `2026-09-30-v03`
 
-Previous Production: `2026-09-30-v01`
+Previous Production: `2026-09-30-v02`
 
-Production functional baseline last promoted from Development: `2026-09-30-v02`
+Production functional baseline last promoted from Development: `2026-09-30-v03`
 
 Production package-validation HEAD: `ab81e7c4fde29ff1851427846bf8902dbe7045fb`
 
@@ -38,6 +38,27 @@ Important promotion state:
 - Development v25 validated application delta is promoted in Production v08. Production retains the v07 inventory/order, routing and Owner Insights baseline while adding the approved QR/CTA inventory watermark renderer and compact continuous Add/Edit owner editor.
 - Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
+
+## Production 2026-09-30-v03
+
+Previous Production: `2026-09-30-v02`
+
+Development promoted from: `2026-09-30-v03`
+
+Purpose: promote the validated Development v03 Raw-card Condition visibility fix.
+
+Changes:
+- Adds an explicit `Condition` item immediately after `Format` in Card Information when the effective card format is Raw.
+- Uses the existing full condition label already calculated by card details (for example Near Mint or Damaged).
+- Desktop and mobile use the same Card Information renderer, so both receive the field without a CSS/layout redesign.
+- Graded cards do not receive a redundant Condition item.
+- Production-only QR Generator, CHECK FULL INVENTORY watermark, SEO/canonical/indexing, analytics/privacy boundaries and rollback protection are preserved.
+
+SQL required: No.
+
+Validation status: promotion implemented; independent Production validation and packaging in progress.
+
+Validation limitation: live Production will not be manually opened to avoid contaminating Insights. Interactive desktop/mobile/Safari browser testing has not been performed.
 
 ## Production 2026-09-30-v02
 
