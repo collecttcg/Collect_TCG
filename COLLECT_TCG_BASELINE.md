@@ -26,7 +26,7 @@ Previous Production: `2026-09-30-v01`
 
 Production functional baseline last promoted from Development: `2026-09-30-v02`
 
-Production package-validation HEAD: `b4a83f9b016d8b1024fad244ae15886ea2b041f0`
+Production package-validation HEAD: `ab81e7c4fde29ff1851427846bf8902dbe7045fb`
 
 Development version promoted from for Production `2026-09-27-v08`: `2026-09-27-v25`.
 
@@ -55,9 +55,19 @@ Changes:
 
 SQL required: No.
 
-Validation status: promotion committed; independent Production validation, packaging and Pages/rollback confirmation in progress.
+Validation status: completed successfully. Production independently validated the promoted Development v02 WTS-first Generate Post Details title while preserving Card List, Card Drop, NFS, eBay, Carousell and Giveaway title formats and Production-only QR Generator, CHECK FULL INVENTORY watermark, SEO/canonical/indexing, analytics/privacy boundaries and rollback protection. Rollback-anchor validation, repository/JavaScript checks, consolidated CSS, executable Post Generator title checks including the exact Ace C531 WTS-first output, SEO generator syntax/self-test/generation/privacy checks, package creation, ZIP integrity, artifact upload, manifest recording and the exact package-validation GitHub Pages deployment all passed. `production-last-known-good` advanced to the exact package-validation commit.
 
-Validation limitation: live Production will not be manually opened to avoid contaminating Insights. Interactive desktop/mobile/Safari browser testing has not been performed.
+Release records:
+- Promotion commit: `45979eda6a290ab9b655979990181e54404dd935`
+- Validation-contract correction commit: `01d173bf8f60a021289590409f7fb7e753378214`
+- Generated/package source commit: `39ae4413c9b8fa67591ce6e8fc7f3a5395f13108`
+- Package-validation / last-known-good commit: `ab81e7c4fde29ff1851427846bf8902dbe7045fb`
+- Successful Production workflow: `36672403412`
+- Successful package-validation Pages run: `36672434867`
+- Full ZIP SHA256: `aae5d6b541b58d9e0f0c5e9579895e3939d9854c158e4f04991d1771579949fc`
+- Patch ZIP SHA256: `68f9908c310f93c94707fe08f4f291e51b9c15ed04a89c43c623ba4bf876e203`
+
+Validation limitation: live Production was not manually opened to avoid contaminating Insights. Interactive desktop/mobile/Safari browser testing was not performed.
 
 ## Production 2026-09-30-v01
 
