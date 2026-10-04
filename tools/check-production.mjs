@@ -58,9 +58,9 @@ const baselinePath=path.join(root,'COLLECT_TCG_BASELINE.md');
 if(!fs.existsSync(baselinePath)) throw new Error('Missing COLLECT_TCG_BASELINE.md');
 const baseline=fs.readFileSync(baselinePath,'utf8');
 for(const marker of [
-  'Latest Production: `2026-09-30-v03`',
-  'Latest Development: `2026-09-30-v03`',
-  'Development promoted from: `2026-09-30-v03`',
+  'Latest Production: `2026-10-05-v01`',
+  'Latest Development: `2026-10-05-v01`',
+  'Development promoted from: `2026-10-05-v01`',
   'QR Generator',
   'migrations/2026/'
 ]){
@@ -179,7 +179,7 @@ const initializer=fs.readFileSync(path.join(root,'src/app/initialize.js'),'utf8'
 const policySource=fs.readFileSync(path.join(root,'src/services/contact-intent-policy.js'),'utf8');
 const utilitiesSource=fs.readFileSync(path.join(root,'src/features/core/utilities.js'),'utf8');
 const enhancementSource=fs.readFileSync(path.join(root,'src/ui/enhancement-2.js'),'utf8');
-if(!initializer.includes("export { initializeApp } from './register-features.js?v=2026-09-30-v03'")) throw new Error('Refactored initializer facade missing.');
+if(!initializer.includes("export { initializeApp } from './register-features.js?v=2026-10-05-v01'")) throw new Error('Refactored initializer facade missing.');
 if((registry.match(/posts\.js\?v=2026-09-30-v02/g)||[]).length!==1) throw new Error('Post Generator module must be registered exactly once.');
 if(analyticsSource.includes('function insightContactMetrics(')||analyticsSource.includes('function insightInterestScore(')) throw new Error('Superseded analytics contact scoring returned.');
 if(!policySource.includes('function insightContactMetrics(')||!policySource.includes('function insightInterestScore(')) throw new Error('Canonical contact-intent scoring policy missing.');
@@ -206,7 +206,7 @@ for(const marker of [
   if(!imageSource.includes(marker)) throw new Error('Production watermark CTA contract missing: '+marker);
 }
 if(!registry.includes("images.js?v=2026-09-29-v07")) throw new Error('Production watermark module cache-buster missing.');
-if(!html.includes('src/main.js?v=2026-09-30-v03')) throw new Error('Production main cache-buster missing.');
+if(!html.includes('src/main.js?v=2026-10-05-v01')) throw new Error('Production main cache-buster missing.');
 console.log('Validated retained Production CHECK FULL INVENTORY watermark CTA contract.');
 const cardListSource=fs.readFileSync(path.join(root,'src/features/social/posts-card-list.js'),'utf8');
 if(!cardListSource.includes('`${text.cardList}  [${prefs.language==="en"?"UPDATE":"更新"} : ${appContext.fbCardListDateLabel()}]`')) throw new Error('Production v08 Card List heading order missing.');
@@ -219,7 +219,7 @@ console.log('Validated Production 2026-09-29-v08 Card List title-order promotion
 if(!tilesSource.includes('if(status==="Sold") candidate.sold_at=new Date().toISOString();')) throw new Error('Production v09 Mark Sold click timestamp missing.');
 if(!tilesSource.includes('else candidate.sold_at=null;')) throw new Error('Production v09 non-Sold sold_at clear behavior missing.');
 if(!registry.includes("tiles.js?v=2026-09-29-v09-sold-date")) throw new Error('Production v09 Mark Sold tiles cache-buster missing.');
-if(!mainSource.includes("register-features.js?v=2026-09-30-v03") || !mainSource.includes("initialize.js?v=2026-09-30-v03")) throw new Error('Production v09 application cache chain missing.');
+if(!mainSource.includes("register-features.js?v=2026-10-05-v01") || !mainSource.includes("initialize.js?v=2026-10-05-v01")) throw new Error('Production v09 application cache chain missing.');
 console.log('Validated Production 2026-09-29-v09 Mark Sold click timestamp contract.');
 
 if(!registry.includes("posts.js?v=2026-09-30-v02")) throw new Error('Production v10 posts cache-buster missing.');
@@ -246,3 +246,13 @@ if(!detailsSource.includes('appContext.effectiveFormat(card)==="Raw" ? `<div cla
 if((detailsSource.match(/<div class="detail-label">Condition<\/div>/g)||[]).length!==1) throw new Error('Production v03 must contain exactly one Card Information Condition row.');
 if(!registry.includes("details.js?v=2026-09-30-v03")) throw new Error('Production v03 details cache-buster missing.');
 console.log('Validated Production 2026-09-30-v03 Raw condition card-details contract.');
+
+const analyticsCountrySource=fs.readFileSync(path.join(root,'src/services/analytics.js'),'utf8');
+const countryMigration=fs.readFileSync(path.join(root,'migrations/2026/2026-10-05-v01-QUALIFIED-VIEW-COUNTRY.sql'),'utf8');
+const cardViewEdge=fs.readFileSync(path.join(root,'supabase/functions/record-card-view/index.ts'),'utf8');
+if(!analyticsCountrySource.includes('record_qualified_card_view_event_with_country')) throw new Error('Production country-aware Qualified View RPC missing.');
+if(!analyticsCountrySource.includes('p_country_code:countryCode||null')) throw new Error('Production Qualified View country payload missing.');
+if(!cardViewEdge.includes('check_view_rate_limit')) throw new Error('Production card-view rate limiting was not preserved.');
+if(!cardViewEdge.includes('country_code: countryCode || null')) throw new Error('Production card-view country response missing.');
+if(!countryMigration.includes("coalesce(nullif(q.country_code,'XX'),country_event.country_code,'XX')")) throw new Error('Production Market Demand country fallback missing.');
+console.log('Validated Production 2026-10-05-v01 Qualified View country attribution contract.');

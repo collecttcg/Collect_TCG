@@ -1,6 +1,6 @@
 # Collect TCG Current Baseline
 
-Last reconciled against GitHub: 2026-09-30
+Last reconciled against GitHub: 2026-10-05
 
 ## Repositories
 
@@ -18,13 +18,13 @@ Repository inspection and current release manifests take precedence if an extern
 
 ## Current Versions
 
-Latest Development: `2026-09-30-v03`
+Latest Development: `2026-10-05-v01`
 
-Latest Production: `2026-09-30-v03`
+Latest Production: `2026-10-05-v01`
 
-Previous Production: `2026-09-30-v02`
+Previous Production: `2026-09-30-v03`
 
-Production functional baseline last promoted from Development: `2026-09-30-v03`
+Production functional baseline last promoted from Development: `2026-10-05-v01`
 
 Production package-validation HEAD: `a30f219a57623bb4cdead48f2370910c2018659f`
 
@@ -38,6 +38,28 @@ Important promotion state:
 - Development v25 validated application delta is promoted in Production v08. Production retains the v07 inventory/order, routing and Owner Insights baseline while adding the approved QR/CTA inventory watermark renderer and compact continuous Add/Edit owner editor.
 - Development-only repository structure (`dev/`) and the Development-only `analytics_test` Insights exclusion are not promoted to Production.
 - Beta v20 baseline/documentation release is **not application-code promotion**.
+
+## Production 2026-10-05-v01
+
+Previous Production: `2026-09-30-v03`
+
+Development promoted from: `2026-10-05-v01`
+
+Purpose: promote the validated Qualified View country-attribution fix while preserving Production card-view rate limiting and Production-only behavior.
+
+Changes:
+- Qualified Views store the country observed on the same card-view request when available.
+- Market Demand prefers that country and falls back to the historical visitor-ID country join for older events.
+- Production retains the existing `record-card-view` endpoint and its IP-hash rate limiting; only a country response is added.
+- Production does not reference the Development-only `record-card-view-dev` endpoint.
+- No visitor IP address is stored by this attribution path.
+
+SQL required: Yes — `migrations/2026/2026-10-05-v01-QUALIFIED-VIEW-COUNTRY.sql`.
+SQL status: already applied successfully during Development `2026-10-05-v01`; the rerunnable migration is included in Production source.
+
+Validation status: in progress.
+
+Validation limitation: live Production will not be manually opened, to avoid contaminating Insights.
 
 ## Production 2026-09-30-v03
 

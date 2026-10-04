@@ -438,7 +438,7 @@ async function sendQualifiedCardViewEvent(card,token){
       if(document.visibilityState && document.visibilityState!=="visible") return false;
 
       const visitorId=appContext.getVisitorId();
-      const {error}=await appContext.supabaseClient.functions.invoke("record-card-view",{
+      const {data,error}=await appContext.supabaseClient.functions.invoke("record-card-view",{
         body:{
           card_id:cardId,
           visitor_id:visitorId
@@ -450,15 +450,35 @@ async function sendQualifiedCardViewEvent(card,token){
         return false;
       }
 
-      // Mirror the qualified view into the owner analytics event table when V5
-      // is installed. This makes the timeline filterable by current Status/Game.
-      // Failure here never affects the public card-view experience.
+      // Capture country from the same request that qualified the card view.
+      // This survives embedded-browser visitor-ID changes during startup.
+      const candidateCountry=String(data?.country_code||"").trim().toUpperCase();
+      const countryCode=/^[A-Z]{2}$/.test(candidateCountry) && candidateCountry!=="XX"
+        ? candidateCountry
+        : "";
+
+      // Prefer the country-aware Qualified View RPC while retaining the legacy
+      // RPC as a backward-compatible fallback.
       try{
-        await appContext.supabaseClient.rpc("record_qualified_card_view_event",{
+        const {error:countryAwareError}=await appContext.supabaseClient.rpc("record_qualified_card_view_event_with_country",{
           p_card_id:cardId,
-          p_visitor_id:visitorId
+          p_visitor_id:visitorId,
+          p_country_code:countryCode||null
         });
-      }catch{}
+        if(countryAwareError){
+          await appContext.supabaseClient.rpc("record_qualified_card_view_event",{
+            p_card_id:cardId,
+            p_visitor_id:visitorId
+          });
+        }
+      }catch{
+        try{
+          await appContext.supabaseClient.rpc("record_qualified_card_view_event",{
+            p_card_id:cardId,
+            p_visitor_id:visitorId
+          });
+        }catch{}
+      }
 
       // Discovery attribution is recorded only after the same 2-second
       // Qualified View succeeds. This keeps accidental taps and Owner/testing
