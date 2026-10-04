@@ -57,9 +57,17 @@ Changes:
 SQL required: Yes — `migrations/2026/2026-10-05-v01-QUALIFIED-VIEW-COUNTRY.sql`.
 SQL status: already applied successfully during Development `2026-10-05-v01`; the rerunnable migration is included in Production source.
 
-Validation status: in progress.
+Validation status: completed successfully. Production repository/JavaScript validation, consolidated CSS, retained Post Generator checks, SEO generator syntax/self-test/generation/privacy checks, package creation and ZIP integrity, artifact upload, package-validation manifest, GitHub Pages deployment and rollback-anchor advancement all passed. Production `record-card-view` Edge Function version 3 is ACTIVE with JWT verification enabled and retains `check_view_rate_limit`.
 
-Validation limitation: live Production will not be manually opened, to avoid contaminating Insights.
+Release records:
+- Promotion commit: `c5e9c9bf85def9fa2346828fcd7ec2c35ac7fa2d`
+- Generated/package source commit: `e132087e98b83b3a78cafc96b28c56c10d32372d`
+- Package-validation / last-known-good commit: `d589bde6623bc2dd6e2068b08258ffeda120520e`
+- Successful Production workflow: `37219320542`
+- Full ZIP SHA256: `ee80d7684b2d8bbf0e977bf30a1d9ff36d0898d94b3328fe07c73181ee4df603`
+- Patch ZIP SHA256: `a99c4bf7a2bf525ea67410fd6bacd35e77d1ff3322399c1fb280e5ae85ccdcdd`
+
+Validation limitation: live Production was not manually opened, to avoid contaminating Insights. Interactive desktop/mobile/Safari browser testing was not performed; the promoted behavior was validated through the completed Development release plus independent Production repository/static checks and confirmed backend deployment.
 
 ## Production 2026-09-30-v03
 
