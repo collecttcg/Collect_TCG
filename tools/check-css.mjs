@@ -28,5 +28,6 @@ for(const selector of deadSelectors){
   if(nonCss.includes(cls)) throw new Error(`Dead-selector guard is no longer valid: ${selector} is referenced by active source`);
   for(const name of files) if(fs.readFileSync(path.join(styleDir,name),"utf8").includes(selector)) throw new Error(`${name}: obsolete selector remains: ${selector}`);
 }
-if(files.join(',')!==['01-foundation.css','02-components.css','27-insights-dashboard.css'].join(',')) throw new Error('Unexpected active Production stylesheet set: '+files.join(', '));
+const expectedStyles=['01-foundation.css','02-components.css','27-insights-dashboard.css','30-ai-card-scanner.css'];
+if(files.join(',')!==expectedStyles.join(',')) throw new Error('Unexpected active Production stylesheet set: '+files.join(', '));
 console.log(`CSS checks passed (${files.length} active stylesheets).`);
