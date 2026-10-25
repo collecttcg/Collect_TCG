@@ -7,10 +7,10 @@ Last reconciled against GitHub: 2026-10-25
 - Production: `collecttcg/Collect_TCG`
 - Development: `collecttcg/Collect_TCG_Dev`
 - Default branch: `main`
-- Development is the working environment.
-- Production is protected. Never modify, promote, deploy, prepare, or live-test Production unless explicitly requested.
+- Development is the normal working environment.
+- Production is protected and is modified/promoted only when explicitly authorized.
 
-Reconciliation priority: current GitHub HEAD > latest release manifest > this baseline > recent Project conversations > older conversations.
+Reconciliation priority: current GitHub HEAD > latest valid release manifest > this baseline > recent Project conversations > older conversations.
 
 ## Versioning
 
@@ -24,43 +24,34 @@ Reconciliation priority: current GitHub HEAD > latest release manifest > this ba
 
 ## Current Production
 
-Latest Production: `2026-10-25-v01`
-
-Previous Production: `2026-10-16-v02`
-
+Latest Production: `2026-10-25-v02`
+Previous Production: `2026-10-25-v01`
 Development promoted from: `2026-10-25-v05`
-
-Release manifest: `release-manifests/2026-10-25-v01.txt`
-
-Production application source commit recorded by manifest: `e08599649dc87ed7a869b7e7b1ea4b389053dc94`
-
-Final release/manifest HEAD before this baseline-only reconciliation: `7bd74334c08026921de0093212e1bcf096be2cc7`
-
-`production-last-known-good` was advanced to `7bd74334c08026921de0093212e1bcf096be2cc7` after the exact GitHub Pages deployment completed successfully.
+Release manifest: `release-manifests/2026-10-25-v02.txt`
+Production package source commit: `5c6eee211b51e405a6d957e1ad13c29877f0ce27`
+Initial v02 release/manifest HEAD: `69630c3685228f8e89877549d1692e002a118c86`
 
 ### Production package record
 
-- Full ZIP: `Collect-TCG-Production-2026-10-25-v01-full.zip`
-- Full SHA256: `231595e86b0bf296890e38a8c0f32ec36005b4731aa88e55b2c42c3a5e182372`
-- Patch ZIP: `Collect-TCG-Production-2026-10-16-v02-to-2026-10-25-v01-patch.zip`
-- Patch SHA256: `8bb782965ed33967610fa9683d7def0d47c33603ee2329be69bbfd0d6cb5e704`
+- Full ZIP: `Collect-TCG-Production-2026-10-25-v02-full.zip`
+- Full SHA256: `e0139b2481b170fa0d18765a7dd2246696494def9d02a09a5f58ad0ad6eb6dab`
+- Patch ZIP: `Collect-TCG-Production-2026-10-25-v01-to-2026-10-25-v02-patch.zip`
+- Patch SHA256: `57ed8a291fb4d2543d5cbba6960e8e643e6b400ea55926d110db10672ce151c0`
 
-## Production 2026-10-25-v01
+## Production 2026-10-25-v02
 
-Purpose: promote the approved Owner-only AI Card Scanner from Development while preserving Production-specific public, Owner, analytics, SEO, Supabase/RLS, Contact to Buy, generator, giveaway, QR and rollback behavior.
+Purpose: reconcile the already-deployed scanner stylesheet/loader work and repair Production release bookkeeping/workflow safety without changing the approved scanner backend or promoting Development v06.
 
-Changes:
-- Adds the Owner-only AI Card Scanner to the Production Add/Edit workflow.
-- Uses the Production Supabase Edge Function `scan-card-ai`; Development continues to use `scan-card-ai-dev`.
-- Production `scan-card-ai` is ACTIVE, version 1, with JWT verification enabled.
-- Server-side owner authorization remains required; public users do not gain scanner or Owner capabilities.
-- Gemini API credentials remain server-side only.
-- AI identification and market-price research remain recommendations; detected values are not saved until the Owner applies/saves them.
-- Raw/Sealed results clear grading-company, grade and certification values.
-- Raw and graded market comparisons remain separated.
-- Scanner Series detection includes the promoted One Piece Carddass Hyper Battle canonical mapping work, including deterministic correction for supported vintage card-code families instead of relying only on Gemini guesses.
-- Existing Production QR Generator, CHECK FULL INVENTORY watermark behavior, SEO/canonical/indexing, analytics/privacy boundaries, Owner tools, Contact to Buy, giveaways and generators are retained.
-- Development-only analytics exclusion behavior is not promoted as Production behavior.
+Changes retained in v02:
+- Owner AI Card Scanner stylesheet is canonical at `src/styles/30-ai-card-scanner.css`.
+- Scanner stylesheet loader is canonical at `src/features/owner/card-scanner-style.js` and is registered by Production `src/main.js`.
+- Existing Owner-only scanner authorization and Production `scan-card-ai` endpoint remain unchanged.
+- Production release workflow now packages `2026-10-25-v02` against previous Production `2026-10-25-v01`.
+- The workflow records Development promoted from `2026-10-25-v05`.
+- Accepted release manifests are immutable: scheduled/later runs do not overwrite an existing manifest.
+- The accidentally rewritten historical `release-manifests/2026-10-16-v02.txt` was restored to its accepted original source commit/checksums.
+- Existing Production SEO, QR Generator, Owner tools, analytics/privacy boundaries, Contact to Buy, giveaways and generators remain retained.
+- Development v06 scanner error-reporting remains Development-only and was not promoted.
 
 SQL required: No.
 
@@ -68,40 +59,42 @@ SQL required: No.
 
 - Supabase project: Collect TCG Website (`cbzytysxtdcqxuckspye`).
 - Production Edge Function: `scan-card-ai`.
-- Function version at promotion: 1.
+- Function version at the scanner promotion: 1.
 - Status: ACTIVE.
 - `verify_jwt`: true.
 - Deployed function SHA256: `73c4883287c5d88f32263289fe0ab4b91ade6e13f2089050dd6b092cdda99cd7`.
-- Development function remains `scan-card-ai-dev`; do not point Production at the Development endpoint.
+- Development remains on `scan-card-ai-dev`.
 
 ### Validation status
 
-Completed for the Production promotion:
-- Production repository/JavaScript validation executed.
-- Consolidated CSS validation executed.
-- Retained Post Generator checks executed.
-- SEO generator syntax/self-test/generation checks executed.
-- Production packages were created and integrity/checksum records were written to the release manifest.
-- GitHub Pages deployment for final release HEAD `7bd74334c08026921de0093212e1bcf096be2cc7` completed successfully.
-- `production-last-known-good` was advanced only after the successful deployment.
+Completed for Production v02 reconciliation:
+- Production repository/JavaScript validation executed successfully.
+- Consolidated CSS validation executed successfully.
+- Retained Post Generator checks executed successfully.
+- SEO generator syntax/self-test/generation checks executed successfully.
+- Generated SEO output validation executed successfully.
+- Full and patch ZIPs were created and integrity checked.
+- Package artifact upload succeeded.
+- Correct v02 release manifest/checksums were recorded.
+- Exact final release/manifest Pages deployment succeeded.
+- `production-last-known-good` advancement completed successfully after Pages success.
 
 Validation limitations:
 - Live Production was not manually opened, to avoid contaminating Insights.
 - Authenticated Owner image scanning was not interactively exercised in a Production browser session.
-- Interactive desktop/mobile/Safari browser testing was not performed for the scanner promotion; repository/static/workflow validation and backend deployment were confirmed.
+- Interactive desktop/mobile/Safari browser testing was not performed for this release-state reconciliation.
 
-## Previous Production
+## Historical release integrity
 
-`2026-10-16-v02` remains the previous Production release. Its historical manifest must remain unchanged:
-- `release-manifests/2026-10-16-v02.txt`
+`2026-10-25-v01` is the previous Production release and remains recorded by `release-manifests/2026-10-25-v01.txt`.
 
-Do not let later workflow runs rewrite historical release manifests or package checksums.
+`release-manifests/2026-10-16-v02.txt` is an older accepted historical record. It was restored after an outdated workflow accidentally rewrote its source/checksum fields. Future workflow runs must not modify accepted historical manifests.
+
+Audit note for the repaired stale validator: the pre-v02 baseline contained `Latest Production: `2026-10-25-v01`` and `Previous Production: `2026-10-16-v02``. These are historical values only; the authoritative current state is the Current Production section above.
 
 ## Development relationship
 
-Production `2026-10-25-v01` records Development `2026-10-25-v05` as the promoted Development state in the release manifest.
-
-Development remains the working environment for future changes. New scanner changes must be implemented and validated in `collecttcg/Collect_TCG_Dev` first unless the user explicitly authorizes a direct Production operation.
+Production v02 records Development `2026-10-25-v05` as the promoted Development state. Development `2026-10-25-v06` is separately completed/validated but its scanner error-reporting change is not part of Production v02.
 
 ## Production repository structure
 
@@ -110,48 +103,44 @@ Development remains the working environment for future changes. New scanner chan
 - `cards/` — generated SEO card pages
 - `migrations/2026/` — Production SQL migration history
 - `tools/` — validation and SEO tooling
-- `release-manifests/` — release/package checksum records
+- `release-manifests/` — immutable release/package checksum records
 - `COLLECT_TCG_BASELINE.md` — current project baseline
-- `docs/BACKUP-RECOVERY.md` — Production rollback/external-backup procedure where present
-- `production-last-known-good` branch — validated deployed Production rollback anchor
+- `docs/BACKUP-RECOVERY.md` — Production rollback procedure
+- `production-last-known-good` — validated deployed Production rollback anchor
 
 ## Retained behavior
 
 Do not accidentally remove or expose:
-- public card pages, SEO, stable URLs and SPA/history behavior
-- Related Cards, Trending and discovery attribution
-- Inventory/Collection/Sold/Reserved/Favorites flows
-- Owner Mode and owner-only Add/Edit/Delete/bulk/lifecycle/export tools
-- Owner private analytics and Buyer Preview privacy
-- Owner-only AI Card Scanner
-- QR Generator
-- Facebook/Carousell/eBay/Post Generator behavior and giveaway generator/winner/images
-- Contact to Buy intents: Availability, Make an offer, More photos / video, COD / meetup
-- Malaysia & Singapore purchase messaging and negotiable international shipping
-- Supabase/RLS behavior and analytics boundaries
-- Safari-safe purchase/contact layout
+- public card pages, SEO, stable URLs and SPA/history behavior;
+- Related Cards, Trending and discovery attribution;
+- Inventory/Collection/Sold/Reserved/Favorites flows;
+- Owner Mode and owner-only Add/Edit/Delete/bulk/lifecycle/export tools;
+- Owner private analytics and Buyer Preview privacy;
+- Owner-only AI Card Scanner;
+- QR Generator;
+- Facebook/Carousell/eBay/Post Generator and giveaway functionality;
+- Contact to Buy intents: Availability, Make an offer, More photos / video, COD / meetup;
+- Malaysia & Singapore purchase messaging and negotiable international shipping;
+- Supabase/RLS behavior and analytics boundaries;
+- Safari-safe purchase/contact layout.
 
 ## Intentionally removed / excluded
 
 Do not restore unless explicitly requested:
-- Download Share Preview
-- V200 multi-card inquiry basket
-- V201 custom Share menu/grid
-- V202 share-menu experiment
-- V203/V204 compact-layout experiments
-- abandoned scanner/layout experiments that were superseded before the promoted release
-- Development-only analytics-test behavior in Production
+- Download Share Preview;
+- V200 multi-card inquiry basket;
+- V201 custom Share menu/grid;
+- V202 share-menu experiment;
+- V203/V204 compact-layout experiments;
+- abandoned/superseded scanner/layout experiments;
+- Development-only analytics-test behavior in Production.
 
 ## SQL / database baseline
 
-No new SQL migration was required for Production `2026-10-25-v01`.
-
-Existing Production migrations remain under `migrations/2026/`. Moving or retaining migration files does not apply SQL. Never claim SQL was applied unless actually confirmed.
+No new SQL migration was required for Production `2026-10-25-v02`. Existing Production migrations remain under `migrations/2026/`. Never claim SQL was applied unless actually confirmed.
 
 ## Release and validation contract
 
-A Production release is complete only after implementation, independent Production validation, regression review, committed-file inspection, full/patch package creation, checksum verification, release manifest recording, successful Pages deployment and rollback protection where available.
+A Production release is complete only after implementation, independent Production validation, regression review, committed-file inspection, full/patch package creation, checksum verification, immutable release manifest recording, successful Pages deployment and rollback protection where available.
 
 Do not live-open Production for testing unless explicitly authorized because it may contaminate Insights.
-
-Historical release manifests are immutable records. A later push, scheduled workflow or baseline-only reconciliation must not silently regenerate or overwrite an already accepted historical release.
