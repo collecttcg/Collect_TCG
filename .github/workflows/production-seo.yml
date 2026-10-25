@@ -61,6 +61,9 @@ jobs:
           test -s robots.txt
           test -s seo-slugs.json
           test -s owner-card-routes.json
+          test -s src/features/owner/ebay-banlist.js
+          test -s src/features/owner/ebay-banlist.css
+          test -s migrations/2026/2026-10-25-v03-EBAY-BANLIST.sql
           grep -q 'Allow: /' robots.txt
           grep -q '<urlset' sitemap.xml
           grep -q 'index,follow,max-image-preview:large' cards/*/index.html
@@ -70,7 +73,12 @@ jobs:
           fi
           ! grep -Fq 'analytics_test' src/services/analytics.js
           ! grep -Fq 'isDevelopmentAnalyticsTestSession' src/app/startup.js
+          ! grep -Fq 'scan-card-ai-dev' src/features/owner/card-scanner.js
+          grep -Fq 'functions.invoke("scan-card-ai"' src/features/owner/card-scanner.js
+          grep -Fq 'functionErrorMessage' src/features/owner/card-scanner.js
           grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
+          grep -Fq 'ebay-banlist.js?v=2026-10-25-v03' src/app/register-features.js
+          grep -Fq 'module50.initialize(appContext,runtime)' src/app/register-features.js
           grep -Fq 'card-owner-category.js?v=2026-10-16-v02' src/app/register-features.js
           grep -Fq 'const OWNER_CATEGORIES=["Zakwan","Yen","Daniel","Jack","Shue"]' src/features/owner/card-owner-category.js
           grep -Fq 'bulkAssignOwnerCategory' src/features/owner/card-owner-category.js
@@ -94,10 +102,10 @@ jobs:
       - name: Create Production release packages
         shell: bash
         env:
-          RELEASE_VERSION: 2026-10-25-v02
-          PREVIOUS_VERSION: 2026-10-25-v01
-          PREVIOUS_COMMIT: 7bd74334c08026921de0093212e1bcf096be2cc7
-          DEVELOPMENT_PROMOTED: 2026-10-25-v05
+          RELEASE_VERSION: 2026-10-25-v03
+          PREVIOUS_VERSION: 2026-10-25-v02
+          PREVIOUS_COMMIT: 54255c95d00a4022e1880782155880aff9711628
+          DEVELOPMENT_PROMOTED: 2026-10-25-v08
         run: |
           set -euo pipefail
           mkdir -p release
@@ -117,10 +125,10 @@ jobs:
       - name: Upload Production release packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-10-25-v02-packages
+          name: Collect-TCG-Production-2026-10-25-v03-packages
           path: |
-            release/Collect-TCG-Production-2026-10-25-v02-full.zip
-            release/Collect-TCG-Production-2026-10-25-v01-to-2026-10-25-v02-patch.zip
+            release/Collect-TCG-Production-2026-10-25-v03-full.zip
+            release/Collect-TCG-Production-2026-10-25-v02-to-2026-10-25-v03-patch.zip
           if-no-files-found: error
           retention-days: 30
       - name: Record Production package validation manifest
@@ -128,22 +136,22 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-manifests
-          MANIFEST="release-manifests/2026-10-25-v02.txt"
+          MANIFEST="release-manifests/2026-10-25-v03.txt"
           if [[ -e "${MANIFEST}" ]]; then
             echo "Release manifest already exists and is immutable: ${MANIFEST}"
           else
             {
-              echo "Version: 2026-10-25-v02"
-              echo "Previous Production: 2026-10-25-v01"
-              echo "Development promoted from: 2026-10-25-v05"
+              echo "Version: 2026-10-25-v03"
+              echo "Previous Production: 2026-10-25-v02"
+              echo "Development promoted from: 2026-10-25-v08"
               echo "Source commit: $(git rev-parse HEAD)"
-              echo "Full ZIP: Collect-TCG-Production-2026-10-25-v02-full.zip"
-              echo "Patch ZIP: Collect-TCG-Production-2026-10-25-v01-to-2026-10-25-v02-patch.zip"
+              echo "Full ZIP: Collect-TCG-Production-2026-10-25-v03-full.zip"
+              echo "Patch ZIP: Collect-TCG-Production-2026-10-25-v02-to-2026-10-25-v03-patch.zip"
               echo
               sha256sum release/*.zip
             } > "${MANIFEST}"
             git add "${MANIFEST}"
-            git commit -m "Production 2026-10-25-v02: record package validation"
+            git commit -m "Production 2026-10-25-v03: record package validation"
             git push
           fi
       - name: Confirm Pages deployment and advance last-known-good
