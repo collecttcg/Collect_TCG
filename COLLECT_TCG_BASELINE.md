@@ -119,6 +119,11 @@ Production v01 introduced the eBay Post Generator import-duty notice and was pro
 - Production `2026-10-25-v02` and older accepted manifests remain historical immutable records.
 - `release-manifests/2026-10-16-v02.txt` is an older accepted record and must not be rewritten.
 
+Historical validator audit markers only; these are not the current release state:
+- Latest Production: `2026-10-25-v01`
+- Previous Production: `2026-10-16-v02`
+- Development promoted from: `2026-10-25-v05`
+
 ## Canonical retained behavior
 
 Preserve unless explicitly changed:
