@@ -47,7 +47,7 @@ import * as module44 from '../features/cards/details.js?v=2026-09-30-v03';
 import * as module45 from '../features/owner/editor.js?v=2026-09-29-v09';
 import * as module46 from '../app/theme.js?v=2026-09-29-v09';
 import * as module47 from '../app/startup.js?v=2026-09-29-v09';
-import * as module48 from '../features/social/posts-hidden-ebay.js?v=2026-10-27-v01';
+import * as module48 from '../features/social/posts-hidden-ebay.js?v=2026-10-27-v02';
 import * as module49 from '../features/owner/card-owner-category.js?v=2026-10-16-v02';
 import * as module50 from '../features/owner/ebay-banlist.js?v=2026-10-25-v03';
 
