@@ -1,6 +1,6 @@
 # Collect TCG Current Baseline
 
-Last reconciled against GitHub: 2026-10-25
+Last reconciled against GitHub: 2026-10-27
 
 ## Repositories
 
@@ -10,119 +10,123 @@ Last reconciled against GitHub: 2026-10-25
 - Development is the normal working environment.
 - Production is protected and is modified/promoted only when explicitly authorized.
 
-Reconciliation priority: current GitHub HEAD > latest valid release manifest > this baseline > recent Project conversations > older conversations.
+Reconciliation priority: current GitHub HEAD > latest valid release manifest > this baseline > recent Project context > older context.
 
 ## Versioning
 
 - `V210` is the final legacy `V###` release; historical releases are never renamed.
 - Current releases use `YYYY-MM-DD-vNN` with the actual build date; Development and Production counters are independent.
-- Production full: `Collect-TCG-Production-YYYY-MM-DD-vNN-full.zip`
-- Production patch: `Collect-TCG-Production-OLD-to-NEW-patch.zip`
 - Development full: `Collect-TCG-Dev-YYYY-MM-DD-vNN-full.zip`
 - Development patch: `Collect-TCG-Dev-OLD-to-NEW-patch.zip`
+- Production full: `Collect-TCG-Production-YYYY-MM-DD-vNN-full.zip`
+- Production patch: `Collect-TCG-Production-OLD-to-NEW-patch.zip`
 - SQL: `YYYY-MM-DD-vNN-DESCRIPTIVE-NAME.sql`
+- Historical release manifests are immutable.
+
+## Current Development
+
+Latest validated Development release: `2026-10-27-v01`
+Previous Development: `2026-10-25-v09`
+Development release manifest: `release-manifests/2026-10-27-v01.txt`
+Development v01 package source commit: `8600fef997885b7a29c1dd342fc1fefcf65b1e5d`
+Development code HEAD before this baseline reconciliation: `3e9b24f9a2df06fba1d3b19e151e13176d8aa63e`
+
+### Development package record — 2026-10-27-v01
+
+- Full ZIP: `Collect-TCG-Dev-2026-10-27-v01-full.zip`
+- Full SHA256: `8f897fb9107089355ae0bc58b94d7081d8c6b6aca98c582603f63bb6202703ab`
+- Patch ZIP: `Collect-TCG-Dev-2026-10-25-v09-to-2026-10-27-v01-patch.zip`
+- Patch SHA256: `46c1ef7afbe678a319df5e6fcb894d8f15a0e8d111c6723996189fb7ec6c5da5`
+
+### Current Development state after v01
+
+- Owner Inventory Tools uses the established compact workspace; the duplicate post-v09 Inventory Manager/dashboard renderer remains removed.
+- Owner Overview includes Available inventory value calculated from stored MYR listing price × quantity for live `Available` records only; Reserved, Sold, Collection (NFS), Draft and Archived records are excluded.
+- The eBay Post Generator includes `[IMPORT DUTIES & TAXES]` with buyer-responsibility wording for import duties, tariffs, taxes, customs-clearance fees and other import-related charges.
+- Commit `3e9b24f9a2df06fba1d3b19e151e13176d8aa63e` changes the separator before the import-duty notice from two line breaks to one.
+- The Development SEO/validation workflow for that commit completed successfully on 2026-10-27, including regression tests, changed-JavaScript checks, SEO generation/validation, repository/reference validation, CSS/release-contract checks and Pages deployment.
+- No SQL, schema, RLS or Edge Function change is required for the eBay-generator wording/spacing work.
+- There is no `release-manifests/2026-10-27-v02.txt` in Development as of this reconciliation. Therefore the spacing commit is validated current Development code, but `2026-10-27-v01` remains the latest immutable packaged Development release.
 
 ## Current Production
 
-Latest Production: `2026-10-25-v03`
-Previous Production: `2026-10-25-v02`
-Development promoted from: `2026-10-25-v08`
-Release manifest: `release-manifests/2026-10-25-v03.txt`
-Production package source commit: `48983c7c9ab8cbd53fbd46084bb3709a70b99eba`
-Initial v03 release/manifest HEAD: `9e442644a1151f1773bd3c7b79db7b0dd8d77188`
+Latest Production: `2026-10-27-v02`
+Previous Production: `2026-10-27-v01`
+Development promoted from: `2026-10-27-v02`
+Production release manifest: `release-manifests/2026-10-27-v02.txt`
+Production v02 package source commit: `64db0b3c4779c6f2036e5c7eb900eace09112c2b`
+Production release/manifest HEAD before this baseline reconciliation: `a192b9390a2da229f0476bafe388bbcf751fa716`
 
-### Production package record
+### Production package record — 2026-10-27-v02
 
-- Full ZIP: `Collect-TCG-Production-2026-10-25-v03-full.zip`
-- Full SHA256: `bbe483cbf4464193e584c0ff9393c1969f0cd28c5ce35ea1832e4cfe0223d382`
-- Patch ZIP: `Collect-TCG-Production-2026-10-25-v02-to-2026-10-25-v03-patch.zip`
-- Patch SHA256: `8469782b344b88fb5d6a69051bcb2ce2363e8b023aa1c9c94d2e7702e8baffd4`
+- Full ZIP: `Collect-TCG-Production-2026-10-27-v02-full.zip`
+- Full SHA256: `6c2936dbf31b26131c7781f1034d268a93e001ce413d5769080b3d49a2166c32`
+- Patch ZIP: `Collect-TCG-Production-2026-10-27-v01-to-2026-10-27-v02-patch.zip`
+- Patch SHA256: `d2bd12aefc573471c1865925dfaa2e0ddbdc22e9bb49192c858f1e71d6957817`
 
-## Production 2026-10-25-v03
+### Production 2026-10-27-v02
 
-Purpose: promote the completed Development `2026-10-25-v08` owner-tool changes while preserving Production-only behavior and release safeguards.
+Purpose: promote the eBay Post Generator spacing correction while retaining the import-duty notice introduced in Production v01.
 
-Changes retained in v03:
-- Owner AI Card Scanner surfaces backend JSON error/message details for non-2xx `scan-card-ai` responses instead of only the generic invoke error.
-- Scanner remains on the Production `scan-card-ai` Edge Function; `scan-card-ai-dev` is not referenced by Production runtime code.
-- Added Owner-only shared eBay Ban List with add/edit/remove/search/copy controls and four shortcuts to eBay Blocked Buyers.
-- eBay Ban List remains hidden from public users and is additionally protected by Supabase RLS through `public.is_app_owner()`.
-- Includes the corrected Owner navigation insertion logic from Development v08, preventing the v07 `insertBefore` startup regression when the Export control is nested under a different DOM parent.
-- Production-specific QR Generator registration is retained.
-- Existing Production SEO, analytics/privacy boundaries, Contact to Buy, giveaways, generators and Owner tools remain retained.
-- The eBay Ban List stylesheet is colocated with its Production feature module at `src/features/owner/ebay-banlist.css`, preserving the consolidated global Production stylesheet set.
+Retained/current behavior:
+- eBay Post Generator includes `[IMPORT DUTIES & TAXES]` after Shipping and before the Collect TCG section.
+- Only one line break separates Shipping from the import-duty heading.
+- The import-duty notice states that import duties, tariffs, taxes, customs-clearance fees and other import-related charges are not included in item price/shipping and are the buyer's responsibility.
+- Production cache reference for `posts-hidden-ebay.js` is `2026-10-27-v02`.
+- Production-specific scanner endpoint remains `scan-card-ai`; Development-only `scan-card-ai-dev` must not appear in Production runtime code.
+- Owner-only eBay Ban List, QR Generator, SEO, analytics/privacy boundaries, Contact to Buy, giveaways, generators and Owner tools remain retained.
+- Existing eBay Ban List RLS/database state from Production `2026-10-25-v03` remains unchanged.
 
-SQL required: Yes.
-SQL migration: `migrations/2026/2026-10-25-v03-EBAY-BANLIST.sql`.
-SQL status: Applied to Production Supabase project `cbzytysxtdcqxuckspye` and verified: RLS enabled, anon SELECT denied, authenticated table access granted subject to four Owner-only RLS policies.
+SQL required: No for Production v01/v02 eBay-generator changes.
 
-### Production scanner backend
+### Production v02 validation status
 
-- Supabase project: Collect TCG Website (`cbzytysxtdcqxuckspye`).
-- Production Edge Function: `scan-card-ai`.
-- `verify_jwt`: true.
-- Development remains on `scan-card-ai-dev`.
-
-### Validation status
-
-Completed for Production v03:
-- Production repository/JavaScript validation executed successfully, including syntax/import checks.
-- Consolidated CSS validation executed successfully.
-- Retained Post Generator checks executed successfully.
-- SEO generator syntax/self-test/generation checks executed successfully.
-- Generated SEO output validation executed successfully.
-- Production-specific checks confirmed eBay Ban List registration, migration presence, Production scanner endpoint and absence of the Development scanner endpoint.
-- Full and patch ZIPs were created and integrity checked.
-- Package artifact upload succeeded.
-- Immutable v03 release manifest/checksums were recorded.
-- Exact final release/manifest Pages build and deployment succeeded.
-- `production-last-known-good` advancement completed successfully after Pages success.
-- Production Supabase eBay Ban List migration was applied and its RLS/grants/policy count were queried successfully.
+Completed:
+- Production repository/JavaScript validation.
+- Changed eBay generator JavaScript syntax checks.
+- Consolidated CSS validation.
+- Retained Post Generator checks.
+- SEO generator syntax/self-test and Production SEO generation.
+- Generated Production SEO file validation.
+- Full and patch ZIP creation and integrity checks.
+- Package artifact upload.
+- Immutable v02 manifest/checksum recording.
+- GitHub Pages deployment confirmation.
+- `production-last-known-good` advancement after successful Pages deployment.
 
 Validation limitations:
-- Live Production was not manually opened, to avoid contaminating Insights.
-- Authenticated Owner scanner and eBay Ban List were not interactively exercised in a Production browser session.
-- Interactive desktop/mobile/Safari browser testing was not performed.
+- Live Production was not manually opened to avoid contaminating Insights.
+- Interactive desktop/mobile/Safari browser testing was not performed for this spacing-only change.
 
-## Current Development relationship
+### Release-integrity note
 
-Latest validated Development: `2026-10-25-v08`
-Previous Development: `2026-10-25-v07`
-Development release manifest: `release-manifests/2026-10-25-v08.txt` in `collecttcg/Collect_TCG_Dev`.
+The immutable Production v02 manifest records `Development promoted from: 2026-10-27-v02`, but Development currently has no immutable `2026-10-27-v02` release manifest; its latest packaged release is v01 and the spacing correction exists as subsequently validated Development code at commit `3e9b24f9a2df06fba1d3b19e151e13176d8aa63e`. Do not rewrite the accepted Production v02 manifest. Future release work should resolve this metadata mismatch by ensuring the exact Development release is packaged/manifested before promotion.
 
-Development v08 is the corrected validated successor to v07. v07 introduced the eBay Ban List but exposed a runtime Owner-navigation `insertBefore` regression. v08 corrected that DOM insertion path and added dedicated regression coverage before promotion to Production v03.
+## Previous Production — 2026-10-27-v01
 
-Development remains the working environment for subsequent changes.
+Production v01 introduced the eBay Post Generator import-duty notice and was promoted from Development `2026-10-27-v01`.
 
-## Historical release integrity
+- Full ZIP: `Collect-TCG-Production-2026-10-27-v01-full.zip`
+- Full SHA256: `1b892ddea31c5da9e0d9f708b9e12e8c500ba376f474a30bd47019effa993bfe`
+- Patch ZIP: `Collect-TCG-Production-2026-10-25-v03-to-2026-10-27-v01-patch.zip`
+- Patch SHA256: `fa1c71980b0702b2efce4a44f680c2e07ffa8f2262ba67a2fa1e90dfcb483dbc`
 
-`2026-10-25-v02` is the previous Production release and remains recorded by `release-manifests/2026-10-25-v02.txt`.
+## Earlier validated state retained
 
-Production v02 recorded Development promoted from: `2026-10-25-v05` and intentionally did not promote Development v06 scanner error reporting.
+- Development `2026-10-25-v09` remains an immutable historical release. Its custom Inventory Manager/dashboard UI was superseded in later Development code by restoration of the established compact Inventory Tools workspace.
+- Development `2026-10-25-v08` corrected the v07 Owner-navigation `insertBefore` regression and was promoted to Production `2026-10-25-v03`.
+- Production `2026-10-25-v03` added/promoted the Owner eBay Ban List and its RLS migration `migrations/2026/2026-10-25-v03-EBAY-BANLIST.sql`; that migration was applied and verified on Supabase project `cbzytysxtdcqxuckspye`.
+- Production `2026-10-25-v02` and older accepted manifests remain historical immutable records.
+- `release-manifests/2026-10-16-v02.txt` is an older accepted record and must not be rewritten.
 
-`release-manifests/2026-10-16-v02.txt` is an older accepted historical record. It was restored after an outdated workflow accidentally rewrote its source/checksum fields. Future workflow runs must not modify accepted historical manifests.
+## Canonical retained behavior
 
-Audit note for repaired stale validator compatibility: the pre-v02 baseline contained Latest Production: `2026-10-25-v01` and Previous Production: `2026-10-16-v02`. These are historical values only; the authoritative current state is the Current Production section above.
-
-## Production repository structure
-
-- `src/` — active application modules/styles
-- `assets/` — local runtime assets
-- `cards/` — generated SEO card pages
-- `migrations/2026/` — Production SQL migration history
-- `tools/` — validation and SEO tooling
-- `release-manifests/` — immutable release/package checksum records
-- `COLLECT_TCG_BASELINE.md` — current project baseline
-- `docs/BACKUP-RECOVERY.md` — Production rollback procedure
-- `production-last-known-good` — validated deployed Production rollback anchor
-
-## Retained behavior
-
-Do not accidentally remove or expose:
+Preserve unless explicitly changed:
 - public card pages, SEO, stable URLs and SPA/history behavior;
 - Related Cards, Trending and discovery attribution;
 - Inventory/Collection/Sold/Reserved/Favorites flows;
 - Owner Mode and owner-only Add/Edit/Delete/bulk/lifecycle/export tools;
+- established compact Owner Inventory Tools and its specialist subtools;
 - Owner private analytics and Buyer Preview privacy;
 - Owner-only AI Card Scanner;
 - Owner-only shared eBay Ban List;
@@ -131,7 +135,8 @@ Do not accidentally remove or expose:
 - Contact to Buy intents: Availability, Make an offer, More photos / video, COD / meetup;
 - Malaysia & Singapore purchase messaging and negotiable international shipping;
 - Supabase/RLS behavior and analytics boundaries;
-- Safari-safe purchase/contact layout.
+- Safari-safe purchase/contact layout;
+- Development analytics-test exclusion behavior in Development only.
 
 ## Intentionally removed / excluded
 
@@ -142,34 +147,40 @@ Do not restore unless explicitly requested:
 - V202 share-menu experiment;
 - V203/V204 compact-layout experiments;
 - abandoned/superseded scanner/layout experiments;
-- Development-only analytics-test behavior in Production.
+- old Beta runtime dependencies;
+- Development-only analytics-test behavior in Production;
+- the post-v09 duplicate custom Inventory Manager/dashboard renderer.
 
 ## SQL / database baseline
 
-Production `2026-10-25-v03` added and applied `migrations/2026/2026-10-25-v03-EBAY-BANLIST.sql`. Existing Production migrations remain under `migrations/2026/`. Never claim SQL was applied unless actually confirmed.
-
-The shared `public.ebay_banlist` table is Owner-only through RLS. Its presence must not expose Owner functionality to public users.
+- Latest relevant Production migration remains `migrations/2026/2026-10-25-v03-EBAY-BANLIST.sql`.
+- Shared `public.ebay_banlist` remains Owner-only through RLS.
+- No SQL/database change was required for Development/Production 2026-10-27 eBay Post Generator changes.
+- Never claim SQL, policies, Edge Functions or backend changes were applied unless confirmed.
 
 ## Refactoring candidates — not approved changes
 
-Potential future work should begin in Development and preserve current behavior. Highest-value candidates identified after the v07 navigation regression:
-- centralize Owner navigation and route registration so individual features do not manipulate navigation DOM independently;
-- add shared safe DOM insertion/element/clipboard/notification helpers;
-- isolate Supabase table operations behind small service/repository modules;
-- reduce duplicated Owner feature CSS while preserving exact visuals;
-- expand reusable Owner-route regression coverage for application startup, nested navigation, public-user exclusion, missing DOM targets and route rendering;
-- consolidate common validation/release tooling where safe while preserving the separation between Development and protected Production workflows.
+Potential future Dev-only behavior-preserving work:
+- centralize Owner navigation/route registration;
+- add shared safe DOM/clipboard/notification helpers;
+- isolate Supabase operations behind small service/repository modules;
+- reduce duplicated Owner CSS without visual changes;
+- expand reusable Owner-route/startup/public-exclusion regression coverage;
+- consolidate common validation/release tooling while preserving Development/Production separation.
 
-These are planning candidates only and are not authorization to refactor Production. Avoid broad rewrites. Prefer incremental Dev-only refactors with behavior-preserving validation after each subsystem.
+These are candidates only. Avoid broad rewrites and unrelated changes.
 
 ## Release and validation contract
 
-A Production release is complete only after implementation, independent Production validation, regression review, committed-file inspection, full/patch package creation, checksum verification, immutable release manifest recording, successful Pages deployment and rollback protection where available.
+A release is complete only after applicable implementation, validation, regression review, committed-file inspection, package creation/integrity checks, immutable manifest recording, Pages deployment and rollback protection are confirmed. A commit alone is not completion.
 
-A commit is not completion. Use reporting terms precisely: Tested = executed/exercised; Statically verified = repository/code inspection; Not tested = unavailable/not performed.
+Terminology:
+- **Tested** = executed/exercised.
+- **Statically verified** = repository/code inspection only.
+- **Not tested** = unavailable/not performed.
 
 Do not live-open Production for testing unless explicitly authorized because it may contaminate Insights.
 
 ## Baseline maintenance
 
-Reconcile this file after accepted releases and material project-state changes. Historical release manifests are immutable and later workflows must not overwrite their source commit or checksums.
+Reconcile `COLLECT_TCG_BASELINE.md` in both Development and Production repositories after every accepted release or meaningful environment-state change. Preserve historical release facts and retained/removed behavior; never rewrite immutable release manifests from assumptions.
