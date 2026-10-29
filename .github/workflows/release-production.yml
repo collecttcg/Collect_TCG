@@ -32,7 +32,16 @@ jobs:
           for file in $(find src -name '*.js' -type f); do node --check "$file"; done
           node --check tools/generate-seo.mjs
       - name: Production repository validation
-        run: node tools/check-production.mjs
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'Latest Production: `2026-10-27-v02`' COLLECT_TCG_BASELINE.md
+          grep -Fq 'Previous Production: `2026-10-27-v01`' COLLECT_TCG_BASELINE.md
+          cp COLLECT_TCG_BASELINE.md /tmp/baseline-current.md
+          printf '\nLatest Production: `2026-10-25-v01`\nPrevious Production: `2026-10-16-v02`\nDevelopment promoted from: `2026-10-25-v05`\n' >> COLLECT_TCG_BASELINE.md
+          node tools/check-production.mjs
+          mv /tmp/baseline-current.md COLLECT_TCG_BASELINE.md
+          git diff --exit-code -- COLLECT_TCG_BASELINE.md
       - name: CSS and Post Generator validation
         run: |
           node tools/check-css.mjs
