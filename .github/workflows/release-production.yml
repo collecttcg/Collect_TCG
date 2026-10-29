@@ -1,0 +1,123 @@
+name: Production Release
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/release-production.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: production-release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate rollback anchor
+        run: |
+          set -euo pipefail
+          test -s docs/BACKUP-RECOVERY.md
+          git ls-remote --exit-code origin refs/heads/production-last-known-good
+      - name: Validate all Production JavaScript syntax
+        run: |
+          set -euo pipefail
+          for file in $(find src -name '*.js' -type f); do node --check "$file"; done
+          node --check tools/generate-seo.mjs
+      - name: Production repository validation
+        run: node tools/check-production.mjs
+      - name: CSS and Post Generator validation
+        run: |
+          node tools/check-css.mjs
+          node tools/check-post-generator-titles.mjs
+      - name: SEO validation
+        run: |
+          node tools/generate-seo.mjs --self-test
+          node tools/generate-seo.mjs --production
+          test -s sitemap.xml
+          test -s robots.txt
+          test -s seo-slugs.json
+          test -s owner-card-routes.json
+          grep -q 'Allow: /' robots.txt
+          ! grep -Fq 'scan-card-ai-dev' src/features/owner/card-scanner.js
+          grep -Fq 'functions.invoke("scan-card-ai"' src/features/owner/card-scanner.js
+          grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
+          grep -Fq 'dashboard.js?v=2026-10-29-v01' src/app/register-features.js
+          grep -Fq 'inventory-value-overview.js?v=2026-10-29-v01' src/app/register-features.js
+          grep -Fq 'Available inventory value' src/features/owner/inventory-value-overview.js
+          grep -Fq 'requireOwner("open Owner buyer messages")' src/features/owner/dashboard.js
+          git diff --check
+      - name: Create and verify packages
+        env:
+          RELEASE_VERSION: 2026-10-29-v01
+          PREVIOUS_VERSION: 2026-10-27-v02
+          PREVIOUS_COMMIT: 64db0b3c4779c6f2036e5c7eb900eace09112c2b
+        run: |
+          set -euo pipefail
+          mkdir -p release .release-patch
+          FULL="release/Collect-TCG-Production-${RELEASE_VERSION}-full.zip"
+          PATCH="release/Collect-TCG-Production-${PREVIOUS_VERSION}-to-${RELEASE_VERSION}-patch.zip"
+          git archive --format=zip --output="$FULL" HEAD
+          while IFS= read -r -d '' file; do mkdir -p ".release-patch/$(dirname "$file")"; cp -a "$file" ".release-patch/$file"; done < <(git diff --name-only --diff-filter=ACMRT -z "$PREVIOUS_COMMIT" HEAD)
+          git diff --name-only --diff-filter=D "$PREVIOUS_COMMIT" HEAD > .release-patch/PATCH-DELETIONS.txt
+          (cd .release-patch && zip -qr "../$PATCH" .)
+          unzip -tq "$FULL"
+          unzip -tq "$PATCH"
+          sha256sum "$FULL" "$PATCH" | tee release/checksums.txt
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: Collect-TCG-Production-2026-10-29-v01-packages
+          path: |
+            release/Collect-TCG-Production-2026-10-29-v01-full.zip
+            release/Collect-TCG-Production-2026-10-27-v02-to-2026-10-29-v01-patch.zip
+            release/checksums.txt
+          if-no-files-found: error
+          retention-days: 30
+      - name: Record immutable Production manifest
+        run: |
+          set -euo pipefail
+          MANIFEST='release-manifests/2026-10-29-v01.txt'
+          test ! -e "$MANIFEST"
+          {
+            echo 'Version: 2026-10-29-v01'
+            echo 'Previous Production: 2026-10-27-v02'
+            echo 'Development promoted from: 2026-10-29-v01'
+            echo "Source commit: $(git rev-parse HEAD)"
+            echo 'Full ZIP: Collect-TCG-Production-2026-10-29-v01-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-10-27-v02-to-2026-10-29-v01-patch.zip'
+            echo
+            cat release/checksums.txt
+          } > "$MANIFEST"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$MANIFEST"
+          git commit -m 'Production 2026-10-29-v01: record package validation'
+          git push
+      - name: Confirm Pages deployment and advance last-known-good
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TARGET_SHA="$(git rev-parse HEAD)"
+          for attempt in $(seq 1 60); do
+            RESPONSE="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${TARGET_SHA}&per_page=50")"
+            STATE="$(printf '%s' "$RESPONSE" | jq -r '[.workflow_runs[] | select(.name=="pages build and deployment")] | sort_by(.created_at) | last // empty | [.status,.conclusion] | @tsv')"
+            if [[ -z "$STATE" ]]; then sleep 5; continue; fi
+            STATUS="${STATE%%$'\t'*}"; CONCLUSION="${STATE#*$'\t'}"
+            if [[ "$STATUS" == 'completed' ]]; then
+              test "$CONCLUSION" = 'success'
+              git fetch origin production-last-known-good:refs/remotes/origin/production-last-known-good || true
+              if git rev-parse --verify refs/remotes/origin/production-last-known-good >/dev/null 2>&1; then git merge-base --is-ancestor refs/remotes/origin/production-last-known-good HEAD; fi
+              git push --force origin HEAD:refs/heads/production-last-known-good
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
