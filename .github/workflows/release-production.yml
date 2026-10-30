@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-10-30-v02 release gate
+# Production 2026-10-30-v02 release gate — validator aligned
 on:
   workflow_dispatch:
   push:
