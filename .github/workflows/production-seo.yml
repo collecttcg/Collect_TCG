@@ -50,6 +50,8 @@ jobs:
           node --check src/features/owner/dashboard.js
           node --check src/features/media/heic-support.js
           node --check src/app/register-features.js
+          node --check src/features/content/information.js
+          node --check src/features/owner/ebay-banlist.js
       - name: Validate consolidated CSS
         run: node tools/check-css.mjs
       - name: Validate retained Post Generator titles
@@ -84,7 +86,10 @@ jobs:
           grep -Fq 'functions.invoke("scan-card-ai"' src/features/owner/card-scanner.js
           grep -Fq 'functionErrorMessage' src/features/owner/card-scanner.js
           grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
-          grep -Fq 'ebay-banlist.js?v=2026-10-25-v03' src/app/register-features.js
+          grep -Fq 'ebay-banlist.js?v=2026-10-31-v01' src/app/register-features.js
+          grep -Fq 'information.js?v=2026-10-31-v01' src/app/register-features.js
+          grep -Fq 'collect_tcg_5' src/features/owner/ebay-banlist.js
+          grep -Fq 'collect_tcg_5' src/features/content/information.js
           grep -Fq 'posts-hidden-ebay.js?v=2026-10-27-v02' src/app/register-features.js
           grep -Fq '[IMPORT DUTIES & TAXES]' src/features/social/posts-hidden-ebay.js
           grep -Fq "Import duties, tariffs, taxes, customs clearance fees" src/features/social/posts-hidden-ebay.js
