@@ -43,9 +43,11 @@ jobs:
           git ls-remote --exit-code origin refs/heads/production-last-known-good
       - name: Validate Production repository and JavaScript
         run: node tools/check-production.mjs
-      - name: Validate changed eBay generator JavaScript
+      - name: Validate SEO-related JavaScript
         run: |
           node --check src/features/social/posts-hidden-ebay.js
+          node --check src/features/owner/card-owner-category.js
+          node --check src/features/owner/dashboard.js
           node --check src/app/register-features.js
       - name: Validate consolidated CSS
         run: node tools/check-css.mjs
@@ -85,11 +87,12 @@ jobs:
           grep -Fq 'posts-hidden-ebay.js?v=2026-10-27-v02' src/app/register-features.js
           grep -Fq '[IMPORT DUTIES & TAXES]' src/features/social/posts-hidden-ebay.js
           grep -Fq "Import duties, tariffs, taxes, customs clearance fees" src/features/social/posts-hidden-ebay.js
-          grep -Fq 'module50.initialize(appContext,runtime)' src/app/register-features.js
-          grep -Fq 'card-owner-category.js?v=2026-10-16-v02' src/app/register-features.js
+          grep -Fq 'card-owner-category.js?v=2026-10-30-v02' src/app/register-features.js
+          grep -Fq 'dashboard.js?v=2026-10-30-v02' src/app/register-features.js
           grep -Fq 'const OWNER_CATEGORIES=["Zakwan","Yen","Daniel","Jack","Shue"]' src/features/owner/card-owner-category.js
           grep -Fq 'bulkAssignOwnerCategory' src/features/owner/card-owner-category.js
           grep -Fq 'bulkOwnerCategoryApply' src/features/owner/card-owner-category.js
+          grep -Fq 'sub=unassigned' src/features/owner/dashboard.js
           grep -Fq 'collecttcg.github.io/Collect_TCG/' index.html
           grep -Fq 'index,follow,max-image-preview:large' index.html
           git diff --check
@@ -106,92 +109,3 @@ jobs:
             git commit -m "chore: refresh Production SEO card pages [skip ci]"
             git push
           fi
-      - name: Create Production release packages
-        shell: bash
-        env:
-          RELEASE_VERSION: 2026-10-27-v02
-          PREVIOUS_VERSION: 2026-10-27-v01
-          PREVIOUS_COMMIT: e5ff4a5fb0bf9b3d62456131b4373cad8cf0ac6b
-          DEVELOPMENT_PROMOTED: 2026-10-27-v02
-        run: |
-          set -euo pipefail
-          mkdir -p release
-          FULL="release/Collect-TCG-Production-${RELEASE_VERSION}-full.zip"
-          PATCH="release/Collect-TCG-Production-${PREVIOUS_VERSION}-to-${RELEASE_VERSION}-patch.zip"
-          git archive --format=zip --output="${FULL}" HEAD
-          rm -rf .release-patch
-          mkdir -p .release-patch
-          while IFS= read -r -d '' file; do
-            mkdir -p ".release-patch/$(dirname "$file")"
-            cp -a "$file" ".release-patch/$file"
-          done < <(git diff --name-only --diff-filter=ACMRT -z "${PREVIOUS_COMMIT}" HEAD)
-          git diff --name-only --diff-filter=D "${PREVIOUS_COMMIT}" HEAD > .release-patch/PATCH-DELETIONS.txt
-          (cd .release-patch && zip -qr "../${PATCH}" .)
-          unzip -tq "${FULL}"
-          unzip -tq "${PATCH}"
-      - name: Upload Production release packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: Collect-TCG-Production-2026-10-27-v02-packages
-          path: |
-            release/Collect-TCG-Production-2026-10-27-v02-full.zip
-            release/Collect-TCG-Production-2026-10-27-v01-to-2026-10-27-v02-patch.zip
-          if-no-files-found: error
-          retention-days: 30
-      - name: Record Production package validation manifest
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p release-manifests
-          MANIFEST="release-manifests/2026-10-27-v02.txt"
-          if [[ -e "${MANIFEST}" ]]; then
-            echo "Release manifest already exists and is immutable: ${MANIFEST}"
-          else
-            {
-              echo "Version: 2026-10-27-v02"
-              echo "Previous Production: 2026-10-27-v01"
-              echo "Development promoted from: 2026-10-27-v02"
-              echo "Source commit: $(git rev-parse HEAD)"
-              echo "Full ZIP: Collect-TCG-Production-2026-10-27-v02-full.zip"
-              echo "Patch ZIP: Collect-TCG-Production-2026-10-27-v01-to-2026-10-27-v02-patch.zip"
-              echo
-              sha256sum release/*.zip
-            } > "${MANIFEST}"
-            git add "${MANIFEST}"
-            git commit -m "Production 2026-10-27-v02: record package validation"
-            git push
-          fi
-      - name: Confirm Pages deployment and advance last-known-good
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          TARGET_SHA="$(git rev-parse HEAD)"
-          echo "Waiting for GitHub Pages deployment of ${TARGET_SHA}"
-          for attempt in $(seq 1 60); do
-            RESPONSE="$(curl -fsSL -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GH_TOKEN}" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${TARGET_SHA}&per_page=50")"
-            STATE="$(printf '%s' "${RESPONSE}" | jq -r '[.workflow_runs[] | select(.name=="pages build and deployment")] | sort_by(.created_at) | last // empty | [.status,.conclusion] | @tsv')"
-            if [[ -z "${STATE}" ]]; then sleep 5; continue; fi
-            STATUS="${STATE%%$'\t'*}"
-            CONCLUSION="${STATE#*$'\t'}"
-            if [[ "${STATUS}" == "completed" ]]; then
-              if [[ "${CONCLUSION}" != "success" ]]; then
-                echo "Pages deployment failed with conclusion: ${CONCLUSION}" >&2
-                exit 1
-              fi
-              git fetch origin production-last-known-good:refs/remotes/origin/production-last-known-good || true
-              if git rev-parse --verify refs/remotes/origin/production-last-known-good >/dev/null 2>&1; then
-                if ! git merge-base --is-ancestor refs/remotes/origin/production-last-known-good HEAD; then
-                  echo "Refusing to move production-last-known-good backwards or across rewritten history." >&2
-                  exit 1
-                fi
-              fi
-              git push --force origin HEAD:refs/heads/production-last-known-good
-              echo "production-last-known-good advanced to ${TARGET_SHA}"
-              exit 0
-            fi
-            sleep 5
-          done
-          echo "Timed out waiting for Pages deployment of ${TARGET_SHA}" >&2
-          exit 1
