@@ -48,6 +48,7 @@ jobs:
           node --check src/features/social/posts-hidden-ebay.js
           node --check src/features/owner/card-owner-category.js
           node --check src/features/owner/dashboard.js
+          node --check src/features/media/heic-support.js
           node --check src/app/register-features.js
       - name: Validate consolidated CSS
         run: node tools/check-css.mjs
@@ -89,6 +90,8 @@ jobs:
           grep -Fq "Import duties, tariffs, taxes, customs clearance fees" src/features/social/posts-hidden-ebay.js
           grep -Fq 'card-owner-category.js?v=2026-10-30-v02' src/app/register-features.js
           grep -Fq 'dashboard.js?v=2026-10-30-v02' src/app/register-features.js
+          grep -Fq 'heic-support.js?v=2026-10-30-v03' src/app/register-features.js
+          grep -Fq 'heic2any@0.0.4' src/features/media/heic-support.js
           grep -Fq 'const OWNER_CATEGORIES=["Zakwan","Yen","Daniel","Jack","Shue"]' src/features/owner/card-owner-category.js
           grep -Fq 'bulkAssignOwnerCategory' src/features/owner/card-owner-category.js
           grep -Fq 'bulkOwnerCategoryApply' src/features/owner/card-owner-category.js
