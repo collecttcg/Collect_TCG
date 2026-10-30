@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-10-29-v01 release gate
+# Production 2026-10-30-v01 release gate
 on:
   workflow_dispatch:
   push:
@@ -35,13 +35,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq 'Latest Production: `2026-10-27-v02`' COLLECT_TCG_BASELINE.md
-          grep -Fq 'Previous Production: `2026-10-27-v01`' COLLECT_TCG_BASELINE.md
-          cp COLLECT_TCG_BASELINE.md /tmp/baseline-current.md
-          printf '\nLatest Production: `2026-10-25-v01`\nPrevious Production: `2026-10-16-v02`\nDevelopment promoted from: `2026-10-25-v05`\n' >> COLLECT_TCG_BASELINE.md
+          grep -Fq 'Latest Production: `2026-10-29-v01`' COLLECT_TCG_BASELINE.md
+          grep -Fq 'Previous Production: `2026-10-27-v02`' COLLECT_TCG_BASELINE.md
+          grep -Fq 'Development promoted from: `2026-10-29-v01`' COLLECT_TCG_BASELINE.md
           node tools/check-production.mjs
-          mv /tmp/baseline-current.md COLLECT_TCG_BASELINE.md
-          git diff --exit-code -- COLLECT_TCG_BASELINE.md
       - name: CSS and Post Generator validation
         run: |
           node tools/check-css.mjs
@@ -62,12 +59,16 @@ jobs:
           grep -Fq 'inventory-value-overview.js?v=2026-10-29-v01' src/app/register-features.js
           grep -Fq 'Available inventory value' src/features/owner/inventory-value-overview.js
           grep -Fq 'requireOwner("open Owner buyer messages")' src/features/owner/dashboard.js
+          grep -Fq 'https://www.ebay.co.uk/str/collecttcg2' src/features/content/information.js
+          grep -Fq 'https://www.ebay.co.uk/usr/collect_tcg_3' src/features/content/information.js
+          grep -Fq 'https://www.ebay.co.uk/usr/collect_tcg_4' src/features/content/information.js
+          grep -Fq 'const EBAY_ACCOUNT_URLS=[' src/features/owner/ebay-banlist.js
           git diff --check
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-10-29-v01
-          PREVIOUS_VERSION: 2026-10-27-v02
-          PREVIOUS_COMMIT: 64db0b3c4779c6f2036e5c7eb900eace09112c2b
+          RELEASE_VERSION: 2026-10-30-v01
+          PREVIOUS_VERSION: 2026-10-29-v01
+          PREVIOUS_COMMIT: 7e543586e1ca8b0f0b57d17fe2f36edbf2638b52
         run: |
           set -euo pipefail
           mkdir -p release .release-patch
@@ -83,32 +84,32 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-10-29-v01-packages
+          name: Collect-TCG-Production-2026-10-30-v01-packages
           path: |
-            release/Collect-TCG-Production-2026-10-29-v01-full.zip
-            release/Collect-TCG-Production-2026-10-27-v02-to-2026-10-29-v01-patch.zip
+            release/Collect-TCG-Production-2026-10-30-v01-full.zip
+            release/Collect-TCG-Production-2026-10-29-v01-to-2026-10-30-v01-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
       - name: Record immutable Production manifest
         run: |
           set -euo pipefail
-          MANIFEST='release-manifests/2026-10-29-v01.txt'
+          MANIFEST='release-manifests/2026-10-30-v01.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-10-29-v01'
-            echo 'Previous Production: 2026-10-27-v02'
-            echo 'Development promoted from: 2026-10-29-v01'
+            echo 'Version: 2026-10-30-v01'
+            echo 'Previous Production: 2026-10-29-v01'
+            echo 'Development promoted from: 2026-10-30-v01'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-10-29-v01-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-10-27-v02-to-2026-10-29-v01-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-10-30-v01-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-10-29-v01-to-2026-10-30-v01-patch.zip'
             echo
             cat release/checksums.txt
           } > "$MANIFEST"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-10-29-v01: record package validation'
+          git commit -m 'Production 2026-10-30-v01: record package validation'
           git push
       - name: Confirm Pages deployment and advance last-known-good
         env:
