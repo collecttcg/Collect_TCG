@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-10-30-v02 release gate — validator aligned
+# Production 2026-10-30-v03 release gate — promote validated Development 2026-10-30-v04 HEIC support.
 on:
   workflow_dispatch:
   push:
@@ -35,10 +35,20 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq 'Latest Production: `2026-10-30-v01`' COLLECT_TCG_BASELINE.md
-          grep -Fq 'Previous Production: `2026-10-29-v01`' COLLECT_TCG_BASELINE.md
-          grep -Fq 'Development promoted from: `2026-10-30-v01`' COLLECT_TCG_BASELINE.md
+          grep -Fq 'Latest Production: `2026-10-30-v02`' COLLECT_TCG_BASELINE.md
+          grep -Fq 'Previous Production: `2026-10-30-v01`' COLLECT_TCG_BASELINE.md
+          grep -Fq 'Development promoted from: `2026-10-30-v03`' COLLECT_TCG_BASELINE.md
           node tools/check-production.mjs
+      - name: HEIC Add/Edit integration contract
+        run: |
+          set -euo pipefail
+          grep -Fq 'image/heic,image/heif,.heic,.heif' src/features/media/heic-support.js
+          grep -Fq 'heic2any@0.0.4' src/features/media/heic-support.js
+          grep -Fq 'convertHeicOwnerImage' src/features/media/heic-support.js
+          grep -Fq "features/media/heic-support.js?v=2026-10-30-v03" src/app/register-features.js
+          grep -Fq 'wireImageControls("add"' src/features/owner/add.js
+          grep -Fq 'wireImageControls("edit"' src/features/owner/editor.js
+          grep -Fq 'accept="image/jpeg,image/png,image/webp"' src/features/owner/forms.js
       - name: CSS and Post Generator validation
         run: |
           node tools/check-css.mjs
@@ -70,11 +80,12 @@ jobs:
           git diff --check
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-10-30-v02
-          PREVIOUS_VERSION: 2026-10-30-v01
-          PREVIOUS_COMMIT: 91b322acb86dad4a8d9a63ac2da4a2f30882aeba
+          RELEASE_VERSION: 2026-10-30-v03
+          PREVIOUS_VERSION: 2026-10-30-v02
+          PREVIOUS_COMMIT: 4760776ef14c33261d498ebf2c8aca3abf0e4fb1
         run: |
           set -euo pipefail
+          rm -rf .release-patch
           mkdir -p release .release-patch
           FULL="release/Collect-TCG-Production-${RELEASE_VERSION}-full.zip"
           PATCH="release/Collect-TCG-Production-${PREVIOUS_VERSION}-to-${RELEASE_VERSION}-patch.zip"
@@ -88,32 +99,32 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-10-30-v02-packages
+          name: Collect-TCG-Production-2026-10-30-v03-packages
           path: |
-            release/Collect-TCG-Production-2026-10-30-v02-full.zip
-            release/Collect-TCG-Production-2026-10-30-v01-to-2026-10-30-v02-patch.zip
+            release/Collect-TCG-Production-2026-10-30-v03-full.zip
+            release/Collect-TCG-Production-2026-10-30-v02-to-2026-10-30-v03-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
       - name: Record immutable Production manifest
         run: |
           set -euo pipefail
-          MANIFEST='release-manifests/2026-10-30-v02.txt'
+          MANIFEST='release-manifests/2026-10-30-v03.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-10-30-v02'
-            echo 'Previous Production: 2026-10-30-v01'
-            echo 'Development promoted from: 2026-10-30-v03'
+            echo 'Version: 2026-10-30-v03'
+            echo 'Previous Production: 2026-10-30-v02'
+            echo 'Development promoted from: 2026-10-30-v04'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-10-30-v02-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-10-30-v01-to-2026-10-30-v02-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-10-30-v03-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-10-30-v02-to-2026-10-30-v03-patch.zip'
             echo
             cat release/checksums.txt
           } > "$MANIFEST"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-10-30-v02: record package validation'
+          git commit -m 'Production 2026-10-30-v03: record package validation'
           git push
       - name: Confirm Pages deployment and advance last-known-good
         env:
