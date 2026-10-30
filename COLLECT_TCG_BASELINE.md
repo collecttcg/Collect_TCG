@@ -15,101 +15,93 @@ Reconciliation priority: current GitHub HEAD > latest valid release manifest > t
 ## Versioning
 
 - `V210` is the final legacy `V###` release; historical releases are never renamed.
-- Current releases use `YYYY-MM-DD-vNN` with the actual build date; Development and Production counters are independent.
-- Development full: `Collect-TCG-Dev-YYYY-MM-DD-vNN-full.zip`
-- Development patch: `Collect-TCG-Dev-OLD-to-NEW-patch.zip`
-- Production full: `Collect-TCG-Production-YYYY-MM-DD-vNN-full.zip`
-- Production patch: `Collect-TCG-Production-OLD-to-NEW-patch.zip`
-- SQL: `YYYY-MM-DD-vNN-DESCRIPTIVE-NAME.sql`
+- Current releases use `YYYY-MM-DD-vNN`; Development and Production counters are independent.
 - Historical release manifests are immutable.
 
 ## Current Development
 
-Latest validated Development release: `2026-10-30-v04`
-Previous Development: `2026-10-30-v03`
-Development release manifest: `release-manifests/2026-10-30-v04.txt`
-Development v04 package source commit: `27e258feba7aa135013330f6e870b8b5bb4fd89d`
-Development v04 manifest commit: `6a1ec3e2a2a6c3b51af2ba5f7ad041722d7a41af`
+Latest validated Development release: `2026-10-30-v06`
+Previous Development: `2026-10-30-v05`
+Development release manifest: `release-manifests/2026-10-30-v06.txt`
+Development v06 package source commit: `6e32e6221ea041a09e601b82819a914577cc0383`
+Development v06 manifest commit: `53a3c87e2d32e7eb620a4444d2e016c639527da4`
 
-### Development package record — 2026-10-30-v04
+### Development package record — 2026-10-30-v06
 
-- Full ZIP: `Collect-TCG-Dev-2026-10-30-v04-full.zip`
-- Full SHA256: `f818c8df4e39856a3249425252397600d66a627849ef5ca3b57a5c718180f62b`
-- Patch ZIP: `Collect-TCG-Dev-2026-10-30-v03-to-2026-10-30-v04-patch.zip`
-- Patch SHA256: `cabaca9a16d284c1e3e1164469483ca67b71fae2ddcc0e0e41a3fbc9b9519fa2`
+- Full ZIP: `Collect-TCG-Dev-2026-10-30-v06-full.zip`
+- Full SHA256: `41e65ed67ea5d14b255a7d7567a35a6bdce157dfff5fecf68cf2616ccb237dc3`
+- Patch ZIP: `Collect-TCG-Dev-2026-10-30-v05-to-2026-10-30-v06-patch.zip`
+- Patch SHA256: `80f2801ff8e17f7c6314c402a7d94b74e5546b9768dc8e1bf3cb7cf1b1543d6e`
 
-### Development 2026-10-30-v04 retained/current state
+### Development 2026-10-30-v06 retained/current state
 
-- Owner Add Listing and Edit Listing image pickers accept JPEG, PNG, WebP, HEIC and HEIF.
-- HEIC/HEIF owner uploads are converted client-side to JPEG before entering the established resize/validation/upload pipeline; stored listing images therefore remain compatible with existing image handling.
-- HEIC conversion is Owner-protected, preserves the established image-size limit, and loads `heic2any` 0.0.4 on demand only when a HEIC/HEIF file is selected.
-- Existing JPEG/PNG/WebP behavior remains unchanged.
-- Owner Inventory Tools → Bulk Edit retains `Unassigned Owners`, private Card Owner assignment and 100-row chunking from Development `2026-10-30-v03`.
+- Owner Add/Edit accepts JPEG, PNG, WebP, HEIC and HEIF, including HEIC/HEIF sequence MIME variants.
+- HEIC/HEIF conversion remains Owner-only and client-side before the established image resize/validation/upload pipeline.
+- Native browser HEIC decode is attempted first; fallback decoder is pinned `heic-to` 1.6.7 loaded on demand from jsDelivr.
+- Existing JPEG/PNG/WebP behavior and established image-size limits remain unchanged.
+- Owner Inventory Tools → Bulk Edit retains `Unassigned Owners`, private Card Owner assignment and 100-row chunking.
 - Contact → Official eBay Accounts and eBay Ban List account shortcuts remain retained.
 - No SQL/schema/RLS/Edge Function change was required.
 
 ## Current Production
 
-Latest Production: `2026-10-30-v03`
-Previous Production: `2026-10-30-v02`
-Development promoted from: `2026-10-30-v04`
-Production release manifest: `release-manifests/2026-10-30-v03.txt`
-Production v03 package source commit: `5bb6310420349d4e1bc5b294ef35d5e2a625ae4c`
-Production last-known-good / release manifest commit: `4ffb6b3caf0ca29626bde56afd7fcaaa2bb9004c`
+Latest Production: `2026-10-30-v04`
+Previous Production: `2026-10-30-v03`
+Development promoted from: `2026-10-30-v06`
+Production release manifest: `release-manifests/2026-10-30-v04.txt`
+Production v04 package source commit: `d9956480c288128206814f52af16a9fd376d1753`
+Production last-known-good / release manifest commit: `24383c875d63992fcf302cce5fc3b752215c34de`
 
-### Production package record — 2026-10-30-v03
+### Production package record — 2026-10-30-v04
 
-- Full ZIP: `Collect-TCG-Production-2026-10-30-v03-full.zip`
-- Full SHA256: `f5f7e4fc9375bf2600497b36066fa3e1e085c82788faf520d3c51ef7fa365b79`
-- Patch ZIP: `Collect-TCG-Production-2026-10-30-v02-to-2026-10-30-v03-patch.zip`
-- Patch SHA256: `1a3c41b64c9c98fc05dfc91d1ea6ceed42911e5b87889f4c565f1dfa572578dc`
+- Full ZIP: `Collect-TCG-Production-2026-10-30-v04-full.zip`
+- Full SHA256: `f0dc80b9ffd1685d486d69310e5a571ea4200e3c42334ffbdce6d5be259ddaf9`
+- Patch ZIP: `Collect-TCG-Production-2026-10-30-v03-to-2026-10-30-v04-patch.zip`
+- Patch SHA256: `4c52a4404ac0192cf3bbc91b124d77de776857a39e48e115ef40b7f7ffab9097`
 
-### Production 2026-10-30-v03
+### Production 2026-10-30-v04
 
-Purpose: promote validated HEIC/HEIF listing-photo support from Development `2026-10-30-v04` while preserving Production-specific behavior.
+Purpose: promote the validated modern iPhone HEIC decoder path from Development `2026-10-30-v06` while preserving Production-specific behavior.
 
 Retained/current behavior:
-- Owner Add Listing and Edit Listing accept HEIC/HEIF in addition to JPEG/PNG/WebP.
-- HEIC/HEIF files are converted client-side to JPEG before the existing image resize/validation/upload flow.
-- Existing image size limits and Owner authorization remain in force; no public upload surface was added.
-- Existing JPEG/PNG/WebP upload behavior remains unchanged.
+- Owner Add/Edit accepts HEIC/HEIF plus JPEG/PNG/WebP.
+- Native browser decode is attempted first; fallback uses pinned `heic-to` 1.6.7 and converts to JPEG before the existing image pipeline.
+- Owner authorization and existing image-size limits remain in force; no public upload surface was added.
 - Owner Inventory Tools → Bulk Edit retains Unassigned Owners assignment and private `card_owner_private` storage.
-- Production-specific scanner endpoint remains `scan-card-ai`; Development-only `scan-card-ai-dev` must not appear in Production runtime code.
+- Production scanner remains `scan-card-ai`; Development-only `scan-card-ai-dev` must not appear in Production runtime code.
 - QR Generator, eBay account links, eBay Ban List, SEO, analytics/privacy boundaries, Contact to Buy, giveaways, generators, Buyer Messages and established Owner tools remain retained.
-- Existing eBay Ban List database/RLS state from Production `2026-10-25-v03` remains unchanged.
+- Existing eBay Ban List database/RLS state remains unchanged.
 
 SQL required: No.
 
-### Production v03 validation status
+### Production v04 validation status
 
 Completed:
 - rollback-anchor validation;
 - all Production JavaScript syntax validation;
 - Production repository/reference validation;
-- HEIC Add/Edit registration and integration contract validation;
-- CSS and Post Generator validation;
-- SEO validation and retained Production endpoint checks;
+- modern HEIC Add/Edit integration contract and decoder availability validation;
+- CSS, Post Generator and SEO validation;
 - full and patch ZIP creation and integrity checks;
 - package artifact upload;
 - immutable Production manifest/checksum recording;
 - GitHub Pages deployment confirmation;
-- `production-last-known-good` advanced to `4ffb6b3caf0ca29626bde56afd7fcaaa2bb9004c` after successful deployment.
+- `production-last-known-good` advanced after successful deployment.
 
 Validation limitations:
 - Live Production was not manually opened to avoid contaminating Insights.
-- A physical HEIC/HEIF file was not interactively uploaded in a browser during release validation; HEIC Add/Edit support was validated by syntax, wiring and integration contracts.
+- The user's exact `IMG_6923.HEIC` was not available as a file for interactive upload testing; validation covered syntax, wiring, decoder availability and integration contracts.
 - Interactive desktop/mobile/Safari browser testing was not performed during this promotion.
 
 ## Earlier validated state retained
 
-- Development `2026-10-30-v03` and Production `2026-10-30-v02` remain immutable; they introduced/promoted the corrected Unassigned Owners assignment workflow.
+- Development `2026-10-30-v05` is immutable; it was the prior HEIC compatibility iteration superseded by v06.
+- Development `2026-10-30-v04` and Production `2026-10-30-v03` are immutable; they introduced/promoted initial HEIC/HEIF listing-photo support.
+- Development `2026-10-30-v03` and Production `2026-10-30-v02` remain immutable; they introduced/promoted corrected Unassigned Owners assignment.
 - Development `2026-10-30-v02` is immutable; it first packaged the Unassigned Owners feature/runtime correction.
 - Development and Production `2026-10-30-v01` remain immutable; Production v01 promoted approved eBay account-link changes.
-- Development and Production `2026-10-29-v01` remain immutable historical releases; Production v01 promoted Owner inventory value visibility and Owner Buyer Messages.
 - Production `2026-10-27-v02` remains immutable. Its manifest records `Development promoted from: 2026-10-27-v02` despite no matching immutable Development v02 manifest; do not rewrite it.
-- Production `2026-10-27-v01` introduced the eBay Post Generator import-duty notice.
-- Development `2026-10-25-v09` remains immutable; its custom Inventory Manager/dashboard UI was superseded by restoration of the established compact Inventory Tools workspace.
-- Development `2026-10-25-v08` corrected the v07 Owner-navigation `insertBefore` regression and was promoted to Production `2026-10-25-v03`.
+- Development `2026-10-25-v09` custom Inventory Manager/dashboard UI remains superseded by the established compact Inventory Tools workspace.
 - Production `2026-10-25-v03` added/promoted the Owner eBay Ban List and migration `migrations/2026/2026-10-25-v03-EBAY-BANLIST.sql`; that migration was applied and verified on Supabase project `cbzytysxtdcqxuckspye`.
 - Older accepted manifests remain historical immutable records.
 
@@ -124,14 +116,10 @@ Preserve unless explicitly changed:
 - established compact Owner Inventory Tools and specialist subtools;
 - Owner-only Card Owner categories and Unassigned Owners assignment workflow;
 - Available inventory value in Owner Overview;
-- Owner-only Buyer Messages;
-- Owner private analytics and Buyer Preview privacy;
-- Owner-only AI Card Scanner;
-- Owner-only shared eBay Ban List;
-- QR Generator;
-- Facebook/Carousell/eBay/Post Generator and giveaway functionality;
-- Contact to Buy intents: Availability, Make an offer, More photos / video, COD / meetup;
-- Malaysia & Singapore purchase messaging and negotiable international shipping;
+- Owner-only Buyer Messages, private analytics and Buyer Preview privacy;
+- Owner-only AI Card Scanner and shared eBay Ban List;
+- QR Generator, Post Generators and giveaway functionality;
+- Contact to Buy intents and Malaysia/Singapore purchase messaging;
 - Supabase/RLS behavior and analytics boundaries;
 - Safari-safe purchase/contact layout;
 - Development analytics-test exclusion behavior in Development only.
@@ -147,27 +135,15 @@ Do not restore unless explicitly requested:
 - abandoned/superseded scanner/layout experiments;
 - old Beta runtime dependencies;
 - Development-only analytics-test behavior in Production;
-- the post-v09 duplicate custom Inventory Manager/dashboard renderer.
+- post-v09 duplicate custom Inventory Manager/dashboard renderer.
 
 ## SQL / database baseline
 
 - Latest relevant Production migration remains `migrations/2026/2026-10-25-v03-EBAY-BANLIST.sql`.
 - Shared `public.ebay_banlist` remains Owner-only through RLS.
-- Card Owner assignment continues to use existing private `card_owner_private` metadata and existing authorization.
-- HEIC/HEIF listing-photo support is client-side and required no SQL/database/RLS/Edge Function change for Development `2026-10-30-v04` or Production `2026-10-30-v03`.
+- Card Owner assignment continues to use existing private `card_owner_private` metadata and authorization.
+- HEIC/HEIF support is client-side and required no SQL/database/RLS/Edge Function change for Development `2026-10-30-v06` or Production `2026-10-30-v04`.
 - Never claim SQL, policies, Edge Functions or backend changes were applied unless confirmed.
-
-## Refactoring candidates — not approved changes
-
-Potential future Dev-only behavior-preserving work:
-- centralize Owner navigation/route registration;
-- add shared safe DOM/clipboard/notification helpers;
-- isolate Supabase operations behind small service/repository modules;
-- reduce duplicated Owner CSS without visual changes;
-- expand reusable Owner-route/startup/public-exclusion regression coverage;
-- consolidate common validation/release tooling while preserving Development/Production separation.
-
-These are candidates only. Avoid broad rewrites and unrelated changes.
 
 ## Release and validation contract
 
@@ -182,4 +158,4 @@ Do not live-open Production for testing unless explicitly authorized because it 
 
 ## Baseline maintenance
 
-Reconcile `COLLECT_TCG_BASELINE.md` in both Development and Production repositories after every accepted release or meaningful environment-state change. This is part of release completion, not an optional follow-up. Preserve historical release facts and retained/removed behavior; never rewrite immutable release manifests from assumptions.
+Reconcile `COLLECT_TCG_BASELINE.md` in both Development and Production repositories after every accepted release or meaningful environment-state change. Preserve historical release facts and retained/removed behavior; never rewrite immutable release manifests from assumptions.
