@@ -90,8 +90,15 @@ jobs:
           grep -Fq "Import duties, tariffs, taxes, customs clearance fees" src/features/social/posts-hidden-ebay.js
           grep -Fq 'card-owner-category.js?v=2026-10-30-v02' src/app/register-features.js
           grep -Fq 'dashboard.js?v=2026-10-30-v02' src/app/register-features.js
-          grep -Fq 'heic-support.js?v=2026-10-30-v03' src/app/register-features.js
-          grep -Fq 'heic2any@0.0.4' src/features/media/heic-support.js
+          grep -Fq 'heic-support.js?v=2026-10-30-v04' src/app/register-features.js
+          grep -Fq 'image/heic-sequence' src/features/media/heic-support.js
+          grep -Fq 'image/heif-sequence' src/features/media/heic-support.js
+          grep -Fq 'nativeHeicToJpegBlob' src/features/media/heic-support.js
+          grep -Fq 'heic-to@1.6.7/dist/iife/heic-to.js' src/features/media/heic-support.js
+          grep -Fq 'const converted=await heicTo({blob:file,type:"image/jpeg",quality:0.94})' src/features/media/heic-support.js
+          curl --fail --silent --show-error --location --max-time 30 -o /tmp/heic-to.js https://cdn.jsdelivr.net/npm/heic-to@1.6.7/dist/iife/heic-to.js
+          test -s /tmp/heic-to.js
+          grep -Fq 'HeicTo' /tmp/heic-to.js
           grep -Fq 'const OWNER_CATEGORIES=["Zakwan","Yen","Daniel","Jack","Shue"]' src/features/owner/card-owner-category.js
           grep -Fq 'bulkAssignOwnerCategory' src/features/owner/card-owner-category.js
           grep -Fq 'bulkOwnerCategoryApply' src/features/owner/card-owner-category.js
