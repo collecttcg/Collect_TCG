@@ -131,6 +131,7 @@ jobs:
       - name: Record immutable Production manifest
         run: |
           set -euo pipefail
+          git pull --rebase origin main
           MANIFEST='release-manifests/2026-10-31-v01.txt'
           test ! -e "$MANIFEST"
           {
