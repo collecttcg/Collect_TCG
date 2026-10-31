@@ -2,6 +2,7 @@ import { createProductionRuntime } from './app/production-runtime.js?v=2026-09-2
 import { registerFeatures } from './app/register-features.js?v=2026-10-05-v01&release=2026-10-25-v03&bulk=1';
 import { register as registerScanner } from './features/owner/card-scanner.js?v=2026-10-25-v03';
 import { register as registerScannerStyle } from './features/owner/card-scanner-style.js?v=2026-10-25-v02';
+import { register as registerInventorySortToolbar } from './features/inventory/sort-toolbar.js?v=2026-10-31-v02';
 import { initializeApp } from './app/initialize.js?v=2026-10-05-v01';
 import { setup as setup1 } from './ui/enhancement-1.js';
 import { setup as setup2 } from './ui/enhancement-2.js';
@@ -12,6 +13,7 @@ try{
   const runtime=createProductionRuntime();
   const appContext={localStorage:runtime.localStorage,sessionStorage:runtime.sessionStorage,fetch:runtime.fetch};
   registerFeatures(appContext);
+  registerInventorySortToolbar(appContext);
   registerScanner(appContext);
   initializeApp(appContext,runtime);
   setup1(appContext);setup2(appContext);setup3(appContext);
