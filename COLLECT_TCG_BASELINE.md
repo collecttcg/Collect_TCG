@@ -34,7 +34,7 @@ Current Development behavior:
 - Owner Add/Edit retains JPEG, PNG, WebP, HEIC and HEIF support with native decode first and pinned `heic-to` 1.6.7 fallback.
 - Owner Add/Edit listing photos retain file drop and drag-reorder edge auto-scroll.
 - Owner Inventory Tools → PSA POP retains `Get Never-Synced PSA POPs (N)`; existing Update Due / Update All behavior remains unchanged.
-- Owner-only AI Card Scanner, QR Generator, eBay account links/Ban List, Buyer Messages, generators, private analytics and established Inventory Tools remain retained.
+- Owner-only AI Card Scanner, QR Generator, eBay account links/Ban List, Buyer Messages, generators, private analytics and established compact Owner Inventory Tools remain retained.
 - Development SEO generation and validation passed for v02.
 - No SQL/schema/RLS/Edge Function change was required.
 
@@ -74,6 +74,11 @@ Validation limitations:
 
 ## Historical immutable state retained
 - Production `2026-10-31-v01` / Development `2026-10-31-v01` remain immutable prior releases containing Owner image workflow and PSA POP improvements.
+- Historical v01 baseline snapshot retained for validator/history continuity:
+  - Latest validated Development release: `2026-10-31-v01`
+  - Latest Production: `2026-10-31-v01`
+  - Previous Production: `2026-10-30-v04`
+  - Development promoted from: `2026-10-31-v01`
 - Production `2026-10-30-v04` / Development `2026-10-30-v06` remain immutable prior releases and retain the modern HEIC decoder path.
 - Development `2026-10-30-v04` / Production `2026-10-30-v03` introduced/promoted initial HEIC support.
 - Development `2026-10-30-v03` / Production `2026-10-30-v02` introduced/promoted corrected Unassigned Owners assignment.
