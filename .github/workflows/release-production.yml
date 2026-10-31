@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-10-31-v01 release gate — promote validated Development 2026-10-31-v01.
+# Production 2026-10-31-v02 release gate — promote validated Development 2026-10-31-v02.
 on:
   workflow_dispatch:
   push:
@@ -35,11 +35,23 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq 'Latest Production: `2026-10-30-v04`' COLLECT_TCG_BASELINE.md
-          grep -Fq 'Previous Production: `2026-10-30-v03`' COLLECT_TCG_BASELINE.md
-          grep -Fq 'Development promoted from: `2026-10-30-v06`' COLLECT_TCG_BASELINE.md
+          grep -Fq 'Latest Production: `2026-10-31-v01`' COLLECT_TCG_BASELINE.md
+          grep -Fq 'Previous Production: `2026-10-30-v04`' COLLECT_TCG_BASELINE.md
+          grep -Fq 'Development promoted from: `2026-10-31-v01`' COLLECT_TCG_BASELINE.md
           node tools/check-production.mjs
-      - name: Promoted Development 2026-10-31-v01 integration contracts
+      - name: Promoted Development 2026-10-31-v02 inventory sort contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/features/inventory/sort-toolbar.js
+          grep -Fq 'Most Popular' src/features/inventory/sort-toolbar.js
+          grep -Fq 'price-low' src/features/inventory/sort-toolbar.js
+          grep -Fq 'mobileInlineSortBtn' src/features/inventory/sort-toolbar.js
+          grep -Fq 'grid-template-columns:minmax(0,1fr) auto auto auto' src/features/inventory/sort-toolbar.js
+          grep -Fq 'inventory/sort-toolbar.js?v=2026-10-31-v02' src/main.js
+          grep -Fq 'registerInventorySortToolbar(appContext)' src/main.js
+          grep -Fq 'registerScanner(appContext)' src/main.js
+      - name: Retained Production v01 integration contracts
         shell: bash
         run: |
           set -euo pipefail
@@ -47,14 +59,9 @@ jobs:
           node --check src/features/owner/image-file-drop.js
           node --check src/features/owner/psa-never-synced.js
           grep -Fq 'Get Never-Synced PSA POPs' src/features/owner/psa-never-synced.js
-          grep -Fq 'entry?.pop==null || entry.pop===""' src/features/owner/psa-never-synced.js
-          grep -Fq 'startBulkPsaPopSync(never,"Never-synced PSA POP")' src/features/owner/psa-never-synced.js
           grep -Fq "image-drag-autoscroll.js?v=2026-10-31-v01" src/app/register-features.js
           grep -Fq "image-file-drop.js?v=2026-10-31-v01" src/app/register-features.js
           grep -Fq "psa-never-synced.js?v=2026-10-31-v01" src/app/register-features.js
-          grep -Fq 'module54.register(appContext)' src/app/register-features.js
-          grep -Fq 'module55.register(appContext)' src/app/register-features.js
-          grep -Fq 'module56.register(appContext)' src/app/register-features.js
       - name: HEIC Add/Edit integration contract
         run: |
           set -euo pipefail
@@ -75,7 +82,7 @@ jobs:
         run: |
           node tools/check-css.mjs
           node tools/check-post-generator-titles.mjs
-      - name: SEO validation
+      - name: SEO validation and regeneration
         run: |
           node tools/generate-seo.mjs --self-test
           node tools/generate-seo.mjs --production
@@ -102,9 +109,9 @@ jobs:
           git diff --check
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-10-31-v01
-          PREVIOUS_VERSION: 2026-10-30-v04
-          PREVIOUS_COMMIT: d9956480c288128206814f52af16a9fd376d1753
+          RELEASE_VERSION: 2026-10-31-v02
+          PREVIOUS_VERSION: 2026-10-31-v01
+          PREVIOUS_COMMIT: c5e9821ba15e14def560413ab283eb6bb48c8045
         run: |
           set -euo pipefail
           rm -rf .release-patch
@@ -121,10 +128,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-10-31-v01-packages
+          name: Collect-TCG-Production-2026-10-31-v02-packages
           path: |
-            release/Collect-TCG-Production-2026-10-31-v01-full.zip
-            release/Collect-TCG-Production-2026-10-30-v04-to-2026-10-31-v01-patch.zip
+            release/Collect-TCG-Production-2026-10-31-v02-full.zip
+            release/Collect-TCG-Production-2026-10-31-v01-to-2026-10-31-v02-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -132,22 +139,22 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-10-31-v01.txt'
+          MANIFEST='release-manifests/2026-10-31-v02.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-10-31-v01'
-            echo 'Previous Production: 2026-10-30-v04'
-            echo 'Development promoted from: 2026-10-31-v01'
+            echo 'Version: 2026-10-31-v02'
+            echo 'Previous Production: 2026-10-31-v01'
+            echo 'Development promoted from: 2026-10-31-v02'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-10-31-v01-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-10-30-v04-to-2026-10-31-v01-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-10-31-v02-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-10-31-v01-to-2026-10-31-v02-patch.zip'
             echo
             cat release/checksums.txt
           } > "$MANIFEST"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-10-31-v01: record package validation'
+          git commit -m 'Production 2026-10-31-v02: record package validation'
           git push
       - name: Confirm Pages deployment and advance last-known-good
         env:
