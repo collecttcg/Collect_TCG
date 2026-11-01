@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-01-v02 — promote validated Development state 1427c2649715e4c081327dde5224bc5c5546a0c1.
+# Production 2026-11-01-v03 — make SEO validation release-agnostic.
 on:
   workflow_dispatch:
   push:
@@ -21,39 +21,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Promote validated Development changes and fix validator
-        shell: bash
-        run: |
-          set -euo pipefail
-          DEV_SHA='1427c2649715e4c081327dde5224bc5c5546a0c1'
-          BASE="https://raw.githubusercontent.com/collecttcg/Collect_TCG_Dev/${DEV_SHA}/dev/src"
-          curl --fail --silent --show-error --location --max-time 30 "$BASE/features/social/posts-hidden-ebay.js" -o src/features/social/posts-hidden-ebay.js
-          curl --fail --silent --show-error --location --max-time 30 "$BASE/features/owner/dashboard.js" -o src/features/owner/dashboard.js
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('src/app/register-features.js'); s=p.read_text()
-          s=s.replace("../features/social/posts-hidden-ebay.js?v=2026-10-27-v02", "../features/social/posts-hidden-ebay.js?v=2026-11-01-v01")
-          s=s.replace("../features/owner/dashboard.js?v=2026-10-30-v02", "../features/owner/dashboard.js?v=2026-11-01-v01")
-          p.write_text(s)
-          p=Path('tools/check-production.mjs'); s=p.read_text()
-          s=s.replace("['Latest Production: `2026-10-31-v02`','Previous Production: `2026-10-31-v01`','Development promoted from: `2026-10-31-v02`','QR Generator','migrations/2026/']", "['Latest Production: `2026-11-01-v01`','Previous Production: `2026-10-31-v02`','Development promoted from: `2026-11-01-v01`','QR Generator','migrations/2026/']")
-          p.write_text(s)
-          PY
-          node --check src/features/social/posts-hidden-ebay.js
-          node --check src/features/owner/dashboard.js
-          node --check src/app/register-features.js
-          node --check tools/check-production.mjs
-          grep -Fq "posts-hidden-ebay.js?v=2026-11-01-v01" src/app/register-features.js
-          grep -Fq "dashboard.js?v=2026-11-01-v01" src/app/register-features.js
-          grep -Fq 'Latest Production: `2026-11-01-v01`' tools/check-production.mjs
-          git diff --check
-          if ! git diff --quiet; then
-            git config user.name 'collecttcg'
-            git config user.email 'z3313514@gmail.com'
-            git add src/features/social/posts-hidden-ebay.js src/features/owner/dashboard.js src/app/register-features.js tools/check-production.mjs
-            git commit -m 'Promote latest Development messaging and fix Production validator'
-            git push
-          fi
       - name: Validate rollback anchor
         run: |
           set -euo pipefail
@@ -65,11 +32,13 @@ jobs:
           for file in $(find src -name '*.js' -type f); do node --check "$file"; done
           node --check tools/generate-seo.mjs
           node --check tools/check-production.mjs
-      - name: Validate promoted and retained contracts
+          node --check tools/check-seo-workflow.mjs
+      - name: Validate Production and retained contracts
         shell: bash
         run: |
           set -euo pipefail
           node tools/check-production.mjs
+          node tools/check-seo-workflow.mjs
           grep -Fq 'For additional security and documentation' src/features/owner/dashboard.js
           grep -Fq 'video recorded before dispatch' src/features/social/posts-hidden-ebay.js
           grep -Fq '[IMPORT DUTIES & TAXES]' src/features/social/posts-hidden-ebay.js
@@ -94,20 +63,24 @@ jobs:
           test -s seo-slugs.json
           test -s owner-card-routes.json
           grep -q 'Allow: /' robots.txt
-          git diff --check
+          grep -q '<urlset' sitemap.xml
+          grep -q 'index,follow,max-image-preview:large' cards/*/index.html
+          if grep -Eq '/cards/[^<]*/?--[0-9a-fA-F-]{20,40}/' sitemap.xml; then exit 1; fi
       - name: Commit refreshed SEO pages
         run: |
           set -euo pipefail
           if ! git diff --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
             git add cards sitemap.xml robots.txt seo-slugs.json owner-card-routes.json
             git commit -m 'chore: refresh Production SEO card pages [skip ci]'
             git push
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-01-v02
-          PREVIOUS_VERSION: 2026-11-01-v01
-          PREVIOUS_COMMIT: df8e6108ac560da7ef95b290ea7f7ea7df957f6b
+          RELEASE_VERSION: 2026-11-01-v03
+          PREVIOUS_VERSION: 2026-11-01-v02
+          PREVIOUS_COMMIT: b47619734c9d6a399a7e8366761d0ce653579f54
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -124,10 +97,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-01-v02-packages
+          name: Collect-TCG-Production-2026-11-01-v03-packages
           path: |
-            release/Collect-TCG-Production-2026-11-01-v02-full.zip
-            release/Collect-TCG-Production-2026-11-01-v01-to-2026-11-01-v02-patch.zip
+            release/Collect-TCG-Production-2026-11-01-v03-full.zip
+            release/Collect-TCG-Production-2026-11-01-v02-to-2026-11-01-v03-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -135,25 +108,25 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-01-v02.txt'
+          MANIFEST='release-manifests/2026-11-01-v03.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-01-v02'
-            echo 'Previous Production: 2026-11-01-v01'
-            echo 'Development promoted from: latest validated Development state 1427c2649715e4c081327dde5224bc5c5546a0c1'
+            echo 'Version: 2026-11-01-v03'
+            echo 'Previous Production: 2026-11-01-v02'
+            echo 'Purpose: make SEO validation release-agnostic and prevent cache-version/release metadata changes from breaking scheduled SEO.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-01-v02-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-01-v01-to-2026-11-01-v02-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-01-v03-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-01-v02-to-2026-11-01-v03-patch.zip'
             echo 'SQL required: No'
-            echo 'Validation: all Production JavaScript syntax; Production repository/contracts; Buyer Messages/eBay generator contracts; CSS/Post Generator checks; SEO self-test/regeneration; package integrity.'
-            echo 'Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test during promotion.'
+            echo 'Validation: all Production JavaScript syntax; repository/retained contracts; release-agnostic SEO workflow guard; SEO self-test/regeneration; package integrity.'
+            echo 'Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.'
             echo
             cat release/checksums.txt
           } > "$MANIFEST"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-01-v02: record package validation'
+          git commit -m 'Production 2026-11-01-v03: record package validation'
           git push
       - name: Confirm Pages deployment and advance last-known-good
         env:
