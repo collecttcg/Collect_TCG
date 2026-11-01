@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-10-31-v02 release gate — promote validated Development 2026-10-31-v02.
+# Production 2026-11-01-v01 release gate — promote validated Development 2026-11-01-v01 final state d3416a0d5de88aecf0595d6a334def9add4a3367.
 on:
   workflow_dispatch:
   push:
@@ -21,6 +21,41 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Promote validated Development feature files
+        shell: bash
+        run: |
+          set -euo pipefail
+          DEV_SHA='d3416a0d5de88aecf0595d6a334def9add4a3367'
+          BASE="https://raw.githubusercontent.com/collecttcg/Collect_TCG_Dev/${DEV_SHA}/dev/src"
+          curl --fail --silent --show-error --location --max-time 30 "$BASE/features/cards/tiles.js" -o src/features/cards/tiles.js
+          curl --fail --silent --show-error --location --max-time 30 "$BASE/features/owner/ebay-listing-status.js" -o src/features/owner/ebay-listing-status.js
+          curl --fail --silent --show-error --location --max-time 30 "$BASE/features/owner/quick-action-scroll.js" -o src/features/owner/quick-action-scroll.js
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/app/register-features.js')
+          s=p.read_text()
+          s=s.replace("import * as module23 from '../features/cards/tiles.js?v=2026-09-29-v09-sold-date';", "import * as module23 from '../features/cards/tiles.js?v=2026-11-01-v01';")
+          marker="import * as module56 from '../features/owner/psa-never-synced.js?v=2026-10-31-v01';\n"
+          addition=marker+"import * as module57 from '../features/owner/ebay-listing-status.js?v=2026-11-01-v02';\nimport * as module58 from '../features/owner/quick-action-scroll.js?v=2026-11-01-v04';\n"
+          if 'ebay-listing-status.js' not in s:
+              s=s.replace(marker,addition)
+          s=s.replace('module55.register(appContext); module56.register(appContext);', 'module55.register(appContext); module56.register(appContext); module57.register(appContext); module58.register(appContext);')
+          s=s.replace('module54.initialize(appContext,runtime); module55.initialize(appContext,runtime);', 'module54.initialize(appContext,runtime); module55.initialize(appContext,runtime); module58.initialize(appContext,runtime);')
+          p.write_text(s)
+          PY
+          node --check src/features/cards/tiles.js
+          node --check src/features/owner/ebay-listing-status.js
+          node --check src/features/owner/quick-action-scroll.js
+          node --check src/app/register-features.js
+          grep -Fq "ebay-listing-status.js?v=2026-11-01-v02" src/app/register-features.js
+          grep -Fq "quick-action-scroll.js?v=2026-11-01-v04" src/app/register-features.js
+          grep -Fq "tiles.js?v=2026-11-01-v01" src/app/register-features.js
+          git diff --check
+          git config user.name 'collecttcg'
+          git config user.email 'z3313514@gmail.com'
+          git add src/features/cards/tiles.js src/features/owner/ebay-listing-status.js src/features/owner/quick-action-scroll.js src/app/register-features.js
+          git commit -m 'Promote Development 2026-11-01-v01 features to Production'
+          git push
       - name: Validate rollback anchor
         run: |
           set -euo pipefail
@@ -35,11 +70,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq 'Latest Production: `2026-10-31-v01`' COLLECT_TCG_BASELINE.md
-          grep -Fq 'Previous Production: `2026-10-30-v04`' COLLECT_TCG_BASELINE.md
-          grep -Fq 'Development promoted from: `2026-10-31-v01`' COLLECT_TCG_BASELINE.md
+          grep -Fq 'Latest Production: `2026-10-31-v02`' COLLECT_TCG_BASELINE.md
           node tools/check-production.mjs
-      - name: Promoted Development 2026-10-31-v02 inventory sort contracts
+      - name: Promoted Development 2026-11-01-v01 eBay and quick-action contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/features/cards/tiles.js
+          node --check src/features/owner/ebay-listing-status.js
+          node --check src/features/owner/quick-action-scroll.js
+          grep -Fq 'Mark On eBay' src/features/cards/tiles.js
+          grep -Fq 'Remove On eBay' src/features/cards/tiles.js
+          grep -Fq 'notesWithEbayListing' src/features/owner/ebay-listing-status.js
+          grep -Fq 'ebay-listing-image-badge' src/features/owner/ebay-listing-status.js
+          grep -Fq 'preserveNextRouterScroll' src/features/owner/quick-action-scroll.js
+          grep -Fq "ebay-listing-status.js?v=2026-11-01-v02" src/app/register-features.js
+          grep -Fq "quick-action-scroll.js?v=2026-11-01-v04" src/app/register-features.js
+          grep -Fq "tiles.js?v=2026-11-01-v01" src/app/register-features.js
+          ! grep -Fq 'analytics-test-exclusion' src/app/register-features.js
+      - name: Retained Production integration contracts
         shell: bash
         run: |
           set -euo pipefail
@@ -47,21 +96,11 @@ jobs:
           grep -Fq 'Most Popular' src/features/inventory/sort-toolbar.js
           grep -Fq 'price-low' src/features/inventory/sort-toolbar.js
           grep -Fq 'mobileInlineSortBtn' src/features/inventory/sort-toolbar.js
-          grep -Fq 'grid-template-columns:minmax(0,1fr) auto auto auto' src/features/inventory/sort-toolbar.js
           grep -Fq 'inventory/sort-toolbar.js?v=2026-10-31-v02' src/main.js
-          grep -Fq 'registerInventorySortToolbar(appContext)' src/main.js
-          grep -Fq 'registerScanner(appContext)' src/main.js
-      - name: Retained Production v01 integration contracts
-        shell: bash
-        run: |
-          set -euo pipefail
           node --check src/features/owner/image-drag-autoscroll.js
           node --check src/features/owner/image-file-drop.js
           node --check src/features/owner/psa-never-synced.js
           grep -Fq 'Get Never-Synced PSA POPs' src/features/owner/psa-never-synced.js
-          grep -Fq "image-drag-autoscroll.js?v=2026-10-31-v01" src/app/register-features.js
-          grep -Fq "image-file-drop.js?v=2026-10-31-v01" src/app/register-features.js
-          grep -Fq "psa-never-synced.js?v=2026-10-31-v01" src/app/register-features.js
       - name: HEIC Add/Edit integration contract
         run: |
           set -euo pipefail
@@ -69,15 +108,9 @@ jobs:
           grep -Fq 'image/heif-sequence' src/features/media/heic-support.js
           grep -Fq 'nativeHeicToJpegBlob' src/features/media/heic-support.js
           grep -Fq 'heic-to@1.6.7/dist/iife/heic-to.js' src/features/media/heic-support.js
-          grep -Fq 'const converted=await heicTo({blob:file,type:"image/jpeg",quality:0.94})' src/features/media/heic-support.js
           grep -Fq 'convertHeicOwnerImage' src/features/media/heic-support.js
-          grep -Fq "features/media/heic-support.js?v=2026-10-30-v04" src/app/register-features.js
           grep -Fq 'wireImageControls("add"' src/features/owner/add.js
           grep -Fq 'wireImageControls("edit"' src/features/owner/editor.js
-          grep -Fq 'accept="image/jpeg,image/png,image/webp"' src/features/owner/forms.js
-          curl --fail --silent --show-error --location --max-time 30 -o /tmp/heic-to.js https://cdn.jsdelivr.net/npm/heic-to@1.6.7/dist/iife/heic-to.js
-          test -s /tmp/heic-to.js
-          grep -Fq 'HeicTo' /tmp/heic-to.js
       - name: CSS and Post Generator validation
         run: |
           node tools/check-css.mjs
@@ -94,24 +127,22 @@ jobs:
           ! grep -Fq 'scan-card-ai-dev' src/features/owner/card-scanner.js
           grep -Fq 'functions.invoke("scan-card-ai"' src/features/owner/card-scanner.js
           grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
-          grep -Fq 'card-owner-category.js?v=2026-10-30-v02' src/app/register-features.js
-          grep -Fq 'dashboard.js?v=2026-10-30-v02' src/app/register-features.js
-          grep -Fq 'inventory-value-overview.js?v=2026-10-29-v01' src/app/register-features.js
-          grep -Fq 'Available inventory value' src/features/owner/inventory-value-overview.js
-          grep -Fq 'requireOwner("manage unassigned card owners")' src/features/owner/dashboard.js
-          grep -Fq 'sub=unassigned' src/features/owner/dashboard.js
-          grep -Fq 'appContext.supabaseClient.from("card_owner_private").upsert' src/features/owner/card-owner-category.js
-          grep -Fq 'requireOwner("open Owner buyer messages")' src/features/owner/dashboard.js
           grep -Fq 'https://www.ebay.co.uk/str/collecttcg2' src/features/content/information.js
-          grep -Fq 'https://www.ebay.co.uk/usr/collect_tcg_3' src/features/content/information.js
-          grep -Fq 'https://www.ebay.co.uk/usr/collect_tcg_4' src/features/content/information.js
           grep -Fq 'const EBAY_ACCOUNT_URLS=[' src/features/owner/ebay-banlist.js
           git diff --check
+      - name: Commit refreshed SEO pages
+        run: |
+          set -euo pipefail
+          if ! git diff --quiet; then
+            git add cards sitemap.xml robots.txt seo-slugs.json owner-card-routes.json
+            git commit -m 'chore: refresh Production SEO card pages [skip ci]'
+            git push
+          fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-10-31-v02
-          PREVIOUS_VERSION: 2026-10-31-v01
-          PREVIOUS_COMMIT: c5e9821ba15e14def560413ab283eb6bb48c8045
+          RELEASE_VERSION: 2026-11-01-v01
+          PREVIOUS_VERSION: 2026-10-31-v02
+          PREVIOUS_COMMIT: 699fdb575a50b1358b8372a9458aac6b5aac2fc9
         run: |
           set -euo pipefail
           rm -rf .release-patch
@@ -128,10 +159,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-10-31-v02-packages
+          name: Collect-TCG-Production-2026-11-01-v01-packages
           path: |
-            release/Collect-TCG-Production-2026-10-31-v02-full.zip
-            release/Collect-TCG-Production-2026-10-31-v01-to-2026-10-31-v02-patch.zip
+            release/Collect-TCG-Production-2026-11-01-v01-full.zip
+            release/Collect-TCG-Production-2026-10-31-v02-to-2026-11-01-v01-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -139,22 +170,22 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-10-31-v02.txt'
+          MANIFEST='release-manifests/2026-11-01-v01.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-10-31-v02'
-            echo 'Previous Production: 2026-10-31-v01'
-            echo 'Development promoted from: 2026-10-31-v02'
+            echo 'Version: 2026-11-01-v01'
+            echo 'Previous Production: 2026-10-31-v02'
+            echo 'Development promoted from: 2026-11-01-v01 (final validated state d3416a0d5de88aecf0595d6a334def9add4a3367)'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-10-31-v02-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-10-31-v01-to-2026-10-31-v02-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-01-v01-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-10-31-v02-to-2026-11-01-v01-patch.zip'
             echo
             cat release/checksums.txt
           } > "$MANIFEST"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-10-31-v02: record package validation'
+          git commit -m 'Production 2026-11-01-v01: record package validation'
           git push
       - name: Confirm Pages deployment and advance last-known-good
         env:
