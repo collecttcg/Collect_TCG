@@ -1,5 +1,7 @@
 name: Refresh Production SEO card pages
 
+# Scheduled SEO validates SEO invariants only. Release/cache-version contracts
+# belong to the Production release gate and cannot break routine SEO refreshes.
 on:
   workflow_dispatch:
   schedule:
@@ -8,15 +10,15 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/production-seo.yml'
-      - 'tools/**'
-      - 'migrations/**'
+      - 'tools/generate-seo.mjs'
+      - 'tools/check-production.mjs'
+      - 'tools/check-seo-workflow.mjs'
       - 'COLLECT_TCG_BASELINE.md'
       - 'README.md'
       - 'index.html'
       - 'src/**'
 
 permissions:
-  actions: read
   contents: write
 
 concurrency:
@@ -41,24 +43,10 @@ jobs:
           set -euo pipefail
           test -s docs/BACKUP-RECOVERY.md
           git ls-remote --exit-code origin refs/heads/production-last-known-good
-      - name: Validate Production repository and JavaScript
-        shell: bash
-        run: |
-          set -euo pipefail
-          node tools/check-production.mjs
-      - name: Validate SEO-related JavaScript
-        run: |
-          node --check src/features/social/posts-hidden-ebay.js
-          node --check src/features/owner/card-owner-category.js
-          node --check src/features/owner/dashboard.js
-          node --check src/features/media/heic-support.js
-          node --check src/app/register-features.js
-          node --check src/features/content/information.js
-          node --check src/features/owner/ebay-banlist.js
-      - name: Validate consolidated CSS
-        run: node tools/check-css.mjs
-      - name: Validate retained Post Generator titles
-        run: node tools/check-post-generator-titles.mjs
+      - name: Validate Production repository
+        run: node tools/check-production.mjs
+      - name: Guard SEO workflow against release coupling
+        run: node tools/check-seo-workflow.mjs
       - name: Validate SEO generator syntax and self-test
         run: |
           node --check tools/generate-seo.mjs
@@ -73,58 +61,28 @@ jobs:
           test -s robots.txt
           test -s seo-slugs.json
           test -s owner-card-routes.json
-          test -s src/features/owner/ebay-banlist.js
-          test -s src/features/owner/ebay-banlist.css
-          test -s migrations/2026/2026-10-25-v03-EBAY-BANLIST.sql
           grep -q 'Allow: /' robots.txt
           grep -q '<urlset' sitemap.xml
           grep -q 'index,follow,max-image-preview:large' cards/*/index.html
+          grep -q 'collecttcg.github.io/Collect_TCG/' index.html
+          grep -q 'index,follow,max-image-preview:large' index.html
           if grep -Eq '/cards/[^<]*/?--[0-9a-fA-F-]{20,40}/' sitemap.xml; then
-            echo "UUID found in public card URL" >&2
+            echo 'UUID found in public card URL' >&2
             exit 1
           fi
           ! grep -Fq 'analytics_test' src/services/analytics.js
           ! grep -Fq 'isDevelopmentAnalyticsTestSession' src/app/startup.js
           ! grep -Fq 'scan-card-ai-dev' src/features/owner/card-scanner.js
-          grep -Fq 'functions.invoke("scan-card-ai"' src/features/owner/card-scanner.js
-          grep -Fq 'functionErrorMessage' src/features/owner/card-scanner.js
-          grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
-          grep -Fq 'ebay-banlist.js?v=2026-10-31-v01' src/app/register-features.js
-          grep -Fq 'information.js?v=2026-10-31-v01' src/app/register-features.js
-          grep -Fq 'collect_tcg_5' src/features/owner/ebay-banlist.js
-          grep -Fq 'collect_tcg_5' src/features/content/information.js
-          grep -Fq 'posts-hidden-ebay.js?v=2026-11-01-v01' src/app/register-features.js
-          grep -Fq '[IMPORT DUTIES & TAXES]' src/features/social/posts-hidden-ebay.js
-          grep -Fq "Import duties, tariffs, taxes, customs clearance fees" src/features/social/posts-hidden-ebay.js
-          grep -Fq 'video recorded before dispatch' src/features/social/posts-hidden-ebay.js
-          grep -Fq 'card-owner-category.js?v=2026-10-30-v02' src/app/register-features.js
-          grep -Fq 'dashboard.js?v=2026-11-01-v01' src/app/register-features.js
-          grep -Fq 'heic-support.js?v=2026-10-30-v04' src/app/register-features.js
-          grep -Fq 'image/heic-sequence' src/features/media/heic-support.js
-          grep -Fq 'image/heif-sequence' src/features/media/heic-support.js
-          grep -Fq 'nativeHeicToJpegBlob' src/features/media/heic-support.js
-          grep -Fq 'heic-to@1.6.7/dist/iife/heic-to.js' src/features/media/heic-support.js
-          grep -Fq 'const converted=await heicTo({blob:file,type:"image/jpeg",quality:0.94})' src/features/media/heic-support.js
-          curl --fail --silent --show-error --location --max-time 30 -o /tmp/heic-to.js https://cdn.jsdelivr.net/npm/heic-to@1.6.7/dist/iife/heic-to.js
-          test -s /tmp/heic-to.js
-          grep -Fq 'HeicTo' /tmp/heic-to.js
-          grep -Fq 'const OWNER_CATEGORIES=["Zakwan","Yen","Daniel","Jack","Shue"]' src/features/owner/card-owner-category.js
-          grep -Fq 'bulkAssignOwnerCategory' src/features/owner/card-owner-category.js
-          grep -Fq 'bulkOwnerCategoryApply' src/features/owner/card-owner-category.js
-          grep -Fq 'sub=unassigned' src/features/owner/dashboard.js
-          grep -Fq 'collecttcg.github.io/Collect_TCG/' index.html
-          grep -Fq 'index,follow,max-image-preview:large' index.html
-          git diff --check
       - name: Commit refreshed Production SEO pages
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add cards sitemap.xml robots.txt seo-slugs.json owner-card-routes.json
           if git diff --cached --quiet; then
-            echo "Production SEO output already current."
+            echo 'Production SEO output already current.'
           else
-            git commit -m "chore: refresh Production SEO card pages [skip ci]"
+            git commit -m 'chore: refresh Production SEO card pages [skip ci]'
             git push
           fi
