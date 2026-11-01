@@ -45,14 +45,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # check-production.mjs still carries the previous release's baseline markers.
-          # Patch only the working-copy expectations so the structural validation runs
-          # against the canonical current baseline without altering release history.
-          sed -i \
-            -e 's/Latest Production: `2026-10-31-v01`/Latest Production: `2026-11-01-v01`/' \
-            -e 's/Previous Production: `2026-10-30-v04`/Previous Production: `2026-10-31-v02`/' \
-            -e 's/Development promoted from: `2026-10-31-v01`/Development promoted from: `2026-11-01-v01`/' \
-            tools/check-production.mjs
           node tools/check-production.mjs
       - name: Validate SEO-related JavaScript
         run: |
@@ -101,11 +93,12 @@ jobs:
           grep -Fq 'information.js?v=2026-10-31-v01' src/app/register-features.js
           grep -Fq 'collect_tcg_5' src/features/owner/ebay-banlist.js
           grep -Fq 'collect_tcg_5' src/features/content/information.js
-          grep -Fq 'posts-hidden-ebay.js?v=2026-10-27-v02' src/app/register-features.js
+          grep -Fq 'posts-hidden-ebay.js?v=2026-11-01-v01' src/app/register-features.js
           grep -Fq '[IMPORT DUTIES & TAXES]' src/features/social/posts-hidden-ebay.js
           grep -Fq "Import duties, tariffs, taxes, customs clearance fees" src/features/social/posts-hidden-ebay.js
+          grep -Fq 'video recorded before dispatch' src/features/social/posts-hidden-ebay.js
           grep -Fq 'card-owner-category.js?v=2026-10-30-v02' src/app/register-features.js
-          grep -Fq 'dashboard.js?v=2026-10-30-v02' src/app/register-features.js
+          grep -Fq 'dashboard.js?v=2026-11-01-v01' src/app/register-features.js
           grep -Fq 'heic-support.js?v=2026-10-30-v04' src/app/register-features.js
           grep -Fq 'image/heic-sequence' src/features/media/heic-support.js
           grep -Fq 'image/heif-sequence' src/features/media/heic-support.js
