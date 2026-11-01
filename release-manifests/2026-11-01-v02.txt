@@ -1,0 +1,12 @@
+Version: 2026-11-01-v02
+Previous Production: 2026-11-01-v01
+Development promoted from: latest validated Development state 1427c2649715e4c081327dde5224bc5c5546a0c1
+Source commit: 12b8d7afea6ba27cf3aaa245b5d6d5786e3a7b66
+Full ZIP: Collect-TCG-Production-2026-11-01-v02-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-01-v01-to-2026-11-01-v02-patch.zip
+SQL required: No
+Validation: all Production JavaScript syntax; Production repository/contracts; Buyer Messages/eBay generator contracts; CSS/Post Generator checks; SEO self-test/regeneration; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test during promotion.
+
+187a32fd88c3a69633441f82bc04f0e412e0c508638c8b8f2b7c70baaf366a7c  release/Collect-TCG-Production-2026-11-01-v02-full.zip
+fed563aa49cbc20970746f92acf1ea11ebc43939f2f65194bfc8134cde8200a7  release/Collect-TCG-Production-2026-11-01-v01-to-2026-11-01-v02-patch.zip
