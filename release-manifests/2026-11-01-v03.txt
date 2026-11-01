@@ -1,0 +1,12 @@
+Version: 2026-11-01-v03
+Previous Production: 2026-11-01-v02
+Purpose: make SEO validation release-agnostic and prevent cache-version/release metadata changes from breaking scheduled SEO.
+Source commit: 83921d14a1e93f3f0f95df8aeebe5c4486dcf73e
+Full ZIP: Collect-TCG-Production-2026-11-01-v03-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-01-v02-to-2026-11-01-v03-patch.zip
+SQL required: No
+Validation: all Production JavaScript syntax; repository/retained contracts; release-agnostic SEO workflow guard; SEO self-test/regeneration; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+91b2c2a82b265dea971c9b5b3cbb0dc1103679bf9a0f25b3c3607b74c3acc8d3  release/Collect-TCG-Production-2026-11-01-v03-full.zip
+6e859a1c44812e5697e17cc71a43889d59ba275415a2cbf6fad77b257cdd04db  release/Collect-TCG-Production-2026-11-01-v02-to-2026-11-01-v03-patch.zip
