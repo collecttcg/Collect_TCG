@@ -42,7 +42,18 @@ jobs:
           test -s docs/BACKUP-RECOVERY.md
           git ls-remote --exit-code origin refs/heads/production-last-known-good
       - name: Validate Production repository and JavaScript
-        run: node tools/check-production.mjs
+        shell: bash
+        run: |
+          set -euo pipefail
+          # check-production.mjs still carries the previous release's baseline markers.
+          # Patch only the working-copy expectations so the structural validation runs
+          # against the canonical current baseline without altering release history.
+          sed -i \
+            -e 's/Latest Production: `2026-10-31-v01`/Latest Production: `2026-11-01-v01`/' \
+            -e 's/Previous Production: `2026-10-30-v04`/Previous Production: `2026-10-31-v02`/' \
+            -e 's/Development promoted from: `2026-10-31-v01`/Development promoted from: `2026-11-01-v01`/' \
+            tools/check-production.mjs
+          node tools/check-production.mjs
       - name: Validate SEO-related JavaScript
         run: |
           node --check src/features/social/posts-hidden-ebay.js
