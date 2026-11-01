@@ -43,11 +43,13 @@ jobs:
           grep -Fq "posts-hidden-ebay.js?v=2026-11-01-v01" src/app/register-features.js
           grep -Fq "dashboard.js?v=2026-11-01-v01" src/app/register-features.js
           git diff --check
-          git config user.name 'collecttcg'
-          git config user.email 'z3313514@gmail.com'
-          git add src/features/social/posts-hidden-ebay.js src/features/owner/dashboard.js src/app/register-features.js
-          git commit -m 'Promote latest Development buyer and eBay messaging to Production'
-          git push
+          if ! git diff --quiet; then
+            git config user.name 'collecttcg'
+            git config user.email 'z3313514@gmail.com'
+            git add src/features/social/posts-hidden-ebay.js src/features/owner/dashboard.js src/app/register-features.js
+            git commit -m 'Promote latest Development buyer and eBay messaging to Production'
+            git push
+          fi
       - name: Validate rollback anchor
         run: |
           set -euo pipefail
