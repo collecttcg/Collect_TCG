@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Promote validated Development changes
+      - name: Promote validated Development changes and fix validator
         shell: bash
         run: |
           set -euo pipefail
@@ -31,23 +31,27 @@ jobs:
           curl --fail --silent --show-error --location --max-time 30 "$BASE/features/owner/dashboard.js" -o src/features/owner/dashboard.js
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('src/app/register-features.js')
-          s=p.read_text()
+          p=Path('src/app/register-features.js'); s=p.read_text()
           s=s.replace("../features/social/posts-hidden-ebay.js?v=2026-10-27-v02", "../features/social/posts-hidden-ebay.js?v=2026-11-01-v01")
           s=s.replace("../features/owner/dashboard.js?v=2026-10-30-v02", "../features/owner/dashboard.js?v=2026-11-01-v01")
+          p.write_text(s)
+          p=Path('tools/check-production.mjs'); s=p.read_text()
+          s=s.replace("['Latest Production: `2026-10-31-v02`','Previous Production: `2026-10-31-v01`','Development promoted from: `2026-10-31-v02`','QR Generator','migrations/2026/']", "['Latest Production: `2026-11-01-v01`','Previous Production: `2026-10-31-v02`','Development promoted from: `2026-11-01-v01`','QR Generator','migrations/2026/']")
           p.write_text(s)
           PY
           node --check src/features/social/posts-hidden-ebay.js
           node --check src/features/owner/dashboard.js
           node --check src/app/register-features.js
+          node --check tools/check-production.mjs
           grep -Fq "posts-hidden-ebay.js?v=2026-11-01-v01" src/app/register-features.js
           grep -Fq "dashboard.js?v=2026-11-01-v01" src/app/register-features.js
+          grep -Fq 'Latest Production: `2026-11-01-v01`' tools/check-production.mjs
           git diff --check
           if ! git diff --quiet; then
             git config user.name 'collecttcg'
             git config user.email 'z3313514@gmail.com'
-            git add src/features/social/posts-hidden-ebay.js src/features/owner/dashboard.js src/app/register-features.js
-            git commit -m 'Promote latest Development buyer and eBay messaging to Production'
+            git add src/features/social/posts-hidden-ebay.js src/features/owner/dashboard.js src/app/register-features.js tools/check-production.mjs
+            git commit -m 'Promote latest Development messaging and fix Production validator'
             git push
           fi
       - name: Validate rollback anchor
@@ -60,6 +64,7 @@ jobs:
           set -euo pipefail
           for file in $(find src -name '*.js' -type f); do node --check "$file"; done
           node --check tools/generate-seo.mjs
+          node --check tools/check-production.mjs
       - name: Validate promoted and retained contracts
         shell: bash
         run: |
