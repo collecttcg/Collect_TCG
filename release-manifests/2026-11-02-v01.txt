@@ -1,0 +1,13 @@
+Version: 2026-11-02-v01
+Previous Production: 2026-11-01-v03
+Development promoted from: 2026-11-02-v01 (source b7b4f4977788d8f90c243efd7a9a25d53dd77eaa)
+Purpose: promote validated eBay import-duty refusal notice and Buyer Message Collect TCG signature.
+Source commit: c2b228d61227581083c48c7075ad0fcc45f09185
+Full ZIP: Collect-TCG-Production-2026-11-02-v01-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-01-v03-to-2026-11-02-v01-patch.zip
+SQL required: No
+Validation: all Production JavaScript syntax; repository/retained contracts; eBay import notice and Buyer Message contracts; SEO workflow guard; SEO self-test/regeneration; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+46c029fc29bc6ad66499fdeed51b85baa1647dcef53c76043f762fc3770de915  release/Collect-TCG-Production-2026-11-02-v01-full.zip
+82b38368a8bf24309b78a732d6b8f546ad3d421370cde428407ce0edfa6434a9  release/Collect-TCG-Production-2026-11-01-v03-to-2026-11-02-v01-patch.zip
