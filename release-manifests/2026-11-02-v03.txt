@@ -1,0 +1,13 @@
+Version: 2026-11-02-v03
+Previous Production: 2026-11-02-v02
+Development promoted from: 2026-11-02-v03 (source a5159ca3eb342605aae9b98791e185e8b23eafd5)
+Purpose: round normal FX conversions below RM400 to the nearest whole USD/SGD amount; retain existing rounded pricing at RM400 and above.
+Source commit: b5ac1f8efd14e47f0e91dd9d20f9e93a8d27e419
+Full ZIP: Collect-TCG-Production-2026-11-02-v03-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-02-v02-to-2026-11-02-v03-patch.zip
+SQL required: No
+Validation: rollback anchor; all Production JavaScript syntax; repository/retained contracts; FX threshold/whole-number/registration/cache contract; SEO workflow guard; SEO self-test/regeneration; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+3b7e6b536437d02c2c6dea0e3f1ff7dd9114691bcf9b653d2f5c7f62188ee2b4  release/Collect-TCG-Production-2026-11-02-v03-full.zip
+63c92bf164338542f81e64d173bf25456c080e34097ac68378741ba3870da7d9  release/Collect-TCG-Production-2026-11-02-v02-to-2026-11-02-v03-patch.zip
