@@ -1,0 +1,13 @@
+Version: 2026-11-02-v02
+Previous Production: 2026-11-02-v01
+Development promoted from: 2026-11-02-v02 (source 5fd899b1176480107c34165e5847d408edfc449a)
+Purpose: normal FX conversion below RM400; retain existing rounded pricing at RM400 and above.
+Source commit: 2c330d4bdcf44d17db5738d937c943eb701c5e6d
+Full ZIP: Collect-TCG-Production-2026-11-02-v02-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-02-v01-to-2026-11-02-v02-patch.zip
+SQL required: No
+Validation: rollback anchor; all Production JavaScript syntax; repository/retained contracts; FX threshold/registration contract; SEO workflow guard; SEO self-test/regeneration; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+17b2274353e2914a8de54045cccc0433800600d9e4c5c4be7df944a777e1bfc6  release/Collect-TCG-Production-2026-11-02-v02-full.zip
+3f34715a805eb66bc0f3d0384783c4cdd647ddd696d0210ba4bda4a3bb958330  release/Collect-TCG-Production-2026-11-02-v01-to-2026-11-02-v02-patch.zip
