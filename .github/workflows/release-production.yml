@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-02-v01 — promote validated eBay import notice and Buyer Message signature updates.
+# Production 2026-11-02-v02 — promote validated low-price FX conversion behavior.
 on:
   workflow_dispatch:
   push:
@@ -46,8 +46,13 @@ jobs:
           grep -Fq '[IMPORT DUTIES & TAXES]' src/features/social/posts-hidden-ebay.js
           grep -Fq 'refuses or fails to pay applicable import duties' src/features/social/posts-hidden-ebay.js
           grep -Fq 'Such circumstances may not be covered by eBay Money Back Guarantee.' src/features/social/posts-hidden-ebay.js
-          grep -Fq 'posts-hidden-ebay.js?v=2026-11-02-v01' src/app/register-features.js
+          grep -Fq 'posts-hidden-ebay.js?v=2026-11-02-v02' src/app/register-features.js
           grep -Fq 'dashboard.js?v=2026-11-02-v01' src/app/register-features.js
+          grep -Fq 'FX_NORMAL_CONVERSION_BELOW_MYR=400' src/features/owner/fx-low-price.js
+          grep -Fq 'Math.round((raw+Number.EPSILON)*100)/100' src/features/owner/fx-low-price.js
+          grep -Fq 'fx-low-price.js?v=2026-11-02-v02' src/app/register-features.js
+          grep -Fq 'module59.register(appContext)' src/app/register-features.js
+          grep -Fq 'module59.initialize(appContext,runtime)' src/app/register-features.js
           grep -Fq 'Mark On eBay' src/features/cards/tiles.js
           grep -Fq 'Remove On eBay' src/features/cards/tiles.js
           grep -Fq 'notesWithEbayListing' src/features/owner/ebay-listing-status.js
@@ -84,9 +89,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-02-v01
-          PREVIOUS_VERSION: 2026-11-01-v03
-          PREVIOUS_COMMIT: c8d6b32a1410b60033db6745abb763d927e9c972
+          RELEASE_VERSION: 2026-11-02-v02
+          PREVIOUS_VERSION: 2026-11-02-v01
+          PREVIOUS_COMMIT: ca9aca6864dd534ea124fbb84018f03dec99a52c
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -103,10 +108,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-02-v01-packages
+          name: Collect-TCG-Production-2026-11-02-v02-packages
           path: |
-            release/Collect-TCG-Production-2026-11-02-v01-full.zip
-            release/Collect-TCG-Production-2026-11-01-v03-to-2026-11-02-v01-patch.zip
+            release/Collect-TCG-Production-2026-11-02-v02-full.zip
+            release/Collect-TCG-Production-2026-11-02-v01-to-2026-11-02-v02-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -114,18 +119,18 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-02-v01.txt'
+          MANIFEST='release-manifests/2026-11-02-v02.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-02-v01'
-            echo 'Previous Production: 2026-11-01-v03'
-            echo 'Development promoted from: 2026-11-02-v01 (source b7b4f4977788d8f90c243efd7a9a25d53dd77eaa)'
-            echo 'Purpose: promote validated eBay import-duty refusal notice and Buyer Message Collect TCG signature.'
+            echo 'Version: 2026-11-02-v02'
+            echo 'Previous Production: 2026-11-02-v01'
+            echo 'Development promoted from: 2026-11-02-v02 (source 5fd899b1176480107c34165e5847d408edfc449a)'
+            echo 'Purpose: normal FX conversion below RM400; retain existing rounded pricing at RM400 and above.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-02-v01-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-01-v03-to-2026-11-02-v01-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-02-v02-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-02-v01-to-2026-11-02-v02-patch.zip'
             echo 'SQL required: No'
-            echo 'Validation: all Production JavaScript syntax; repository/retained contracts; eBay import notice and Buyer Message contracts; SEO workflow guard; SEO self-test/regeneration; package integrity.'
+            echo 'Validation: rollback anchor; all Production JavaScript syntax; repository/retained contracts; FX threshold/registration contract; SEO workflow guard; SEO self-test/regeneration; package integrity.'
             echo 'Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.'
             echo
             cat release/checksums.txt
@@ -133,7 +138,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-02-v01: record package validation'
+          git commit -m 'Production 2026-11-02-v02: record package validation'
           git push
       - name: Confirm Pages deployment and advance last-known-good
         env:
