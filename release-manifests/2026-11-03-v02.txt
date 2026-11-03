@@ -1,0 +1,13 @@
+Version: 2026-11-03-v02
+Previous Production: 2026-11-03-v01
+Development promoted from: 2026-11-03-v02 (source df39a93b2138732c22aa9f674f870df6fd75f76e)
+Purpose: remove the duplicate eBay Ban List entry from More/main navigation while retaining Inventory Tools > eBay access.
+Source commit: 5004b407617369d4dcfef88a2d0890ac9661f16f
+Full ZIP: Collect-TCG-Production-2026-11-03-v02-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-03-v01-to-2026-11-03-v02-patch.zip
+SQL required: No
+Validation: rollback anchor; all Production JavaScript syntax; Production/retained contracts; eBay navigation cleanup and form markup contract; SEO workflow guard; SEO self-test/regeneration/output validation; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+872dc22886389b20a28c45fbaf566dfd31768bba2aa74e385caab0e8d55da07d  release/Collect-TCG-Production-2026-11-03-v02-full.zip
+afae239c9e3b943fd28bb0837f7d0ca5d27abd97e77ec003b182a001137f33de  release/Collect-TCG-Production-2026-11-03-v01-to-2026-11-03-v02-patch.zip
