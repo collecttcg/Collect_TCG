@@ -1,0 +1,13 @@
+Version: 2026-11-03-v01
+Previous Production: 2026-11-02-v03
+Development promoted from: 2026-11-03-v01 (source 8d7a606445ce485a484235136902efdc4a0d7147)
+Purpose: consolidate Owner eBay tools under Inventory Tools > eBay, add separate After Shipped feedback message, and refresh Production SEO output.
+Source commit: d5b23f2448bf4b8af35d8bff9d58099fe9531b9a
+Full ZIP: Collect-TCG-Production-2026-11-03-v01-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-02-v03-to-2026-11-03-v01-patch.zip
+SQL required: No
+Validation: rollback anchor; all Production JavaScript syntax; Production/retained and eBay tools contracts; SEO workflow guard; SEO self-test/regeneration/output validation; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+97f2c93f24aad47f67943fb85f6ad7069bbb4f03c1804a506aa9214b29ad9636  release/Collect-TCG-Production-2026-11-03-v01-full.zip
+272ffed4f7800cc198028d902a954c0dd3def361e8878a20c6a863eb391bcf08  release/Collect-TCG-Production-2026-11-02-v03-to-2026-11-03-v01-patch.zip
