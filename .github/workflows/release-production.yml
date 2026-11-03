@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-03-v01 — promote validated consolidated eBay Owner tools and refreshed SEO.
+# Production 2026-11-03-v02 — remove duplicate eBay Ban List navigation entry.
 on:
   workflow_dispatch:
   push:
@@ -40,24 +40,22 @@ jobs:
           node tools/check-production.mjs
           node tools/check-seo-workflow.mjs
           grep -Fq 'For additional security and documentation' src/features/owner/dashboard.js
-          grep -Fq 'Collect TCG`;' src/features/owner/dashboard.js
-          ! grep -Fq 'Collect TCG MY & SG`;' src/features/owner/dashboard.js
           grep -Fq 'Messages · ban list · listing status' src/features/owner/ebay-messages.js
           grep -Fq "['messages','eBay Messages']" src/features/owner/ebay-messages.js
           grep -Fq "['banlist','eBay Ban List']" src/features/owner/ebay-messages.js
           grep -Fq "['listing-status','eBay Listing Status']" src/features/owner/ebay-messages.js
           grep -Fq 'positive feedback for our store' src/features/owner/ebay-messages.js
           grep -Fq '#/inventory-tools?mode=ebay&sub=banlist' src/features/owner/ebay-banlist.js
+          ! grep -Fq 'addNavLink(document.getElementById("premiumDesktopMoreMenu")' src/features/owner/ebay-banlist.js
+          ! grep -Fq 'addNavLink(document.getElementById("mainnav")' src/features/owner/ebay-banlist.js
+          grep -Fq '<span>Reason / note <small>(optional)</small></span><input name="reason"' src/features/owner/ebay-banlist.js
           grep -Fq 'ebay-messages.js?v=2026-11-03-v01' src/app/register-features.js
           grep -Fq 'ebay-banlist.js?v=2026-11-03-v01' src/app/register-features.js
           grep -Fq 'module60.register(appContext)' src/app/register-features.js
           grep -Fq 'video recorded before dispatch' src/features/social/posts-hidden-ebay.js
           grep -Fq '[IMPORT DUTIES & TAXES]' src/features/social/posts-hidden-ebay.js
-          grep -Fq 'posts-hidden-ebay.js?v=2026-11-02-v02' src/app/register-features.js
           grep -Fq 'FX_NORMAL_CONVERSION_BELOW_MYR=400' src/features/owner/fx-low-price.js
           grep -Fq 'Math.round(raw)' src/features/owner/fx-low-price.js
-          grep -Fq 'fx-low-price.js?v=2026-11-02-v03' src/app/register-features.js
-          grep -Fq 'module59.initialize(appContext,runtime)' src/app/register-features.js
           grep -Fq 'notesWithEbayListing' src/features/owner/ebay-listing-status.js
           grep -Fq 'preserveNextRouterScroll' src/features/owner/quick-action-scroll.js
           ! grep -Fq 'analytics-test-exclusion' src/app/register-features.js
@@ -92,9 +90,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-03-v01
-          PREVIOUS_VERSION: 2026-11-02-v03
-          PREVIOUS_COMMIT: b5ac1f8efd14e47f0e91dd9d20f9e93a8d27e419
+          RELEASE_VERSION: 2026-11-03-v02
+          PREVIOUS_VERSION: 2026-11-03-v01
+          PREVIOUS_COMMIT: d5b23f2448bf4b8af35d8bff9d58099fe9531b9a
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -111,10 +109,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-03-v01-packages
+          name: Collect-TCG-Production-2026-11-03-v02-packages
           path: |
-            release/Collect-TCG-Production-2026-11-03-v01-full.zip
-            release/Collect-TCG-Production-2026-11-02-v03-to-2026-11-03-v01-patch.zip
+            release/Collect-TCG-Production-2026-11-03-v02-full.zip
+            release/Collect-TCG-Production-2026-11-03-v01-to-2026-11-03-v02-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -122,18 +120,18 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-03-v01.txt'
+          MANIFEST='release-manifests/2026-11-03-v02.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-03-v01'
-            echo 'Previous Production: 2026-11-02-v03'
-            echo 'Development promoted from: 2026-11-03-v01 (source 8d7a606445ce485a484235136902efdc4a0d7147)'
-            echo 'Purpose: consolidate Owner eBay tools under Inventory Tools > eBay, add separate After Shipped feedback message, and refresh Production SEO output.'
+            echo 'Version: 2026-11-03-v02'
+            echo 'Previous Production: 2026-11-03-v01'
+            echo 'Development promoted from: 2026-11-03-v02 (source df39a93b2138732c22aa9f674f870df6fd75f76e)'
+            echo 'Purpose: remove the duplicate eBay Ban List entry from More/main navigation while retaining Inventory Tools > eBay access.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-03-v01-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-02-v03-to-2026-11-03-v01-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-03-v02-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-03-v01-to-2026-11-03-v02-patch.zip'
             echo 'SQL required: No'
-            echo 'Validation: rollback anchor; all Production JavaScript syntax; Production/retained and eBay tools contracts; SEO workflow guard; SEO self-test/regeneration/output validation; package integrity.'
+            echo 'Validation: rollback anchor; all Production JavaScript syntax; Production/retained contracts; eBay navigation cleanup and form markup contract; SEO workflow guard; SEO self-test/regeneration/output validation; package integrity.'
             echo 'Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.'
             echo
             cat release/checksums.txt
@@ -141,7 +139,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-03-v01: record package validation'
+          git commit -m 'Production 2026-11-03-v02: record package validation'
           git push
       - name: Confirm Pages deployment and advance last-known-good
         env:
