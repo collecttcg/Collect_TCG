@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-03-v02 — remove duplicate eBay Ban List navigation entry.
+# Production 2026-11-05-v01 — promote validated Development changes.
 on:
   workflow_dispatch:
   push:
@@ -39,6 +39,13 @@ jobs:
           set -euo pipefail
           node tools/check-production.mjs
           node tools/check-seo-workflow.mjs
+          grep -Fq 'posts-ebay-link.js?v=2026-11-05-v01' src/app/register-features.js
+          grep -Fq 'module61.register(appContext)' src/app/register-features.js
+          grep -Fq '🛒 eBay Listing:' src/features/social/posts-ebay-link.js
+          grep -Fq '.select("created_at")' src/services/analytics.js
+          grep -Fq 'const daysListed=validCreatedAt' src/services/analytics.js
+          ! sed -n '/async function captureSaleConversionSnapshot(card)/,/function getAnalyticsSessionId()/p' src/services/analytics.js | grep -Fq '2000-01-01'
+          grep -Fq 'analytics.js?v=2026-11-05-v01' src/app/register-features.js
           grep -Fq 'For additional security and documentation' src/features/owner/dashboard.js
           grep -Fq 'Messages · ban list · listing status' src/features/owner/ebay-messages.js
           grep -Fq "['messages','eBay Messages']" src/features/owner/ebay-messages.js
@@ -90,9 +97,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-03-v02
-          PREVIOUS_VERSION: 2026-11-03-v01
-          PREVIOUS_COMMIT: d5b23f2448bf4b8af35d8bff9d58099fe9531b9a
+          RELEASE_VERSION: 2026-11-05-v01
+          PREVIOUS_VERSION: 2026-11-03-v02
+          PREVIOUS_COMMIT: 5004b407617369d4dcfef88a2d0890ac9661f16f
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -109,10 +116,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-03-v02-packages
+          name: Collect-TCG-Production-2026-11-05-v01-packages
           path: |
-            release/Collect-TCG-Production-2026-11-03-v02-full.zip
-            release/Collect-TCG-Production-2026-11-03-v01-to-2026-11-03-v02-patch.zip
+            release/Collect-TCG-Production-2026-11-05-v01-full.zip
+            release/Collect-TCG-Production-2026-11-03-v02-to-2026-11-05-v01-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -120,18 +127,18 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-03-v02.txt'
+          MANIFEST='release-manifests/2026-11-05-v01.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-03-v02'
-            echo 'Previous Production: 2026-11-03-v01'
-            echo 'Development promoted from: 2026-11-03-v02 (source df39a93b2138732c22aa9f674f870df6fd75f76e)'
-            echo 'Purpose: remove the duplicate eBay Ban List entry from More/main navigation while retaining Inventory Tools > eBay access.'
+            echo 'Version: 2026-11-05-v01'
+            echo 'Previous Production: 2026-11-03-v02'
+            echo 'Development promoted from: 2026-11-05-v01 (source 9f8312141068c2e7f33b85b8b341863255ff71ae)'
+            echo 'Purpose: promote Facebook single-card eBay links, correct sale snapshot creation-date fallback, and distinguish SEO card titles.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-03-v02-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-03-v01-to-2026-11-03-v02-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-05-v01-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-03-v02-to-2026-11-05-v01-patch.zip'
             echo 'SQL required: No'
-            echo 'Validation: rollback anchor; all Production JavaScript syntax; Production/retained contracts; eBay navigation cleanup and form markup contract; SEO workflow guard; SEO self-test/regeneration/output validation; package integrity.'
+            echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.'
             echo
             cat release/checksums.txt
@@ -139,7 +146,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-03-v02: record package validation'
+          git commit -m 'Production 2026-11-05-v01: record package validation'
           git push
       - name: Confirm Pages deployment and advance last-known-good
         env:
