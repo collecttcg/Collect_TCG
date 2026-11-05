@@ -1,0 +1,13 @@
+Version: 2026-11-05-v02
+Previous Production: 2026-11-05-v01
+Development promoted from: 2026-11-05-v02 (source c45f6ae7ea4815aae1e3bc4c4c7078d54b92fd1d)
+Purpose: add the five official Contact-page eBay accounts once to Full Card List and Short Drop posts.
+Source commit: 698ef031a53425d55a4c278c92736f6a7a0775be
+Full ZIP: Collect-TCG-Production-2026-11-05-v02-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-05-v01-to-2026-11-05-v02-patch.zip
+SQL required: No
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+499590cb45084667e9a10f0572500bc506ac4821b5438fb5bd3b15f217cce441  release/Collect-TCG-Production-2026-11-05-v02-full.zip
+399ca43693702f5307862147107ca2ab5c309c73d925ee598a09122a66180383  release/Collect-TCG-Production-2026-11-05-v01-to-2026-11-05-v02-patch.zip
