@@ -39,13 +39,13 @@ jobs:
           set -euo pipefail
           node tools/check-production.mjs
           node tools/check-seo-workflow.mjs
-          grep -Fq 'posts-ebay-link.js?v=2026-11-05-v02' src/app/register-features.js
+          grep -Fq 'posts-ebay-link.js?v=2026-11-05-v01' src/app/register-features.js
           grep -Fq 'module61.register(appContext)' src/app/register-features.js
           grep -Fq '🛒 eBay Listing:' src/features/social/posts-ebay-link.js
           grep -Fq '.select("created_at")' src/services/analytics.js
           grep -Fq 'const daysListed=validCreatedAt' src/services/analytics.js
           ! sed -n '/async function captureSaleConversionSnapshot(card)/,/function getAnalyticsSessionId()/p' src/services/analytics.js | grep -Fq '2000-01-01'
-          grep -Fq 'analytics.js?v=2026-11-05-v02' src/app/register-features.js
+          grep -Fq 'analytics.js?v=2026-11-05-v01' src/app/register-features.js
           grep -Fq 'For additional security and documentation' src/features/owner/dashboard.js
           grep -Fq 'Messages · ban list · listing status' src/features/owner/ebay-messages.js
           grep -Fq "['messages','eBay Messages']" src/features/owner/ebay-messages.js
