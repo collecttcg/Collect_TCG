@@ -135,7 +135,7 @@ function productJsonLd(card,url){
 }
 
 function metadataBlock(card,url){
-  const titleParts=[card?.year,card?.name,card?.card_code,gradeLabel(card)]
+  const titleParts=[card?.year,card?.game,card?.series,card?.name,card?.card_code,gradeLabel(card)]
     .map(v=>String(v||'').trim()).filter(Boolean);
   const title=`${titleParts.join(' · ')||'Trading Card'} | Collect TCG MY & SG`.slice(0,180);
   const description=descriptionFor(card);
