@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-05-v01 — promote validated Development changes.
+# Production 2026-11-05-v02 — promote validated Development changes.
 on:
   workflow_dispatch:
   push:
@@ -39,13 +39,13 @@ jobs:
           set -euo pipefail
           node tools/check-production.mjs
           node tools/check-seo-workflow.mjs
-          grep -Fq 'posts-ebay-link.js?v=2026-11-05-v01' src/app/register-features.js
+          grep -Fq 'posts-ebay-link.js?v=2026-11-05-v02' src/app/register-features.js
           grep -Fq 'module61.register(appContext)' src/app/register-features.js
           grep -Fq '🛒 eBay Listing:' src/features/social/posts-ebay-link.js
           grep -Fq '.select("created_at")' src/services/analytics.js
           grep -Fq 'const daysListed=validCreatedAt' src/services/analytics.js
           ! sed -n '/async function captureSaleConversionSnapshot(card)/,/function getAnalyticsSessionId()/p' src/services/analytics.js | grep -Fq '2000-01-01'
-          grep -Fq 'analytics.js?v=2026-11-05-v01' src/app/register-features.js
+          grep -Fq 'analytics.js?v=2026-11-05-v02' src/app/register-features.js
           grep -Fq 'For additional security and documentation' src/features/owner/dashboard.js
           grep -Fq 'Messages · ban list · listing status' src/features/owner/ebay-messages.js
           grep -Fq "['messages','eBay Messages']" src/features/owner/ebay-messages.js
@@ -69,6 +69,17 @@ jobs:
           ! grep -Fq 'scan-card-ai-dev' src/features/owner/card-scanner.js
           grep -Fq 'functions.invoke("scan-card-ai"' src/features/owner/card-scanner.js
           grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const source=fs.readFileSync('src/features/social/posts-card-list.js','utf8');
+          const full=source.split('function buildFbCardListPost(')[1].split('function buildFbCardDropPost(')[0];
+          const drop=source.split('function buildFbCardDropPost(')[1].split('function balancedCardDropCards(')[0];
+          for(const section of [full,drop]) assert.equal((section.match(/\.\.\.officialEbayAccountLines\(\)/g)||[]).length,1);
+          assert.equal((source.match(/View our seller history and feedback/g)||[]).length,0);
+          for(let i=1;i<=5;i++) assert.match(source,new RegExp('COLLECT_TCG_'+i+': https://www\\.ebay\\.'));
+          assert.match(fs.readFileSync('src/features/social/posts.js','utf8'),/posts-card-list\.js\?v=2026-11-05-v02/);
+          NODE
           node tools/check-css.mjs
           node tools/check-post-generator-titles.mjs
           git diff --check
@@ -97,9 +108,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-05-v01
-          PREVIOUS_VERSION: 2026-11-03-v02
-          PREVIOUS_COMMIT: 5004b407617369d4dcfef88a2d0890ac9661f16f
+          RELEASE_VERSION: 2026-11-05-v02
+          PREVIOUS_VERSION: 2026-11-05-v01
+          PREVIOUS_COMMIT: 5b3fb08542bdc9b317f896e19e1a6bdb95a84dde
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -116,10 +127,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-05-v01-packages
+          name: Collect-TCG-Production-2026-11-05-v02-packages
           path: |
-            release/Collect-TCG-Production-2026-11-05-v01-full.zip
-            release/Collect-TCG-Production-2026-11-03-v02-to-2026-11-05-v01-patch.zip
+            release/Collect-TCG-Production-2026-11-05-v02-full.zip
+            release/Collect-TCG-Production-2026-11-05-v01-to-2026-11-05-v02-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -127,16 +138,16 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-05-v01.txt'
+          MANIFEST='release-manifests/2026-11-05-v02.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-05-v01'
-            echo 'Previous Production: 2026-11-03-v02'
-            echo 'Development promoted from: 2026-11-05-v01 (source 9f8312141068c2e7f33b85b8b341863255ff71ae)'
-            echo 'Purpose: promote Facebook single-card eBay links, correct sale snapshot creation-date fallback, and distinguish SEO card titles.'
+            echo 'Version: 2026-11-05-v02'
+            echo 'Previous Production: 2026-11-05-v01'
+            echo 'Development promoted from: 2026-11-05-v02 (source c45f6ae7ea4815aae1e3bc4c4c7078d54b92fd1d)'
+            echo 'Purpose: add the five official Contact-page eBay accounts once to Full Card List and Short Drop posts.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-05-v01-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-03-v02-to-2026-11-05-v01-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-05-v02-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-05-v01-to-2026-11-05-v02-patch.zip'
             echo 'SQL required: No'
             echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.'
@@ -146,7 +157,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-05-v01: record package validation'
+          git commit -m 'Production 2026-11-05-v02: record package validation'
           git push
       - name: Confirm Pages deployment and advance last-known-good
         env:
