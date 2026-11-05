@@ -1,0 +1,13 @@
+Version: 2026-11-05-v01
+Previous Production: 2026-11-03-v02
+Development promoted from: 2026-11-05-v01 (source 9f8312141068c2e7f33b85b8b341863255ff71ae)
+Purpose: promote Facebook single-card eBay links, correct sale snapshot creation-date fallback, and distinguish SEO card titles.
+Source commit: 838e0fcdba04101c2dca4558d21de722c6a6b4e6
+Full ZIP: Collect-TCG-Production-2026-11-05-v01-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-03-v02-to-2026-11-05-v01-patch.zip
+SQL required: No
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+37849152060388021a885d2530225edc316cc6a2ae8f83c6855f8540cc1b65ad  release/Collect-TCG-Production-2026-11-05-v01-full.zip
+20e1b0d970ad47a9b67b958f22cc18cd8914bdcc4668a2cf51bec17f02b4b878  release/Collect-TCG-Production-2026-11-03-v02-to-2026-11-05-v01-patch.zip
