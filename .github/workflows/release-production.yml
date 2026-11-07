@@ -78,7 +78,7 @@ jobs:
           for(const section of [full,drop]) assert.equal((section.match(/\.\.\.officialEbayAccountLines\(\)/g)||[]).length,1);
           assert.equal((source.match(/View our seller history and feedback/g)||[]).length,0);
           for(let i=1;i<=5;i++) assert.match(source,new RegExp('COLLECT_TCG_'+i+': https://www\\.ebay\\.'));
-          assert.match(fs.readFileSync('src/features/social/posts.js','utf8'),/posts-card-list\.js\?v=2026-11-07-v01/);
+          assert.match(fs.readFileSync('src/features/social/posts.js','utf8'),/posts-card-list\.js\?v=2026-11-05-v02/);
           NODE
           node tools/check-css.mjs
           node tools/check-post-generator-titles.mjs
