@@ -1,6 +1,6 @@
 # Collect TCG Current Baseline
 
-Last reconciled against GitHub: 2026-11-05
+Last reconciled against GitHub: 2026-11-07
 
 ## Repositories
 - Production: `collecttcg/Collect_TCG`
@@ -14,7 +14,16 @@ Last reconciled against GitHub: 2026-11-05
 - Current releases use `YYYY-MM-DD-vNN`; Development and Production counters are independent.
 - Historical release manifests are immutable.
 
-## Current reconciled state — 2026-11-05
+## Current reconciled state — 2026-11-07
+
+### Latest Production promotion — 2026-11-07-v01
+- Production `2026-11-07-v01` (previous `2026-11-05-v02`) promoted the validated Development `2026-11-07-v01` Insights country attribution change (Development source `89d2bc6c17a9cfbba62de3812201328880706baf`).
+- Production package source `7bb88c0f80b78f997c98c8f0ab29389d681fba31`; immutable manifest `release-manifests/2026-11-07-v01.txt` recorded at `80173ca41ee693d1773e1936c7ee6154a0915c7f`.
+- Full ZIP `Collect-TCG-Production-2026-11-07-v01-full.zip` SHA256 `1a1ec8e2baaff8ab1a718d1b8b8459039eb8456f07e38a7c5fe0c50b57c91160`.
+- Patch ZIP `Collect-TCG-Production-2026-11-05-v02-to-2026-11-07-v01-patch.zip` SHA256 `23d5ef519a3b38f4e5c818b8b13f44b20d6afe59a581ccea65ab33604cf7e865`.
+- Production Release workflow `42379610182` succeeded, including rollback anchor, all Production JavaScript syntax, retained contracts, Insights country attribution, SEO, package integrity, and successful Pages deployment `42379642635`. Workflow advances the last-known-good rollback branch after Pages success.
+- Scope: Owner Insights Recently Viewed Cards country labels using existing country analytics; Insights module cache refreshed. No SQL, RLS or Edge Function changes. Production-specific QR Generator, scanner, public behavior and analytics boundaries retained.
+- Limitations: no live Production opening; interactive desktop/mobile/Safari browser testing not performed.
 
 ### Previous validated releases (2026-11-05-v01)
 - Development: `2026-11-05-v01`; previous `2026-11-03-v02`; manifest `release-manifests/2026-11-05-v01.txt`; package source `9f8312141068c2e7f33b85b8b341863255ff71ae`.
