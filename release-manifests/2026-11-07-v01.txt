@@ -1,0 +1,13 @@
+Version: 2026-11-07-v01
+Previous Production: 2026-11-05-v02
+Development promoted from: 2026-11-07-v01 (source 89d2bc6c17a9cfbba62de3812201328880706baf)
+Purpose: show existing qualified card-view country attribution in Owner Insights Recently Viewed Cards.
+Source commit: 7bb88c0f80b78f997c98c8f0ab29389d681fba31
+Full ZIP: Collect-TCG-Production-2026-11-07-v01-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-05-v02-to-2026-11-07-v01-patch.zip
+SQL required: No
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+1a1ec8e2baaff8ab1a718d1b8b8459039eb8456f07e38a7c5fe0c50b57c91160  release/Collect-TCG-Production-2026-11-07-v01-full.zip
+23d5ef519a3b38f4e5c818b8b13f44b20d6afe59a581ccea65ab33604cf7e865  release/Collect-TCG-Production-2026-11-05-v02-to-2026-11-07-v01-patch.zip
