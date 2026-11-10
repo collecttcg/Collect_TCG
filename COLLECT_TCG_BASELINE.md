@@ -1,6 +1,6 @@
 # Collect TCG Current Baseline
 
-Last reconciled against GitHub: 2026-11-07
+Last reconciled against GitHub: 2026-11-10
 
 ## Repositories
 - Production: `collecttcg/Collect_TCG`
@@ -14,7 +14,14 @@ Last reconciled against GitHub: 2026-11-07
 - Current releases use `YYYY-MM-DD-vNN`; Development and Production counters are independent.
 - Historical release manifests are immutable.
 
-## Current reconciled state — 2026-11-07
+## Current reconciled state — 2026-11-10
+
+### Incomplete Production promotion — 2026-11-10-v01 (not accepted)
+- The Owner eBay After Purchase message source was updated to say: “It will be shipped over the weekend.” Production cache registration was refreshed, and the Production release workflow was hardened against concurrent SEO-refresh push races.
+- Immutable manifest `release-manifests/2026-11-10-v01.txt` was recorded at `d10a2ee9e805e23a4f5d62bfc9303763731df009`, with Development source `aba745c2aa04ca7088f1f8a26f79ad65d5c4fb25`. Full ZIP SHA256 `d27dc1c79b83c05fc13d65e2da1c92957aa832b60c152f193bec6ce46fc8049a`; patch ZIP SHA256 `a90f3cdb3f6f796f6ee97b1727d0bf70847d3c36e84d0a5666f059e5aca7d941`.
+- Production Release workflow `42803886315` passed source, retained-contract, syntax, SEO, and package validation, but failed its final Pages-deployment wait. GitHub Pages run `42803941060` subsequently completed with `failure`.
+- This is **not** an accepted Production release. `production-last-known-good` remains at `80173ca41ee693d1773e1936c7ee6154a0915c7f` (Production `2026-11-07-v01`); do not describe `2026-11-10-v01` as live until a successful Pages deployment and rollback-anchor advance are confirmed.
+- SQL/RLS/Edge Functions: none. No live Production opening or interactive desktop/mobile/Safari testing was performed.
 
 ### Latest Production promotion — 2026-11-07-v01
 - Production `2026-11-07-v01` (previous `2026-11-05-v02`) promoted the validated Development `2026-11-07-v01` Insights country attribution change (Development source `89d2bc6c17a9cfbba62de3812201328880706baf`).
