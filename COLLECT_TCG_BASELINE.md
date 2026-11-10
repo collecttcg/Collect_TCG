@@ -16,11 +16,21 @@ Last reconciled against GitHub: 2026-11-10
 
 ## Current reconciled state — 2026-11-10
 
+### Latest Production promotion — 2026-11-10-v02
+- Production `2026-11-10-v02` (previous accepted Production `2026-11-07-v01`) promotes validated Development `2026-11-10-v04` (source `2777969a4476c95cae58ef41c7bbca2d6a1d77c9`).
+- Changes: the Owner eBay After Purchase template includes weekend dispatch timing; available cards with a valid saved HTTPS eBay listing URL now show **View on eBay ↗** next to **Contact to Buy**. On mobile, the paired actions are equal, compact 78px controls. Cards without a valid eBay listing retain the established contact-only path.
+- Production source `2fd0920b3e594aa6954370e8cbc2107061b52ef2`; immutable manifest `release-manifests/2026-11-10-v02.txt` recorded at `f18846cd8aa3d118e98eaed2d0d671eadf424438`.
+- Full ZIP `Collect-TCG-Production-2026-11-10-v02-full.zip` SHA256 `c172916500e59992fe32aa1746370aa0767be9da9e58e0f56b2837cf9e8cc1cc`.
+- Patch ZIP `Collect-TCG-Production-2026-11-07-v01-to-2026-11-10-v02-patch.zip` SHA256 `b1436b60c2758e4ff67a5356e689621a6b22f067729399970550b64446a3d727`.
+- Production Release workflow `42818203155` passed rollback-anchor, Production syntax, retained and direct-eBay/mobile contracts, SEO validation/regeneration, package integrity, and final Pages deployment. GitHub Pages workflow `42818269347` deployed successfully; `production-last-known-good` advanced to `f18846cd8aa3d118e98eaed2d0d671eadf424438`.
+- SQL/database/RLS/Edge Function change required: No. Production-specific QR Generator, scanner endpoint, analytics/privacy boundaries, and Owner authorization protections were retained.
+- Validation limitations: Production was not manually opened; interactive desktop/mobile/Safari testing was not performed.
+
 ### Incomplete Production promotion — 2026-11-10-v01 (not accepted)
 - The Owner eBay After Purchase message source was updated to say: “It will be shipped over the weekend.” Production cache registration was refreshed, and the Production release workflow was hardened against concurrent SEO-refresh push races.
 - Immutable manifest `release-manifests/2026-11-10-v01.txt` was recorded at `d10a2ee9e805e23a4f5d62bfc9303763731df009`, with Development source `aba745c2aa04ca7088f1f8a26f79ad65d5c4fb25`. Full ZIP SHA256 `d27dc1c79b83c05fc13d65e2da1c92957aa832b60c152f193bec6ce46fc8049a`; patch ZIP SHA256 `a90f3cdb3f6f796f6ee97b1727d0bf70847d3c36e84d0a5666f059e5aca7d941`.
 - Production Release workflow `42803886315` passed source, retained-contract, syntax, SEO, and package validation, but failed its final Pages-deployment wait. GitHub Pages run `42803941060` subsequently completed with `failure`.
-- This is **not** an accepted Production release. `production-last-known-good` remains at `80173ca41ee693d1773e1936c7ee6154a0915c7f` (Production `2026-11-07-v01`); do not describe `2026-11-10-v01` as live until a successful Pages deployment and rollback-anchor advance are confirmed.
+- This is **not** an accepted Production release. At that time, `production-last-known-good` remained at `80173ca41ee693d1773e1936c7ee6154a0915c7f` (Production `2026-11-07-v01`); it was later superseded by the successful v02 release below.
 - SQL/RLS/Edge Functions: none. No live Production opening or interactive desktop/mobile/Safari testing was performed.
 
 ### Latest Production promotion — 2026-11-07-v01
