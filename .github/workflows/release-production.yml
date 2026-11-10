@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-10-v03 — promote validated Development listing-images ZIP download.
+# Production 2026-11-10-v03 — retry after retained Insights cache-contract correction.
 on:
   workflow_dispatch:
   push:
@@ -96,7 +96,7 @@ jobs:
       - name: Insights country attribution promotion contract
         run: |
           set -euo pipefail
-          grep -Fq 'insights.js?v=2026-11-10-v02' src/app/register-features.js
+          grep -Fq 'insights.js?v=2026-11-07-v01' src/app/register-features.js
           grep -Fq 'function recentQualifiedCountryLabel(cardId)' src/features/owner/insights.js
           grep -Fq 'appContext.fetchCountryCardViewInsights(startDate,endDate)' src/features/owner/insights.js
           grep -Fq 'recentQualifiedCountriesSupported:recentQualifiedCountryResult.supported' src/features/owner/insights.js
