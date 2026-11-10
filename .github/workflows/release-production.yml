@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-10-v02 — promote validated Development eBay CTA and compact paired mobile actions.
+# Production 2026-11-10-v03 — promote validated Development listing-images ZIP download.
 on:
   workflow_dispatch:
   push:
@@ -67,8 +67,12 @@ jobs:
           grep -Fq 'notesWithEbayListing' src/features/owner/ebay-listing-status.js
           grep -Fq 'class="detail-ebay-cta"' src/features/cards/details.js
           grep -Fq 'target="_blank" rel="noopener noreferrer"' src/features/cards/details.js
-          grep -Fq 'details.js?v=2026-11-10-v02' src/app/register-features.js
-          grep -Fq '02-components.css?v=2026-11-10-v02' index.html
+          grep -Fq 'details.js?v=2026-11-10-v03' src/app/register-features.js
+          grep -Fq '02-components.css?v=2026-11-10-v03' index.html
+          grep -Fq 'id="detailsDownloadAllBtn"' index.html
+          grep -Fq 'Download all listing images' index.html
+          grep -Fq 'downloadSingleCardImagesZip(card,null,{includeInventoryQr:false})' src/features/cards/details.js
+          grep -Fq '.details-download-all-desktop{display:none;}' src/styles/02-components.css
           grep -Fq -- '--detail-purchase-action-height:78px' src/styles/02-components.css
           grep -Fq 'preserveNextRouterScroll' src/features/owner/quick-action-scroll.js
           ! grep -Fq 'analytics-test-exclusion' src/app/register-features.js
@@ -92,7 +96,7 @@ jobs:
       - name: Insights country attribution promotion contract
         run: |
           set -euo pipefail
-          grep -Fq 'insights.js?v=2026-11-07-v01' src/app/register-features.js
+          grep -Fq 'insights.js?v=2026-11-10-v02' src/app/register-features.js
           grep -Fq 'function recentQualifiedCountryLabel(cardId)' src/features/owner/insights.js
           grep -Fq 'appContext.fetchCountryCardViewInsights(startDate,endDate)' src/features/owner/insights.js
           grep -Fq 'recentQualifiedCountriesSupported:recentQualifiedCountryResult.supported' src/features/owner/insights.js
@@ -126,9 +130,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-10-v02
-          PREVIOUS_VERSION: 2026-11-07-v01
-          PREVIOUS_COMMIT: 7bb88c0f80b78f997c98c8f0ab29389d681fba31
+          RELEASE_VERSION: 2026-11-10-v03
+          PREVIOUS_VERSION: 2026-11-10-v02
+          PREVIOUS_COMMIT: 2fd0920b3e594aa6954370e8cbc2107061b52ef2
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -145,10 +149,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-10-v02-packages
+          name: Collect-TCG-Production-2026-11-10-v03-packages
           path: |
-            release/Collect-TCG-Production-2026-11-10-v02-full.zip
-            release/Collect-TCG-Production-2026-11-07-v01-to-2026-11-10-v02-patch.zip
+            release/Collect-TCG-Production-2026-11-10-v03-full.zip
+            release/Collect-TCG-Production-2026-11-10-v02-to-2026-11-10-v03-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -156,18 +160,18 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-10-v02.txt'
+          MANIFEST='release-manifests/2026-11-10-v03.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-10-v02'
-            echo 'Previous Production: 2026-11-07-v01'
-            echo 'Development promoted from: 2026-11-10-v04 (source 2777969a4476c95cae58ef41c7bbca2d6a1d77c9)'
-            echo 'Purpose: promote the weekend dispatch message and direct eBay card-detail CTA with compact matched mobile actions.'
+            echo 'Version: 2026-11-10-v03'
+            echo 'Previous Production: 2026-11-10-v02'
+            echo 'Development promoted from: 2026-11-10-v05 (source c45f417c114c04bc87bfbcd5fc8e7a63e58cb25a)'
+            echo 'Purpose: promote the desktop-only listing-images ZIP download from the card-detail More menu.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-10-v02-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-07-v01-to-2026-11-10-v02-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-10-v03-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-10-v02-to-2026-11-10-v03-patch.zip'
             echo 'SQL required: No'
-            echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA and compact mobile action contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
+            echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.'
             echo
             cat release/checksums.txt
@@ -175,7 +179,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-10-v02: record package validation'
+          git commit -m 'Production 2026-11-10-v03: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm Pages deployment and advance last-known-good
