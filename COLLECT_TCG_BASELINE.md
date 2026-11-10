@@ -16,6 +16,16 @@ Last reconciled against GitHub: 2026-11-10
 
 ## Current reconciled state — 2026-11-10
 
+### Latest Production promotion — 2026-11-10-v03
+- Production 2026-11-10-v03 (previous accepted Production 2026-11-10-v02) promotes validated Development 2026-11-10-v05 (source c45f417c114c04bc87bfbcd5fc8e7a63e58cb25a).
+- Changes: desktop Card Details **More** now includes **Download all listing images**. It creates a ZIP containing listing photos only, without the Inventory QR. Existing single-image downloads, eBay-generator ZIP behavior, and sold/reserved watermark behavior are retained.
+- Production source c3ca934a6dcd5fb1e8ced00d42bb03f0ad1f2f23; immutable manifest release-manifests/2026-11-10-v03.txt recorded at f34534a03d61cbf5c063c9d36fb55a2c016b30cd.
+- Full ZIP Collect-TCG-Production-2026-11-10-v03-full.zip SHA256 e737dd3dd46f4509a59af73096649c2098ec5fd308a52ee2b4ccaf81099e2ca8.
+- Patch ZIP Collect-TCG-Production-2026-11-10-v02-to-2026-11-10-v03-patch.zip SHA256 ece1413051b1cea98da75990ae9fee45017ce92b8dbefaef2eb409d7667643a2.
+- Production Release workflow 42832447033 passed all application validation and package gates but timed out waiting for GitHub Pages, which canceled that deployment. A behavior-neutral Pages retry commit 0fa0b7f67facb17d46e69e6502749412d3d7f35c deployed successfully through Pages workflow 42834550533; production-last-known-good advanced to that deployed commit.
+- SQL/database/RLS/Edge Function change required: No. Production-specific QR Generator, Production scanner endpoint, analytics/privacy boundaries, and Owner authorization protections were retained.
+- Validation limitations: Production was not manually opened; interactive desktop/mobile/Safari browser testing was not performed.
+
 ### Latest Production promotion — 2026-11-10-v02
 - Production `2026-11-10-v02` (previous accepted Production `2026-11-07-v01`) promotes validated Development `2026-11-10-v04` (source `2777969a4476c95cae58ef41c7bbca2d6a1d77c9`).
 - Changes: the Owner eBay After Purchase template includes weekend dispatch timing; available cards with a valid saved HTTPS eBay listing URL now show **View on eBay ↗** next to **Contact to Buy**. On mobile, the paired actions are equal, compact 78px controls. Cards without a valid eBay listing retain the established contact-only path.
