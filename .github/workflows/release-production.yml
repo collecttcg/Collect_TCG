@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-07-v01 — promote validated Development Insights country attribution.
+# Production 2026-11-10-v01 — promote validated Development eBay weekend dispatch message.
 on:
   workflow_dispatch:
   push:
@@ -52,11 +52,12 @@ jobs:
           grep -Fq "['banlist','eBay Ban List']" src/features/owner/ebay-messages.js
           grep -Fq "['listing-status','eBay Listing Status']" src/features/owner/ebay-messages.js
           grep -Fq 'positive feedback for our store' src/features/owner/ebay-messages.js
+          grep -Fq 'It will be shipped over the weekend.' src/features/owner/ebay-messages.js
           grep -Fq '#/inventory-tools?mode=ebay&sub=banlist' src/features/owner/ebay-banlist.js
           ! grep -Fq 'addNavLink(document.getElementById("premiumDesktopMoreMenu")' src/features/owner/ebay-banlist.js
           ! grep -Fq 'addNavLink(document.getElementById("mainnav")' src/features/owner/ebay-banlist.js
           grep -Fq '<span>Reason / note <small>(optional)</small></span><input name="reason"' src/features/owner/ebay-banlist.js
-          grep -Fq 'ebay-messages.js?v=2026-11-03-v01' src/app/register-features.js
+          grep -Fq 'ebay-messages.js?v=2026-11-10-v01' src/app/register-features.js
           grep -Fq 'ebay-banlist.js?v=2026-11-03-v01' src/app/register-features.js
           grep -Fq 'module60.register(appContext)' src/app/register-features.js
           grep -Fq 'video recorded before dispatch' src/features/social/posts-hidden-ebay.js
@@ -119,9 +120,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-07-v01
-          PREVIOUS_VERSION: 2026-11-05-v02
-          PREVIOUS_COMMIT: 698ef031a53425d55a4c278c92736f6a7a0775be
+          RELEASE_VERSION: 2026-11-10-v01
+          PREVIOUS_VERSION: 2026-11-07-v01
+          PREVIOUS_COMMIT: 7bb88c0f80b78f997c98c8f0ab29389d681fba31
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -138,10 +139,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-07-v01-packages
+          name: Collect-TCG-Production-2026-11-10-v01-packages
           path: |
-            release/Collect-TCG-Production-2026-11-07-v01-full.zip
-            release/Collect-TCG-Production-2026-11-05-v02-to-2026-11-07-v01-patch.zip
+            release/Collect-TCG-Production-2026-11-10-v01-full.zip
+            release/Collect-TCG-Production-2026-11-07-v01-to-2026-11-10-v01-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -149,16 +150,16 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-07-v01.txt'
+          MANIFEST='release-manifests/2026-11-10-v01.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-07-v01'
-            echo 'Previous Production: 2026-11-05-v02'
-            echo 'Development promoted from: 2026-11-07-v01 (source 89d2bc6c17a9cfbba62de3812201328880706baf)'
-            echo 'Purpose: show existing qualified card-view country attribution in Owner Insights Recently Viewed Cards.'
+            echo 'Version: 2026-11-10-v01'
+            echo 'Previous Production: 2026-11-07-v01'
+            echo 'Development promoted from: 2026-11-10-v01 (source aba745c2aa04ca7088f1f8a26f79ad65d5c4fb25)'
+            echo 'Purpose: add the weekend dispatch timing sentence to the reusable Owner eBay After Purchase message.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-07-v01-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-05-v02-to-2026-11-07-v01-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-10-v01-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-07-v01-to-2026-11-10-v01-patch.zip'
             echo 'SQL required: No'
             echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.'
@@ -168,7 +169,8 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-07-v01: record package validation'
+          git commit -m 'Production 2026-11-10-v01: record package validation'
+          git pull --rebase origin main
           git push
       - name: Confirm Pages deployment and advance last-known-good
         env:
