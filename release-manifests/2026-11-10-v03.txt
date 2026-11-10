@@ -1,0 +1,13 @@
+Version: 2026-11-10-v03
+Previous Production: 2026-11-10-v02
+Development promoted from: 2026-11-10-v05 (source c45f417c114c04bc87bfbcd5fc8e7a63e58cb25a)
+Purpose: promote the desktop-only listing-images ZIP download from the card-detail More menu.
+Source commit: c3ca934a6dcd5fb1e8ced00d42bb03f0ad1f2f23
+Full ZIP: Collect-TCG-Production-2026-11-10-v03-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-10-v02-to-2026-11-10-v03-patch.zip
+SQL required: No
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+e737dd3dd46f4509a59af73096649c2098ec5fd308a52ee2b4ccaf81099e2ca8  release/Collect-TCG-Production-2026-11-10-v03-full.zip
+ece1413051b1cea98da75990ae9fee45017ce92b8dbefaef2eb409d7667643a2  release/Collect-TCG-Production-2026-11-10-v02-to-2026-11-10-v03-patch.zip
