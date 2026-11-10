@@ -1,0 +1,13 @@
+Version: 2026-11-10-v02
+Previous Production: 2026-11-07-v01
+Development promoted from: 2026-11-10-v04 (source 2777969a4476c95cae58ef41c7bbca2d6a1d77c9)
+Purpose: promote the weekend dispatch message and direct eBay card-detail CTA with compact matched mobile actions.
+Source commit: 2fd0920b3e594aa6954370e8cbc2107061b52ef2
+Full ZIP: Collect-TCG-Production-2026-11-10-v02-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-07-v01-to-2026-11-10-v02-patch.zip
+SQL required: No
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA and compact mobile action contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+c172916500e59992fe32aa1746370aa0767be9da9e58e0f56b2837cf9e8cc1cc  release/Collect-TCG-Production-2026-11-10-v02-full.zip
+b1436b60c2758e4ff67a5356e689621a6b22f067729399970550b64446a3d727  release/Collect-TCG-Production-2026-11-07-v01-to-2026-11-10-v02-patch.zip
