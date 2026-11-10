@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-10-v03 — retry after retained Insights cache-contract correction.
+# Production 2026-11-10-v03 — Pages redeploy retry after GitHub deploy timeout.
 on:
   workflow_dispatch:
   push:
