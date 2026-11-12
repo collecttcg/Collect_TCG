@@ -109,13 +109,13 @@ jobs:
           grep -Fq 'hiddenOwnerCategory' src/features/inventory/filtering.js
           grep -Fq 'hiddenOwnerCategoryFilter' src/features/inventory/page.js
           grep -Fq 'if(appContext.isOwnerMode()) appContext.renderHiddenListingsPage();' src/app/routing.js
-          grep -Fq 'repository.js?v=2026-11-12-v03' src/app/register-features.js
-          grep -Fq 'filtering.js?v=2026-11-12-v03' src/app/register-features.js
-          grep -Fq 'page.js?v=2026-11-12-v03' src/app/register-features.js
-          grep -Fq 'lifecycle.js?v=2026-11-12-v03' src/app/register-features.js
-          grep -Fq 'page-shell.js?v=2026-11-12-v03' src/features/inventory/page.js
-          grep -Fq 'register-features.js?v=2026-11-12-v03' src/main.js
-          grep -Fq 'main.js?v=2026-11-12-v03' index.html
+          grep -Fq 'repository.js?v=2026-11-12-v02' src/app/register-features.js
+          grep -Fq 'filtering.js?v=2026-11-12-v02' src/app/register-features.js
+          grep -Fq 'page.js?v=2026-11-12-v02' src/app/register-features.js
+          grep -Fq 'lifecycle.js?v=2026-11-12-v02' src/app/register-features.js
+          grep -Fq 'page-shell.js?v=2026-11-12-v02' src/features/inventory/page.js
+          grep -Fq 'register-features.js?v=2026-11-12-v02' src/main.js
+          grep -Fq 'main.js?v=2026-11-12-v02' index.html
           ! grep -Fq 'analytics-test-exclusion' src/app/register-features.js
 
       - name: Insights country attribution promotion contract
