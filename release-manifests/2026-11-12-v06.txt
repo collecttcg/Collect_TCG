@@ -1,0 +1,13 @@
+Version: 2026-11-12-v06
+Previous Production: 2026-11-12-v05
+Development promoted from: 2026-11-12-v07 (source aa545e2de5c5398f2afdc70ab04e36457fc1bcd1; pre-errata checkbox only)
+Purpose: promote validated pre-errata/error card title checkbox for Owner Add, Edit, and Clone forms.
+Source commit: e427081abe02098e2eaee5eae35d97aa12caa7ce
+Full ZIP: Collect-TCG-Production-2026-11-12-v06-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-12-v05-to-2026-11-12-v06-patch.zip
+SQL required: No
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+792afcd8695477e154473f2ac5e233a75088b76499b32ec3bd71203b64951329  release/Collect-TCG-Production-2026-11-12-v06-full.zip
+79af26c9675f112edde2cafc272f6587749448ba39bf2ef0cf56bc610ed97fb3  release/Collect-TCG-Production-2026-11-12-v05-to-2026-11-12-v06-patch.zip
