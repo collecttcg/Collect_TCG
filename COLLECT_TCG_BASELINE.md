@@ -1,6 +1,6 @@
 # Collect TCG Current Baseline
 
-Last reconciled against GitHub: 2026-11-10
+Last reconciled against GitHub: 2026-11-12
 
 ## Repositories
 - Production: `collecttcg/Collect_TCG`
@@ -14,7 +14,23 @@ Last reconciled against GitHub: 2026-11-10
 - Current releases use `YYYY-MM-DD-vNN`; Development and Production counters are independent.
 - Historical release manifests are immutable.
 
-## Current reconciled state — 2026-11-10
+## Current reconciled state — 2026-11-12
+
+### Latest Production promotion — 2026-11-12-v01
+- Previous Production: `2026-11-10-v03`. Approved Development source: `2026-11-12-v01` (source `77793b6a073f45d9b46dd6513b50cc8489f01cf6`), with **only the Collect TCG 2 eBay URL correction** promoted.
+- The active Production Contact, Owner eBay Ban List, and Card List Post Generator references to `COLLECT_TCG_2` now use `https://www.ebay.com/str/collecttcg2` instead of the UK storefront URL.
+- Production files: `src/features/content/information.js`, `src/features/owner/ebay-banlist.js`, `src/features/social/posts-card-list.js`; release workflow `.github/workflows/release-production.yml`. Other Development-only changes, including the Hidden Listings shared Inventory workspace, were not promoted.
+- SQL required: No. No database migration or backend change.
+- Production release manifest: `release-manifests/2026-11-12-v01.txt`. Full package: `Collect-TCG-Production-2026-11-12-v01-full.zip` (SHA-256 `143c0b6579dd014e9af4eee8f38747aefcbafacc41941a6150d2d27ba2dab2e1`). Patch package: `Collect-TCG-Production-2026-11-10-v03-to-2026-11-12-v01-patch.zip` (SHA-256 `dd18b578bed5c73ba6141dd64f67707be6b0a708d1279e5a6e5df031c3e5bb1a`).
+- Production Release workflow `43134003196` succeeded: Production JavaScript syntax, retained contracts, SEO regeneration, package integrity, GitHub Pages deployment, and advancement of `production-last-known-good`. Final Pages run `43134048295` succeeded.
+- Validation limitations: Production was not manually opened to avoid Insights contamination; interactive desktop/mobile/Safari browser testing and authenticated Owner interaction were not performed.
+
+### Latest Development release — 2026-11-12-v01
+- Previous packaged Development release: `2026-11-10-v05`.
+- Includes Development Hidden Listings shared Inventory workspace and the Collect TCG 2 eBay URL correction. Full and patch ZIPs were created, integrity-checked, uploaded, and recorded in `release-manifests/2026-11-12-v01.txt`; Development Release workflow `43133733570` succeeded.
+- Development-only behavior remains excluded from Production unless separately approved.
+
+## Historical reconciled state — 2026-11-10
 
 ### Latest Production promotion — 2026-11-10-v03
 - Production 2026-11-10-v03 (previous accepted Production 2026-11-10-v02) promotes validated Development 2026-11-10-v05 (source c45f417c114c04bc87bfbcd5fc8e7a63e58cb25a).
