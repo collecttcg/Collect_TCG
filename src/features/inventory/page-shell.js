@@ -80,6 +80,15 @@ function inventoryPageHTML(scopeMeta,scope){
         </div>
 
         <div class="inventory-display-tools ${isCollection ? "collection-display-tools" : ""}">
+          ${isHiddenListings && appContext.isOwnerMode() ? `
+            <label class="field owner-only" style="min-width:160px">
+              <span>Owner</span>
+              <select id="hiddenOwnerCategoryFilter" aria-label="Filter hidden listings by owner">
+                <option value="">All Owners</option>
+                ${(appContext.OWNER_CATEGORIES||[]).map(name=>`<option value="${appContext.escapeHtml(name)}">${appContext.escapeHtml(name)}</option>`).join("")}
+              </select>
+            </label>
+          ` : ""}
           ${!isCollection && scope!=="inventory" ? `
             <label class="listing-per-page-control" title="Choose how many listings are shown on each page.">
               <span>Show</span>
