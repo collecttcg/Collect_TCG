@@ -16,6 +16,14 @@ Last reconciled against GitHub: 2026-11-12
 
 ## Current reconciled state — 2026-11-12
 
+### Pre-errata/error card title checkbox — Production 2026-11-12-v06
+- Previous Production: `2026-11-12-v05`; promoted from validated Development `2026-11-12-v07` (source `aa545e2de5c5398f2afdc70ab04e36457fc1bcd1`).
+- Owner Add, Edit and Clone card forms expose a Pre-errata / error card checkbox under Card Name. Toggling it immediately adds/removes the exact `[PRE ERRATA] [ERROR]` prefix in the name input; saving persists it as part of the existing `name` field, without a DB schema change. Reopening an existing prefixed title restores checked state.
+- Production changed `src/features/owner/forms.js`, `src/features/owner/add.js`, `src/app/register-features.js`, release workflow. No SQL required. No unrelated Dev-only features promoted.
+- Production release manifest `release-manifests/2026-11-12-v06.txt`; full ZIP SHA-256 `792afcd8695477e154473f2ac5e233a75088b76499b32ec3bd71203b64951329`; patch ZIP SHA-256 `79af26c9675f112edde2cafc272f6587749448ba39bf2ef0cf56bc610ed97fb3`.
+- Development Release workflow `43185641589` succeeded; Production Release workflow `43186493423` passed checks and packaging but failed final Pages monitoring because its initial deployment was canceled by the manifest commit. Independent Pages deployment for manifest commit `e1047a76f9c6570bf9b6e2f8cd16b3431f2df355` succeeded in workflow `43186549046`; `production-last-known-good` updated to that manifest commit with expected-SHA guard.
+- Validation limitations: no interactive authenticated Owner, desktop/mobile, or Safari browser testing; no manual live Production opening to avoid Insights contamination.
+
 ### Refined eBay negotiation wording — Production 2026-11-12-v05
 - Previous Production: `2026-11-12-v04`; Development promoted from `2026-11-12-v04` (source `c5ba5e2b0f5e7dea8e1fc46d787eaf3e7e91bcc1`).
 - Updated the Owner eBay Listing Generator `[NEGOTIATION]` wording to welcome reasonable offers, ask buyers to provide their offer first rather than requesting the seller's best price, review offers, arrange agreed-price purchases through eBay where supported, and respectfully decline unacceptable offers. Existing listing sections retained.
