@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-10-v03 — Pages redeploy retry after GitHub deploy timeout.
+# Production 2026-11-12-v01 — approved Collect TCG 2 eBay store URL correction.
 on:
   workflow_dispatch:
   push:
@@ -130,9 +130,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-10-v03
-          PREVIOUS_VERSION: 2026-11-10-v02
-          PREVIOUS_COMMIT: 2fd0920b3e594aa6954370e8cbc2107061b52ef2
+          RELEASE_VERSION: 2026-11-12-v01
+          PREVIOUS_VERSION: 2026-11-10-v03
+          PREVIOUS_COMMIT: c3ca934a6dcd5fb1e8ced00d42bb03f0ad1f2f23
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -149,10 +149,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-10-v03-packages
+          name: Collect-TCG-Production-2026-11-12-v01-packages
           path: |
-            release/Collect-TCG-Production-2026-11-10-v03-full.zip
-            release/Collect-TCG-Production-2026-11-10-v02-to-2026-11-10-v03-patch.zip
+            release/Collect-TCG-Production-2026-11-12-v01-full.zip
+            release/Collect-TCG-Production-2026-11-10-v03-to-2026-11-12-v01-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -160,16 +160,16 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-10-v03.txt'
+          MANIFEST='release-manifests/2026-11-12-v01.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-10-v03'
-            echo 'Previous Production: 2026-11-10-v02'
-            echo 'Development promoted from: 2026-11-10-v05 (source c45f417c114c04bc87bfbcd5fc8e7a63e58cb25a)'
-            echo 'Purpose: promote the desktop-only listing-images ZIP download from the card-detail More menu.'
+            echo 'Version: 2026-11-12-v01'
+            echo 'Previous Production: 2026-11-10-v03'
+            echo 'Development promoted from: 2026-11-12-v01 (source 77793b6a073f45d9b46dd6513b50cc8489f01cf6; URL changes only)'
+            echo 'Purpose: promote the Collect TCG 2 eBay store URL correction in Contact, Owner eBay Ban List, and Card List Post Generator; exclude Development-only changes.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-10-v03-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-10-v02-to-2026-11-10-v03-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-12-v01-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-10-v03-to-2026-11-12-v01-patch.zip'
             echo 'SQL required: No'
             echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.'
@@ -179,7 +179,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-10-v03: record package validation'
+          git commit -m 'Production 2026-11-12-v01: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm Pages deployment and advance last-known-good
