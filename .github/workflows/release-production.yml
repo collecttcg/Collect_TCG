@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-12-v01 — approved Collect TCG 2 eBay store URL correction.
+# Production 2026-11-12-v02 — approved owner-only Hidden Listings shared Inventory redesign.
 on:
   workflow_dispatch:
   push:
@@ -93,6 +93,27 @@ jobs:
           node tools/check-css.mjs
           node tools/check-post-generator-titles.mjs
           git diff --check
+      - name: Hidden Listings shared Inventory and Owner isolation contracts
+        run: |
+          set -euo pipefail
+          grep -Fq 'return appContext.renderInventoryPage("hidden-listings");' src/features/owner/lifecycle.js
+          grep -Fq 'if(!appContext.requireOwner("open Hidden Listings")) return;' src/features/owner/lifecycle.js
+          grep -Fq 'if(scope === "hidden-listings") return lifecycle === "draft";' src/features/inventory/filtering.js
+          grep -Fq '["inventory","collection","hidden-listings"].includes(scope)' src/features/inventory/page-shell.js
+          grep -Fq '["inventory","collection","hidden-listings"].includes(appContext.listingAvailabilityScope)' src/features/inventory/page.js
+          grep -Fq 'hiddenOwnerCategoryFilter' src/features/inventory/page-shell.js
+          grep -Fq 'hiddenOwnerCategory' src/features/inventory/filtering.js
+          grep -Fq 'hiddenOwnerCategoryFilter' src/features/inventory/page.js
+          grep -Fq 'if(appContext.isOwnerMode()) appContext.renderHiddenListingsPage();' src/app/routing.js
+          grep -Fq 'repository.js?v=2026-11-12-v02' src/app/register-features.js
+          grep -Fq 'filtering.js?v=2026-11-12-v02' src/app/register-features.js
+          grep -Fq 'page.js?v=2026-11-12-v02' src/app/register-features.js
+          grep -Fq 'lifecycle.js?v=2026-11-12-v02' src/app/register-features.js
+          grep -Fq 'page-shell.js?v=2026-11-12-v02' src/features/inventory/page.js
+          grep -Fq 'register-features.js?v=2026-11-12-v02' src/main.js
+          grep -Fq 'main.js?v=2026-11-12-v02' index.html
+          ! grep -Fq 'analytics-test-exclusion' src/app/register-features.js
+
       - name: Insights country attribution promotion contract
         run: |
           set -euo pipefail
@@ -130,9 +151,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-12-v01
-          PREVIOUS_VERSION: 2026-11-10-v03
-          PREVIOUS_COMMIT: c3ca934a6dcd5fb1e8ced00d42bb03f0ad1f2f23
+          RELEASE_VERSION: 2026-11-12-v02
+          PREVIOUS_VERSION: 2026-11-12-v01
+          PREVIOUS_COMMIT: 5fe07d1324273aa457c434294f1e95b20a57379f
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -149,10 +170,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-12-v01-packages
+          name: Collect-TCG-Production-2026-11-12-v02-packages
           path: |
-            release/Collect-TCG-Production-2026-11-12-v01-full.zip
-            release/Collect-TCG-Production-2026-11-10-v03-to-2026-11-12-v01-patch.zip
+            release/Collect-TCG-Production-2026-11-12-v02-full.zip
+            release/Collect-TCG-Production-2026-11-12-v01-to-2026-11-12-v02-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -160,16 +181,16 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-12-v01.txt'
+          MANIFEST='release-manifests/2026-11-12-v02.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-12-v01'
-            echo 'Previous Production: 2026-11-10-v03'
-            echo 'Development promoted from: 2026-11-12-v01 (source 77793b6a073f45d9b46dd6513b50cc8489f01cf6; URL changes only)'
-            echo 'Purpose: promote the Collect TCG 2 eBay store URL correction in Contact, Owner eBay Ban List, and Card List Post Generator; exclude Development-only changes.'
+            echo 'Version: 2026-11-12-v02'
+            echo 'Previous Production: 2026-11-12-v01'
+            echo 'Development promoted from: 2026-11-12-v01 (source 77793b6a073f45d9b46dd6513b50cc8489f01cf6; Hidden Listings redesign only)'
+            echo 'Purpose: promote the owner-only Hidden Listings shared Inventory redesign with Browse the Vault, filters and sorting, retaining Production Owner category filtering.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-12-v01-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-10-v03-to-2026-11-12-v01-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-12-v02-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-12-v01-to-2026-11-12-v02-patch.zip'
             echo 'SQL required: No'
             echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.'
@@ -179,7 +200,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-12-v01: record package validation'
+          git commit -m 'Production 2026-11-12-v02: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm Pages deployment and advance last-known-good
