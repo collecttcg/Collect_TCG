@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-12-v02 — approved owner-only Hidden Listings shared Inventory redesign.
+# Production 2026-11-12-v03 — eBay blocked-buyer management shortcuts.
 on:
   workflow_dispatch:
   push:
@@ -58,7 +58,11 @@ jobs:
           ! grep -Fq 'addNavLink(document.getElementById("mainnav")' src/features/owner/ebay-banlist.js
           grep -Fq '<span>Reason / note <small>(optional)</small></span><input name="reason"' src/features/owner/ebay-banlist.js
           grep -Fq 'ebay-messages.js?v=2026-11-10-v01' src/app/register-features.js
-          grep -Fq 'ebay-banlist.js?v=2026-11-03-v01' src/app/register-features.js
+          grep -Fq 'ebay-banlist.js?v=2026-11-12-v03' src/app/register-features.js
+          grep -Fq 'const EBAY_BLOCKED_BUYERS_URL="https://www.ebay.com/bmgt/BuyerBlock"' src/features/owner/ebay-banlist.js
+          grep -Fq 'length:EBAY_ACCOUNT_COUNT' src/features/owner/ebay-banlist.js
+          grep -Fq 'href="${EBAY_BLOCKED_BUYERS_URL}"' src/features/owner/ebay-banlist.js
+          grep -Fq 'if(!appContext.isOwnerMode())' src/features/owner/ebay-banlist.js
           grep -Fq 'module60.register(appContext)' src/app/register-features.js
           grep -Fq 'video recorded before dispatch' src/features/social/posts-hidden-ebay.js
           grep -Fq '[IMPORT DUTIES & TAXES]' src/features/social/posts-hidden-ebay.js
@@ -105,13 +109,13 @@ jobs:
           grep -Fq 'hiddenOwnerCategory' src/features/inventory/filtering.js
           grep -Fq 'hiddenOwnerCategoryFilter' src/features/inventory/page.js
           grep -Fq 'if(appContext.isOwnerMode()) appContext.renderHiddenListingsPage();' src/app/routing.js
-          grep -Fq 'repository.js?v=2026-11-12-v02' src/app/register-features.js
-          grep -Fq 'filtering.js?v=2026-11-12-v02' src/app/register-features.js
-          grep -Fq 'page.js?v=2026-11-12-v02' src/app/register-features.js
-          grep -Fq 'lifecycle.js?v=2026-11-12-v02' src/app/register-features.js
-          grep -Fq 'page-shell.js?v=2026-11-12-v02' src/features/inventory/page.js
-          grep -Fq 'register-features.js?v=2026-11-12-v02' src/main.js
-          grep -Fq 'main.js?v=2026-11-12-v02' index.html
+          grep -Fq 'repository.js?v=2026-11-12-v03' src/app/register-features.js
+          grep -Fq 'filtering.js?v=2026-11-12-v03' src/app/register-features.js
+          grep -Fq 'page.js?v=2026-11-12-v03' src/app/register-features.js
+          grep -Fq 'lifecycle.js?v=2026-11-12-v03' src/app/register-features.js
+          grep -Fq 'page-shell.js?v=2026-11-12-v03' src/features/inventory/page.js
+          grep -Fq 'register-features.js?v=2026-11-12-v03' src/main.js
+          grep -Fq 'main.js?v=2026-11-12-v03' index.html
           ! grep -Fq 'analytics-test-exclusion' src/app/register-features.js
 
       - name: Insights country attribution promotion contract
@@ -151,9 +155,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-12-v02
-          PREVIOUS_VERSION: 2026-11-12-v01
-          PREVIOUS_COMMIT: 5fe07d1324273aa457c434294f1e95b20a57379f
+          RELEASE_VERSION: 2026-11-12-v03
+          PREVIOUS_VERSION: 2026-11-12-v02
+          PREVIOUS_COMMIT: 58b3debf21a80dd5eb2b2ee36e10f62fc428ab07
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -170,10 +174,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-12-v02-packages
+          name: Collect-TCG-Production-2026-11-12-v03-packages
           path: |
-            release/Collect-TCG-Production-2026-11-12-v02-full.zip
-            release/Collect-TCG-Production-2026-11-12-v01-to-2026-11-12-v02-patch.zip
+            release/Collect-TCG-Production-2026-11-12-v03-full.zip
+            release/Collect-TCG-Production-2026-11-12-v02-to-2026-11-12-v03-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -181,16 +185,16 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-12-v02.txt'
+          MANIFEST='release-manifests/2026-11-12-v03.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-12-v02'
-            echo 'Previous Production: 2026-11-12-v01'
-            echo 'Development promoted from: 2026-11-12-v01 (source 77793b6a073f45d9b46dd6513b50cc8489f01cf6; Hidden Listings redesign only)'
-            echo 'Purpose: promote the owner-only Hidden Listings shared Inventory redesign with Browse the Vault, filters and sorting, retaining Production Owner category filtering.'
+            echo 'Version: 2026-11-12-v03'
+            echo 'Previous Production: 2026-11-12-v02'
+            echo 'Development promoted from: 2026-11-12-v02 (source a78552d408f95f8155dc920bc98a749b51d63ead; eBay Ban List shortcuts only)'
+            echo 'Purpose: point all five eBay Ban List account tiles to eBay Blocked Buyers management for the currently signed-in eBay account.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-12-v02-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-12-v01-to-2026-11-12-v02-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-12-v03-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-12-v02-to-2026-11-12-v03-patch.zip'
             echo 'SQL required: No'
             echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.'
@@ -200,7 +204,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-12-v02: record package validation'
+          git commit -m 'Production 2026-11-12-v03: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm Pages deployment and advance last-known-good
@@ -208,7 +212,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TARGET_SHA="$(git rev-parse HEAD)"
+          TARGET_SHA="${GITHUB_SHA}" # Pages deploys the release source; manifest commit uses GITHUB_TOKEN and does not trigger a Pages run.
           for attempt in $(seq 1 60); do
             RESPONSE="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${TARGET_SHA}&per_page=50")"
             STATE="$(printf '%s' "$RESPONSE" | jq -r '[.workflow_runs[] | select(.name=="pages build and deployment")] | sort_by(.created_at) | last // empty | [.status,.conclusion] | @tsv')"
