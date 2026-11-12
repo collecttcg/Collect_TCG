@@ -1,0 +1,13 @@
+Version: 2026-11-12-v03
+Previous Production: 2026-11-12-v02
+Development promoted from: 2026-11-12-v02 (source a78552d408f95f8155dc920bc98a749b51d63ead; eBay Ban List shortcuts only)
+Purpose: point all five eBay Ban List account tiles to eBay Blocked Buyers management for the currently signed-in eBay account.
+Source commit: 341d61258d3be5f40332917edf87251912e1eda6
+Full ZIP: Collect-TCG-Production-2026-11-12-v03-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-12-v02-to-2026-11-12-v03-patch.zip
+SQL required: No
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+b3b3c90db915d2db572b436818f06a551538f3f095a844af8daaf2079fc7e4a6  release/Collect-TCG-Production-2026-11-12-v03-full.zip
+d5e7e027575bcdf82f2e1903099ec77e5684bacca559016a96dbe27cbfc9c6c0  release/Collect-TCG-Production-2026-11-12-v02-to-2026-11-12-v03-patch.zip
