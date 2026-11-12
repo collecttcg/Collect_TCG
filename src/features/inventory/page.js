@@ -592,6 +592,7 @@ function renderInventoryPage(scope = "inventory"){
       grid.querySelector("[data-empty-clear-price]")?.addEventListener("click",()=>{
         if(appContext.$("filterPriceMin")) appContext.$("filterPriceMin").value="";
         if(appContext.$("filterPriceMax")) appContext.$("filterPriceMax").value="";
+      if(appContext.$("hiddenOwnerCategoryFilter")) appContext.$("hiddenOwnerCategoryFilter").value="";
         appContext.updateListingUrlFromControls();
         draw();
       });
@@ -1798,6 +1799,7 @@ function renderInventoryPage(scope = "inventory"){
     }
 
     appContext.$("clearAllFiltersBtn")?.addEventListener("click",clearAllInventoryFilters);
+    appContext.$("hiddenOwnerCategoryFilter")?.addEventListener("change",()=>{ draw(); },{signal:inventorySignal});
 
     ["search","filterGame","filterGrade","filterLanguage","filterEra","filterAvailability","filterSeries","filterPriceMin","filterPriceMax","sortBy"].forEach(id=>{
       const el = appContext.$(id);
