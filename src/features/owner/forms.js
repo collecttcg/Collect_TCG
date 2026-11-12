@@ -174,6 +174,12 @@ function fieldsTemplate(p){
         <label for="${p}Name">Card name</label>
         <input type="text" id="${p}Name" required placeholder="e.g. Charizard ex">
       </div>
+      <div class="field">
+        <label class="psa-image-privacy-toggle" for="${p}PreErrataError">
+          <input type="checkbox" id="${p}PreErrataError">
+          <span><strong>Pre-errata / error card</strong><small>When checked, the saved card title starts with [PRE ERRATA] [ERROR]. Uncheck to remove both tags.</small></span>
+        </label>
+      </div>
       <div class="field-row">
         <div class="field">
           <label for="${p}CardCode">Card code</label>
@@ -1519,9 +1525,22 @@ function wireAutoCapitalization(p){
     }
   }
 
+function wirePreErrataError(p){
+    const nameInput=appContext.$(p + "Name");
+    const errorToggle=appContext.$(p + "PreErrataError");
+    if(!nameInput || !errorToggle || errorToggle.dataset.titleToggleWired) return;
+    errorToggle.dataset.titleToggleWired="1";
+    errorToggle.checked=/^\[PRE ERRATA\]\s*\[ERROR\]\s*/i.test(nameInput.value);
+    errorToggle.addEventListener("change",()=>{
+      const baseName=nameInput.value.replace(/^(?:\[PRE ERRATA\]\s*\[ERROR\]\s*)+/i,"").trimStart();
+      nameInput.value=(errorToggle.checked ? "[PRE ERRATA] [ERROR] " : "")+baseName;
+    });
+  }
+
 function populateFields(p, card){
     appContext.wireAutoCapitalization(p);
     appContext.$(p + "Name").value = card ? card.name : "";
+    appContext.wirePreErrataError(p);
     appContext.$(p + "CardCode").value = card ? (card.card_code || "") : "";
     appContext.$(p + "Year").value = card && card.year ? card.year : "";
     appContext.$(p + "Game").value = card ? card.game : "";
@@ -1548,7 +1567,7 @@ function populateFields(p, card){
 function collectFields(p, id, formState){
     return {
       id: id || appContext.uid(),
-      name: appContext.$(p + "Name").value.trim().toUpperCase(),
+      name: (appContext.$(p + "PreErrataError")?.checked ? "[PRE ERRATA] [ERROR] " : "") + appContext.$(p + "Name").value.trim().replace(/^(?:\[PRE ERRATA\]\s*\[ERROR\]\s*)+/i,"").toUpperCase(),
       card_code: appContext.$(p + "CardCode").value.trim().toUpperCase(),
       year: appContext.normalizeYearValue(appContext.$(p + "Year").value),
       game: appContext.$(p + "Game").value.trim(),
@@ -1597,7 +1616,7 @@ function collectFields(p, id, formState){
     };
   }
 
-  Object.assign(appContext,{wireGameCombobox,normalizeYearValue,isValidYearValue,normalizePriceNegotiability,priceNegotiabilityFromNotes,stripPriceNegotiabilityMarker,notesWithPriceNegotiability,fieldsTemplate,wireImageControls,gradingRowHTML,wireGradingControls,validMyrFxRates,readCachedMyrFxRates,saveCachedMyrFxRates,fetchCurrentMyrFxRates,fxRateDateLabel,roundConvertedCardPrice,convertedPriceValue,applyMyrConversionToFields,updateFxRateStatus,wireAutoCurrencyConversion,ensureMyrConversionBeforeSave,wireAvailabilityPriceState,invalidFieldLabel,reportFirstInvalidField,wireSoldDateField,wireAutoCapitalization,populateFields,collectFields});
+  Object.assign(appContext,{wireGameCombobox,normalizeYearValue,isValidYearValue,normalizePriceNegotiability,priceNegotiabilityFromNotes,stripPriceNegotiabilityMarker,notesWithPriceNegotiability,fieldsTemplate,wireImageControls,gradingRowHTML,wireGradingControls,validMyrFxRates,readCachedMyrFxRates,saveCachedMyrFxRates,fetchCurrentMyrFxRates,fxRateDateLabel,roundConvertedCardPrice,convertedPriceValue,applyMyrConversionToFields,updateFxRateStatus,wireAutoCurrencyConversion,ensureMyrConversionBeforeSave,wireAvailabilityPriceState,invalidFieldLabel,reportFirstInvalidField,wireSoldDateField,wireAutoCapitalization,wirePreErrataError,populateFields,collectFields});
 }
 
 /** State and event initialization; called in preserved startup order. */
