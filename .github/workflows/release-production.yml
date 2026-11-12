@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-12-v04 — eBay listing negotiation guidance.
+# Production 2026-11-12-v05 — eBay listing negotiation guidance.
 on:
   workflow_dispatch:
   push:
@@ -60,9 +60,9 @@ jobs:
           grep -Fq 'ebay-messages.js?v=2026-11-10-v01' src/app/register-features.js
           grep -Fq 'ebay-banlist.js?v=2026-11-12-v03' src/app/register-features.js
           grep -Fq '"[NEGOTIATION]"' src/features/social/posts-marketplace.js
-          grep -Fq 'Please do not ask for our best price.' src/features/social/posts-marketplace.js
-          grep -Fq 'posts-marketplace.js?v=2026-11-12-v04' src/features/social/posts.js
-          grep -Fq 'posts.js?v=2026-11-12-v04' src/app/register-features.js
+          grep -Fq 'We welcome reasonable offers.' src/features/social/posts-marketplace.js
+          grep -Fq 'posts-marketplace.js?v=2026-11-12-v05' src/features/social/posts.js
+          grep -Fq 'posts.js?v=2026-11-12-v05' src/app/register-features.js
           grep -Fq 'const EBAY_BLOCKED_BUYERS_URL="https://www.ebay.com/bmgt/BuyerBlock"' src/features/owner/ebay-banlist.js
           grep -Fq 'length:EBAY_ACCOUNT_COUNT' src/features/owner/ebay-banlist.js
           grep -Fq 'href="${EBAY_BLOCKED_BUYERS_URL}"' src/features/owner/ebay-banlist.js
@@ -159,9 +159,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-12-v04
-          PREVIOUS_VERSION: 2026-11-12-v03
-          PREVIOUS_COMMIT: db74b646e6fb18c1dee52ed0a519678c8074bcdb
+          RELEASE_VERSION: 2026-11-12-v05
+          PREVIOUS_VERSION: 2026-11-12-v04
+          PREVIOUS_COMMIT: ac0ee7269d70ef6c588a7562f92e8208fcb667ff
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -178,10 +178,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-12-v04-packages
+          name: Collect-TCG-Production-2026-11-12-v05-packages
           path: |
-            release/Collect-TCG-Production-2026-11-12-v04-full.zip
-            release/Collect-TCG-Production-2026-11-12-v03-to-2026-11-12-v04-patch.zip
+            release/Collect-TCG-Production-2026-11-12-v05-full.zip
+            release/Collect-TCG-Production-2026-11-12-v04-to-2026-11-12-v05-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -189,16 +189,16 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-12-v04.txt'
+          MANIFEST='release-manifests/2026-11-12-v05.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-12-v04'
-            echo 'Previous Production: 2026-11-12-v03'
-            echo 'Development promoted from: 2026-11-12-v03 (source e63c8848667e567eb623036684ed372a8a026462; eBay listing negotiation only)'
-            echo 'Purpose: add a NEGOTIATION section after ITEM DETAILS in the eBay listing generator requesting buyers state their best offer first.'
+            echo 'Version: 2026-11-12-v05'
+            echo 'Previous Production: 2026-11-12-v04'
+            echo 'Development promoted from: 2026-11-12-v04 (refined negotiation wording only)'
+            echo 'Purpose: refine eBay listing negotiation wording with clear buyer-offer review, eBay agreed-price purchase, and respectful decline.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-12-v04-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-12-v03-to-2026-11-12-v04-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-12-v05-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-12-v04-to-2026-11-12-v05-patch.zip'
             echo 'SQL required: No'
             echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.'
@@ -208,7 +208,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-12-v04: record package validation'
+          git commit -m 'Production 2026-11-12-v05: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm Pages deployment and advance last-known-good
