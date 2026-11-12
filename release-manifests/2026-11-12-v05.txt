@@ -1,0 +1,13 @@
+Version: 2026-11-12-v05
+Previous Production: 2026-11-12-v04
+Development promoted from: 2026-11-12-v04 (refined negotiation wording only)
+Purpose: refine eBay listing negotiation wording with clear buyer-offer review, eBay agreed-price purchase, and respectful decline.
+Source commit: 373211f273c1f8e1cce0ba3845f6dd71f9ec29ad
+Full ZIP: Collect-TCG-Production-2026-11-12-v05-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-12-v04-to-2026-11-12-v05-patch.zip
+SQL required: No
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+8cd69756772eb5eba3cbb82059b24dac34bb71b8effa4a5a0c981316ea6c2f0d  release/Collect-TCG-Production-2026-11-12-v05-full.zip
+a1d7401ebe56b8ec09565d37cb5b632516a71c15ef5b602df25f61eeeba8dbb2  release/Collect-TCG-Production-2026-11-12-v04-to-2026-11-12-v05-patch.zip
