@@ -418,6 +418,7 @@ function getFiltered(){
     const eraF = (appContext.$("filterEra") && appContext.$("filterEra").value) || "";
     const availabilityF = (appContext.$("filterAvailability") && appContext.$("filterAvailability").value) || "";
     const seriesF = (appContext.$("filterSeries") && appContext.$("filterSeries").value) || "";
+    const hiddenOwnerCategory = appContext.listingAvailabilityScope==="hidden-listings" && appContext.isOwnerMode() ? (appContext.$("hiddenOwnerCategoryFilter")?.value || "") : "";
     const priceMin = appContext.safePriceFilterValue(appContext.$("filterPriceMin")?.value);
     const priceMax = appContext.safePriceFilterValue(appContext.$("filterPriceMax")?.value);
     const sortBy = (appContext.$("sortBy") && appContext.$("sortBy").value) || (
@@ -428,6 +429,7 @@ function getFiltered(){
 
     let list = appContext.cards.filter(c=>{
       if(!appContext.cardMatchesListingScope(c)) return false;
+      if(hiddenOwnerCategory && appContext.sanitizeOwnerCategory(c._owner_category)!==appContext.sanitizeOwnerCategory(hiddenOwnerCategory)) return false;
       const format = appContext.effectiveFormat(c);
       if(gameF && appContext.normalizeFilterValue(c.game) !== appContext.normalizeFilterValue(gameF)) return false;
       if(gradeF){
