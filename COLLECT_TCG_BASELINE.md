@@ -16,6 +16,13 @@ Last reconciled against GitHub: 2026-11-12
 
 ## Current reconciled state — 2026-11-12
 
+### Refined eBay negotiation wording — Production 2026-11-12-v05
+- Previous Production: `2026-11-12-v04`; Development promoted from `2026-11-12-v04` (source `c5ba5e2b0f5e7dea8e1fc46d787eaf3e7e91bcc1`).
+- Updated the Owner eBay Listing Generator `[NEGOTIATION]` wording to welcome reasonable offers, ask buyers to provide their offer first rather than requesting the seller's best price, review offers, arrange agreed-price purchases through eBay where supported, and respectfully decline unacceptable offers. Existing listing sections retained.
+- Dev manifest: `release-manifests/2026-11-12-v04.txt`; Production manifest: `release-manifests/2026-11-12-v05.txt`. SQL: none.
+- Production full ZIP SHA-256: `8cd69756772eb5eba3cbb82059b24dac34bb71b8effa4a5a0c981316ea6c2f0d`; patch ZIP SHA-256: `a1d7401ebe56b8ec09565d37cb5b632516a71c15ef5b602df25f61eeeba8dbb2`.
+- Dev release validation and packaging succeeded; Production syntax, retained contracts, SEO and package integrity passed. Production Release workflow `43178384213` failed at final Pages-monitoring stage because the source Pages run was canceled by the manifest commit. Independent manifest-commit Pages deployment `43178434147` was pending at initial reconciliation. No interactive desktop/mobile/Safari or authenticated Owner browser testing.
+
 ### eBay listing negotiation guidance — Production 2026-11-12-v04
 - Previous Production: `2026-11-12-v03`. Development promoted from: `2026-11-12-v03` (source `e63c8848667e567eb623036684ed372a8a026462`).
 - The eBay Listing Generator now inserts `[NEGOTIATION]` after `[ITEM DETAILS]` and before `[SHIPPING]`, with the text: "Please do not ask for our best price. If you would like to negotiate, please state your best offer first." Existing shipping, import duties, and Collect TCG footer content are retained.
