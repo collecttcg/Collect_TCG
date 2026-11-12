@@ -16,6 +16,14 @@ Last reconciled against GitHub: 2026-11-12
 
 ## Current reconciled state — 2026-11-12
 
+### eBay Ban List blocked-buyer shortcuts — Production 2026-11-12-v03
+- Previous Production: `2026-11-12-v02`. Development promoted from: `2026-11-12-v02` (source `a78552d408f95f8155dc920bc98a749b51d63ead`).
+- All five owner-only eBay Ban List account tiles now link to `https://www.ebay.com/bmgt/BuyerBlock` and say "Manage Blocked Buyers". eBay determines the displayed blocked-buyer list from the signed-in eBay account; users must switch accounts manually. Existing shared Supabase ban list and RLS were not modified. No SQL.
+- Production files: `src/features/owner/ebay-banlist.js`, `src/app/register-features.js`, `.github/workflows/release-production.yml`.
+- Production manifest: `release-manifests/2026-11-12-v03.txt`. Full ZIP `Collect-TCG-Production-2026-11-12-v03-full.zip` SHA-256 `b3b3c90db915d2db572b436818f06a551538f3f095a844af8daaf2079fc7e4a6`. Patch ZIP `Collect-TCG-Production-2026-11-12-v02-to-2026-11-12-v03-patch.zip` SHA-256 `d5e7e027575bcdf82f2e1903099ec77e5684bacca559016a96dbe27cbfc9c6c0`.
+- Production Release workflow `43140531651` passed code/retained-contract/SEO/package checks and committed manifest, but its final automatic deployment check failed because it monitored the original workflow source commit whose Pages run was canceled when the manifest commit was pushed. The **manifest commit** Pages run `43140576433` subsequently succeeded. Rollback branch `production-last-known-good` was separately advanced to `db74b646e6fb18c1dee52ed0a519678c8074bcdb` using verified ref update. The automatic release workflow remains marked failed; the independent deployment and rollback evidence is recorded here.
+- Validation limitations: no interactive authenticated Owner browser test, desktop/mobile/Safari test, or live Production open.
+
 ### Hidden Listings Production promotion — 2026-11-12-v02
 - Previous Production: `2026-11-12-v01`. Approved Development source: `2026-11-12-v01` (`77793b6a073f45d9b46dd6513b50cc8489f01cf6`); promoted only the owner-only Hidden Listings shared Inventory interface.
 - Hidden Listings now reuses Browse the Vault game tiles, search, filters, sorting, and pagination. Production's existing private Card Owner category filter was adapted to the shared workspace instead of being removed.
