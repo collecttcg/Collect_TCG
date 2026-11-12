@@ -1,0 +1,13 @@
+Version: 2026-11-12-v04
+Previous Production: 2026-11-12-v03
+Development promoted from: 2026-11-12-v03 (source e63c8848667e567eb623036684ed372a8a026462; eBay listing negotiation only)
+Purpose: add a NEGOTIATION section after ITEM DETAILS in the eBay listing generator requesting buyers state their best offer first.
+Source commit: ac0ee7269d70ef6c588a7562f92e8208fcb667ff
+Full ZIP: Collect-TCG-Production-2026-11-12-v04-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-12-v03-to-2026-11-12-v04-patch.zip
+SQL required: No
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+39ede7165569926415f9d85966c744248819b3044767017cf4c803d86a2ff672  release/Collect-TCG-Production-2026-11-12-v04-full.zip
+1b250d5a9fbdf369066db8eb5375cc020eccbbaa294a00994e259a8571b2049f  release/Collect-TCG-Production-2026-11-12-v03-to-2026-11-12-v04-patch.zip
