@@ -16,6 +16,14 @@ Last reconciled against GitHub: 2026-11-12
 
 ## Current reconciled state — 2026-11-12
 
+### eBay listing negotiation guidance — Production 2026-11-12-v04
+- Previous Production: `2026-11-12-v03`. Development promoted from: `2026-11-12-v03` (source `e63c8848667e567eb623036684ed372a8a026462`).
+- The eBay Listing Generator now inserts `[NEGOTIATION]` after `[ITEM DETAILS]` and before `[SHIPPING]`, with the text: "Please do not ask for our best price. If you would like to negotiate, please state your best offer first." Existing shipping, import duties, and Collect TCG footer content are retained.
+- Production files: `src/features/social/posts-marketplace.js`, `src/features/social/posts.js`, `src/app/register-features.js`, `.github/workflows/release-production.yml`. No SQL.
+- Production manifest: `release-manifests/2026-11-12-v04.txt`. Full ZIP `Collect-TCG-Production-2026-11-12-v04-full.zip` SHA-256 `39ede7165569926415f9d85966c744248819b3044767017cf4c803d86a2ff672`. Patch ZIP `Collect-TCG-Production-2026-11-12-v03-to-2026-11-12-v04-patch.zip` SHA-256 `1b250d5a9fbdf369066db8eb5375cc020eccbbaa294a00994e259a8571b2049f`.
+- Development Release workflow `43177759134` succeeded. Production Release workflow `43177897900` passed syntax, retained contracts, SEO, and package integrity, but its final deployment-monitoring step failed after the source Pages run was canceled by the manifest commit. Independent Pages deployment for the manifest commit succeeded in run `43177963743`; `production-last-known-good` was advanced to manifest commit `b913c07a50f2396752ab4eb64cb8932e21e34ccb` with an expected-SHA guard.
+- Validation limitations: no authenticated Owner browser testing, desktop/mobile/Safari browser testing, or manual Production live opening to avoid Insights contamination.
+
 ### eBay Ban List blocked-buyer shortcuts — Production 2026-11-12-v03
 - Previous Production: `2026-11-12-v02`. Development promoted from: `2026-11-12-v02` (source `a78552d408f95f8155dc920bc98a749b51d63ead`).
 - All five owner-only eBay Ban List account tiles now link to `https://www.ebay.com/bmgt/BuyerBlock` and say "Manage Blocked Buyers". eBay determines the displayed blocked-buyer list from the signed-in eBay account; users must switch accounts manually. Existing shared Supabase ban list and RLS were not modified. No SQL.
