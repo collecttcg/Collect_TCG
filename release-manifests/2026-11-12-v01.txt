@@ -1,0 +1,13 @@
+Version: 2026-11-12-v01
+Previous Production: 2026-11-10-v03
+Development promoted from: 2026-11-12-v01 (source 77793b6a073f45d9b46dd6513b50cc8489f01cf6; URL changes only)
+Purpose: promote the Collect TCG 2 eBay store URL correction in Contact, Owner eBay Ban List, and Card List Post Generator; exclude Development-only changes.
+Source commit: 97cc7d783c64cdc0c33289f2588c2404c91118ed
+Full ZIP: Collect-TCG-Production-2026-11-12-v01-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-10-v03-to-2026-11-12-v01-patch.zip
+SQL required: No
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+143c0b6579dd014e9af4eee8f38747aefcbafacc41941a6150d2d27ba2dab2e1  release/Collect-TCG-Production-2026-11-12-v01-full.zip
+dd18b578bed5c73ba6141dd64f67707be6b0a708d1279e5a6e5df031c3e5bb1a  release/Collect-TCG-Production-2026-11-10-v03-to-2026-11-12-v01-patch.zip
