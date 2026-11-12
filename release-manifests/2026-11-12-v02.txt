@@ -1,0 +1,13 @@
+Version: 2026-11-12-v02
+Previous Production: 2026-11-12-v01
+Development promoted from: 2026-11-12-v01 (source 77793b6a073f45d9b46dd6513b50cc8489f01cf6; Hidden Listings redesign only)
+Purpose: promote the owner-only Hidden Listings shared Inventory redesign with Browse the Vault, filters and sorting, retaining Production Owner category filtering.
+Source commit: 971bd8de3e128cb4874d65eb651fb86a9b29cade
+Full ZIP: Collect-TCG-Production-2026-11-12-v02-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-12-v01-to-2026-11-12-v02-patch.zip
+SQL required: No
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+0d2285d8e34170032e3c014c069ee6e23dfeb536306c47f4ffaafae684400ffa  release/Collect-TCG-Production-2026-11-12-v02-full.zip
+b0ba3b2ccf31cbd8697a90aeac9d1e1f5975e7a98c6cadec342a7f26de31f071  release/Collect-TCG-Production-2026-11-12-v01-to-2026-11-12-v02-patch.zip
