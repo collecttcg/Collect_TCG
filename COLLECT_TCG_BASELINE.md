@@ -16,7 +16,16 @@ Last reconciled against GitHub: 2026-11-12
 
 ## Current reconciled state — 2026-11-12
 
-### Latest Production promotion — 2026-11-12-v01
+### Hidden Listings Production promotion — 2026-11-12-v02
+- Previous Production: `2026-11-12-v01`. Approved Development source: `2026-11-12-v01` (`77793b6a073f45d9b46dd6513b50cc8489f01cf6`); promoted only the owner-only Hidden Listings shared Inventory interface.
+- Hidden Listings now reuses Browse the Vault game tiles, search, filters, sorting, and pagination. Production's existing private Card Owner category filter was adapted to the shared workspace instead of being removed.
+- Owner-only routing and `requireOwner` remain; hidden scope filters only draft lifecycle records; normal catalogue scopes continue to exclude drafts and archives. No SQL required.
+- Production release manifest: `release-manifests/2026-11-12-v02.txt`. Full ZIP `Collect-TCG-Production-2026-11-12-v02-full.zip` SHA-256 `0d2285d8e34170032e3c014c069ee6e23dfeb536306c47f4ffaafae684400ffa`. Patch ZIP `Collect-TCG-Production-2026-11-12-v01-to-2026-11-12-v02-patch.zip` SHA-256 `b0ba3b2ccf31cbd8697a90aeac9d1e1f5975e7a98c6cadec342a7f26de31f071`.
+- Production Release workflow `43134853427` passed JavaScript syntax, retained contracts, Hidden Listings contracts, SEO, and package integrity. GitHub Pages deployment `43134906950` succeeded for source `971bd8de3e128cb4874d65eb651fb86a9b29cade`. Rollback branch `production-last-known-good` was advanced to manifest commit `58b3debf21a80dd5eb2b2ee36e10f62fc428ab07` via verified ref update.
+- The release workflow's final automatic deployment check was still waiting for a Pages run on the manifest commit, while the actual source commit Pages deployment succeeded. Treat workflow terminal status separately from independently confirmed Pages success.
+- Validation limitations: no authenticated interactive Owner test, desktop/mobile/Safari browser test, or live Production opening.
+
+### Previous Production promotion — 2026-11-12-v01
 - Previous Production: `2026-11-10-v03`. Approved Development source: `2026-11-12-v01` (source `77793b6a073f45d9b46dd6513b50cc8489f01cf6`), with **only the Collect TCG 2 eBay URL correction** promoted.
 - The active Production Contact, Owner eBay Ban List, and Card List Post Generator references to `COLLECT_TCG_2` now use `https://www.ebay.com/str/collecttcg2` instead of the UK storefront URL.
 - Production files: `src/features/content/information.js`, `src/features/owner/ebay-banlist.js`, `src/features/social/posts-card-list.js`; release workflow `.github/workflows/release-production.yml`. Other Development-only changes, including the Hidden Listings shared Inventory workspace, were not promoted.
