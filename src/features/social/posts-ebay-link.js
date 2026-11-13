@@ -1,4 +1,7 @@
-/** Production: include a saved eBay listing URL in single-card Facebook sales posts. */
+/** Production: include saved eBay listing URLs in Facebook sales posts.
+ * The link must be appended independently of the card-details URL,
+ * since Sold cards display their USD price in place of that URL.
+ */
 export function register(appContext){
   const originalBuildFbPostText=appContext.buildFbPostText;
   if(typeof originalBuildFbPostText!=="function") return;
@@ -12,12 +15,9 @@ export function register(appContext){
       : "";
     if(!ebayUrl) return post;
 
-    const websiteCardUrl=appContext.getCardShareUrl(card.id);
-    if(!websiteCardUrl || !post.includes(websiteCardUrl)) return post;
-
-    return post.replace(
-      websiteCardUrl,
-      `${websiteCardUrl}\n\n🛒 eBay Listing:\n${ebayUrl}`
-    );
+    const separator="━━━━━━━━━━━━━━━━━━━━━━━━";
+    const marker=post.indexOf("\n"+separator);
+    if(marker<0) return post+"\n\n🛒 eBay Listing:\n"+ebayUrl;
+    return post.slice(0,marker)+"\n\n🛒 eBay Listing:\n"+ebayUrl+post.slice(marker);
   };
 }
