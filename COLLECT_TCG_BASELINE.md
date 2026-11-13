@@ -264,3 +264,13 @@ This section records subsequent GitHub commits and does **not** supersede the la
 - Do not reintroduce automatic clipboard writes in Prepare eBay Listing. Copying must remain an explicit action on a dedicated Copy button.
 - Do not restore the desktop percentage-height purchase CTA behavior that caused Safari's tall yellow panel.
 - Preserve Development and Production separation; promote only explicitly approved changes. Keep immutable historical release records and last-known-good rollback anchors unchanged until the full release validation contract is satisfied.
+
+
+## Production promotion — 2026-11-13 (Development to Production)
+
+- Promoted Facebook Post Generator sold-card behavior: replace **only** the price/details card URL with a single line `💰 SOLD PRICE: USD [recorded price]` for Sold cards; keep Available card price/details URLs unchanged. Missing sold prices display `Price unavailable`. Production commit `092e2a7b`.
+- Preserve saved **eBay Listing URL** for both Sold and Available cards, independent of whether the website card URL appears in the post. Production commit `0d6af7cb`. Never remove this URL while changing price display.
+- Promoted latest qualified-view country and Mobile/PC context in Owner Insights, with graceful `Country unknown` / `Device unknown` fallbacks, and coarse device recording for new qualified views. Production commits `903f9f22`, `2bba9d69`. Existing historical records may lack device data. The shared Supabase migration had previously been applied; end-to-end live device capture is not separately verified.
+- Updated Production module import versions and browser entry cache keys in `2766780a`, `8c32fd05`, `c722134b`.
+- **Production SEO refresh validated:** GitHub Actions run `43411254815` completed successfully with Production repository checks, generator self-test, generated SEO page checks and refreshed-page commit. This is SEO workflow validation, not an interactive multi-browser release regression or immutable release manifest.
+- Preserve the existing Production rollback anchor, historical release manifests, Safari purchase-button sizing, eBay ZIP download behavior and explicit-only clipboard copying.
