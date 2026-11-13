@@ -480,6 +480,16 @@ async function sendQualifiedCardViewEvent(card,token){
         }catch{}
       }
 
+      // Record only a coarse device category for the qualified card view.
+      // Failure here must never interrupt card-view analytics.
+      try{
+        await appContext.supabaseClient.rpc("record_qualified_card_view_device",{
+          p_card_id:cardId,
+          p_visitor_id:visitorId,
+          p_device_type:appContext.currentVisitorDeviceType()==="Desktop"?"desktop":"mobile"
+        });
+      }catch{}
+
       // Discovery attribution is recorded only after the same 2-second
       // Qualified View succeeds. This keeps accidental taps and Owner/testing
       // activity out of the discovery history.
