@@ -326,6 +326,11 @@ function buildFbPostText(card, values){
     const text=appContext.postLocale(values.language);
     const title = String(values.title || appContext.defaultFbPostTitle(card)).trim();
     const websiteCardUrl = appContext.getCardShareUrl(card.id);
+    const isSold=String(card.availability||card.status||"").trim().toLowerCase()==="sold";
+    const usdPrice=card.price_usd ?? card.price;
+    const soldPrice=isSold && appContext.hasListedPrice(usdPrice)
+      ? `USD ${Number(usdPrice).toLocaleString("en-US",{maximumFractionDigits:2})}`
+      : "";
     const carousellShopUrl = appContext.safeHttpUrl(values.carousellShopUrl);
     const instagramUrl = appContext.safeHttpUrl(values.instagramUrl);
     const hashtags = normalizePostHashtags(values.hashtags || appContext.defaultFbHashtags(card));
@@ -335,9 +340,9 @@ function buildFbPostText(card, values){
     const lines = [
       title,
       "",
-      groupCopy.price,
-      "",
-      websiteCardUrl,
+      ...(isSold
+        ? [`💰 SOLD PRICE: ${soldPrice||"Price unavailable"}`]
+        : [groupCopy.price,"",websiteCardUrl]),
       "",
       divider,
       "",
