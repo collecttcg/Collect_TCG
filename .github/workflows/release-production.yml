@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-14-v01 — eBay listing negotiation guidance.
+# Production 2026-11-14-v02 — eBay listing negotiation guidance.
 on:
   workflow_dispatch:
   push:
@@ -164,9 +164,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-14-v01
-          PREVIOUS_VERSION: 2026-11-12-v06
-          PREVIOUS_COMMIT: e427081abe02098e2eaee5eae35d97aa12caa7ce
+          RELEASE_VERSION: 2026-11-14-v02
+          PREVIOUS_VERSION: 2026-11-14-v01
+          PREVIOUS_COMMIT: 4ab6679f643755f29d10c4ba2e076f9bc248dad5
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -183,10 +183,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-14-v01-packages
+          name: Collect-TCG-Production-2026-11-14-v02-packages
           path: |
-            release/Collect-TCG-Production-2026-11-14-v01-full.zip
-            release/Collect-TCG-Production-2026-11-12-v06-to-2026-11-14-v01-patch.zip
+            release/Collect-TCG-Production-2026-11-14-v02-full.zip
+            release/Collect-TCG-Production-2026-11-14-v01-to-2026-11-14-v02-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -194,17 +194,17 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-14-v01.txt'
+          MANIFEST='release-manifests/2026-11-14-v02.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-14-v01'
-            echo 'Previous Production: 2026-11-12-v06'
-            echo 'Development promoted from: 2026-11-14-v01 (source a9e2d7fd08aedd9c9b45596a5481be2b1d18b635)'
-            echo 'Purpose: promote compact desktop filters and the five official eBay accounts on About Us.'
+            echo 'Version: 2026-11-14-v02'
+            echo 'Previous Production: 2026-11-14-v01'
+            echo 'Development promoted from: 2026-11-14-v03 (source e23b55ff9b1fc400f50168835ab5d603c15a96ee)'
+            echo 'Purpose: promote the private Owner Photo Library with filename renaming.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-14-v01-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-12-v06-to-2026-11-14-v01-patch.zip'
-            echo 'SQL required: No'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-14-v02-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-14-v01-to-2026-11-14-v02-patch.zip'
+            echo 'SQL required: Yes. Shared private bucket and Owner rename policy already applied.'
             echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.'
             echo
@@ -213,7 +213,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-14-v01: record package validation'
+          git commit -m 'Production 2026-11-14-v02: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm Pages deployment and advance last-known-good
