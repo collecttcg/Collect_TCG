@@ -1,0 +1,13 @@
+Version: 2026-11-14-v01
+Previous Production: 2026-11-12-v06
+Development promoted from: 2026-11-14-v01 (source a9e2d7fd08aedd9c9b45596a5481be2b1d18b635)
+Purpose: promote compact desktop filters and the five official eBay accounts on About Us.
+Source commit: 4ab6679f643755f29d10c4ba2e076f9bc248dad5
+Full ZIP: Collect-TCG-Production-2026-11-14-v01-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-12-v06-to-2026-11-14-v01-patch.zip
+SQL required: No
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+2c923a908827af818a7fe3d428dba35521ac17920a743190d699bea29f8f9992  release/Collect-TCG-Production-2026-11-14-v01-full.zip
+832c217d7bb77a67cc999791ce1db9903d7669428bf993a48b824e3bddf4f2f4  release/Collect-TCG-Production-2026-11-12-v06-to-2026-11-14-v01-patch.zip
