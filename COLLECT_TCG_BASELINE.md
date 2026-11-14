@@ -28,6 +28,12 @@ Last reconciled against GitHub: 2026-11-14
 
 ## Current reconciled state — 2026-11-14
 
+- Production `2026-11-14-v03`, previous `2026-11-14-v02`, promoted from Development `2026-11-14-v04` (`1566fdd208dccf54440fbe30cdfa139cf6958ea4`). [Release manifest and ZIP checksums](release-manifests/2026-11-14-v03.txt).
+- On eBay replaces Championship in the desktop and mobile quick-filter row. Existing Championship URLs still resolve. No SQL required.
+- Production JavaScript, CSS, retained behavior, SEO generation, and ZIP integrity checks completed. Production Pages served the new entry point and filter markup. Interactive Production browser testing was not performed. The last observed rollback ref remained `e1047a76f9c6570bf9b6e2f8cd16b3431f2df355`.
+
+## Previous Production release — 2026-11-14-v02
+
 - Production: `2026-11-14-v02`; previous `2026-11-14-v01`. Promoted from Development `2026-11-14-v03` (`e23b55ff9b1fc400f50168835ab5d603c15a96ee`). [Production release manifest and ZIP checksums](release-manifests/2026-11-14-v02.txt).
 - Owner Add Card and Edit Card can upload, select, and rename originals in the shared private Photo Library. Published listing copies are stored separately.
 - The Owner-only rename migration was applied to shared Supabase and its policy was verified. Production served the new entry point and Photo Library code. The release workflow recorded package integrity checks. Signed-in browser testing remains pending, and rollback-anchor advancement has not been confirmed.
