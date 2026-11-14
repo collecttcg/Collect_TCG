@@ -4,10 +4,10 @@
 ## GitHub state
 
 - Development latest non-baseline commit: `3ea7a9f4cc303e7f8b4a75955a463404f1d68677`.
-- Production latest non-baseline commit: `8ceeebe2beff0825116b6bf3cbee343b0e181a2a`.
+- Production latest non-baseline commit: `ca6ab7660d898e85f992b895af07d663b3678ae9`.
 - Production rollback ref: `e1047a76f9c6570bf9b6e2f8cd16b3431f2df355`.
-- Latest local release manifest: [`2026-11-14-v02`](release-manifests/2026-11-14-v02.txt) from `c92252fe97cf4bc438a1b365c7b5be4f0ea7e344`.
-- Latest local change: `8ceeebe2beff0825116b6bf3cbee343b0e181a2a` · Production 2026-11-14-v03: promote On eBay quick filter.
+- Latest local release manifest: [`2026-11-14-v03`](release-manifests/2026-11-14-v03.txt) from `7b77755851b87bad5b58334e9301c5d2816b655a`.
+- Latest local change: `ca6ab7660d898e85f992b895af07d663b3678ae9` · Production 2026-11-14-v03: record package validation.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
