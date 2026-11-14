@@ -12,7 +12,7 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
-Last reconciled against GitHub: 2026-11-12
+Last reconciled against GitHub: 2026-11-14
 
 ## Repositories
 - Production: `collecttcg/Collect_TCG`
@@ -26,7 +26,14 @@ Last reconciled against GitHub: 2026-11-12
 - Current releases use `YYYY-MM-DD-vNN`; Development and Production counters are independent.
 - Historical release manifests are immutable.
 
-## Current reconciled state — 2026-11-12
+## Current reconciled state — 2026-11-14
+
+- Production: `2026-11-14-v02`; previous `2026-11-14-v01`. Promoted from Development `2026-11-14-v03` (`e23b55ff9b1fc400f50168835ab5d603c15a96ee`). [Production release manifest and ZIP checksums](release-manifests/2026-11-14-v02.txt).
+- Owner Add Card and Edit Card can upload, select, and rename originals in the shared private Photo Library. Published listing copies are stored separately.
+- The Owner-only rename migration was applied to shared Supabase and its policy was verified. Production served the new entry point and Photo Library code. The release workflow recorded package integrity checks. Signed-in browser testing remains pending, and rollback-anchor advancement has not been confirmed.
+- The automated GitHub state section above tracks repository commits, manifest pointers, and the observed rollback ref. Update this narrative summary whenever a release or meaningful state change is confirmed.
+
+## Historical reconciled state — 2026-11-12
 
 ### Pre-errata/error card title checkbox — Production 2026-11-12-v06
 - Previous Production: `2026-11-12-v05`; promoted from validated Development `2026-11-12-v07` (source `aa545e2de5c5398f2afdc70ab04e36457fc1bcd1`).
@@ -290,12 +297,6 @@ This section records subsequent GitHub commits and does **not** supersede the la
 
 ## Production promotion candidate — 2026-11-14
 
-- Production release `2026-11-14-v01` is sourced from Development `2026-11-14-v01` (`a9e2d7fd08aedd9c9b45596a5481be2b1d18b635`). The release manifest records completed packaging and the release workflow confirms Pages and the rollback anchor.
+- Production release `2026-11-14-v01` is sourced from Development `2026-11-14-v01` (`a9e2d7fd08aedd9c9b45596a5481be2b1d18b635`). The release manifest records completed packaging. Pages served the release assets. Rollback-anchor advancement was not confirmed.
 - Desktop inventory sort and filter controls use 11px type and 40px height at widths of 992px and above, with an 18 × 18px eBay checkbox. About Us lists the five official eBay accounts.
 - The November 13 sold-post and Insights updates were already present. Development eBay feedback and its separate SQL migration are excluded. This promotion requires no SQL.
-
-## Owner Photo Library release — 2026-11-14-v02
-
-- Add Card and Edit Card support uploading, selecting and renaming private library originals. Both environments use the existing private bucket so saved originals are available across the two sites. Listing copies are separate.
-- The Owner-only rename migration was applied to shared Supabase and policy definitions were verified. Signed-in browser testing remains pending.
-- Promoted from Development `2026-11-14-v03` (`e23b55ff9b1fc400f50168835ab5d603c15a96ee`). See the [release manifest](release-manifests/2026-11-14-v02.txt) for packaging and validation details.
