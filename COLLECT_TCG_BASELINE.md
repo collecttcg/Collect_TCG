@@ -4,10 +4,10 @@
 ## GitHub state
 
 - Development latest non-baseline commit: `c73c5b88f56dce9d1c9993eadb87906924ea651b`.
-- Production latest non-baseline commit: `b2e672e18a7014020898a0f5036654335a425d3e`.
+- Production latest non-baseline commit: `0ada2d141c1d1c8540f0dc9a14ae6fbf7db54de1`.
 - Production rollback ref: `e1047a76f9c6570bf9b6e2f8cd16b3431f2df355`.
-- Latest local release manifest: [`2026-11-14-v01`](release-manifests/2026-11-14-v01.txt) from `4ab6679f643755f29d10c4ba2e076f9bc248dad5`.
-- Latest local change: `b2e672e18a7014020898a0f5036654335a425d3e` · Production 2026-11-14-v02: promote private Photo Library with rename.
+- Latest local release manifest: [`2026-11-14-v02`](release-manifests/2026-11-14-v02.txt) from `c92252fe97cf4bc438a1b365c7b5be4f0ea7e344`.
+- Latest local change: `0ada2d141c1d1c8540f0dc9a14ae6fbf7db54de1` · Production 2026-11-14-v02: record package validation.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
