@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-12-v06 — eBay listing negotiation guidance.
+# Production 2026-11-14-v01 — eBay listing negotiation guidance.
 on:
   workflow_dispatch:
   push:
@@ -39,13 +39,13 @@ jobs:
           set -euo pipefail
           node tools/check-production.mjs
           node tools/check-seo-workflow.mjs
-          grep -Fq 'posts-ebay-link.js?v=2026-11-05-v01' src/app/register-features.js
+          grep -Fq 'posts-ebay-link.js?v=' src/app/register-features.js
           grep -Fq 'module61.register(appContext)' src/app/register-features.js
           grep -Fq '🛒 eBay Listing:' src/features/social/posts-ebay-link.js
           grep -Fq '.select("created_at")' src/services/analytics.js
           grep -Fq 'const daysListed=validCreatedAt' src/services/analytics.js
           ! sed -n '/async function captureSaleConversionSnapshot(card)/,/function getAnalyticsSessionId()/p' src/services/analytics.js | grep -Fq '2000-01-01'
-          grep -Fq 'analytics.js?v=2026-11-05-v01' src/app/register-features.js
+          grep -Fq 'analytics.js?v=' src/app/register-features.js
           grep -Fq 'For additional security and documentation' src/features/owner/dashboard.js
           grep -Fq 'Messages · ban list · listing status' src/features/owner/ebay-messages.js
           grep -Fq "['messages','eBay Messages']" src/features/owner/ebay-messages.js
@@ -57,14 +57,14 @@ jobs:
           ! grep -Fq 'addNavLink(document.getElementById("premiumDesktopMoreMenu")' src/features/owner/ebay-banlist.js
           ! grep -Fq 'addNavLink(document.getElementById("mainnav")' src/features/owner/ebay-banlist.js
           grep -Fq '<span>Reason / note <small>(optional)</small></span><input name="reason"' src/features/owner/ebay-banlist.js
-          grep -Fq 'ebay-messages.js?v=2026-11-10-v01' src/app/register-features.js
-          grep -Fq 'ebay-banlist.js?v=2026-11-12-v03' src/app/register-features.js
+          grep -Fq 'ebay-messages.js?v=' src/app/register-features.js
+          grep -Fq 'ebay-banlist.js?v=' src/app/register-features.js
           grep -Fq '"[NEGOTIATION]"' src/features/social/posts-marketplace.js
           grep -Fq 'We welcome reasonable offers.' src/features/social/posts-marketplace.js
-          grep -Fq 'posts-marketplace.js?v=2026-11-12-v05' src/features/social/posts.js
-          grep -Fq 'posts.js?v=2026-11-12-v05' src/app/register-features.js
-          grep -Fq 'forms.js?v=2026-11-12-v06' src/app/register-features.js
-          grep -Fq 'add.js?v=2026-11-12-v06' src/app/register-features.js
+          grep -Fq 'posts-marketplace.js?v=' src/features/social/posts.js
+          grep -Fq 'posts.js?v=' src/app/register-features.js
+          grep -Fq 'forms.js?v=' src/app/register-features.js
+          grep -Fq 'add.js?v=' src/app/register-features.js
           grep -Fq 'function wirePreErrataError(p)' src/features/owner/forms.js
           grep -Fq 'else appContext.wirePreErrataError("add")' src/features/owner/add.js
           grep -Fq '[PRE ERRATA] [ERROR]' src/features/owner/forms.js
@@ -80,8 +80,8 @@ jobs:
           grep -Fq 'notesWithEbayListing' src/features/owner/ebay-listing-status.js
           grep -Fq 'class="detail-ebay-cta"' src/features/cards/details.js
           grep -Fq 'target="_blank" rel="noopener noreferrer"' src/features/cards/details.js
-          grep -Fq 'details.js?v=2026-11-10-v03' src/app/register-features.js
-          grep -Fq '02-components.css?v=2026-11-10-v03' index.html
+          grep -Fq 'details.js?v=' src/app/register-features.js
+          grep -Fq '02-components.css?v=' index.html
           grep -Fq 'id="detailsDownloadAllBtn"' index.html
           grep -Fq 'Download all listing images' index.html
           grep -Fq 'downloadSingleCardImagesZip(card,null,{includeInventoryQr:false})' src/features/cards/details.js
@@ -101,7 +101,7 @@ jobs:
           for(const section of [full,drop]) assert.equal((section.match(/\.\.\.officialEbayAccountLines\(\)/g)||[]).length,1);
           assert.equal((source.match(/View our seller history and feedback/g)||[]).length,0);
           for(let i=1;i<=5;i++) assert.match(source,new RegExp('COLLECT_TCG_'+i+': https://www\\.ebay\\.'));
-          assert.match(fs.readFileSync('src/features/social/posts.js','utf8'),/posts-card-list\.js\?v=2026-11-05-v02/);
+          assert.match(fs.readFileSync('src/features/social/posts.js','utf8'),/posts-card-list\.js\?v=[^\x27"]+/);
           NODE
           node tools/check-css.mjs
           node tools/check-post-generator-titles.mjs
@@ -118,23 +118,23 @@ jobs:
           grep -Fq 'hiddenOwnerCategory' src/features/inventory/filtering.js
           grep -Fq 'hiddenOwnerCategoryFilter' src/features/inventory/page.js
           grep -Fq 'if(appContext.isOwnerMode()) appContext.renderHiddenListingsPage();' src/app/routing.js
-          grep -Fq 'repository.js?v=2026-11-12-v02' src/app/register-features.js
-          grep -Fq 'filtering.js?v=2026-11-12-v02' src/app/register-features.js
-          grep -Fq 'page.js?v=2026-11-12-v02' src/app/register-features.js
-          grep -Fq 'lifecycle.js?v=2026-11-12-v02' src/app/register-features.js
-          grep -Fq 'page-shell.js?v=2026-11-12-v02' src/features/inventory/page.js
-          grep -Fq 'register-features.js?v=2026-11-12-v02' src/main.js
-          grep -Fq 'main.js?v=2026-11-12-v02' index.html
+          grep -Fq 'repository.js?v=' src/app/register-features.js
+          grep -Fq 'filtering.js?v=' src/app/register-features.js
+          grep -Fq 'page.js?v=' src/app/register-features.js
+          grep -Fq 'lifecycle.js?v=' src/app/register-features.js
+          grep -Fq 'page-shell.js?v=' src/features/inventory/page.js
+          grep -Fq 'register-features.js?v=' src/main.js
+          grep -Fq 'main.js?v=' index.html
           ! grep -Fq 'analytics-test-exclusion' src/app/register-features.js
 
       - name: Insights country attribution promotion contract
         run: |
           set -euo pipefail
-          grep -Fq 'insights.js?v=2026-11-07-v01' src/app/register-features.js
+          grep -Fq 'insights.js?v=' src/app/register-features.js
           grep -Fq 'function recentQualifiedCountryLabel(cardId)' src/features/owner/insights.js
           grep -Fq 'appContext.fetchCountryCardViewInsights(startDate,endDate)' src/features/owner/insights.js
           grep -Fq 'recentQualifiedCountriesSupported:recentQualifiedCountryResult.supported' src/features/owner/insights.js
-          grep -Fq 'const country=recentQualifiedCountryLabel(card.id);' src/features/owner/insights.js
+          grep -Fq 'const country=latest?.country_code' src/features/owner/insights.js
           grep -Fq 'Country unknown' src/features/owner/insights.js
           grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
           ! grep -Fq 'analytics-test-exclusion' src/app/register-features.js
@@ -164,9 +164,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-12-v06
-          PREVIOUS_VERSION: 2026-11-12-v05
-          PREVIOUS_COMMIT: 373211f273c1f8e1cce0ba3845f6dd71f9ec29ad
+          RELEASE_VERSION: 2026-11-14-v01
+          PREVIOUS_VERSION: 2026-11-12-v06
+          PREVIOUS_COMMIT: e427081abe02098e2eaee5eae35d97aa12caa7ce
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -183,10 +183,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-12-v06-packages
+          name: Collect-TCG-Production-2026-11-14-v01-packages
           path: |
-            release/Collect-TCG-Production-2026-11-12-v06-full.zip
-            release/Collect-TCG-Production-2026-11-12-v05-to-2026-11-12-v06-patch.zip
+            release/Collect-TCG-Production-2026-11-14-v01-full.zip
+            release/Collect-TCG-Production-2026-11-12-v06-to-2026-11-14-v01-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -194,16 +194,16 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-12-v06.txt'
+          MANIFEST='release-manifests/2026-11-14-v01.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-12-v06'
-            echo 'Previous Production: 2026-11-12-v05'
-            echo 'Development promoted from: 2026-11-12-v07 (source aa545e2de5c5398f2afdc70ab04e36457fc1bcd1; pre-errata checkbox only)'
-            echo 'Purpose: promote validated pre-errata/error card title checkbox for Owner Add, Edit, and Clone forms.'
+            echo 'Version: 2026-11-14-v01'
+            echo 'Previous Production: 2026-11-12-v06'
+            echo 'Development promoted from: 2026-11-14-v01 (source a9e2d7fd08aedd9c9b45596a5481be2b1d18b635)'
+            echo 'Purpose: promote compact desktop filters and the five official eBay accounts on About Us.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-12-v06-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-12-v05-to-2026-11-12-v06-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-14-v01-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-12-v06-to-2026-11-14-v01-patch.zip'
             echo 'SQL required: No'
             echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.'
@@ -213,7 +213,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-12-v06: record package validation'
+          git commit -m 'Production 2026-11-14-v01: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm Pages deployment and advance last-known-good

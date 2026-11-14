@@ -274,3 +274,10 @@ This section records subsequent GitHub commits and does **not** supersede the la
 - Updated Production module import versions and browser entry cache keys in `2766780a`, `8c32fd05`, `c722134b`.
 - **Production SEO refresh validated:** GitHub Actions run `43411254815` completed successfully with Production repository checks, generator self-test, generated SEO page checks and refreshed-page commit. This is SEO workflow validation, not an interactive multi-browser release regression or immutable release manifest.
 - Preserve the existing Production rollback anchor, historical release manifests, Safari purchase-button sizing, eBay ZIP download behavior and explicit-only clipboard copying.
+
+
+## Production promotion candidate — 2026-11-14
+
+- Production release `2026-11-14-v01` is sourced from Development `2026-11-14-v01` (`a9e2d7fd08aedd9c9b45596a5481be2b1d18b635`). The release manifest records completed packaging and the release workflow confirms Pages and the rollback anchor.
+- Desktop inventory sort and filter controls use 11px type and 40px height at widths of 992px and above, with an 18 × 18px eBay checkbox. About Us lists the five official eBay accounts.
+- The November 13 sold-post and Insights updates were already present. Development eBay feedback and its separate SQL migration are excluded. This promotion requires no SQL.

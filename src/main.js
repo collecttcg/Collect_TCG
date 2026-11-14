@@ -1,5 +1,5 @@
 import { createProductionRuntime } from './app/production-runtime.js?v=2026-09-29-v09';
-import { registerFeatures } from './app/register-features.js?v=2026-11-13-prod-promotion01';
+import { registerFeatures } from './app/register-features.js?v=2026-11-14-v01';
 import { register as registerScanner } from './features/owner/card-scanner.js?v=2026-10-25-v03';
 import { register as registerScannerStyle } from './features/owner/card-scanner-style.js?v=2026-10-25-v02';
 import { register as registerInventorySortToolbar } from './features/inventory/sort-toolbar.js?v=2026-10-31-v02';
