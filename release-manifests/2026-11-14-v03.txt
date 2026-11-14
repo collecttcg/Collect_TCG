@@ -1,0 +1,13 @@
+Version: 2026-11-14-v03
+Previous Production: 2026-11-14-v02
+Development promoted from: 2026-11-14-v04 (source 1566fdd208dccf54440fbe30cdfa139cf6958ea4)
+Purpose: promote the On eBay quick filter on desktop and mobile.
+Source commit: 7b77755851b87bad5b58334e9301c5d2816b655a
+Full ZIP: Collect-TCG-Production-2026-11-14-v03-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-14-v02-to-2026-11-14-v03-patch.zip
+SQL required: No.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+a618f1580335d0cdd1be1985bb66637beed1adf5c366e3bd46198e2640eb9894  release/Collect-TCG-Production-2026-11-14-v03-full.zip
+18a853c521a9e96434049cbe50acdcdd465c088bc2f017cd65544886b0a60a1d  release/Collect-TCG-Production-2026-11-14-v02-to-2026-11-14-v03-patch.zip
