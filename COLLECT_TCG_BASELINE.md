@@ -1,5 +1,17 @@
 # Collect TCG Current Baseline
 
+<!-- BEGIN AUTOMATED BASELINE STATE -->
+## GitHub state
+
+- Development latest non-baseline commit: `3a3e15d31e71aa1f52d9c13dc10705fd45d04036`.
+- Production latest non-baseline commit: `38cd267d9407a00edfdb19cf477ed4175431981f`.
+- Production rollback ref: `e1047a76f9c6570bf9b6e2f8cd16b3431f2df355`.
+- Latest local release manifest: [`2026-11-14-v01`](release-manifests/2026-11-14-v01.txt) from `4ab6679f643755f29d10c4ba2e076f9bc248dad5`.
+- Latest local change: `38cd267d9407a00edfdb19cf477ed4175431981f` · Automate baseline reconciliation and document new-chat startup.
+
+This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
+<!-- END AUTOMATED BASELINE STATE -->
+
 Last reconciled against GitHub: 2026-11-12
 
 ## Repositories
