@@ -1,0 +1,13 @@
+Version: 2026-11-14-v02
+Previous Production: 2026-11-14-v01
+Development promoted from: 2026-11-14-v03 (source e23b55ff9b1fc400f50168835ab5d603c15a96ee)
+Purpose: promote the private Owner Photo Library with filename renaming.
+Source commit: c92252fe97cf4bc438a1b365c7b5be4f0ea7e344
+Full ZIP: Collect-TCG-Production-2026-11-14-v02-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-14-v01-to-2026-11-14-v02-patch.zip
+SQL required: Yes. Shared private bucket and Owner rename policy already applied.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+654c7aadb469322a1b62a12437744ba40414871d97afb1a25655259033d0ef03  release/Collect-TCG-Production-2026-11-14-v02-full.zip
+e8671772ee5dfc005befa6fdae60a21c31241a8fad3b9b7ef937a0bbcb434037  release/Collect-TCG-Production-2026-11-14-v01-to-2026-11-14-v02-patch.zip
