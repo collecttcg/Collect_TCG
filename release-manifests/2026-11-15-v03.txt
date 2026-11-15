@@ -1,0 +1,13 @@
+Version: 2026-11-15-v03
+Previous Production: 2026-11-15-v02
+Development promoted from: 2026-11-15-v05 (source 6a3629f2447ab1db957d8078a76772b9bac6eac9; Reviews frontend and SEO)
+Purpose: Promote the clean Reviews URL and remove the eBay feedback account filter.
+Source commit: 38e4c7ed45119280d2dcbe52831e1d4ee8a6b252
+Full ZIP: Collect-TCG-Production-2026-11-15-v03-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-15-v02-to-2026-11-15-v03-patch.zip
+SQL required: No.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+2ea4760b2078080a969e122cc1f825558463f03e9edcc4be0f8649ae32d457e4  release/Collect-TCG-Production-2026-11-15-v03-full.zip
+9116cd88429f2e72474b8c9f7217583b638516ee12ae1210c611a6de2130dfaf  release/Collect-TCG-Production-2026-11-15-v02-to-2026-11-15-v03-patch.zip
