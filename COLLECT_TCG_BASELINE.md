@@ -3,11 +3,11 @@
 <!-- BEGIN AUTOMATED BASELINE STATE -->
 ## GitHub state
 
-- Development latest non-baseline commit: `75b67d62b9dfb3e98bafc3ae38c1f6056ef54225`.
-- Production latest non-baseline commit: `e7e91a38876345daded870424e6d4040d02a89a5`.
-- Production rollback ref: `e1047a76f9c6570bf9b6e2f8cd16b3431f2df355`.
-- Latest local release manifest: [`2026-11-15-v01`](release-manifests/2026-11-15-v01.txt) from `d43207f799b1287d4dfbe8fbee1b72b6de8eb5bd`.
-- Latest local change: `e7e91a38876345daded870424e6d4040d02a89a5` · Production 2026-11-15-v02: promote Reviews page updates.
+- Development latest non-baseline commit: `9099e9f5f70cde5a0b10661809fb2f7d335c5966`.
+- Production latest non-baseline commit: `e658ca3a26fbd4ae2ccca02662f8b0c14c37384a`.
+- Production rollback ref: `28a13c67d0bcded8dcfb2704be54973646a8050c`.
+- Latest local release manifest: [`2026-11-15-v02`](release-manifests/2026-11-15-v02.txt) from `a739988eb7f515cbae5211dfb58f051b60e1796b`.
+- Latest local change: `e658ca3a26fbd4ae2ccca02662f8b0c14c37384a` · Production 2026-11-15-v03: promote clean Reviews URL and combined feedback.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
