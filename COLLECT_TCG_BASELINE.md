@@ -3,11 +3,11 @@
 <!-- BEGIN AUTOMATED BASELINE STATE -->
 ## GitHub state
 
-- Development latest non-baseline commit: `9099e9f5f70cde5a0b10661809fb2f7d335c5966`.
-- Production latest non-baseline commit: `e658ca3a26fbd4ae2ccca02662f8b0c14c37384a`.
-- Production rollback ref: `28a13c67d0bcded8dcfb2704be54973646a8050c`.
-- Latest local release manifest: [`2026-11-15-v02`](release-manifests/2026-11-15-v02.txt) from `a739988eb7f515cbae5211dfb58f051b60e1796b`.
-- Latest local change: `e658ca3a26fbd4ae2ccca02662f8b0c14c37384a` · Production 2026-11-15-v03: promote clean Reviews URL and combined feedback.
+- Development latest non-baseline commit: `f44d8ea3cafc0f4d0eaa01938fa2e52a5bded5a4`.
+- Production latest non-baseline commit: `fdc1806278f22f91c6768551825fcdf6dd7591f4`.
+- Production rollback ref: `0c19b5af5fd7b3aa8eabe612c0af5b5de36ca3f1`.
+- Latest local release manifest: [`2026-11-15-v03`](release-manifests/2026-11-15-v03.txt) from `38e4c7ed45119280d2dcbe52831e1d4ee8a6b252`.
+- Latest local change: `fdc1806278f22f91c6768551825fcdf6dd7591f4` · Production 2026-11-15-v04: promote desktop navigation swap.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
