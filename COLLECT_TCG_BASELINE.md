@@ -26,7 +26,15 @@ Last reconciled against GitHub: 2026-11-15
 - Current releases use `YYYY-MM-DD-vNN`; Development and Production counters are independent.
 - Historical release manifests are immutable.
 
-## Current reconciled state — 2026-11-15
+## Current Production release — Reviews — 2026-11-15
+
+- Production `2026-11-15-v02`, previous `2026-11-15-v01`, promoted from Development `2026-11-15-v03` (Reviews frontend only, source `1b92e890e98e21363cba8236b3ed74eb16c09f9e`). [Manifest and ZIP checksums](release-manifests/2026-11-15-v02.txt).
+- Reviews now shows eBay reputation and sentiment totals, seller account filtering, ten reviews per page in both public lists, and Owner-only connection and sync controls. Existing Supabase feedback and sync endpoints are reused. No SQL, RLS, scheduler, or Edge Function change was required for this promotion.
+- Application changes: `src/features/content/reviews.js`, `src/app/register-features.js`, `src/main.js`, `index.html`; release workflow and generated SEO card entry pages updated.
+- Production release workflow `43712857967` passed checks, SEO regeneration, full and patch ZIP verification, and comparison of the deployed site files against release source. Pages `43712903625` succeeded. Rollback ref `production-last-known-good` verified at `28a13c67d0bcded8dcfb2704be54973646a8050c`. The separate SEO push run `43712857946` failed at its generated-files commit step; the release workflow regenerated and published the files.
+- Production fixture tests exercised pagination, filtering, empty/error states, and public control visibility. Interactive desktop/mobile/Safari and signed-in eBay OAuth were not exercised.
+
+## Previous reconciled state — 2026-11-15
 
 - Production `2026-11-15-v01`, previous `2026-11-14-v03`, promoted from Development `2026-11-15-v02` (`95bb2e07c8e12eaf272ce53fd987e275bfb2f1a1`). [Release manifest and ZIP checksums](release-manifests/2026-11-15-v01.txt).
 - The desktop and mobile inventory quick filters read “Listed on eBay”. The filter still uses `quick=ebay`. No SQL required.
