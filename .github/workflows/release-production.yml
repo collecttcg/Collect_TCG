@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-15-v02 — Reviews page promotion.
+# Production 2026-11-15-v03 — Reviews page promotion.
 on:
   workflow_dispatch:
   push:
@@ -143,7 +143,9 @@ jobs:
           set -euo pipefail
           node tools/generate-seo.mjs --self-test
           node tools/generate-seo.mjs --production
+          test -s reviews/index.html
           test -s sitemap.xml
+          grep -Fq 'https://collecttcg.github.io/Collect_TCG/reviews/' sitemap.xml
           test -s robots.txt
           test -s seo-slugs.json
           test -s owner-card-routes.json
@@ -157,16 +159,16 @@ jobs:
           if ! git diff --quiet; then
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add cards sitemap.xml robots.txt seo-slugs.json owner-card-routes.json
+            git add cards reviews/index.html sitemap.xml robots.txt seo-slugs.json owner-card-routes.json
             git commit -m 'chore: refresh Production SEO card pages [skip ci]'
             git pull --rebase origin main
             git push
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-15-v02
-          PREVIOUS_VERSION: 2026-11-15-v01
-          PREVIOUS_COMMIT: d43207f799b1287d4dfbe8fbee1b72b6de8eb5bd
+          RELEASE_VERSION: 2026-11-15-v03
+          PREVIOUS_VERSION: 2026-11-15-v02
+          PREVIOUS_COMMIT: a739988eb7f515cbae5211dfb58f051b60e1796b
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -183,10 +185,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-15-v02-packages
+          name: Collect-TCG-Production-2026-11-15-v03-packages
           path: |
-            release/Collect-TCG-Production-2026-11-15-v02-full.zip
-            release/Collect-TCG-Production-2026-11-15-v01-to-2026-11-15-v02-patch.zip
+            release/Collect-TCG-Production-2026-11-15-v03-full.zip
+            release/Collect-TCG-Production-2026-11-15-v02-to-2026-11-15-v03-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -194,16 +196,16 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-15-v02.txt'
+          MANIFEST='release-manifests/2026-11-15-v03.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-15-v02'
-            echo 'Previous Production: 2026-11-15-v01'
-            echo 'Development promoted from: 2026-11-15-v03 (source 1b92e890e98e21363cba8236b3ed74eb16c09f9e; Reviews frontend only)'
-            echo 'Purpose: Promote Reviews pagination, eBay reputation and account filters, and Owner review controls.'
+            echo 'Version: 2026-11-15-v03'
+            echo 'Previous Production: 2026-11-15-v02'
+            echo 'Development promoted from: 2026-11-15-v05 (source 6a3629f2447ab1db957d8078a76772b9bac6eac9; Reviews frontend and SEO)'
+            echo 'Purpose: Promote the clean Reviews URL and remove the eBay feedback account filter.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-15-v02-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-15-v01-to-2026-11-15-v02-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-15-v03-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-15-v02-to-2026-11-15-v03-patch.zip'
             echo 'SQL required: No.'
             echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.'
@@ -213,7 +215,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-15-v02: record package validation'
+          git commit -m 'Production 2026-11-15-v03: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm deployed Reviews files and advance last-known-good
@@ -225,7 +227,7 @@ jobs:
           CHECK_DIR="$(mktemp -d)"
           for attempt in $(seq 1 30); do
             MATCH=true
-            for FILE in index.html src/main.js src/app/register-features.js src/features/content/reviews.js; do
+            for FILE in index.html reviews/index.html sitemap.xml src/main.js src/app/register-features.js src/app/routing.js src/features/content/reviews.js; do
               if ! curl -fsSL --max-time 10 "$BASE/$FILE?release=$GITHUB_SHA" -o "$CHECK_DIR/file" || ! cmp -s "$FILE" "$CHECK_DIR/file"; then
                 MATCH=false
                 break
