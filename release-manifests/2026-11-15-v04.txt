@@ -1,0 +1,13 @@
+Version: 2026-11-15-v04
+Previous Production: 2026-11-15-v03
+Development promoted from: 2026-11-15-v07 (source 020aa23bc087c3c7ffbd97e37dbfe97f688c428a; desktop navigation with original mobile layout)
+Purpose: Promote desktop Reviews and Giveaway placement with the original mobile header and More menu.
+Source commit: 20a77772cc54126ec06c6d502d98ce638fefbaf1
+Full ZIP: Collect-TCG-Production-2026-11-15-v04-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-15-v03-to-2026-11-15-v04-patch.zip
+SQL required: No.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+a9e517c5cc99b77645aef5394cdc51b03ea78df293864636121f70d24a35e3cd  release/Collect-TCG-Production-2026-11-15-v04-full.zip
+b6d781f4339f9e35c29f2fd18bc3cfc4b3bf8b901455c412198143b9ef781495  release/Collect-TCG-Production-2026-11-15-v03-to-2026-11-15-v04-patch.zip
