@@ -26,7 +26,14 @@ Last reconciled against GitHub: 2026-11-15
 - Current releases use `YYYY-MM-DD-vNN`; Development and Production counters are independent.
 - Historical release manifests are immutable.
 
-## Current Production release — Reviews — 2026-11-15
+## Current Production release — Clean Reviews URL — 2026-11-15
+
+- Production `2026-11-15-v03`, previous `2026-11-15-v02`, promoted from Development `2026-11-15-v05` (source `6a3629f2447ab1db957d8078a76772b9bac6eac9`, including Dev v04 feedback filter removal). [Manifest and ZIP checksums](release-manifests/2026-11-15-v03.txt).
+- Published `/Collect_TCG/reviews/` with its own canonical URL, title, description, crawlable navigation, static page heading and summary, and sitemap entry. Existing `#/reviews` links resolve. eBay seller feedback displays as one paginated list. No schema, authorization, Edge Function, or SQL changes.
+- Updated Reviews, app routing and entry points, generated Reviews and card HTML, sitemap, SEO generator, and release/SEO workflows. Production route and pagination fixtures passed, and the release workflow `43720319868` completed after retrying an SEO push race. SEO refresh `43720319942` and Pages `43720343524` succeeded. The workflow verified both ZIPs and matched live release assets. Rollback ref verified at `0c19b5af5fd7b3aa8eabe612c0af5b5de36ca3f1`.
+- Interactive browser/Safari and Google indexing were not verified. No search result star markup was added.
+
+## Previous Production release — Reviews — 2026-11-15
 
 - Production `2026-11-15-v02`, previous `2026-11-15-v01`, promoted from Development `2026-11-15-v03` (Reviews frontend only, source `1b92e890e98e21363cba8236b3ed74eb16c09f9e`). [Manifest and ZIP checksums](release-manifests/2026-11-15-v02.txt).
 - Reviews now shows eBay reputation and sentiment totals, seller account filtering, ten reviews per page in both public lists, and Owner-only connection and sync controls. Existing Supabase feedback and sync endpoints are reused. No SQL, RLS, scheduler, or Edge Function change was required for this promotion.
