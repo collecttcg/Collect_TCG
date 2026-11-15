@@ -313,6 +313,17 @@
   }
 }
 
+@media (min-width:801px) and (max-width:1179px){
+  body .shell .sidebar nav#mainnav > a.reviews-desktop-nav{
+    display:flex !important;
+    order:7 !important;
+  }
+
+  #mobileMoreMenu .reviews-more-nav{
+    display:none !important;
+  }
+}
+
 /* Tight desktop width just above the mobile breakpoint. */
 @media (min-width:801px) and (max-width:1399px){
   nav.mainnav > a[data-route="giveaway"]{
