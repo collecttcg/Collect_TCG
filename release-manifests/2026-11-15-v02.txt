@@ -1,0 +1,13 @@
+Version: 2026-11-15-v02
+Previous Production: 2026-11-15-v01
+Development promoted from: 2026-11-15-v03 (source 1b92e890e98e21363cba8236b3ed74eb16c09f9e; Reviews frontend only)
+Purpose: Promote Reviews pagination, eBay reputation and account filters, and Owner review controls.
+Source commit: a739988eb7f515cbae5211dfb58f051b60e1796b
+Full ZIP: Collect-TCG-Production-2026-11-15-v02-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-15-v01-to-2026-11-15-v02-patch.zip
+SQL required: No.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+46377e0e4a8a9c5454b8c71072a0d9ae191875d2293a8cb6746a6c1988ab4b49  release/Collect-TCG-Production-2026-11-15-v02-full.zip
+4676171482a19a91bc53f275daeb7b400d839e0c759336889fe4a74c30f53f57  release/Collect-TCG-Production-2026-11-15-v01-to-2026-11-15-v02-patch.zip
