@@ -12,7 +12,7 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
-Last reconciled against GitHub: 2026-11-14
+Last reconciled against GitHub: 2026-11-15
 
 ## Repositories
 - Production: `collecttcg/Collect_TCG`
@@ -26,7 +26,13 @@ Last reconciled against GitHub: 2026-11-14
 - Current releases use `YYYY-MM-DD-vNN`; Development and Production counters are independent.
 - Historical release manifests are immutable.
 
-## Current reconciled state — 2026-11-14
+## Current reconciled state — 2026-11-15
+
+- Production `2026-11-15-v01`, previous `2026-11-14-v03`, promoted from Development `2026-11-15-v02` (`95bb2e07c8e12eaf272ce53fd987e275bfb2f1a1`). [Release manifest and ZIP checksums](release-manifests/2026-11-15-v01.txt).
+- The desktop and mobile inventory quick filters read “Listed on eBay”. The filter still uses `quick=ebay`. No SQL required.
+- Production checks and ZIP integrity checks completed. Pages served the new entry point and label. Interactive browser testing was not performed. The observed rollback ref remains `e1047a76f9c6570bf9b6e2f8cd16b3431f2df355`.
+
+## Previous Production release — 2026-11-14-v03
 
 - Production `2026-11-14-v03`, previous `2026-11-14-v02`, promoted from Development `2026-11-14-v04` (`1566fdd208dccf54440fbe30cdfa139cf6958ea4`). [Release manifest and ZIP checksums](release-manifests/2026-11-14-v03.txt).
 - On eBay replaces Championship in the desktop and mobile quick-filter row. Existing Championship URLs still resolve. No SQL required.
