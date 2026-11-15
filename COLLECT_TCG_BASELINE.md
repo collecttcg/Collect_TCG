@@ -26,7 +26,14 @@ Last reconciled against GitHub: 2026-11-15
 - Current releases use `YYYY-MM-DD-vNN`; Development and Production counters are independent.
 - Historical release manifests are immutable.
 
-## Current Production release — Clean Reviews URL — 2026-11-15
+## Current Production release — Desktop navigation — 2026-11-15
+
+- Production `2026-11-15-v04`, previous `2026-11-15-v03`, promoted from Development `2026-11-15-v07` (source `020aa23bc087c3c7ffbd97e37dbfe97f688c428a`). [Manifest and ZIP checksums](release-manifests/2026-11-15-v04.txt).
+- Desktop now shows Reviews in the primary row, with Giveaway under More. The compact desktop header follows the same layout. Mobile keeps the original header and More menu order. The Reviews URL remains `/Collect_TCG/reviews/`. No SQL or backend changes.
+- Updated app shell, generated Reviews and card pages, responsive nav CSS, navigation active-state logic, entry point caches and release workflow. Production release `43724799373` and Pages `43724833485` succeeded. Verified full and patch ZIPs, live release files, and rollback ref at `3585e4b7b05c815a117ec4d7b9755a2efaed0a58`.
+- Standalone SEO refresh `43724799394` encountered a concurrent push; the successful Production release regenerated, validated, and published the SEO pages. Navigation markup and active-state fixtures passed. Interactive browser and Safari testing and Google indexing were not verified.
+
+## Previous Production release — Clean Reviews URL — 2026-11-15
 
 - Production `2026-11-15-v03`, previous `2026-11-15-v02`, promoted from Development `2026-11-15-v05` (source `6a3629f2447ab1db957d8078a76772b9bac6eac9`, including Dev v04 feedback filter removal). [Manifest and ZIP checksums](release-manifests/2026-11-15-v03.txt).
 - Published `/Collect_TCG/reviews/` with its own canonical URL, title, description, crawlable navigation, static page heading and summary, and sitemap entry. Existing `#/reviews` links resolve. eBay seller feedback displays as one paginated list. No schema, authorization, Edge Function, or SQL changes.
