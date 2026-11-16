@@ -26,6 +26,11 @@ Last reconciled against GitHub: 2026-11-15
 - Current releases use `YYYY-MM-DD-vNN`; Development and Production counters are independent.
 - Historical release manifests are immutable.
 
+## Daily eBay seller feedback sync — 2026-11-16
+
+- The shared background job `collect-tcg-ebay-feedback-weekly-dev` now runs daily at 09:00 JST (00:00 GMT) via applied migration `dev_2026_11_16_v01_ebay_feedback_daily`. It retains its existing job name and signed command. The same eBay feedback cache supplies Dev and Production Reviews. No website deployment or Supabase Edge Function change was required.
+- Confirmed the active daily schedule and identical job command. A manual run of the exact scheduled command returned HTTP 204 and advanced the success timestamps for accounts 1, 2, 3 and 5 at 17:23 JST. Account 4 is unconnected. The first timer-triggered daily run is due November 17 at 09:00 JST.
+
 ## Current Production release — Desktop navigation — 2026-11-15
 
 - Production `2026-11-15-v04`, previous `2026-11-15-v03`, promoted from Development `2026-11-15-v07` (source `020aa23bc087c3c7ffbd97e37dbfe97f688c428a`). [Manifest and ZIP checksums](release-manifests/2026-11-15-v04.txt).
