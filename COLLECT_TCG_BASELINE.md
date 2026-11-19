@@ -3,11 +3,11 @@
 <!-- BEGIN AUTOMATED BASELINE STATE -->
 ## GitHub state
 
-- Development latest non-baseline commit: `526d0393eab3e1f4ba7161da768532b766a411ec`.
-- Production latest non-baseline commit: `e51f0935bc896a04ea690f39c47a2bc4e7c42ece`.
+- Development latest non-baseline commit: `28abe2b70728b251fe251666de4a14bd762f282d`.
+- Production latest non-baseline commit: `6569d077ccba102ddff1bf87fb48cdcc32c80a25`.
 - Production rollback ref: `3585e4b7b05c815a117ec4d7b9755a2efaed0a58`.
 - Latest local release manifest: [`2026-11-15-v04`](release-manifests/2026-11-15-v04.txt) from `20a77772cc54126ec06c6d502d98ce638fefbaf1`.
-- Latest local change: `e51f0935bc896a04ea690f39c47a2bc4e7c42ece` · chore: refresh Production SEO card pages [skip ci].
+- Latest local change: `6569d077ccba102ddff1bf87fb48cdcc32c80a25` · Production 2026-11-19-v01: persist the Owner category filter.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
