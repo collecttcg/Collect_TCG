@@ -1,0 +1,13 @@
+Version: 2026-11-19-v01
+Previous Production: 2026-11-15-v04
+Development promoted from: 2026-11-19-v01 (source 9e1095cc981299d4d0cb83fa76c831d44c7a8daf; Owner filter persistence)
+Purpose: Persist the Card Owner filter across refreshes and clear the saved preference with All Owners or Clear All.
+Source commit: 0f33d0c9f190ed20660e03dfc3b213fc99904af8
+Full ZIP: Collect-TCG-Production-2026-11-19-v01-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-15-v04-to-2026-11-19-v01-patch.zip
+SQL required: No.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.
+
+f80a8fcd7c93572dbd7a6f3f26ab6039751f9b3c8202f1dd74149bc9bc62b194  release/Collect-TCG-Production-2026-11-19-v01-full.zip
+1c0991fa3c6576db55f4ade7a1098a61346ce42c20901808b96fc92f5799e793  release/Collect-TCG-Production-2026-11-15-v04-to-2026-11-19-v01-patch.zip
