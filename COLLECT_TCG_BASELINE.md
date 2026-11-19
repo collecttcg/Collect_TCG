@@ -31,7 +31,13 @@ Last reconciled against GitHub: 2026-11-15
 - The shared background job `collect-tcg-ebay-feedback-weekly-dev` now runs daily at 09:00 JST (00:00 GMT) via applied migration `dev_2026_11_16_v01_ebay_feedback_daily`. It retains its existing job name and signed command. The same eBay feedback cache supplies Dev and Production Reviews. No website deployment or Supabase Edge Function change was required.
 - Confirmed the active daily schedule and identical job command. A manual run of the exact scheduled command returned HTTP 204 and advanced the success timestamps for accounts 1, 2, 3 and 5 at 17:23 JST. Account 4 is unconnected. The first timer-triggered daily run is due November 17 at 09:00 JST.
 
-## Current Production release — Desktop navigation — 2026-11-15
+## Current Production release — Owner filter persistence — 2026-11-19
+
+- Production `2026-11-19-v01`, previous `2026-11-15-v04`, promoted from Development `2026-11-19-v01` (source `9e1095cc981299d4d0cb83fa76c831d44c7a8daf`). [Manifest and ZIP checksums](release-manifests/2026-11-19-v01.txt).
+- Card Owner selection is restored from browser localStorage after refresh. All Owners and Clear All remove it. Production uses a separate preference key from Dev. Public filtering remains Owner-gated. No SQL or backend changes.
+- Updated the Owner category module, app cache entry points, generated Reviews/card HTML, and release workflow. Production lifecycle fixtures covered refresh, clearing before redraw, invalid/unavailable storage and public isolation. Production checks, SEO and both package integrity checks passed in release `44447284661`. The release verified deployed files and advanced rollback ref to `c65d68cd4c81f63b0182f6483fe3b37553a2914b`. The served filter module, homepage and registry matched the release. Interactive browser/Safari testing was not performed.
+
+## Previous Production release — Desktop navigation — 2026-11-15
 
 - Production `2026-11-15-v04`, previous `2026-11-15-v03`, promoted from Development `2026-11-15-v07` (source `020aa23bc087c3c7ffbd97e37dbfe97f688c428a`). [Manifest and ZIP checksums](release-manifests/2026-11-15-v04.txt).
 - Desktop now shows Reviews in the primary row, with Giveaway under More. The compact desktop header follows the same layout. Mobile keeps the original header and More menu order. The Reviews URL remains `/Collect_TCG/reviews/`. No SQL or backend changes.
