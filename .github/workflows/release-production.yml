@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-19-v01 — Reviews page promotion.
+# Production 2026-11-20-v01 — Carddass category rename.
 on:
   workflow_dispatch:
   push:
@@ -166,9 +166,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-19-v01
-          PREVIOUS_VERSION: 2026-11-15-v04
-          PREVIOUS_COMMIT: 20a77772cc54126ec06c6d502d98ce638fefbaf1
+          RELEASE_VERSION: 2026-11-20-v01
+          PREVIOUS_VERSION: 2026-11-19-v01
+          PREVIOUS_COMMIT: 0f33d0c9f190ed20660e03dfc3b213fc99904af8
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -185,10 +185,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-19-v01-packages
+          name: Collect-TCG-Production-2026-11-20-v01-packages
           path: |
-            release/Collect-TCG-Production-2026-11-19-v01-full.zip
-            release/Collect-TCG-Production-2026-11-15-v04-to-2026-11-19-v01-patch.zip
+            release/Collect-TCG-Production-2026-11-20-v01-full.zip
+            release/Collect-TCG-Production-2026-11-19-v01-to-2026-11-20-v01-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -196,29 +196,29 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-19-v01.txt'
+          MANIFEST='release-manifests/2026-11-20-v01.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-19-v01'
-            echo 'Previous Production: 2026-11-15-v04'
-            echo 'Development promoted from: 2026-11-19-v01 (source 9e1095cc981299d4d0cb83fa76c831d44c7a8daf; Owner filter persistence)'
-            echo 'Purpose: Persist the Card Owner filter across refreshes and clear the saved preference with All Owners or Clear All.'
+            echo 'Version: 2026-11-20-v01'
+            echo 'Previous Production: 2026-11-19-v01'
+            echo 'Development promoted from: 2026-11-20-v02 (source 7eabc9c28ea3ba9806718d65c990a668addf50ec; Carddass category rename)'
+            echo 'Purpose: Rename One Piece Hyper Battle to One Piece Carddass Hyper Battle for existing and new cards, with legacy filter, storage and URL compatibility.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-19-v01-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-15-v04-to-2026-11-19-v01-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-20-v01-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-19-v01-to-2026-11-20-v01-patch.zip'
             echo 'SQL required: No.'
             echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
-            echo 'Validation limitations: no manual live Production open; no interactive desktop/mobile/Safari browser test.'
+            echo 'Validation limitations: Production category conversion, search/filter and ordering fixtures; no interactive desktop/mobile/Safari browser test.'
             echo
             cat release/checksums.txt
           } > "$MANIFEST"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-19-v01: record package validation'
+          git commit -m 'Production 2026-11-20-v01: record package validation'
           git pull --rebase origin main
           git push
-      - name: Confirm deployed Reviews files and advance last-known-good
+      - name: Confirm deployed category files and advance last-known-good
         run: |
           set -euo pipefail
           BASE="https://collecttcg.github.io/Collect_TCG"
@@ -227,7 +227,7 @@ jobs:
           CHECK_DIR="$(mktemp -d)"
           for attempt in $(seq 1 30); do
             MATCH=true
-            for FILE in index.html reviews/index.html sitemap.xml src/main.js src/app/register-features.js src/features/owner/card-owner-category.js; do
+            for FILE in index.html reviews/index.html sitemap.xml src/main.js src/app/register-features.js src/services/catalogue.js src/features/cards/presentation.js src/features/inventory/filtering.js; do
               if ! curl -fsSL --max-time 10 "$BASE/$FILE?release=$GITHUB_SHA" -o "$CHECK_DIR/file" || ! cmp -s "$FILE" "$CHECK_DIR/file"; then
                 MATCH=false
                 break

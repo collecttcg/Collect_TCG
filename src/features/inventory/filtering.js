@@ -79,12 +79,13 @@ function listingScopeMeta(scope){
   }
 
 function normalizeFilterValue(value){
-    return String(value ?? "").trim().toLowerCase();
+    const normalized=String(value ?? "").trim().toLowerCase();
+    return normalized==="one piece carddass hyper battle" ? "one piece hyper battle" : normalized;
   }
 
 
 function normalizeSearchText(value){
-    return appContext.normalizeFilterValue(value)
+    return String(value ?? "").trim().toLowerCase()
       .replace(/[\u2013\u2014_\-\/\\·•(),.:;]+/g," ")
       .replace(/\s+/g," ")
       .trim();
