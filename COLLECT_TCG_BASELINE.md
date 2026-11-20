@@ -3,11 +3,11 @@
 <!-- BEGIN AUTOMATED BASELINE STATE -->
 ## GitHub state
 
-- Development latest non-baseline commit: `ce22de2a52ea14dfd1f9f7f5970f60b2bfa0c97c`.
-- Production latest non-baseline commit: `28f1a8eb52105a0c9ca6a2343bac86e8179cd7ee`.
+- Development latest non-baseline commit: `cc6fc148d2465b6fd183de3d01805148fd4fdfc4`.
+- Production latest non-baseline commit: `e6f5fb5d295a2430a8cea4979a31d9a9788530df`.
 - Production rollback ref: `c65d68cd4c81f63b0182f6483fe3b37553a2914b`.
 - Latest local release manifest: [`2026-11-19-v01`](release-manifests/2026-11-19-v01.txt) from `0f33d0c9f190ed20660e03dfc3b213fc99904af8`.
-- Latest local change: `28f1a8eb52105a0c9ca6a2343bac86e8179cd7ee` · chore: refresh Production SEO card pages [skip ci].
+- Latest local change: `e6f5fb5d295a2430a8cea4979a31d9a9788530df` · Production 2026-11-20-v01: promote Carddass category rename from Dev v02.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
