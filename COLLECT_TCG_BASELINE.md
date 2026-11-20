@@ -12,7 +12,7 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
-Last reconciled against GitHub: 2026-11-15
+Last reconciled against GitHub: 2026-11-20
 
 ## Repositories
 - Production: `collecttcg/Collect_TCG`
@@ -31,7 +31,17 @@ Last reconciled against GitHub: 2026-11-15
 - The shared background job `collect-tcg-ebay-feedback-weekly-dev` now runs daily at 09:00 JST (00:00 GMT) via applied migration `dev_2026_11_16_v01_ebay_feedback_daily`. It retains its existing job name and signed command. The same eBay feedback cache supplies Dev and Production Reviews. No website deployment or Supabase Edge Function change was required.
 - Confirmed the active daily schedule and identical job command. A manual run of the exact scheduled command returned HTTP 204 and advanced the success timestamps for accounts 1, 2, 3 and 5 at 17:23 JST. Account 4 is unconnected. The first timer-triggered daily run is due November 17 at 09:00 JST.
 
-## Current Production release — Owner filter persistence — 2026-11-19
+## Current Production release — Carddass category rename — 2026-11-20
+
+- Production `2026-11-20-v01`, previous `2026-11-19-v01`, promoted from validated Development `2026-11-20-v02` (source `7eabc9c28ea3ba9806718d65c990a668addf50ec`). Promotion source `e6f5fb5d295a2430a8cea4979a31d9a9788530df`; packaged source after SEO regeneration `e87c693e3cf7e1dd73c8d9c9674c7dfe2089ef1e`. [Manifest and ZIP checksums](release-manifests/2026-11-20-v01.txt).
+- Existing cards display **One Piece Carddass Hyper Battle** instead of **One Piece Hyper Battle**. Add/Edit choices and generated public card metadata use the new name. Both names work with filters/search. Stored card values and category-order keys retain their legacy format for compatibility. No SQL, schema, RLS, scheduler, Edge Function or shared-data mutation was needed.
+- Changed `src/services/catalogue.js`, `src/features/cards/presentation.js`, `src/features/inventory/filtering.js`, app registry/main and HTML cache references, Production SEO generator, generated card/Reviews pages and sitemap/slug records, and Production release workflow. Production-specific Hidden Listings Owner filtering, scanner endpoints, analytics boundaries, persisted Owner filter settings and public indexing directives were retained.
+- Independent Production checks passed: all 81 JavaScript/import/structure checks; 350 golden filter/sort scenarios; category read/write/new-entry and live/draft/archived fixtures; legacy/new search/filter aliases; shared inventory/collection ordering keys; CSS, post-title, SEO and retained/Owner isolation contracts. All 426 existing public card URLs common to the prior and refreshed catalogue were preserved in committed output.
+- Production Release `44683597737` succeeded, including SEO generation, full/patch ZIP creation and integrity checks, immutable manifest, deployed-file checks and advancing `production-last-known-good` to `9691c20819996d34197a08361d1ed72183b0b236`. Pages `44683652910` succeeded. Live homepage, main/registry, catalogue, choices and filtering modules, plus a generated renamed card page, matched committed content. Static HTTP requests did not execute application analytics.
+- Standalone SEO refresh `44683597828` initially hit a concurrent GitHub push conflict; the release independently published the generated output, and the standalone job succeeded on retry. Interactive desktop/mobile and Safari browser sessions were not performed.
+- [Full and patch ZIP artifact](https://github.com/collecttcg/Collect_TCG/actions/runs/44683597737/artifacts/14605298517), retained by GitHub for 30 days. Historical manifests remain immutable.
+
+## Previous Production release — Owner filter persistence — 2026-11-19
 
 - Production `2026-11-19-v01`, previous `2026-11-15-v04`, promoted from Development `2026-11-19-v01` (source `9e1095cc981299d4d0cb83fa76c831d44c7a8daf`). [Manifest and ZIP checksums](release-manifests/2026-11-19-v01.txt).
 - Card Owner selection is restored from browser localStorage after refresh. All Owners and Clear All remove it. Production uses a separate preference key from Dev. Public filtering remains Owner-gated. No SQL or backend changes.
