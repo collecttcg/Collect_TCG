@@ -15,6 +15,10 @@ This section records GitHub state. The release manifest and workflow results det
 Last reconciled against GitHub: 2026-11-20
 
 
+## Google Search Console ownership verification — 2026-11-21
+
+- Published the Google-provided HTML verification file at the Production site root and confirmed that the live response matched the supplied file byte for byte. Keep it deployed for ownership rechecks. Search Console verification and sitemap submission are pending. No application code or SQL changes.
+
 ## Production collection SEO — 2026-11-21-v03
 
 - Promoted Development `2026-11-21-v03` (source `fbf3679d8ca7c11a2071811f787cc1428b702976`) over Production `2026-11-21-v02`. Published the One Piece Carddass Hyper Battle collection with 245 public card links, a homepage link and more specific homepage metadata. No SQL required.
