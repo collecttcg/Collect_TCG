@@ -14,6 +14,13 @@ This section records GitHub state. The release manifest and workflow results det
 
 Last reconciled against GitHub: 2026-11-20
 
+
+## Production collection SEO — 2026-11-21-v03
+
+- Promoted Development `2026-11-21-v03` (source `fbf3679d8ca7c11a2071811f787cc1428b702976`) over Production `2026-11-21-v02`. Published the One Piece Carddass Hyper Battle collection with 245 public card links, a homepage link and more specific homepage metadata. No SQL required.
+- Production release validated repository and retained contracts, JavaScript syntax, SEO generation and both ZIPs. Live HTTP checks verified the homepage, collection, project robots file, two card pages and sitemap with 435 URLs. The release workflow advanced `production-last-known-good` from `d35d8d733455224dd197c36879244770df89ce9d` to `8fbfe5a4d3ef799129c2a453563aecc8197f4698`. Interactive desktop, mobile and Safari sessions were not performed.
+- Public search checks did not surface the Production site. Google Search Console inspection and submission require sign-in to the verified property. [Manifest and ZIP checksums](release-manifests/2026-11-21-v03.txt).
+
 ## Production eBay inventory cleanup — 2026-11-21-v02
 
 - Production `2026-11-21-v02` replaces `2026-11-21-v01`, promoted from Development `2026-11-21-v02` at `9ea66c401649779ad7ca12d7f0c03e2d43040cfa`. Deployed `ebay-listing-check` and applied the scheduler authorization and daily cron migrations. The single shared job runs at 09:30 JST, 08:30 MYT/SGT. No card schema or RLS changes. Only confirmed ended eBay listing lines are cleared, with other notes preserved and concurrent edits guarded.
