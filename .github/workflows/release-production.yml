@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-21-v01 — eBay title format.
+# Production 2026-11-21-v02 — daily eBay inventory cleanup.
 on:
   workflow_dispatch:
   push:
@@ -187,9 +187,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-21-v01
-          PREVIOUS_VERSION: 2026-11-20-v01
-          PREVIOUS_COMMIT: e87c693e3cf7e1dd73c8d9c9674c7dfe2089ef1e
+          RELEASE_VERSION: 2026-11-21-v02
+          PREVIOUS_VERSION: 2026-11-21-v01
+          PREVIOUS_COMMIT: 8e02ec3c8e7f218797b39433a5d6743410a484cc
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -206,10 +206,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-21-v01-packages
+          name: Collect-TCG-Production-2026-11-21-v02-packages
           path: |
-            release/Collect-TCG-Production-2026-11-21-v01-full.zip
-            release/Collect-TCG-Production-2026-11-20-v01-to-2026-11-21-v01-patch.zip
+            release/Collect-TCG-Production-2026-11-21-v02-full.zip
+            release/Collect-TCG-Production-2026-11-21-v01-to-2026-11-21-v02-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -217,27 +217,27 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-21-v01.txt'
+          MANIFEST='release-manifests/2026-11-21-v02.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-21-v01'
-            echo 'Previous Production: 2026-11-20-v01'
-            echo 'Development promoted from: 2026-11-21-v01 (source 6a8697ff33333f77da439456943eee75bc6f208a; eBay title format)'
-            echo 'Purpose: Use game, series, year, card name and card number in generated eBay titles.'
+            echo 'Version: 2026-11-21-v02'
+            echo 'Previous Production: 2026-11-21-v01'
+            echo 'Development promoted from: 2026-11-21-v02 (source d36a8cfd53980c1f170b55137f717c6065aa0819).'
+            echo 'Purpose: Clear confirmed ended eBay listing links from the shared inventory daily.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-21-v01-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-20-v01-to-2026-11-21-v01-patch.zip'
-            echo 'Changed files: marketplace generator, posts module, feature registry, app entry point, homepage, regenerated SEO output and release workflow.'
-            echo 'SQL required: No.'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-21-v02-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-21-v01-to-2026-11-21-v02-patch.zip'
+            echo 'Changed files: Edge Function source, schedule/auth migration, release workflow and baseline.'
+            echo 'SQL required: Yes; shared inventory schedule and scheduler authentication applied separately.'
             echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
-            echo 'Validation limitations: Generated eBay title fixtures; no interactive desktop/mobile/Safari browser test.'
+            echo 'Validation limitations: Live Edge Function API and data path validated separately; no interactive UI changes.'
             echo
             cat release/checksums.txt
           } > "$MANIFEST"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-21-v01: record package validation'
+          git commit -m 'Production 2026-11-21-v02: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm deployed listing generator files and advance last-known-good
