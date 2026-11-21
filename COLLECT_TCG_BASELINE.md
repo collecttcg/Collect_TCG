@@ -4,10 +4,10 @@
 ## GitHub state
 
 - Development latest non-baseline commit: `f0fdc8d70733ee60fa7dfced5390574092ef4ed2`.
-- Production latest non-baseline commit: `8fbfe5a4d3ef799129c2a453563aecc8197f4698`.
+- Production latest non-baseline commit: `1ac4c0a13f155c1eea23c7d2d9e5eb9b585b4318`.
 - Production rollback ref: `8fbfe5a4d3ef799129c2a453563aecc8197f4698`.
 - Latest local release manifest: [`2026-11-21-v03`](release-manifests/2026-11-21-v03.txt) from `f0da646b43423782be14dc09257247d9381ff4b2`.
-- Latest local change: `8fbfe5a4d3ef799129c2a453563aecc8197f4698` · Production 2026-11-21-v03: record package validation.
+- Latest local change: `1ac4c0a13f155c1eea23c7d2d9e5eb9b585b4318` · Publish Google Search Console ownership verification file.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
