@@ -14,6 +14,13 @@ This section records GitHub state. The release manifest and workflow results det
 
 Last reconciled against GitHub: 2026-11-20
 
+## Production eBay inventory cleanup — 2026-11-21-v02
+
+- Production `2026-11-21-v02` replaces `2026-11-21-v01`, promoted from Development `2026-11-21-v02` at `9ea66c401649779ad7ca12d7f0c03e2d43040cfa`. Deployed `ebay-listing-check` and applied the scheduler authorization and daily cron migrations. The single shared job runs at 09:30 JST, 08:30 MYT/SGT. No card schema or RLS changes. Only confirmed ended eBay listing lines are cleared, with other notes preserved and concurrent edits guarded.
+- Production dry run returned HTTP 200 with 31 ended among 128 listing IDs, and an unauthenticated request returned HTTP 403. First manual apply removed 31 links with zero lookup or write errors. Follow-up dry run checked 97 IDs with zero ended and zero errors. The job is active and its first timer-triggered run remains pending.
+- Production release run 44905494117 passed retained contracts, SEO, both ZIP integrity checks, deployed-file comparison and rollback verification. Website rollback ref advanced from `8e02ec3c8e7f218797b39433a5d6743410a484cc` to `d35d8d733455224dd197c36879244770df89ce9d`. Backend rollback is independent of Pages: disable automatic cleanup with `cron.unschedule('collect-tcg-ebay-inventory-daily')`. Browser sessions were not required for the backend-only change.
+- Changed the Edge Function, versioned migration, release workflow and baseline. [Manifest](release-manifests/2026-11-21-v02.txt) and [full and patch ZIPs](https://github.com/collecttcg/Collect_TCG/actions/runs/44905494117/artifacts/14707622825).
+
 ## Production promotion of eBay title format — 2026-11-21
 
 - Production `2026-11-21-v01` replaces `2026-11-20-v01` and promotes Development `2026-11-21-v01` (source `6a8697ff33333f77da439456943eee75bc6f208a`). Generated eBay titles use game, set/series, year, card name and card number. Condition and language remain in listing details. Exact card numbers receive space within the 80-character limit.
