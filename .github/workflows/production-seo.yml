@@ -57,6 +57,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          test -s collections/one-piece-carddass-hyper-battle/index.html
+          grep -Fq 'index,follow,max-image-preview:large' collections/one-piece-carddass-hyper-battle/index.html
+          grep -Fq 'https://collecttcg.github.io/Collect_TCG/collections/one-piece-carddass-hyper-battle/' sitemap.xml
           test -s sitemap.xml
           test -s robots.txt
           test -s seo-slugs.json
@@ -79,7 +82,7 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add cards reviews/index.html sitemap.xml robots.txt seo-slugs.json owner-card-routes.json
+          git add collections/one-piece-carddass-hyper-battle/index.html cards reviews/index.html sitemap.xml robots.txt seo-slugs.json owner-card-routes.json
           if git diff --cached --quiet; then
             echo 'Production SEO output already current.'
           else
