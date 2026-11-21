@@ -1,0 +1,14 @@
+Version: 2026-11-21-v03
+Previous Production: 2026-11-21-v02
+Development promoted from: 2026-11-21-v03 (source fbf3679d8ca7c11a2071811f787cc1428b702976).
+Purpose: Publish the crawlable Carddass Hyper Battle collection and homepage SEO improvements.
+Source commit: f0da646b43423782be14dc09257247d9381ff4b2
+Full ZIP: Collect-TCG-Production-2026-11-21-v03-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-21-v02-to-2026-11-21-v03-patch.zip
+Changed files: Homepage, SEO generator and workflows, collection and regenerated SEO output.
+SQL required: No.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+69a6e864b6d42821708a44433ab0ea12a4f64290f42640ed224835c9b520412b  release/Collect-TCG-Production-2026-11-21-v03-full.zip
+6c8f3251d3d2e09b9f0274861c5cd6f1a1c6e6d793a4405e4ab5139c45c40a79  release/Collect-TCG-Production-2026-11-21-v02-to-2026-11-21-v03-patch.zip
