@@ -1,0 +1,14 @@
+Version: 2026-11-22-v01
+Previous Production: 2026-11-21-v03
+Development promoted from: 2026-11-22-v01 (source c3dab4f892a7e8aa65790238741fd9b84e7557cf).
+Purpose: Show the traffic source for the latest qualified card view in Owner Insights.
+Source commit: ca65159d2c9c5722ce05cd8fa2075e215b99ec8b
+Full ZIP: Collect-TCG-Production-2026-11-22-v01-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-21-v03-to-2026-11-22-v01-patch.zip
+Changed files: Analytics, Owner Insights, cache entry points, release workflow and regenerated SEO output.
+SQL required: Shared migration already applied and verified.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+34e7fd2951d2fe168662faa2ff62da00161827f2046191a2e52432b44ba67f33  release/Collect-TCG-Production-2026-11-22-v01-full.zip
+ca69f3aaf306d850f48abbd6ae1d3397d68176f9ecd9b416202345e80b0ccff5  release/Collect-TCG-Production-2026-11-21-v03-to-2026-11-22-v01-patch.zip
