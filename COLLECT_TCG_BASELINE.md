@@ -3,11 +3,11 @@
 <!-- BEGIN AUTOMATED BASELINE STATE -->
 ## GitHub state
 
-- Development latest non-baseline commit: `d36a8cfd53980c1f170b55137f717c6065aa0819`.
-- Production latest non-baseline commit: `f62909b3e9be18655322b963f8764d4785ac72fb`.
+- Development latest non-baseline commit: `9ea66c401649779ad7ca12d7f0c03e2d43040cfa`.
+- Production latest non-baseline commit: `a73642ad29f2795dd715bf54014e361457033955`.
 - Production rollback ref: `8e02ec3c8e7f218797b39433a5d6743410a484cc`.
 - Latest local release manifest: [`2026-11-21-v01`](release-manifests/2026-11-21-v01.txt) from `128e6a7b2fdbfb87207f8e3964bb930a2a08204e`.
-- Latest local change: `f62909b3e9be18655322b963f8764d4785ac72fb` · Record the gated daily inventory cleanup migration.
+- Latest local change: `a73642ad29f2795dd715bf54014e361457033955` · Package 2026-11-21-v02 eBay inventory cleanup release.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
