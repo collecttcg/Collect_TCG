@@ -1,0 +1,14 @@
+Version: 2026-11-21-v01
+Previous Production: 2026-11-20-v01
+Development promoted from: 2026-11-21-v01 (source 6a8697ff33333f77da439456943eee75bc6f208a; eBay title format)
+Purpose: Use game, series, year, card name and card number in generated eBay titles.
+Source commit: 128e6a7b2fdbfb87207f8e3964bb930a2a08204e
+Full ZIP: Collect-TCG-Production-2026-11-21-v01-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-20-v01-to-2026-11-21-v01-patch.zip
+Changed files: marketplace generator, posts module, feature registry, app entry point, homepage, regenerated SEO output and release workflow.
+SQL required: No.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Generated eBay title fixtures; no interactive desktop/mobile/Safari browser test.
+
+d89e132454db470fbe34d3f4f41cd4653404167627556134a5eb0afc7a71017e  release/Collect-TCG-Production-2026-11-21-v01-full.zip
+5df092ed910d831779a1f9eafe0d5d311535b4987fe147282dc3d343dcd06bd4  release/Collect-TCG-Production-2026-11-20-v01-to-2026-11-21-v01-patch.zip
