@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-20-v01 — Carddass category rename.
+# Production 2026-11-21-v01 — eBay title format.
 on:
   workflow_dispatch:
   push:
@@ -138,6 +138,27 @@ jobs:
           grep -Fq 'Country unknown' src/features/owner/insights.js
           grep -Fq 'registerQrGenerator(appContext)' src/app/register-features.js
           ! grep -Fq 'analytics-test-exclusion' src/app/register-features.js
+      - name: Verify generated eBay titles
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {registerMarketplacePosts} from './src/features/social/posts-marketplace.js';
+          const app = {
+            fbGameLabel: () => 'ONE PIECE',
+            cardListFormat: () => 'graded',
+            gradedPostLabel: () => 'PSA 10',
+          };
+          registerMarketplacePosts(app);
+          const card = {series: '1st Stage', year: 1999, name: 'Luffy', card_code: 'C01', language: 'Japanese'};
+          assert.equal(app.ebayListingTitle(card), 'ONE PIECE 1st Stage 1999 Luffy C01');
+          assert.equal(app.ebayListingTitle({...card, series: '', year: null, card_code: ''}), 'ONE PIECE Luffy');
+          assert.equal(app.ebayListingTitle(null), '');
+          const longTitle = app.ebayListingTitle({...card, name: 'Long Character Name '.repeat(6)});
+          assert.ok(longTitle.length <= 80);
+          assert.match(longTitle, / C01$/);
+          assert.match(app.ebayItemSpecifics(card), /Language: Japanese/);
+          assert.match(app.ebayItemSpecifics(card), /Grade: PSA 10/);
+          JS
       - name: SEO validation and regeneration
         run: |
           set -euo pipefail
@@ -166,9 +187,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-20-v01
-          PREVIOUS_VERSION: 2026-11-19-v01
-          PREVIOUS_COMMIT: 0f33d0c9f190ed20660e03dfc3b213fc99904af8
+          RELEASE_VERSION: 2026-11-21-v01
+          PREVIOUS_VERSION: 2026-11-20-v01
+          PREVIOUS_COMMIT: e87c693e3cf7e1dd73c8d9c9674c7dfe2089ef1e
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -185,10 +206,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-20-v01-packages
+          name: Collect-TCG-Production-2026-11-21-v01-packages
           path: |
-            release/Collect-TCG-Production-2026-11-20-v01-full.zip
-            release/Collect-TCG-Production-2026-11-19-v01-to-2026-11-20-v01-patch.zip
+            release/Collect-TCG-Production-2026-11-21-v01-full.zip
+            release/Collect-TCG-Production-2026-11-20-v01-to-2026-11-21-v01-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -196,29 +217,30 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-20-v01.txt'
+          MANIFEST='release-manifests/2026-11-21-v01.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-20-v01'
-            echo 'Previous Production: 2026-11-19-v01'
-            echo 'Development promoted from: 2026-11-20-v02 (source 7eabc9c28ea3ba9806718d65c990a668addf50ec; Carddass category rename)'
-            echo 'Purpose: Rename One Piece Hyper Battle to One Piece Carddass Hyper Battle for existing and new cards, with legacy filter, storage and URL compatibility.'
+            echo 'Version: 2026-11-21-v01'
+            echo 'Previous Production: 2026-11-20-v01'
+            echo 'Development promoted from: 2026-11-21-v01 (source 6a8697ff33333f77da439456943eee75bc6f208a; eBay title format)'
+            echo 'Purpose: Use game, series, year, card name and card number in generated eBay titles.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-20-v01-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-19-v01-to-2026-11-20-v01-patch.zip'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-21-v01-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-20-v01-to-2026-11-21-v01-patch.zip'
+            echo 'Changed files: marketplace generator, posts module, feature registry, app entry point, homepage, regenerated SEO output and release workflow.'
             echo 'SQL required: No.'
-            echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
-            echo 'Validation limitations: Production category conversion, search/filter and ordering fixtures; no interactive desktop/mobile/Safari browser test.'
+            echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
+            echo 'Validation limitations: Generated eBay title fixtures; no interactive desktop/mobile/Safari browser test.'
             echo
             cat release/checksums.txt
           } > "$MANIFEST"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-20-v01: record package validation'
+          git commit -m 'Production 2026-11-21-v01: record package validation'
           git pull --rebase origin main
           git push
-      - name: Confirm deployed category files and advance last-known-good
+      - name: Confirm deployed listing generator files and advance last-known-good
         run: |
           set -euo pipefail
           BASE="https://collecttcg.github.io/Collect_TCG"
@@ -227,7 +249,7 @@ jobs:
           CHECK_DIR="$(mktemp -d)"
           for attempt in $(seq 1 30); do
             MATCH=true
-            for FILE in index.html reviews/index.html sitemap.xml src/main.js src/app/register-features.js src/services/catalogue.js src/features/cards/presentation.js src/features/inventory/filtering.js; do
+            for FILE in index.html reviews/index.html sitemap.xml src/main.js src/app/register-features.js src/features/social/posts.js src/features/social/posts-marketplace.js; do
               if ! curl -fsSL --max-time 10 "$BASE/$FILE?release=$GITHUB_SHA" -o "$CHECK_DIR/file" || ! cmp -s "$FILE" "$CHECK_DIR/file"; then
                 MATCH=false
                 break
