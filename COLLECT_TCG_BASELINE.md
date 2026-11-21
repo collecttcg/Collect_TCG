@@ -12,6 +12,13 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production qualified card view traffic source — 2026-11-22
+
+- Production `2026-11-22-v01` replaced `2026-11-21-v03` and promoted Development `2026-11-22-v01` (source `c3dab4f892a7e8aa65790238741fd9b84e7557cf`). Owner Insights now displays the latest qualified card view's source alongside country and device. Historical views with no recorded source display Source unknown.
+- The shared SQL migration was already applied and verified. The Production release passed retained contracts, SEO validation, package integrity and deployed-file comparisons. Pages run 44931748444 succeeded. Release run 44931694949 advanced `production-last-known-good` from `8fbfe5a4d3ef799129c2a453563aecc8197f4698`. Interactive desktop, mobile and Safari sessions were not performed.
+- [Manifest](release-manifests/2026-11-22-v01.txt) and [full and patch ZIPs](https://github.com/collecttcg/Collect_TCG/actions/runs/44931694949/artifacts/14718235638).
+
+
 Last reconciled against GitHub: 2026-11-20
 
 
