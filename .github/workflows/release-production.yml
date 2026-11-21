@@ -222,7 +222,7 @@ jobs:
           {
             echo 'Version: 2026-11-21-v02'
             echo 'Previous Production: 2026-11-21-v01'
-            echo 'Development promoted from: 2026-11-21-v02 (source d36a8cfd53980c1f170b55137f717c6065aa0819).'
+            echo 'Development promoted from: 2026-11-21-v02 (source 9ea66c401649779ad7ca12d7f0c03e2d43040cfa).'
             echo 'Purpose: Clear confirmed ended eBay listing links from the shared inventory daily.'
             echo "Source commit: $(git rev-parse HEAD)"
             echo 'Full ZIP: Collect-TCG-Production-2026-11-21-v02-full.zip'
@@ -240,7 +240,7 @@ jobs:
           git commit -m 'Production 2026-11-21-v02: record package validation'
           git pull --rebase origin main
           git push
-      - name: Confirm deployed listing generator files and advance last-known-good
+      - name: Confirm deployed website files and advance last-known-good
         run: |
           set -euo pipefail
           BASE="https://collecttcg.github.io/Collect_TCG"
