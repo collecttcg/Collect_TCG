@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-22-v01 — qualified card view traffic source.
+# Production 2026-11-22-v02 — movable watermarks and eBay title updates.
 on:
   workflow_dispatch:
   push:
@@ -142,17 +142,24 @@ jobs:
         run: |
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
+          import {register as registerUtilities} from './src/features/core/utilities.js';
           import {registerMarketplacePosts} from './src/features/social/posts-marketplace.js';
           const app = {
             fbGameLabel: () => 'ONE PIECE',
+            normalizeFilterValue: value => String(value ?? '').trim().toLowerCase(),
             cardListFormat: () => 'graded',
             gradedPostLabel: () => 'PSA 10',
           };
+          registerUtilities(app);
           registerMarketplacePosts(app);
           const card = {series: '1st Stage', year: 1999, name: 'Luffy', card_code: 'C01', language: 'Japanese'};
           assert.equal(app.ebayListingTitle(card), 'ONE PIECE 1st Stage 1999 Luffy C01');
           assert.equal(app.ebayListingTitle({...card, series: '', year: null, card_code: ''}), 'ONE PIECE Luffy');
           assert.equal(app.ebayListingTitle(null), '');
+          assert.equal(app.ebayListingTitle({...card, era:'Vintage', name:'[PRE ERRATA] [ERROR] ZORO'}), 'Vintage ONE PIECE 1st Stage 1999 ERROR ZORO C01');
+          assert.equal(app.formatPreErrataErrorName('PRE ERRATA ERROR ZORO', false), 'ZORO');
+          assert.equal(app.formatPreErrataErrorName('ERROR ZORO'), 'ERROR ZORO');
+          assert.equal(app.formatPreErrataErrorName('PRE ERRATA ERROR ZORO'), 'ERROR ZORO');
           const longTitle = app.ebayListingTitle({...card, name: 'Long Character Name '.repeat(6)});
           assert.ok(longTitle.length <= 80);
           assert.match(longTitle, / C01$/);
@@ -190,9 +197,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-22-v01
-          PREVIOUS_VERSION: 2026-11-21-v03
-          PREVIOUS_COMMIT: f0da646b43423782be14dc09257247d9381ff4b2
+          RELEASE_VERSION: 2026-11-22-v02
+          PREVIOUS_VERSION: 2026-11-22-v01
+          PREVIOUS_COMMIT: ca65159d2c9c5722ce05cd8fa2075e215b99ec8b
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -209,10 +216,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-22-v01-packages
+          name: Collect-TCG-Production-2026-11-22-v02-packages
           path: |
-            release/Collect-TCG-Production-2026-11-22-v01-full.zip
-            release/Collect-TCG-Production-2026-11-21-v03-to-2026-11-22-v01-patch.zip
+            release/Collect-TCG-Production-2026-11-22-v02-full.zip
+            release/Collect-TCG-Production-2026-11-22-v01-to-2026-11-22-v02-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -220,18 +227,18 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-22-v01.txt'
+          MANIFEST='release-manifests/2026-11-22-v02.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-22-v01'
-            echo 'Previous Production: 2026-11-21-v03'
-            echo 'Development promoted from: 2026-11-22-v01 (source c3dab4f892a7e8aa65790238741fd9b84e7557cf).'
-            echo 'Purpose: Show the traffic source for the latest qualified card view in Owner Insights.'
+            echo 'Version: 2026-11-22-v02'
+            echo 'Previous Production: 2026-11-22-v01'
+            echo 'Development promoted from: 2026-11-22-v05 (source 022016a7694756c45f6c33f3e9cd4e4f95adee0d).'
+            echo 'Purpose: Promote per-photo watermark placement, Vintage eBay titles and the simplified ERROR prefix.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-22-v01-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-21-v03-to-2026-11-22-v01-patch.zip'
-            echo 'Changed files: Analytics, Owner Insights, cache entry points, release workflow and regenerated SEO output.'
-            echo 'SQL required: Shared migration already applied and verified.'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-22-v02-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-22-v01-to-2026-11-22-v02-patch.zip'
+            echo 'Changed files: Owner forms, image renderer, title utilities and eBay generator, cache entry points, release workflow and regenerated SEO output.'
+            echo 'SQL required: No.'
             echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: Interactive desktop, mobile and Safari checks were not performed.'
             echo
@@ -240,7 +247,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-22-v01: record package validation'
+          git commit -m 'Production 2026-11-22-v02: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm deployed website files and advance last-known-good
@@ -252,7 +259,7 @@ jobs:
           CHECK_DIR="$(mktemp -d)"
           for attempt in $(seq 1 30); do
             MATCH=true
-            for FILE in index.html reviews/index.html sitemap.xml collections/one-piece-carddass-hyper-battle/index.html src/main.js src/app/register-features.js src/features/owner/insights.js src/services/analytics.js; do
+            for FILE in index.html reviews/index.html sitemap.xml collections/one-piece-carddass-hyper-battle/index.html src/main.js src/app/register-features.js src/features/owner/forms.js src/features/media/images.js src/features/core/utilities.js src/features/social/posts.js src/features/social/posts-marketplace.js; do
               if ! curl -fsSL --max-time 10 "$BASE/$FILE?release=$GITHUB_SHA" -o "$CHECK_DIR/file" || ! cmp -s "$FILE" "$CHECK_DIR/file"; then
                 MATCH=false
                 break
