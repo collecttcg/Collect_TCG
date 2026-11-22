@@ -12,6 +12,13 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production Facebook Post · eBay Listings — 2026-11-22-v04
+
+- Replaces Production `2026-11-22-v03` and promotes Development `2026-11-22-v07` (source `a48bb8bd98012bc4b76b217cb5f1b816b2134206`). The Owner-only mode filters available live cards with valid saved eBay URLs by Owner and Era, supports multiple selections, and generates a numbered Facebook post and first-photo ZIP in selection order. No SQL required.
+- Production checks, feature fixtures, SEO, both package integrity checks, and deployed-file comparisons passed. Release run 44985463871 advanced the rollback reference. Interactive desktop, mobile and Safari checks were not performed.
+- [Manifest](release-manifests/2026-11-22-v04.txt) and [full and patch ZIPs](https://github.com/collecttcg/Collect_TCG/actions/runs/44985463871/artifacts/14738834070).
+
+
 ## Production eBay title fitting — 2026-11-22-v03
 
 - Replaces Production `2026-11-22-v02` and promotes Development `2026-11-22-v06` (source `205665b10dddd85ad33192bd12533510416e9e24`). Titles already within 80 characters keep their wording. Longer titles retain applicable Vintage and ERROR labels and shorten catalogue wording first, including dropping CARDDASS when needed. No SQL required.
