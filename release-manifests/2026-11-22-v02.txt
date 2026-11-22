@@ -1,0 +1,14 @@
+Version: 2026-11-22-v02
+Previous Production: 2026-11-22-v01
+Development promoted from: 2026-11-22-v05 (source 022016a7694756c45f6c33f3e9cd4e4f95adee0d).
+Purpose: Promote per-photo watermark placement, Vintage eBay titles and the simplified ERROR prefix.
+Source commit: c43ce2ed45411616c5bf93e7d7f510b5d667a3a6
+Full ZIP: Collect-TCG-Production-2026-11-22-v02-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-22-v01-to-2026-11-22-v02-patch.zip
+Changed files: Owner forms, image renderer, title utilities and eBay generator, cache entry points, release workflow and regenerated SEO output.
+SQL required: No.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+9673bf85efa9a35fe838944a66edc6ae5d47e8b87b13f35e917d98ca5b990116  release/Collect-TCG-Production-2026-11-22-v02-full.zip
+0eb2f4d14f0bbe5e8aebf28e82db6b75a288e1a64a2a77b1244004636ebcc525  release/Collect-TCG-Production-2026-11-22-v01-to-2026-11-22-v02-patch.zip
