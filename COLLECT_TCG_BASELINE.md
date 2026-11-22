@@ -4,10 +4,10 @@
 ## GitHub state
 
 - Development latest non-baseline commit: `fd8b290f04ec1621c0c0131531f1f9860a53ea7a`.
-- Production latest non-baseline commit: `c216b78c64eb25ef74e6a0bfa7384443eec9d112`.
-- Production rollback ref: `f205f1681247b612011650c51ece906e8b9f933c`.
-- Latest local release manifest: [`2026-11-22-v04`](release-manifests/2026-11-22-v04.txt) from `69b76f21ddec1c16f17c3260818144ba4c4c7bbf`.
-- Latest local change: `c216b78c64eb25ef74e6a0bfa7384443eec9d112` · Promote AI scanner accuracy to Production 2026-11-22-v05.
+- Production latest non-baseline commit: `a2985302f010c87ff403ce47eefdc7fb3ca9bd55`.
+- Production rollback ref: `a2985302f010c87ff403ce47eefdc7fb3ca9bd55`.
+- Latest local release manifest: [`2026-11-22-v05`](release-manifests/2026-11-22-v05.txt) from `dce651930e6189b897552fb3ff19951f3ba54b85`.
+- Latest local change: `a2985302f010c87ff403ce47eefdc7fb3ca9bd55` · Production 2026-11-22-v05: record package validation.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
