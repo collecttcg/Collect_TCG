@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-22-v02 — movable watermarks and eBay title updates.
+# Production 2026-11-22-v03 — eBay title fitting.
 on:
   workflow_dispatch:
   push:
@@ -163,6 +163,12 @@ jobs:
           const longTitle = app.ebayListingTitle({...card, name: 'Long Character Name '.repeat(6)});
           assert.ok(longTitle.length <= 80);
           assert.match(longTitle, / C01$/);
+          const vintageApp = {...app, fbGameLabel: () => 'ONE PIECE CARDDASS HYPER BATTLE'};
+          registerUtilities(vintageApp);
+          registerMarketplacePosts(vintageApp);
+          const fitted = vintageApp.ebayListingTitle({era:'Vintage', series:'Grand Line Compilation 1', year:2001, name:'ERROR NEFERTARI VIVI', card_code:'C411'});
+          assert.equal(fitted, 'Vintage ONE PIECE HYPER BATTLE Grand Line Comp. 1 2001 ERROR NEFERTARI VIVI C411');
+          assert.equal(fitted.length,80);
           assert.match(app.ebayItemSpecifics(card), /Language: Japanese/);
           assert.match(app.ebayItemSpecifics(card), /Grade: PSA 10/);
           JS
@@ -197,9 +203,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-22-v02
-          PREVIOUS_VERSION: 2026-11-22-v01
-          PREVIOUS_COMMIT: ca65159d2c9c5722ce05cd8fa2075e215b99ec8b
+          RELEASE_VERSION: 2026-11-22-v03
+          PREVIOUS_VERSION: 2026-11-22-v02
+          PREVIOUS_COMMIT: c43ce2ed45411616c5bf93e7d7f510b5d667a3a6
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -216,10 +222,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-22-v02-packages
+          name: Collect-TCG-Production-2026-11-22-v03-packages
           path: |
-            release/Collect-TCG-Production-2026-11-22-v02-full.zip
-            release/Collect-TCG-Production-2026-11-22-v01-to-2026-11-22-v02-patch.zip
+            release/Collect-TCG-Production-2026-11-22-v03-full.zip
+            release/Collect-TCG-Production-2026-11-22-v02-to-2026-11-22-v03-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -227,17 +233,17 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-22-v02.txt'
+          MANIFEST='release-manifests/2026-11-22-v03.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-22-v02'
-            echo 'Previous Production: 2026-11-22-v01'
-            echo 'Development promoted from: 2026-11-22-v05 (source 022016a7694756c45f6c33f3e9cd4e4f95adee0d).'
-            echo 'Purpose: Promote per-photo watermark placement, Vintage eBay titles and the simplified ERROR prefix.'
+            echo 'Version: 2026-11-22-v03'
+            echo 'Previous Production: 2026-11-22-v02'
+            echo 'Development promoted from: 2026-11-22-v06 (source 205665b10dddd85ad33192bd12533510416e9e24).'
+            echo 'Purpose: Keep Vintage and prioritize the card name and number in long eBay titles.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-22-v02-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-22-v01-to-2026-11-22-v02-patch.zip'
-            echo 'Changed files: Owner forms, image renderer, title utilities and eBay generator, cache entry points, release workflow and regenerated SEO output.'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-22-v03-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-22-v02-to-2026-11-22-v03-patch.zip'
+            echo 'Changed files: eBay title generator, cache entry points, title fixtures, release workflow and regenerated SEO output.'
             echo 'SQL required: No.'
             echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: Interactive desktop, mobile and Safari checks were not performed.'
@@ -247,7 +253,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-22-v02: record package validation'
+          git commit -m 'Production 2026-11-22-v03: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm deployed website files and advance last-known-good
