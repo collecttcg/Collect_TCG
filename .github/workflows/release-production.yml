@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-22-v03 — eBay title fitting.
+# Production 2026-11-22-v04 — Facebook posts for eBay listings.
 on:
   workflow_dispatch:
   push:
@@ -172,6 +172,8 @@ jobs:
           assert.match(app.ebayItemSpecifics(card), /Language: Japanese/);
           assert.match(app.ebayItemSpecifics(card), /Grade: PSA 10/);
           JS
+      - name: Verify Facebook eBay post generator
+        run: node tools/check-facebook-ebay-post.mjs
       - name: SEO validation and regeneration
         run: |
           set -euo pipefail
@@ -203,9 +205,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-22-v03
-          PREVIOUS_VERSION: 2026-11-22-v02
-          PREVIOUS_COMMIT: c43ce2ed45411616c5bf93e7d7f510b5d667a3a6
+          RELEASE_VERSION: 2026-11-22-v04
+          PREVIOUS_VERSION: 2026-11-22-v03
+          PREVIOUS_COMMIT: c04702ee026b99dd4579575fea7fc07746e103c8
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -222,10 +224,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-22-v03-packages
+          name: Collect-TCG-Production-2026-11-22-v04-packages
           path: |
-            release/Collect-TCG-Production-2026-11-22-v03-full.zip
-            release/Collect-TCG-Production-2026-11-22-v02-to-2026-11-22-v03-patch.zip
+            release/Collect-TCG-Production-2026-11-22-v04-full.zip
+            release/Collect-TCG-Production-2026-11-22-v03-to-2026-11-22-v04-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -233,17 +235,17 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-22-v03.txt'
+          MANIFEST='release-manifests/2026-11-22-v04.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-22-v03'
-            echo 'Previous Production: 2026-11-22-v02'
-            echo 'Development promoted from: 2026-11-22-v06 (source 205665b10dddd85ad33192bd12533510416e9e24).'
-            echo 'Purpose: Keep Vintage and prioritize the card name and number in long eBay titles.'
+            echo 'Version: 2026-11-22-v04'
+            echo 'Previous Production: 2026-11-22-v03'
+            echo 'Development promoted from: 2026-11-22-v07 (source a48bb8bd98012bc4b76b217cb5f1b816b2134206).'
+            echo 'Purpose: Add the Owner Facebook Post · eBay Listings generator.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-22-v03-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-22-v02-to-2026-11-22-v03-patch.zip'
-            echo 'Changed files: eBay title generator, cache entry points, title fixtures, release workflow and regenerated SEO output.'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-22-v04-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-22-v03-to-2026-11-22-v04-patch.zip'
+            echo 'Changed files: Facebook eBay generator, tool routing, shared photo ZIP helper, cache entry points, fixtures, release workflow and generated SEO output.'
             echo 'SQL required: No.'
             echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: Interactive desktop, mobile and Safari checks were not performed.'
@@ -253,7 +255,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-22-v03: record package validation'
+          git commit -m 'Production 2026-11-22-v04: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm deployed website files and advance last-known-good
@@ -265,7 +267,7 @@ jobs:
           CHECK_DIR="$(mktemp -d)"
           for attempt in $(seq 1 30); do
             MATCH=true
-            for FILE in index.html reviews/index.html sitemap.xml collections/one-piece-carddass-hyper-battle/index.html src/main.js src/app/register-features.js src/features/owner/forms.js src/features/media/images.js src/features/core/utilities.js src/features/social/posts.js src/features/social/posts-marketplace.js; do
+            for FILE in index.html reviews/index.html sitemap.xml collections/one-piece-carddass-hyper-battle/index.html src/main.js src/app/register-features.js src/features/owner/forms.js src/features/media/images.js src/features/core/utilities.js src/features/social/posts.js src/features/social/posts-marketplace.js src/features/social/posts-facebook-ebay.js src/features/social/posts-card-list.js; do
               if ! curl -fsSL --max-time 10 "$BASE/$FILE?release=$GITHUB_SHA" -o "$CHECK_DIR/file" || ! cmp -s "$FILE" "$CHECK_DIR/file"; then
                 MATCH=false
                 break
