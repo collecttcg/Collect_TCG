@@ -8,8 +8,9 @@ export function registerFacebookEbayPosts(appContext){
       card,
       url:appContext.normalizeEbayListingUrl(card.ebay_url),
       owner:card._owner_category || "",
-      era:appContext.normalizeFilterValue(card.era)
-    })).filter(entry=>entry.url);
+      era:appContext.normalizeFilterValue(card.era),
+      startYear:Number(String(card.year ?? "").trim().match(/^(\d{4})(?:\s*[-–—]\s*\d{4})?$/)?.[1] ?? 10000)
+    })).filter(entry=>entry.url).sort((a,b)=>a.startYear-b.startYear);
   }
 
   function buildFacebookEbayListingsPost(entries){
@@ -36,18 +37,25 @@ export function registerFacebookEbayPosts(appContext){
   function renderFacebookEbayListingsPage(){
     if(!appContext.requireOwner("open Facebook eBay listings generator")) return;
     const entries=facebookEbayListingEntries(appContext.cards);
-    const selected=new Map();
+    const selected=new Set();
+    const selectedEntries=()=>entries.filter(({card})=>selected.has(String(card.id)));
     const esc=appContext.escapeHtml;
     const choices=values=>[...new Set(values)].sort((a,b)=>a.localeCompare(b));
+    const ownerChoices=choices(entries.map(entry=>entry.owner).filter(Boolean));
     const options=values=>values.map(value=>`<option value="${esc(value)}">${esc(value)}</option>`).join("");
     appContext.view.innerHTML=`
       <div class="fb-card-list-layout" id="facebookEbayListings">
         <section class="panel fb-card-list-controls">
           <h3>Select cards</h3>
           <div class="fb-card-list-filter-row">
-            <label class="field">Owner
-              <select data-owner><option value="">All owners</option><option value="unassigned">Unassigned</option>${options(choices(entries.map(entry=>entry.owner).filter(Boolean)))}</select>
-            </label>
+            <fieldset class="fb-ebay-owner-filter" data-owners aria-describedby="fbEbayOwnerHelp">
+              <legend>Owners</legend>
+              <p class="hint" id="fbEbayOwnerHelp">Leave all unchecked to show every owner.</p>
+              <div class="fb-ebay-owner-options">
+                <label><input type="checkbox" value=""> Unassigned</label>
+                ${ownerChoices.map(owner=>`<label><input type="checkbox" value="${esc(owner)}"> ${esc(owner)}</label>`).join("")}
+              </div>
+            </fieldset>
             <label class="field">Era
               <select data-era><option value="">All eras</option>${options(choices(entries.map(({card})=>String(card.era || "").trim()).filter(Boolean)))}</select>
             </label>
@@ -73,7 +81,7 @@ export function registerFacebookEbayPosts(appContext){
       </div>`;
     const root=appContext.view.querySelector("#facebookEbayListings");
     const get=selector=>root.querySelector(selector);
-    const owner=get("[data-owner]");
+    const owners=get("[data-owners]");
     const era=get("[data-era]");
     const picker=get("[data-picker]");
     const output=get("[data-post]");
@@ -86,16 +94,18 @@ export function registerFacebookEbayPosts(appContext){
     function updatePost(){
       const hiddenCount=selected.size-filtered.filter(({card})=>selected.has(String(card.id))).length;
       get("[data-count]").textContent=`${selected.size} selected${hiddenCount ? ` · ${hiddenCount} outside current filters` : ""}`;
-      output.value=buildFacebookEbayListingsPost([...selected.values()]);
+      output.value=buildFacebookEbayListingsPost(selectedEntries());
       copy.disabled=!selected.size;
       get("[data-clear]").disabled=!selected.size;
       zip.disabled=!selected.size || downloading;
     }
 
     function updatePicker(){
+      const selectedOwners=new Set(Array.from(owners.querySelectorAll("input:checked"),input=>input.value));
+      const selectedEra=appContext.normalizeFilterValue(era.value);
       filtered=entries.filter(entry=>
-        (!owner.value || (entry.owner || "unassigned")===owner.value) &&
-        (!era.value || entry.era===appContext.normalizeFilterValue(era.value))
+        (!selectedOwners.size || selectedOwners.has(entry.owner)) &&
+        (!selectedEra || entry.era===selectedEra)
       );
       picker.innerHTML=filtered.map(({card})=>{
         const id=String(card.id);
@@ -103,27 +113,26 @@ export function registerFacebookEbayPosts(appContext){
         return `<label class="fb-card-list-picker-row ${selected.has(id) ? "selected" : ""}">
           <input type="checkbox" value="${esc(id)}" ${selected.has(id) ? "checked" : ""}>
           <span class="fb-card-list-picker-thumb">${photo ? `<img src="${esc(photo)}" loading="lazy" alt="">` : "No photo"}</span>
-          <span class="fb-card-list-picker-copy"><strong>${esc(card.name || "Untitled card")}</strong><small>${esc([card.card_code,card.series,card.era].filter(Boolean).join(" · "))}</small></span>
+          <span class="fb-card-list-picker-copy"><strong>${esc(card.name || "Untitled card")}</strong><small>${esc([card.card_code,card.series,card.year,card.era].filter(Boolean).join(" · "))}</small></span>
         </label>`;
       }).join("") || '<p class="hint">No available cards with eBay links match these filters.</p>';
       get("[data-select]").disabled=!filtered.length;
       updatePost();
     }
 
-    owner.addEventListener("change",updatePicker);
+    owners.addEventListener("change",updatePicker);
     era.addEventListener("change",updatePicker);
     picker.addEventListener("change",event=>{
       const input=event.target.closest('input[type="checkbox"]');
       if(!input) return;
-      const entry=filtered.find(({card})=>String(card.id)===input.value);
-      if(!entry) return;
-      if(input.checked) selected.set(input.value,entry);
+      if(!filtered.some(({card})=>String(card.id)===input.value)) return;
+      if(input.checked) selected.add(input.value);
       else selected.delete(input.value);
       input.closest(".fb-card-list-picker-row")?.classList.toggle("selected",input.checked);
       updatePost();
     });
     get("[data-select]").addEventListener("click",()=>{
-      filtered.forEach(entry=>selected.set(String(entry.card.id),entry));
+      filtered.forEach(({card})=>selected.add(String(card.id)));
       updatePicker();
     });
     get("[data-clear]").addEventListener("click",()=>{
@@ -136,7 +145,7 @@ export function registerFacebookEbayPosts(appContext){
     });
     zip.addEventListener("click",async()=>{
       if(downloading || !selected.size || !appContext.requireOwner("download Facebook eBay listing photos")) return;
-      const cards=[...selected.values()].map(({card})=>card);
+      const cards=selectedEntries().map(({card})=>card);
       downloading=true;
       updatePost();
       status.textContent="Preparing ZIP…";
