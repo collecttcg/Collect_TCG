@@ -1,0 +1,14 @@
+Version: 2026-11-22-v06
+Previous Production: 2026-11-22-v05
+Development promoted from: 2026-11-22-v10 (source 18eccca9ef8fcb05831cc4a99b9a377305ea414c).
+Purpose: Sort the Facebook eBay picker, post and first-photo ZIP by year, and allow multiple owner filters.
+Source commit: d6bd27471e4f44853fa1aada0baae297cb2fc59d
+Full ZIP: Collect-TCG-Production-2026-11-22-v06-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-22-v05-to-2026-11-22-v06-patch.zip
+Changed files: Facebook eBay generator, scoped checkbox styles, cache entry points, filter fixture, release workflow and generated SEO output.
+SQL required: No.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+c7f7644660b2dbf36a174e1ef0e4d53d0c2c489ca8ebf860c571acb59208bbb5  release/Collect-TCG-Production-2026-11-22-v06-full.zip
+4431aee33ca000dffbc1e2a183a6244db2955ba6d9abf6414fa207879b5eb00b  release/Collect-TCG-Production-2026-11-22-v05-to-2026-11-22-v06-patch.zip
