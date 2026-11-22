@@ -12,6 +12,13 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production watermark and title updates — 2026-11-22-v02
+
+- Replaces Production `2026-11-22-v01` and promotes Development `2026-11-22-v05` (source `022016a7694756c45f6c33f3e9cd4e4f95adee0d`). Owner Add/Edit supports per-photo CTA/QR watermark placement. Vintage eBay titles start with `Vintage`. Error cards use `ERROR` in the editor and generated eBay titles, with earlier stored prefixes recognized. No SQL or bulk catalogue rewrite.
+- Production syntax, retained contracts, generated title fixtures, SEO, ZIP integrity and deployed-file comparisons passed. The first run stopped on a stale bracketed-label assertion. The corrected run 44983015939 advanced the rollback ref from `fae891da787b293eece9ec2b3896ae7411ef71b9` to `db8387e8a9172297ac1948e1cc16c45a889ae890`. Interactive desktop, mobile and Safari checks were not performed.
+- [Manifest](release-manifests/2026-11-22-v02.txt) and [full and patch ZIPs](https://github.com/collecttcg/Collect_TCG/actions/runs/44983015939/artifacts/14739255002).
+
+
 ## Production qualified card view traffic source — 2026-11-22
 
 - Production `2026-11-22-v01` replaced `2026-11-21-v03` and promoted Development `2026-11-22-v01` (source `c3dab4f892a7e8aa65790238741fd9b84e7557cf`). Owner Insights now displays the latest qualified card view's source alongside country and device. Historical views with no recorded source display Source unknown.
