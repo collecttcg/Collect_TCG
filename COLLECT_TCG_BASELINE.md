@@ -12,6 +12,14 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production AI scanner accuracy — 2026-11-22-v05
+
+- Replaces Production `2026-11-22-v04` and promotes Development `2026-11-22-v08` (source `4fb06598b30bdcbbee88814e4193c7691d57afdd`). Higher-detail first photo, optional scan-only close-up/back photo, ambiguity review, and variant-aware inventory comparables are in Owner Add Card. No SQL required.
+- The separate Production `scan-card-ai` Edge Function advanced from v6 to v7. Deployed source matched the release and the unauthenticated endpoint returned HTTP 401. Backend rollback is separate from Pages and would require redeploying the prior function.
+- Production scanner fixtures, retained contracts, SEO, both ZIP integrity checks and deployed-file comparisons passed. Run 44993143639 advanced the website rollback reference. Real-photo accuracy and interactive desktop, mobile and Safari checks were not measured.
+- [Manifest](release-manifests/2026-11-22-v05.txt) and [full and patch ZIPs](https://github.com/collecttcg/Collect_TCG/actions/runs/44993143639/artifacts/14742561999).
+
+
 ## Production Facebook Post · eBay Listings — 2026-11-22-v04
 
 - Replaces Production `2026-11-22-v03` and promotes Development `2026-11-22-v07` (source `a48bb8bd98012bc4b76b217cb5f1b816b2134206`). The Owner-only mode filters available live cards with valid saved eBay URLs by Owner and Era, supports multiple selections, and generates a numbered Facebook post and first-photo ZIP in selection order. No SQL required.
