@@ -1,0 +1,14 @@
+Version: 2026-11-22-v04
+Previous Production: 2026-11-22-v03
+Development promoted from: 2026-11-22-v07 (source a48bb8bd98012bc4b76b217cb5f1b816b2134206).
+Purpose: Add the Owner Facebook Post · eBay Listings generator.
+Source commit: 69b76f21ddec1c16f17c3260818144ba4c4c7bbf
+Full ZIP: Collect-TCG-Production-2026-11-22-v04-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-22-v03-to-2026-11-22-v04-patch.zip
+Changed files: Facebook eBay generator, tool routing, shared photo ZIP helper, cache entry points, fixtures, release workflow and generated SEO output.
+SQL required: No.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+33571eefac12f2fac7c3268e6080a13a2477a865cabebb1ad0b632f79dd9c172  release/Collect-TCG-Production-2026-11-22-v04-full.zip
+b4dbc12f89f5b0e8151988713235438215624471c8a2e5116eee70575c09f6ca  release/Collect-TCG-Production-2026-11-22-v03-to-2026-11-22-v04-patch.zip
