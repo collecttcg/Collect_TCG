@@ -12,6 +12,13 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Shared daily eBay cleanup — 2026-11-23
+
+- Development `2026-11-23-v01` replaces `2026-11-22-v10`. The [Development manifest](https://github.com/collecttcg/Collect_TCG_Dev/blob/main/release-manifests/2026-11-23-v01.txt) records validation and both verified ZIPs.
+- With explicit approval, deployed shared `ebay-listing-check` v2 (previous v1). Verified ACTIVE status and an exact match with the validated Development source. The 09:30 JST schedule uses that function. No SQL, RLS, schedule or website deployment was required. No live scan was run after deployment. Backend rollback is redeployment of v1 source from Production `429abcc2b361d351c080b91b0d80483c402d16a5`.
+- Read-only review found 34 Sold cards without an eBay listing line. Available card edit history contained no original links for those cards, and no Sold records were modified for recovery.
+
+
 ## Production Facebook eBay owner filters and year order — 2026-11-22-v06
 
 - Replaces Production `2026-11-22-v05`. Promotes Development `2026-11-22-v10` (source `18eccca9ef8fcb05831cc4a99b9a377305ea414c`), including the chronological ordering introduced in Dev v09. The Owner-only picker combines checked owners and Unassigned, with Era applied to those results. No checked owners shows all owners. The picker displays card years, and the post and first-photo ZIP follow oldest-first order. Date ranges use their starting year and undated cards appear last.
