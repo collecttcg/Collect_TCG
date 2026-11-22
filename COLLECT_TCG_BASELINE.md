@@ -12,6 +12,12 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production Facebook eBay owner filters and year order — 2026-11-22-v06
+
+- Replaces Production `2026-11-22-v05`. Promotes Development `2026-11-22-v10` (source `18eccca9ef8fcb05831cc4a99b9a377305ea414c`), including the chronological ordering introduced in Dev v09. The Owner-only picker combines checked owners and Unassigned, with Era applied to those results. No checked owners shows all owners. The picker displays card years, and the post and first-photo ZIP follow oldest-first order. Date ranges use their starting year and undated cards appear last.
+- Production retained contracts, Facebook/eBay fixtures, SEO regeneration, both ZIP integrity checks and deployed-file comparisons passed. Run 45014009693 advanced `production-last-known-good` to `46dae739f69001385ec221132ae892a655dbdb8f`. Interactive desktop, mobile and Safari checks were unavailable. No SQL or Edge Function change.
+- [Manifest](release-manifests/2026-11-22-v06.txt) and [full and patch ZIPs](https://github.com/collecttcg/Collect_TCG/actions/runs/45014009693/artifacts/14750619056).
+
 ## Production AI scanner accuracy — 2026-11-22-v05
 
 - Replaces Production `2026-11-22-v04` and promotes Development `2026-11-22-v08` (source `4fb06598b30bdcbbee88814e4193c7691d57afdd`). Higher-detail first photo, optional scan-only close-up/back photo, ambiguity review, and variant-aware inventory comparables are in Owner Add Card. No SQL required.
