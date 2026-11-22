@@ -12,6 +12,13 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production eBay title fitting — 2026-11-22-v03
+
+- Replaces Production `2026-11-22-v02` and promotes Development `2026-11-22-v06` (source `205665b10dddd85ad33192bd12533510416e9e24`). Titles already within 80 characters keep their wording. Longer titles retain applicable Vintage and ERROR labels and shorten catalogue wording first, including dropping CARDDASS when needed. No SQL required.
+- Production syntax, retained contracts, title fixtures, SEO, ZIP integrity and deployed-file comparisons passed. Release run 44984429465 advanced the rollback reference. Interactive desktop, mobile and Safari checks were not performed.
+- [Manifest](release-manifests/2026-11-22-v03.txt) and [full and patch ZIPs](https://github.com/collecttcg/Collect_TCG/actions/runs/44984429465/artifacts/14739267616).
+
+
 ## Production watermark and title updates — 2026-11-22-v02
 
 - Replaces Production `2026-11-22-v01` and promotes Development `2026-11-22-v05` (source `022016a7694756c45f6c33f3e9cd4e4f95adee0d`). Owner Add/Edit supports per-photo CTA/QR watermark placement. Vintage eBay titles start with `Vintage`. Error cards use `ERROR` in the editor and generated eBay titles, with earlier stored prefixes recognized. No SQL or bulk catalogue rewrite.
