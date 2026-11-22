@@ -4,10 +4,10 @@
 ## GitHub state
 
 - Development latest non-baseline commit: `38268e5889ee26dbdf4452f4d60bb38a933912b4`.
-- Production latest non-baseline commit: `c35ee026a79f2841367cfe2a99685c4521f2731d`.
-- Production rollback ref: `fae891da787b293eece9ec2b3896ae7411ef71b9`.
-- Latest local release manifest: [`2026-11-22-v01`](release-manifests/2026-11-22-v01.txt) from `ca65159d2c9c5722ce05cd8fa2075e215b99ec8b`.
-- Latest local change: `c35ee026a79f2841367cfe2a99685c4521f2731d` · Validate ERROR title contract for Production 2026-11-22-v02.
+- Production latest non-baseline commit: `db8387e8a9172297ac1948e1cc16c45a889ae890`.
+- Production rollback ref: `db8387e8a9172297ac1948e1cc16c45a889ae890`.
+- Latest local release manifest: [`2026-11-22-v02`](release-manifests/2026-11-22-v02.txt) from `c43ce2ed45411616c5bf93e7d7f510b5d667a3a6`.
+- Latest local change: `db8387e8a9172297ac1948e1cc16c45a889ae890` · Production 2026-11-22-v02: record package validation.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
