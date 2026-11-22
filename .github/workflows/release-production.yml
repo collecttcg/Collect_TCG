@@ -67,7 +67,7 @@ jobs:
           grep -Fq 'add.js?v=' src/app/register-features.js
           grep -Fq 'function wirePreErrataError(p)' src/features/owner/forms.js
           grep -Fq 'else appContext.wirePreErrataError("add")' src/features/owner/add.js
-          grep -Fq '[PRE ERRATA] [ERROR]' src/features/owner/forms.js
+          grep -Fq 'saved card title starts with ERROR.' src/features/owner/forms.js
           grep -Fq 'const EBAY_BLOCKED_BUYERS_URL="https://www.ebay.com/bmgt/BuyerBlock"' src/features/owner/ebay-banlist.js
           grep -Fq 'length:EBAY_ACCOUNT_COUNT' src/features/owner/ebay-banlist.js
           grep -Fq 'href="${EBAY_BLOCKED_BUYERS_URL}"' src/features/owner/ebay-banlist.js
