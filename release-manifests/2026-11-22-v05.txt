@@ -1,0 +1,14 @@
+Version: 2026-11-22-v05
+Previous Production: 2026-11-22-v04
+Development promoted from: 2026-11-22-v08 (source 4fb06598b30bdcbbee88814e4193c7691d57afdd).
+Purpose: Improve the Owner AI scanner with higher-detail photos, variant checks and price safeguards.
+Source commit: dce651930e6189b897552fb3ff19951f3ba54b85
+Full ZIP: Collect-TCG-Production-2026-11-22-v05-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-22-v04-to-2026-11-22-v05-patch.zip
+Changed files: Owner Add and scanner modules, Production scanner Edge Function, cache entry points, release workflow and generated SEO output.
+SQL required: No. Production scanner Edge Function deployment required.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+4f2c0d8905b121f8a466ada08137db6980ff2347cd98ffbeb3cc0680449a0f5f  release/Collect-TCG-Production-2026-11-22-v05-full.zip
+a981ddf1d11de4b9f97ea33cfff33f8bedb4018433744ac7cd4d5244190c9b97  release/Collect-TCG-Production-2026-11-22-v04-to-2026-11-22-v05-patch.zip
