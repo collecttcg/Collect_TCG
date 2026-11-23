@@ -12,6 +12,11 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production Inventory pagination and eBay links — 2026-11-23-v05
+
+- Replaces Production `2026-11-23-v04` and promotes Development `2026-11-23-v16`, including v15 social links. Inventory uses Sold full-row pagination and shows a bottom bar when the result set spans multiple pages. The desktop social strip and mobile footer link to eBay accounts 1–5. No SQL required.
+- Production checks, focused pagination markup fixture, and both ZIP integrity checks passed. The workflow verified deployed files and advanced the rollback ref to `d94d6dffcbba9047c756a4ebb14eee2949320be8`. Interactive desktop, mobile and Safari checks were not performed. [Manifest](release-manifests/2026-11-23-v05.txt).
+
 ## Production Sold listings and toolbar — 2026-11-23-v04
 
 - Replaces `2026-11-23-v03`. Promotes Development `2026-11-23-v14` including v13 changes. Sort and Filters match Currency height. Sold grid fills rows, and listings and downloads use the new SOLD ribbon. Facebook posts restore the website and available eBay links and use the new title formatting.
