@@ -1,4 +1,4 @@
-import { createInventoryPagination } from './pagination.js?v=2026-09-29-v09';
+import { createInventoryPagination, fullRowPageSize } from './pagination.js?v=2026-11-23-v04';
 import { registerInventoryShell } from './page-shell.js?v=2026-11-15-v01';
 /** 2026-09-29-v09: inventory interaction controller. */
 export function register(appContext){
@@ -798,6 +798,15 @@ function renderInventoryPage(scope = "inventory"){
     }
 
     let inventoryPagination=null;
+    let lastPageSize=appContext.listingPerPage;
+    function listingPageSize(){
+      const preferred=appContext.listingPerPage;
+      if(appContext.listingAvailabilityScope!=="sold") return preferred;
+      const grid=appContext.$("invGrid");
+      if(!grid || grid.classList.contains("compact-list")) return preferred;
+      const style=getComputedStyle(grid);
+      return style.display==="grid" ? fullRowPageSize(preferred,style.gridTemplateColumns) : preferred;
+    }
 
     function scrollToListingStart(){
       const target=appContext.$("listingPaginationTop") || appContext.$("invGrid");
@@ -885,7 +894,9 @@ function renderInventoryPage(scope = "inventory"){
           grid.innerHTML=list.map(appContext.cardTileHTML).join("");
         }
       }else{
-        const totalPages=Math.max(1,Math.ceil(list.length/appContext.listingPerPage));
+        const pageSize=listingPageSize();
+        lastPageSize=pageSize;
+        const totalPages=Math.max(1,Math.ceil(list.length/pageSize));
         const clampedPage=Math.min(Math.max(1,appContext.listingCurrentPage),totalPages);
         if(clampedPage!==appContext.listingCurrentPage){
           appContext.listingCurrentPage=clampedPage;
@@ -894,8 +905,8 @@ function renderInventoryPage(scope = "inventory"){
 
         inventoryPagination.render(list.length);
 
-        const pageStart=(appContext.listingCurrentPage-1)*appContext.listingPerPage;
-        const pageEnd=Math.min(pageStart+appContext.listingPerPage,list.length);
+        const pageStart=(appContext.listingCurrentPage-1)*pageSize;
+        const pageEnd=Math.min(pageStart+pageSize,list.length);
         const pageCards=list.slice(pageStart,pageEnd);
 
         grid.innerHTML=pageCards
@@ -1644,7 +1655,7 @@ function renderInventoryPage(scope = "inventory"){
       });
     }
 
-    inventoryPagination=createInventoryPagination(appContext,{draw,getFilterSignature:currentPaginationFilterSignature,scrollToListingStart});
+    inventoryPagination=createInventoryPagination(appContext,{draw,getFilterSignature:currentPaginationFilterSignature,scrollToListingStart,getPageSize:listingPageSize});
     appContext.$("listingPerPageSelect")?.addEventListener("change",e=>inventoryPagination.changePerPage(e.target.value));
     appContext.$("mobileListingPerPageSelect")?.addEventListener("change",e=>inventoryPagination.changePerPage(e.target.value));
     const handlePaginationClick=e=>inventoryPagination.handleClick(e);
@@ -1665,7 +1676,14 @@ function renderInventoryPage(scope = "inventory"){
     let lastMobileInventoryLayout=appContext.isMobileInventoryLayout();
     const inventoryLayoutResizeHandler=()=>{
       const mobileNow=appContext.isMobileInventoryLayout();
-      if(mobileNow===lastMobileInventoryLayout) return;
+      const pageSize=listingPageSize();
+      if(mobileNow===lastMobileInventoryLayout && pageSize===lastPageSize) return;
+      if(appContext.listingAvailabilityScope==="sold" && pageSize!==lastPageSize){
+        const firstIndex=(appContext.listingCurrentPage-1)*lastPageSize;
+        appContext.listingCurrentPage=Math.floor(firstIndex/pageSize)+1;
+        appContext.updateListingUrlFromControls();
+      }
+      lastPageSize=pageSize;
       lastMobileInventoryLayout=mobileNow;
 
       const toggle=appContext.$("compactViewToggle");

@@ -284,6 +284,19 @@ function fbGameLabel(card){
     return game.toUpperCase();
   }
 
+function isSoldFacebookListing(card){
+    return appContext.normalizeFilterValue(card.availability || card.status || "") === "sold";
+  }
+
+function facebookTitleForStatus(card,input){
+    const value=String(input||"").trim();
+    const status=isSoldFacebookListing(card) ? "SOLD" : "";
+    const title=status ? ["SOLD",value.replace(/^(?:WTS|SOLD)\b\s*/i,"")].filter(Boolean).join(" ") : value;
+    const legacy=title.match(/^(WTS|SOLD)\s+([^【]+?)\s*((?:【[^】]+】\s*)+)(.*)$/i);
+    if(!legacy || legacy[2].trim().toUpperCase()!==appContext.fbGameLabel(card)) return title;
+    return [legacy[1],legacy[3].trim().replace(/】\s+【/g,"】【"),legacy[2].trim(),legacy[4].trim()].filter(Boolean).join(" ");
+  }
+
 function defaultFbPostTitle(card){
     if(!card) return "";
     const game=appContext.fbGameLabel(card);
@@ -294,16 +307,46 @@ function defaultFbPostTitle(card){
       card.name || "",
       card.card_code || ""
     ].filter(Boolean);
-    const salesLead=`${game ? `WTS ${game}` : "WTS"}【${appContext.fbFormatLabel(card)}】${appContext.postPopLabel(card)}${appContext.postEraLabel(card)}`;
+    const status=isSoldFacebookListing(card) ? "SOLD" : "WTS";
+    const salesLead=`${status} 【${appContext.fbFormatLabel(card)}】${appContext.postEraLabel(card)}${appContext.postPopLabel(card)}`;
 
-    return [salesLead,...parts].filter(Boolean).join(" ").replace(/\s+/g," ").trim().toUpperCase();
+    return [salesLead,game,...parts].filter(Boolean).join(" ").replace(/\s+/g," ").trim().toUpperCase();
   }
 
 function singleCardCopyTitle(card){
     if(!card) return "";
     const type=appContext.cardListFormat(card);
     const lead=type==="graded" ? appContext.gradedPostLabel(card) : (type==="sealed" ? "Sealed" : appContext.rawConditionPostLabel(card));
-    return [appContext.fbGameLabel(card),lead,card.series,card.name,card.card_code].map(value=>String(value||"").trim()).filter(Boolean).join(" · ");
+    const limit=65;
+    const clean=value=>String(value||"").trim().replace(/\s+/g," ");
+    const game=appContext.fbGameLabel(card);
+    const code=clean(card.card_code);
+    const name=clean(card.name);
+    const join=parts=>parts.filter(Boolean).join(" · ");
+    const full=join([game,lead,clean(card.series),name,code]);
+    if(full.length<=limit) return full;
+
+    const shortName=name.replace(/\bKOREAN\s*\/\s*CHINESE\b/gi,"KR/CN")
+      .replace(/\bPROMOS?\b/gi,"")
+      .replace(/\bCARD CHAMPIONSHIP\b/gi,"CHAMPIONSHIP")
+      .split(/\s+/).filter(word=>word && word.toUpperCase()!==code.toUpperCase()).join(" ");
+    const compact=join([game,shortName,code]);
+    if(compact.length<=limit) return compact;
+    const identity=join([shortName,code]);
+    if(identity.length<=limit) return identity;
+    const budget=limit-(code ? code.length+3 : 0);
+    if(budget<2) return [...code].reduce((text,char)=>text.length+char.length<=limit ? text+char : text,"");
+    const words=shortName.split(" ");
+    const kept=[];
+    let length=0;
+    for(let index=words.length-1;index>=0;index--){
+      const word=words[index];
+      if(length+word.length+(kept.length ? 1 : 0)>budget-1) break;
+      kept.unshift(word);
+      length=kept.join(" ").length;
+    }
+    const tail=kept.join(" ") || shortName.slice(-(budget-1)).replace(/^[\uDC00-\uDFFF]/,"");
+    return join([`…${tail}`,code]);
   }
 
 function defaultFbHashtags(card){
@@ -325,9 +368,9 @@ function buildFbPostText(card, values){
 
     const divider = "━━━━━━━━━━━━━━━━━━━━━━━━";
     const text=appContext.postLocale(values.language);
-    const title = String(values.title || appContext.defaultFbPostTitle(card)).trim();
+    const title = facebookTitleForStatus(card,values.title || appContext.defaultFbPostTitle(card));
     const websiteCardUrl = appContext.getCardShareUrl(card.id);
-    const isSold=String(card.availability||card.status||"").trim().toLowerCase()==="sold";
+    const isSold=isSoldFacebookListing(card);
     const usdPrice=card.price_usd ?? card.price;
     const soldPrice=isSold && appContext.hasListedPrice(usdPrice)
       ? `USD ${Number(usdPrice).toLocaleString("en-US",{maximumFractionDigits:2})}`
@@ -342,7 +385,7 @@ function buildFbPostText(card, values){
       title,
       "",
       ...(isSold
-        ? [`💰 SOLD PRICE: ${soldPrice||"Price unavailable"}`]
+        ? [`💰 SOLD PRICE: ${soldPrice||"Price unavailable"}`,"","🔗 Card on Collect TCG:",websiteCardUrl]
         : [groupCopy.price,"",websiteCardUrl]),
       "",
       divider,
@@ -702,7 +745,7 @@ function renderFbPostGeneratorPage(nfsMode=false){
             </div>
           </div>
 
-          <div class="field"><label for="fbListingTitleOutput">Listing Title</label><input id="fbListingTitleOutput" type="text" readonly placeholder="Select a card to generate the listing title…"><div class="hint">Game · condition / grade / sealed · series · card name · card code. Empty fields are omitted.</div></div>
+          <div class="field"><label for="fbListingTitleOutput">Listing Title</label><input id="fbListingTitleOutput" type="text" readonly placeholder="Select a card to generate the listing title…"><div class="hint">Album title · 65 characters max.</div></div>
           <textarea id="fbPostOutput" class="fb-post-output" readonly placeholder="Select a card to generate the Facebook post…"></textarea>
 
           <div class="fb-post-bottom-actions">
@@ -874,9 +917,8 @@ function renderFbPostGeneratorPage(nfsMode=false){
       const meta = perCardMeta[selectedCard.id] || {};
       const normalDefaultTitle=appContext.defaultFbPostTitle(selectedCard);
       const nfsDefaultTitle=`${appContext.fbGameLabel(selectedCard)} COLLECTION SHOWCASE【NFS】${String(selectedCard.name||"").toUpperCase()}${selectedCard.card_code ? ` · ${String(selectedCard.card_code).toUpperCase()}` : ""}`.trim();
-      titleInput.value = String(
-        meta.title || (nfsMode ? nfsDefaultTitle : normalDefaultTitle)
-      ).slice(0,300);
+      const savedTitle=meta.title || (nfsMode ? nfsDefaultTitle : normalDefaultTitle);
+      titleInput.value=(nfsMode ? String(savedTitle) : facebookTitleForStatus(selectedCard,savedTitle)).slice(0,300);
 
       hashtagsInput.value = prefs.hashtags === appContext.FB_POST_DEFAULTS.hashtags
         ? appContext.defaultFbHashtags(selectedCard)
@@ -933,7 +975,7 @@ function renderFbPostGeneratorPage(nfsMode=false){
     });
 
     copyTitleBtn.addEventListener("click", ()=>{
-      appContext.copyPlainText(titleInput.value, "Facebook title copied");
+      appContext.copyPlainText(nfsMode || !selectedCard ? titleInput.value : facebookTitleForStatus(selectedCard,titleInput.value), "Facebook title copied");
     });
 
     copyPostBtn.addEventListener("click", ()=>{

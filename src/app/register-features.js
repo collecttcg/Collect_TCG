@@ -14,7 +14,7 @@ import * as module12 from '../services/analytics.js?v=2026-11-22-v01';
 import * as module13 from '../services/contact-intent-policy.js?v=2026-09-29-v09';
 import * as module14 from '../features/owner/psa.js?v=2026-09-29-v09';
 import * as module15 from '../app/routing.js?v=2026-11-15-v03';
-import * as module16 from '../features/media/images.js?v=2026-11-22-v02';
+import * as module16 from '../features/media/images.js?v=2026-11-23-v04';
 import * as module17 from '../features/cards/presentation.js?v=2026-11-20-v01';
 import * as module18 from '../features/owner/forms.js?v=2026-11-23-v03';
 import * as module19 from '../features/content/home.js?v=2026-09-29-v09';
@@ -22,7 +22,7 @@ import * as module20 from '../features/inventory/filtering.js?v=2026-11-20-v01';
 import * as module21 from '../features/cards/related.js?v=2026-09-29-v09';
 import * as module22 from '../features/cards/compare.js?v=2026-09-29-v09';
 import * as module23 from '../features/cards/tiles.js?v=2026-11-01-v01';
-import * as module24 from '../features/inventory/page.js?v=2026-11-15-v01';
+import * as module24 from '../features/inventory/page.js?v=2026-11-23-v04';
 import * as module25 from '../features/content/giveaways.js?v=2026-09-29-v09';
 import * as module26 from '../features/content/showcase.js?v=2026-09-29-v09';
 import * as module27 from '../features/content/giveaway-pages.js?v=2026-09-29-v09';
@@ -31,7 +31,7 @@ import * as module29 from '../features/owner/insights-intent-rates.js?v=2026-09-
 import * as module30 from '../features/owner/insights-dashboard.js?v=2026-09-29-v09';
 import * as module31 from '../features/content/reviews.js?v=2026-11-15-v03';
 import * as module32 from '../features/content/information.js?v=2026-11-14-v01';
-import * as module33 from '../features/social/posts.js?v=2026-11-23-v02';
+import * as module33 from '../features/social/posts.js?v=2026-11-23-v04';
 import * as module34 from '../features/owner/quality.js?v=2026-09-29-v09';
 import * as module35 from '../features/owner/tools.js?v=2026-09-29-v09';
 import * as module36 from '../features/owner/bulk-status.js?v=2026-09-29-v09';
@@ -61,7 +61,7 @@ import * as module58 from '../features/owner/quick-action-scroll.js?v=2026-11-01
 import * as module59 from '../features/owner/fx-low-price.js?v=2026-11-02-v03';
 import * as module60 from '../features/owner/ebay-messages.js?v=2026-11-10-v01';
 
-import * as module61 from '../features/social/posts-ebay-link.js?v=2026-11-13-prod-sold01';
+import * as module61 from '../features/social/posts-ebay-link.js?v=2026-11-23-v04';
 
 export function registerFeatures(appContext){
   module0.register(appContext); module1.register(appContext); module2.register(appContext); module3.register(appContext); module4.register(appContext); module5.register(appContext); module6.register(appContext); module7.register(appContext); module8.register(appContext); module9.register(appContext); module10.register(appContext); module11.register(appContext); module12.register(appContext); module13.register(appContext); module14.register(appContext); module15.register(appContext); module16.register(appContext); module17.register(appContext); module18.register(appContext); module19.register(appContext); module20.register(appContext); module21.register(appContext); module22.register(appContext); module23.register(appContext); module24.register(appContext); module25.register(appContext); module26.register(appContext); module27.register(appContext); module28.register(appContext); module29.register(appContext); if(typeof document!=="undefined") module30.register(appContext); module31.register(appContext); module32.register(appContext); module33.register(appContext); module34.register(appContext); module35.register(appContext); module36.register(appContext); registerQrGenerator(appContext); module37.register(appContext); module38.register(appContext); module39.register(appContext); module40.register(appContext); module41.register(appContext); module42.register(appContext); module43.register(appContext); module44.register(appContext); module45.register(appContext); module46.register(appContext); module47.register(appContext); module48.register(appContext); module49.register(appContext); module50.register(appContext); module51.register(appContext); module52.register(appContext); module53.register(appContext); module54.register(appContext); module55.register(appContext); module56.register(appContext); module57.register(appContext); module58.register(appContext); module59.register(appContext); module60.register(appContext); module61.register(appContext);
