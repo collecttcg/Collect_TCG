@@ -1,0 +1,14 @@
+Version: 2026-11-23-v03
+Previous Production: 2026-11-23-v02
+Development promoted from: 2026-11-23-v04 (source 680fcd48baa34500861531d6d7a155f184a85c26).
+Purpose: Save an owner-only Facebook listing URL in Add/Edit.
+Source commit: c4136e3b8aada5d4fde728b78350a8ff95f8bf01
+Full ZIP: Collect-TCG-Production-2026-11-23-v03-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-23-v02-to-2026-11-23-v03-patch.zip
+Changed files: Owner forms, editor, private metadata service, cache references, regression fixture, release workflow and generated SEO output.
+SQL required: No.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+e67ad672c24fd73bda98439cb551a787e9161987bf0dcbbcfe484ae9d5c7fb97  release/Collect-TCG-Production-2026-11-23-v03-full.zip
+afac6f508f3daf0a4ef91eccda3aabad35409982d989582d6038e74fb0834263  release/Collect-TCG-Production-2026-11-23-v02-to-2026-11-23-v03-patch.zip
