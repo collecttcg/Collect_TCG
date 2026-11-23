@@ -3,11 +3,11 @@
 <!-- BEGIN AUTOMATED BASELINE STATE -->
 ## GitHub state
 
-- Development latest non-baseline commit: `e6c22c85a3d26fcc1141e5d531f7938d54f3402d`.
-- Production latest non-baseline commit: `6ac52c0e12f585fe59688aab16c118f62e85fe87`.
-- Production rollback ref: `81836b3c7dcdb55b076081e78b5b3ecbe8719f88`.
-- Latest local release manifest: [`2026-11-23-v01`](release-manifests/2026-11-23-v01.txt) from `c580cd3a8a5a6075c34fc7b9dfc7c31e3b5bf630`.
-- Latest local change: `6ac52c0e12f585fe59688aab16c118f62e85fe87` · Promote larger Facebook collage numbers.
+- Development latest non-baseline commit: `680fcd48baa34500861531d6d7a155f184a85c26`.
+- Production latest non-baseline commit: `726c739aeb688ad77bb9ecba2cbf76eef21bbeb2`.
+- Production rollback ref: `726c739aeb688ad77bb9ecba2cbf76eef21bbeb2`.
+- Latest local release manifest: [`2026-11-23-v02`](release-manifests/2026-11-23-v02.txt) from `01c8001821a5d818357d119a02433bb8c355cb2c`.
+- Latest local change: `726c739aeb688ad77bb9ecba2cbf76eef21bbeb2` · Production 2026-11-23-v02: record package validation.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
