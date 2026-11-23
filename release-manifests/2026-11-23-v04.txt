@@ -1,0 +1,14 @@
+Version: 2026-11-23-v04
+Previous Production: 2026-11-23-v03
+Development promoted from: 2026-11-23-v14 (source 46cd20394a5fda257e7366436c88daf7f28b01fb).
+Purpose: Fill Sold grid rows, match desktop toolbar heights, and release the SOLD ribbon and Facebook post titles and links.
+Source commit: 3894ac4fbf8a16a0e8934cab5e55dc6341be11a8
+Full ZIP: Collect-TCG-Production-2026-11-23-v04-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-23-v03-to-2026-11-23-v04-patch.zip
+Changed files: Sold pagination, Facebook post modules, PNG ribbon, download renderer, listing and toolbar CSS, cache references, title regression fixture, release workflow and generated SEO output.
+SQL required: No.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+716149357a29e001a12e4c480374227472f2123b17f0f1886a55787279150e45  release/Collect-TCG-Production-2026-11-23-v04-full.zip
+5118d991a3f10502d4c84aec772e6239feb904340d2e7b647f993fe72d1e524e  release/Collect-TCG-Production-2026-11-23-v03-to-2026-11-23-v04-patch.zip
