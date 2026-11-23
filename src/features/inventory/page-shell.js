@@ -130,26 +130,8 @@ function inventoryPageHTML(scopeMeta,scope){
                     title="Rearrange Inventory game categories and cards">
               ⇅ Rearrange Inventory
             </button>
-            <button type="button"
-                    class="btn-ghost collection-export-collage-btn owner-only"
-                    id="inventoryExportCollageBtn"
-                    title="Download a high-resolution collage using Inventory listing cover images">
-              ⬇ Export Collage
-            </button>
-          ` : ""}
-          ${scope==="inventory" && appContext.isOwnerMode() ? `
-            <button type="button"
-                    class="btn-ghost collection-export-collage-btn owner-only inventory-qr-download-btn"
-                    id="inventoryQrDownloadBtn"
-                    title="Download the full Inventory QR image">
-              ⬇ Inventory QR
-            </button>
           ` : ""}
 
-          <button type="button" class="copy-filter-link-btn" id="copyFilterLinkBtn" title="Copy a link to these filters">
-            <span class="copy-filter-link-desktop">Copy Filtered Link</span>
-            <span class="copy-filter-link-mobile">Copy Filter Link</span>
-          </button>
         </div>
       </div>
 
@@ -202,12 +184,14 @@ function inventoryPageHTML(scopeMeta,scope){
                   id="${scope==="collection" ? "collectionMobileOwnerBtn" : "inventoryMobileOwnerBtn"}">
             ⇅ Rearrange ${scope==="collection" ? "Collection" : "Inventory"}
           </button>
+          ${isCollection ? `
           <button type="button"
                   class="btn-ghost collection-mobile-owner-btn"
-                  id="${scope==="collection" ? "collectionMobileCollageBtn" : "inventoryMobileCollageBtn"}"
-                  title="Download a high-resolution collage using ${scope==="collection" ? "Collection" : "Inventory"} listing cover images">
+                  id="collectionMobileCollageBtn"
+                  title="Download a high-resolution collage using Collection listing cover images">
             ⬇ Export Collage
           </button>
+          ` : ""}
           <button type="button"
                   class="btn-ghost collection-mobile-owner-logout"
                   id="${scope==="collection" ? "collectionMobileOwnerLogoutBtn" : "inventoryMobileOwnerLogoutBtn"}"
