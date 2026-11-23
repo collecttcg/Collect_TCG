@@ -12,6 +12,10 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Inventory pagination controls — 2026-11-23-v06
+
+- Restored the shared pagination mounts and scroll guard on Inventory. The listing-shell fixture exercised Inventory, Sold and Collection. Live desktop Inventory showed 319 results and the bottom Next button advanced from 1–40 to 41–80. No SQL required. [Release manifest](release-manifests/2026-11-23-v06.txt).
+
 ## Production Inventory pagination and eBay links — 2026-11-23-v05
 
 - Replaces Production `2026-11-23-v04` and promotes Development `2026-11-23-v16`, including v15 social links. Inventory uses Sold full-row pagination and shows a bottom bar when the result set spans multiple pages. The desktop social strip and mobile footer link to eBay accounts 1–5. No SQL required.
