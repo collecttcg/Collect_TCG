@@ -12,6 +12,12 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production larger Facebook collage numbers — 2026-11-23-v02
+
+- Replaces `2026-11-23-v01`, promoting Development `2026-11-23-v03` from `cdbd03e39137836573ef5f5d377f643fdbaae8b4`. Listing numbers now use up to 54px bold text with a dedicated row beneath each image.
+- Production validation, collage and SEO checks, and both ZIP integrity checks passed. The release workflow verified deployed files and advanced `production-last-known-good` to `726c739aeb688ad77bb9ecba2cbf76eef21bbeb2`. No SQL required. Interactive desktop, mobile and Safari exports were not tested. [Manifest](release-manifests/2026-11-23-v02.txt).
+
+
 ## Production Facebook eBay first-photo collages — 2026-11-23-v01
 
 - Replaces `2026-11-22-v06` and promotes Development `2026-11-23-v02` from `7a6ded611f911ad0b00c7b5d437c8ad289e12160`. Selections through 25 export individual first photos. Larger selections export up to 25 numbered JPEG collages in Facebook post order.
