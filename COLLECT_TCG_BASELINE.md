@@ -12,6 +12,12 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production private Facebook listing URL — 2026-11-23-v03
+
+- Replaces `2026-11-23-v02` and promotes Development `2026-11-23-v04`. Owner Add/Edit can store one optional Facebook listing URL in existing owner-only metadata. No public listing output or database migration was required.
+- Production validation, private URL fixture, SEO checks and both ZIP integrity checks passed. Deployed files were verified and the rollback reference advanced to `0ba1f844be9c64b149acaa63e3f1a11bdcc6ad42`. Interactive desktop, mobile, Safari and live authenticated saves were not tested. [Manifest](release-manifests/2026-11-23-v03.txt).
+
+
 ## Production larger Facebook collage numbers — 2026-11-23-v02
 
 - Replaces `2026-11-23-v01`, promoting Development `2026-11-23-v03` from `cdbd03e39137836573ef5f5d377f643fdbaae8b4`. Listing numbers now use up to 54px bold text with a dedicated row beneath each image.
