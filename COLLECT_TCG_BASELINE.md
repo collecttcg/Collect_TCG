@@ -12,6 +12,11 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production Inventory toolbar and footer cleanup — 2026-11-23-v07
+
+- Replaces v06 and promotes Development v20. Removed the standalone Carddass Hyper Battle link and the Inventory toolbar shortcuts Copy Filtered Link, Export Collage and Inventory QR. The collection URL, sitemap entry, Collection collage export, Inventory rearrange and pagination remain.
+- Production checks, focused markup fixture and full/patch ZIP integrity passed. The workflow verified deployed files and advanced the rollback ref to `dd1f0913474c95d1efae8dd7398bf88462afe955`. Interactive browser testing was not performed. No SQL required. [Manifest](release-manifests/2026-11-23-v07.txt).
+
 ## Inventory pagination controls — 2026-11-23-v06
 
 - Restored the shared pagination mounts and scroll guard on Inventory. The listing-shell fixture exercised Inventory, Sold and Collection. Live desktop Inventory showed 319 results and the bottom Next button advanced from 1–40 to 41–80. No SQL required. [Release manifest](release-manifests/2026-11-23-v06.txt).
