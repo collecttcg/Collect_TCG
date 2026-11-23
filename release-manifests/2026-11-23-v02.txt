@@ -1,0 +1,14 @@
+Version: 2026-11-23-v02
+Previous Production: 2026-11-23-v01
+Development promoted from: 2026-11-23-v03 (source cdbd03e39137836573ef5f5d377f643fdbaae8b4).
+Purpose: Increase listing-number size below each Facebook collage photo.
+Source commit: 01c8001821a5d818357d119a02433bb8c355cb2c
+Full ZIP: Collect-TCG-Production-2026-11-23-v02-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-23-v01-to-2026-11-23-v02-patch.zip
+Changed files: Collage renderer, cache entry points, label-size fixture, release workflow and generated SEO output.
+SQL required: No.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+46bd11140541c87e245b10da2ff0f6c84deaceebcd81ad013f113f8e765ffd53  release/Collect-TCG-Production-2026-11-23-v02-full.zip
+495fe9e56e74745108f69d27b55a477435f59415ba8d6e0adec453b12c1ff07d  release/Collect-TCG-Production-2026-11-23-v01-to-2026-11-23-v02-patch.zip
