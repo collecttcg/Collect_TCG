@@ -4,10 +4,10 @@
 ## GitHub state
 
 - Development latest non-baseline commit: `f1f3a6af6ff8cd4825556fd7d99065a9c5f90e0a`.
-- Production latest non-baseline commit: `c46db753b81f5c2c9a5ee393f1472d26f8861582`.
-- Production rollback ref: `726c739aeb688ad77bb9ecba2cbf76eef21bbeb2`.
-- Latest local release manifest: [`2026-11-23-v02`](release-manifests/2026-11-23-v02.txt) from `01c8001821a5d818357d119a02433bb8c355cb2c`.
-- Latest local change: `c46db753b81f5c2c9a5ee393f1472d26f8861582` · Promote private Facebook listing URL.
+- Production latest non-baseline commit: `0ba1f844be9c64b149acaa63e3f1a11bdcc6ad42`.
+- Production rollback ref: `0ba1f844be9c64b149acaa63e3f1a11bdcc6ad42`.
+- Latest local release manifest: [`2026-11-23-v03`](release-manifests/2026-11-23-v03.txt) from `c4136e3b8aada5d4fde728b78350a8ff95f8bf01`.
+- Latest local change: `0ba1f844be9c64b149acaa63e3f1a11bdcc6ad42` · Production 2026-11-23-v03: record package validation.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
