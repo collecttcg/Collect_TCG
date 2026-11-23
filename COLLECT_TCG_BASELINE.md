@@ -12,6 +12,12 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production Facebook eBay first-photo collages — 2026-11-23-v01
+
+- Replaces `2026-11-22-v06` and promotes Development `2026-11-23-v02` from `7a6ded611f911ad0b00c7b5d437c8ad289e12160`. Selections through 25 export individual first photos. Larger selections export up to 25 numbered JPEG collages in Facebook post order.
+- Production JavaScript, retained contracts, collage regression fixture, SEO and both ZIP integrity checks passed. The release workflow verified deployed files and advanced `production-last-known-good` from `46dae739f69001385ec221132ae892a655dbdb8f` to `81836b3c7dcdb55b076081e78b5b3ecbe8719f88`. Interactive desktop, mobile and Safari exports were not tested. No SQL required. [Manifest](release-manifests/2026-11-23-v01.txt).
+
+
 ## Sold eBay URLs recovered from order report
 
 - Restored 22 verified links on live Sold cards from the seller-provided eBay Orders Report. Replaced the `eBay listing: yes` placeholders with exact item URLs and preserved other notes and existing links. A second review included rows with blank payment dates and restored 31 more verified links, including C04 Luffy, C08 Roronoa Zoro and C27 Mohji, for a total of 53. A second seller-provided report added 15 verified Sold URLs for a cumulative 68. A third report recovered 8 additional URLs from Sold listings with eBay checked, bringing the total to 76 with two checked listings pending confirmation. The seller confirmed both matches, and the original URLs were restored for the pre-errata First Stage lot and P-028 Ace, bringing the total to 78. This was a shared data correction with no migration, website release, or schedule change.
