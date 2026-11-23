@@ -1,0 +1,14 @@
+Version: 2026-11-23-v01
+Previous Production: 2026-11-22-v06
+Development promoted from: 2026-11-23-v02 (source 7a6ded611f911ad0b00c7b5d437c8ad289e12160).
+Purpose: Limit the Facebook eBay photo ZIP to 25 images with numbered collages.
+Source commit: c580cd3a8a5a6075c34fc7b9dfc7c31e3b5bf630
+Full ZIP: Collect-TCG-Production-2026-11-23-v01-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-22-v06-to-2026-11-23-v01-patch.zip
+Changed files: Facebook eBay generator, shared photo ZIP code, cache entry points, collage fixture, release workflow and generated SEO output.
+SQL required: No.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+a274b1ac20fb98826c980b6d2f7bdfbc939d0aa50226ede870d9c5104cb470bb  release/Collect-TCG-Production-2026-11-23-v01-full.zip
+a438b3267064c2ff0182748a5582df1291bac5ec8acf9cdbe451904987252d9f  release/Collect-TCG-Production-2026-11-22-v06-to-2026-11-23-v01-patch.zip
