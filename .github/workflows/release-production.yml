@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-22-v06 — Facebook eBay year sorting and multi-owner filtering.
+# Production 2026-11-23-v01 — Facebook eBay first-photo collages.
 on:
   workflow_dispatch:
   push:
@@ -205,9 +205,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-22-v06
-          PREVIOUS_VERSION: 2026-11-22-v05
-          PREVIOUS_COMMIT: dce651930e6189b897552fb3ff19951f3ba54b85
+          RELEASE_VERSION: 2026-11-23-v01
+          PREVIOUS_VERSION: 2026-11-22-v06
+          PREVIOUS_COMMIT: 46dae739f69001385ec221132ae892a655dbdb8f
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -224,10 +224,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-22-v06-packages
+          name: Collect-TCG-Production-2026-11-23-v01-packages
           path: |
-            release/Collect-TCG-Production-2026-11-22-v06-full.zip
-            release/Collect-TCG-Production-2026-11-22-v05-to-2026-11-22-v06-patch.zip
+            release/Collect-TCG-Production-2026-11-23-v01-full.zip
+            release/Collect-TCG-Production-2026-11-22-v06-to-2026-11-23-v01-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -235,17 +235,17 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-22-v06.txt'
+          MANIFEST='release-manifests/2026-11-23-v01.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-22-v06'
-            echo 'Previous Production: 2026-11-22-v05'
-            echo 'Development promoted from: 2026-11-22-v10 (source 18eccca9ef8fcb05831cc4a99b9a377305ea414c).'
-            echo 'Purpose: Sort the Facebook eBay picker, post and first-photo ZIP by year, and allow multiple owner filters.'
+            echo 'Version: 2026-11-23-v01'
+            echo 'Previous Production: 2026-11-22-v06'
+            echo 'Development promoted from: 2026-11-23-v02 (source 7a6ded611f911ad0b00c7b5d437c8ad289e12160).'
+            echo 'Purpose: Limit the Facebook eBay photo ZIP to 25 images with numbered collages.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-22-v06-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-22-v05-to-2026-11-22-v06-patch.zip'
-            echo 'Changed files: Facebook eBay generator, scoped checkbox styles, cache entry points, filter fixture, release workflow and generated SEO output.'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-23-v01-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-22-v06-to-2026-11-23-v01-patch.zip'
+            echo 'Changed files: Facebook eBay generator, shared photo ZIP code, cache entry points, collage fixture, release workflow and generated SEO output.'
             echo 'SQL required: No.'
             echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: Interactive desktop, mobile and Safari checks were not performed.'
@@ -255,7 +255,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-22-v06: record package validation'
+          git commit -m 'Production 2026-11-23-v01: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm deployed website files and advance last-known-good
