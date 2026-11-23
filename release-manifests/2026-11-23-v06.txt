@@ -1,0 +1,14 @@
+Version: 2026-11-23-v06
+Previous Production: 2026-11-23-v05
+Development promoted from: 2026-11-23-v16 (source e5f4a410c38a66ca3ceed9e415b9213412393076).
+Purpose: Render the shared pagination bars on Inventory.
+Source commit: 7a45c27ed8dcccdb39f1a4ef19c58dd02d4bdd3a
+Full ZIP: Collect-TCG-Production-2026-11-23-v06-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-23-v05-to-2026-11-23-v06-patch.zip
+Changed files: Inventory shell, app cache references, release workflow and generated SEO output.
+SQL required: No.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+8e18259c98a50764570efedd451ba1a999fefeab6fdc21ed74f445c882d5b948  release/Collect-TCG-Production-2026-11-23-v06-full.zip
+dc7296f41c30a9eb298b0ca4e35809c0b1c4be37416bccb03402c96b276ddda8  release/Collect-TCG-Production-2026-11-23-v05-to-2026-11-23-v06-patch.zip
