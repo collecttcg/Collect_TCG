@@ -1,0 +1,14 @@
+Version: 2026-11-23-v05
+Previous Production: 2026-11-23-v04
+Development promoted from: 2026-11-23-v16 (source e5f4a410c38a66ca3ceed9e415b9213412393076).
+Purpose: Fill complete Inventory grid rows and link all five eBay accounts in the desktop strip and mobile footer.
+Source commit: 078d3a047d385550ed1e934e5ec6b8189d85faab
+Full ZIP: Collect-TCG-Production-2026-11-23-v05-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-23-v04-to-2026-11-23-v05-patch.zip
+Changed files: Inventory page and shell, listing URL routing, index social links, app cache references, workflow and generated SEO output.
+SQL required: No.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+a86a3b109ae92406ec9690e0562c47d9024d9810b4121372708c50d085f808b2  release/Collect-TCG-Production-2026-11-23-v05-full.zip
+55c3304fd27817bb0443e78a4e994c42bc183bc5e0f7e84ab540d90708ebf938  release/Collect-TCG-Production-2026-11-23-v04-to-2026-11-23-v05-patch.zip
