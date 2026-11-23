@@ -1,5 +1,5 @@
 import { createInventoryPagination, fullRowPageSize } from './pagination.js?v=2026-11-23-v04';
-import { registerInventoryShell } from './page-shell.js?v=2026-11-23-v06';
+import { registerInventoryShell } from './page-shell.js?v=2026-11-23-v07';
 /** 2026-09-29-v09: inventory interaction controller. */
 export function register(appContext){
   registerInventoryShell(appContext);
@@ -1087,9 +1087,6 @@ function renderInventoryPage(scope = "inventory"){
     appContext.$("inventoryMobileOwnerBtn")?.addEventListener("click",handleCollectionRearrangeButton);
     appContext.$("collectionExportCollageBtn")?.addEventListener("click",appContext.openCollectionCollageSettingsModal);
     appContext.$("collectionMobileCollageBtn")?.addEventListener("click",appContext.openCollectionCollageSettingsModal);
-    appContext.$("inventoryExportCollageBtn")?.addEventListener("click",appContext.openCollectionCollageSettingsModal);
-    appContext.$("inventoryMobileCollageBtn")?.addEventListener("click",appContext.openCollectionCollageSettingsModal);
-    appContext.$("inventoryQrDownloadBtn")?.addEventListener("click",appContext.downloadInventoryQrImage);
     [appContext.$("collectionMobileOwnerLogoutBtn"),appContext.$("inventoryMobileOwnerLogoutBtn")].filter(Boolean).forEach(btn=>{
       btn.addEventListener("click",async()=>{
         if(collectionRearrangeMode) await finishCollectionRearrangeMode(false);
@@ -1894,26 +1891,6 @@ function renderInventoryPage(scope = "inventory"){
 
         draw();
       });
-    });
-
-    appContext.$("copyFilterLinkBtn")?.addEventListener("click", async ()=>{
-      appContext.updateListingUrlFromControls();
-      const url = location.href;
-      try{
-        await navigator.clipboard.writeText(url);
-        appContext.showToast("Filtered link copied");
-      }catch{
-        const input = document.createElement("textarea");
-        input.value = url;
-        input.setAttribute("readonly","");
-        input.style.position = "fixed";
-        input.style.opacity = "0";
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand("copy");
-        input.remove();
-        appContext.showToast("Filtered link copied");
-      }
     });
 
     function syncPillFilterSummary(){
