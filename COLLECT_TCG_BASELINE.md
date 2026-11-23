@@ -12,6 +12,12 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production Sold listings and toolbar — 2026-11-23-v04
+
+- Replaces `2026-11-23-v03`. Promotes Development `2026-11-23-v14` including v13 changes. Sort and Filters match Currency height. Sold grid fills rows, and listings and downloads use the new SOLD ribbon. Facebook posts restore the website and available eBay links and use the new title formatting.
+- Production validation and both ZIP integrity checks passed. Deployed files were verified and rollback ref advanced to `0491b87345558b054de902d9e9e899397c6b6c04`. Interactive desktop, mobile and Safari checks were not performed. No SQL required. [Manifest](release-manifests/2026-11-23-v04.txt).
+
+
 ## Production private Facebook listing URL — 2026-11-23-v03
 
 - Replaces `2026-11-23-v02` and promotes Development `2026-11-23-v04`. Owner Add/Edit can store one optional Facebook listing URL in existing owner-only metadata. No public listing output or database migration was required.
