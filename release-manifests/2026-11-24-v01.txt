@@ -1,0 +1,14 @@
+Version: 2026-11-24-v01
+Previous Production: 2026-11-23-v07
+Development promoted from: 2026-11-24-v01 (source 642c5b8ea145f82e535a1da10e063cb7ca6e8162).
+Purpose: Use nine-photo Facebook eBay collages with centered partial rows and a 25-image cap.
+Source commit: 8fb8fb61eb95b46c3e3abbaaded6f0ada407bd1f
+Full ZIP: Collect-TCG-Production-2026-11-24-v01-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-23-v07-to-2026-11-24-v01-patch.zip
+Changed files: Card List collage renderer, ZIP regression fixture, app cache references, release workflow and generated SEO output.
+SQL required: No.
+Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+0f688df6ec08705def99ffe0224f67e232dbc6432b78fb3655fe7feedc8701f9  release/Collect-TCG-Production-2026-11-24-v01-full.zip
+7c36cb6febee50192226159a21b4071ea143f22703edf9361f4aee0e7998abae  release/Collect-TCG-Production-2026-11-23-v07-to-2026-11-24-v01-patch.zip
