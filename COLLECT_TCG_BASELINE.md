@@ -3,7 +3,7 @@
 <!-- BEGIN AUTOMATED BASELINE STATE -->
 ## GitHub state
 
-- Development latest non-baseline commit: `c1a84e31a83f6d503787de8d767221b165c586b4`.
+- Development latest non-baseline commit: `ba5b483a02bafb0ea348eeb29cd46a81c7b1e7f7`.
 - Production latest non-baseline commit: `962fe678dd88c019dbb2d31f3962f7b230d1747f`.
 - Production rollback ref: `962fe678dd88c019dbb2d31f3962f7b230d1747f`.
 - Latest local release manifest: [`2026-11-24-v01`](release-manifests/2026-11-24-v01.txt) from `8fb8fb61eb95b46c3e3abbaaded6f0ada407bd1f`.
