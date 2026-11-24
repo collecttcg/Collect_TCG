@@ -12,6 +12,12 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production Owner sign-in bookmark — 2026-11-24-v02
+
+- Replaces `2026-11-24-v01`. The direct Owner sign-in URL opens a password-masked dialog. The existing Supabase login and Owner verification apply, including the mobile Collection ordering limit. No public navigation or sitemap link was added. No SQL or backend change.
+- Added a fixture for cancellation, rejected credentials and non-Owner access, successful sign-in, active-session revisits and desktop/mobile permission boundaries. See the release manifest and GitHub Actions for package and deployment evidence.
+- Promoted Development `2026-11-24-v03` from `be8d285c0c80d940e8e17b2e428f5bc17c13c1fe`.
+
 ## Production Facebook eBay 3×3 collages — 2026-11-24-v01
 
 - Replaces Production `2026-11-23-v07`. Promoted Development `2026-11-24-v01` from `642c5b8ea145f82e535a1da10e063cb7ca6e8162`. Collages use nine photos in Facebook post order with centered partial rows. Above 225 listings, batches grow to preserve the 25-image cap.

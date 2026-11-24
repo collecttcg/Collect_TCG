@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-24-v01 — Facebook eBay 3×3 collages.
+# 2026-11-24-v02 — Direct Owner sign-in bookmark.
 on:
   workflow_dispatch:
   push:
@@ -37,6 +37,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          node tools/check-owner-login.mjs
           node tools/check-production.mjs
           node tools/check-seo-workflow.mjs
           grep -Fq 'posts-ebay-link.js?v=' src/app/register-features.js
@@ -207,9 +208,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-24-v01
-          PREVIOUS_VERSION: 2026-11-23-v07
-          PREVIOUS_COMMIT: dd1f0913474c95d1efae8dd7398bf88462afe955
+          RELEASE_VERSION: 2026-11-24-v02
+          PREVIOUS_VERSION: 2026-11-24-v01
+          PREVIOUS_COMMIT: 8fb8fb61eb95b46c3e3abbaaded6f0ada407bd1f
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -226,10 +227,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-24-v01-packages
+          name: Collect-TCG-Production-2026-11-24-v02-packages
           path: |
-            release/Collect-TCG-Production-2026-11-24-v01-full.zip
-            release/Collect-TCG-Production-2026-11-23-v07-to-2026-11-24-v01-patch.zip
+            release/Collect-TCG-Production-2026-11-24-v02-full.zip
+            release/Collect-TCG-Production-2026-11-24-v01-to-2026-11-24-v02-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -237,19 +238,19 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-24-v01.txt'
+          MANIFEST='release-manifests/2026-11-24-v02.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-24-v01'
-            echo 'Previous Production: 2026-11-23-v07'
-            echo 'Development promoted from: 2026-11-24-v01 (source 642c5b8ea145f82e535a1da10e063cb7ca6e8162).'
-            echo 'Purpose: Use nine-photo Facebook eBay collages with centered partial rows and a 25-image cap.'
+            echo 'Version: 2026-11-24-v02'
+            echo 'Previous Production: 2026-11-24-v01'
+            echo 'Development promoted from: 2026-11-24-v03 (source be8d285c0c80d940e8e17b2e428f5bc17c13c1fe).'
+            echo 'Purpose: Open the Owner sign-in dialog from a direct bookmark with existing authentication and permissions.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-24-v01-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-23-v07-to-2026-11-24-v01-patch.zip'
-            echo 'Changed files: Card List collage renderer, ZIP regression fixture, app cache references, release workflow and generated SEO output.'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-24-v02-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-24-v01-to-2026-11-24-v02-patch.zip'
+            echo 'Changed files: Owner authentication, startup and routing, app cache references, sign-in fixture, baseline and release workflow.'
             echo 'SQL required: No.'
-            echo 'Validation: rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
+            echo 'Validation: Owner sign-in interaction and verification fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: Interactive desktop, mobile and Safari checks were not performed.'
             echo
             cat release/checksums.txt
@@ -257,7 +258,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-24-v01: record package validation'
+          git commit -m 'Production 2026-11-24-v02: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm deployed website files and advance last-known-good
@@ -269,7 +270,7 @@ jobs:
           CHECK_DIR="$(mktemp -d)"
           for attempt in $(seq 1 30); do
             MATCH=true
-            for FILE in src/features/inventory/page-shell.js src/app/routing.js index.html reviews/index.html sitemap.xml collections/one-piece-carddass-hyper-battle/index.html src/main.js src/app/register-features.js assets/sold-download-ribbon.png src/features/inventory/page.js src/features/inventory/pagination.js src/features/social/posts-ebay-link.js src/features/owner/forms.js src/features/owner/editor.js src/services/catalogue.js src/features/media/images.js src/features/core/utilities.js src/features/social/posts.js src/features/social/posts-marketplace.js src/features/social/posts-facebook-ebay.js src/features/social/posts-card-list.js src/features/owner/card-scanner.js src/features/owner/add.js src/styles/01-foundation.css src/styles/02-components.css; do
+            for FILE in src/features/inventory/page-shell.js src/app/routing.js index.html reviews/index.html sitemap.xml collections/one-piece-carddass-hyper-battle/index.html src/main.js src/app/register-features.js assets/sold-download-ribbon.png src/features/inventory/page.js src/features/inventory/pagination.js src/features/social/posts-ebay-link.js src/features/owner/forms.js src/features/owner/editor.js src/services/auth.js src/app/startup.js src/app/initialize.js src/services/catalogue.js src/features/media/images.js src/features/core/utilities.js src/features/social/posts.js src/features/social/posts-marketplace.js src/features/social/posts-facebook-ebay.js src/features/social/posts-card-list.js src/features/owner/card-scanner.js src/features/owner/add.js src/styles/01-foundation.css src/styles/02-components.css; do
               if ! curl -fsSL --max-time 10 "$BASE/$FILE?release=$GITHUB_SHA" -o "$CHECK_DIR/file" || ! cmp -s "$FILE" "$CHECK_DIR/file"; then
                 MATCH=false
                 break
