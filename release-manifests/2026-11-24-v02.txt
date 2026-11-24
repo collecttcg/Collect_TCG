@@ -1,0 +1,14 @@
+Version: 2026-11-24-v02
+Previous Production: 2026-11-24-v01
+Development promoted from: 2026-11-24-v03 (source be8d285c0c80d940e8e17b2e428f5bc17c13c1fe).
+Purpose: Open the Owner sign-in dialog from a direct bookmark with existing authentication and permissions.
+Source commit: 660d96cfb8c52f730f8272e279b7bf6a114cd9ba
+Full ZIP: Collect-TCG-Production-2026-11-24-v02-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-24-v01-to-2026-11-24-v02-patch.zip
+Changed files: Owner authentication, startup and routing, app cache references, sign-in fixture, baseline and release workflow.
+SQL required: No.
+Validation: Owner sign-in interaction and verification fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+4263148f9f7cd3a397f7b4ff7cfaee88390526e205727793a014c06b41718f29  release/Collect-TCG-Production-2026-11-24-v02-full.zip
+844140f28a2e6aebb4d4584ea5f18e0f1ca0a912b98a5643feda20289352c8f9  release/Collect-TCG-Production-2026-11-24-v01-to-2026-11-24-v02-patch.zip
