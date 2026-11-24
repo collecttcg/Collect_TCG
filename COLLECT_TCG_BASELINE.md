@@ -3,11 +3,11 @@
 <!-- BEGIN AUTOMATED BASELINE STATE -->
 ## GitHub state
 
-- Development latest non-baseline commit: `0ea28dda8ce11f06bbbffc9b23b91ce7017380e6`.
-- Production latest non-baseline commit: `93e2db1c73c6fd3f0d0e6636299e1bb79b38fa97`.
+- Development latest non-baseline commit: `c1a84e31a83f6d503787de8d767221b165c586b4`.
+- Production latest non-baseline commit: `b1d5a0d9cc18880420eb904a3dbe13385ad9aa4f`.
 - Production rollback ref: `dd1f0913474c95d1efae8dd7398bf88462afe955`.
 - Latest local release manifest: [`2026-11-23-v07`](release-manifests/2026-11-23-v07.txt) from `76e0bc3391248bac3ae9138baeff73da5e9b7102`.
-- Latest local change: `93e2db1c73c6fd3f0d0e6636299e1bb79b38fa97` · chore: refresh Production SEO card pages [skip ci].
+- Latest local change: `b1d5a0d9cc18880420eb904a3dbe13385ad9aa4f` · Promote Facebook eBay 3×3 collages: release-production.yml.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
