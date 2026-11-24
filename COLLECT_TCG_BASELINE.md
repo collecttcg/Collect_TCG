@@ -12,6 +12,11 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production Facebook eBay 3×3 collages — 2026-11-24-v01
+
+- Replaces Production `2026-11-23-v07`. Promoted Development `2026-11-24-v01` from `642c5b8ea145f82e535a1da10e063cb7ca6e8162`. Collages use nine photos in Facebook post order with centered partial rows. Above 225 listings, batches grow to preserve the 25-image cap.
+- Production and ZIP fixtures passed, both packages passed integrity checks, and deployed files matched the release. Rollback ref advanced to `962fe678dd88c019dbb2d31f3962f7b230d1747f`. Interactive export was not tested. No SQL required. [Manifest](release-manifests/2026-11-24-v01.txt).
+
 ## Production Inventory toolbar and footer cleanup — 2026-11-23-v07
 
 - Replaces v06 and promotes Development v20. Removed the standalone Carddass Hyper Battle link and the Inventory toolbar shortcuts Copy Filtered Link, Export Collage and Inventory QR. The collection URL, sitemap entry, Collection collage export, Inventory rearrange and pagination remain.
