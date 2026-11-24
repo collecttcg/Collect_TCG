@@ -18,6 +18,8 @@ This section records GitHub state. The release manifest and workflow results det
 - Added a fixture for cancellation, rejected credentials and non-Owner access, successful sign-in, active-session revisits and desktop/mobile permission boundaries. See the release manifest and GitHub Actions for package and deployment evidence.
 - Promoted Development `2026-11-24-v03` from `be8d285c0c80d940e8e17b2e428f5bc17c13c1fe`.
 
+- Production validation and sign-in fixtures passed. CI verified both ZIPs and confirmed that deployed files matched the release. The rollback ref advanced to `4a703ca72ebbcf77aa3649a63398cb37637152f4`. Interactive Production browser checks were not performed. [Release and packages](https://github.com/collecttcg/Collect_TCG/actions/runs/45404609596) · [Manifest](release-manifests/2026-11-24-v02.txt).
+
 ## Production Facebook eBay 3×3 collages — 2026-11-24-v01
 
 - Replaces Production `2026-11-23-v07`. Promoted Development `2026-11-24-v01` from `642c5b8ea145f82e535a1da10e063cb7ca6e8162`. Collages use nine photos in Facebook post order with centered partial rows. Above 225 listings, batches grow to preserve the 25-image cap.
