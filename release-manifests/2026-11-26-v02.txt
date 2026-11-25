@@ -1,0 +1,14 @@
+Version: 2026-11-26-v02
+Previous Production: 2026-11-26-v01
+Development promoted from: 2026-11-26-v09 (source 8435a60b808fe1f9aef2779404dc5f2ac2bd743b).
+Purpose: Promote the premium invoice layout and manual PDF archive backed by private Supabase Storage.
+Source commit: 07bcd386b7cdec0196d359e97a224dcd0eeaaa00
+Full ZIP: Collect-TCG-Production-2026-11-26-v02-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-26-v01-to-2026-11-26-v02-patch.zip
+Changed files: Invoice module, private Storage migration, module cache references, baseline and release workflow.
+SQL required: 2026-11-26-v02-OWNER-INVOICES-PROD.sql.
+Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+461854ccfb99a2de10679d66f31b69604458eac080b47640b9db720b2c5672a8  release/Collect-TCG-Production-2026-11-26-v02-full.zip
+696aa5dc70e7ae408cffc37c2f13fbff526bd348c24d8ed5bd08fff7ee7fc2ed  release/Collect-TCG-Production-2026-11-26-v01-to-2026-11-26-v02-patch.zip
