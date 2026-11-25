@@ -1,0 +1,14 @@
+Version: 2026-11-25-v07
+Previous Production: 2026-11-25-v06
+Development promoted from: 2026-11-25-v15 (source 5f7a2410998d2be3629661c57a262d4d8c515900).
+Purpose: Use the revised direct-buy tiers and center the buying example table.
+Source commit: 58b425d871f6aed4bf09fad215a72a27bf793271
+Full ZIP: Collect-TCG-Production-2026-11-25-v07-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-25-v06-to-2026-11-25-v07-patch.zip
+Changed files: About markup and styles, cache references, baseline and release workflow.
+SQL required: No.
+Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+acdd2d93cc3016339a3997a58d8129e6afe6e38af93f9ac027f084eaabdddbc2  release/Collect-TCG-Production-2026-11-25-v07-full.zip
+334bc063f49f073481da67597c73257700deec49cc1408e0652e420838c5134b  release/Collect-TCG-Production-2026-11-25-v06-to-2026-11-25-v07-patch.zip
