@@ -16,6 +16,7 @@ This section records GitHub state. The release manifest and workflow results det
 
 - Replaces `2026-11-25-v01`. Promoted Development `2026-11-25-v05` at `9b92b144a97b4453c7b7f507213616c08137f36d`.
 - Single Card Post uses the Collection Showcase template for NFS cards. Giveaway switches the form and preview in place under shared tabs and fixes initialization of the Winners form. Existing links remain supported. “Share eBay Listings on Facebook” distinguishes that tool from eBay Listing. No SQL required.
+- Production checks, ZIP integrity checks and deployed-file verification passed. The rollback reference advanced to `f332dd318123f7da0bdc8f313d20e0ba722b608c`. Interactive browser testing was not performed. [Release and ZIPs](https://github.com/collecttcg/Collect_TCG/actions/runs/45530101400).
 
 ## Production Owner sign-in, Card Details post actions and homepage title — 2026-11-25-v01
 
