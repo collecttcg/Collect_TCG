@@ -16,7 +16,8 @@ This section records GitHub state. The release manifest and workflow results det
 
 - Replaces Production `2026-11-24-v02`. Promoted approved changes from Development `2026-11-25-v03` at `c0470767362fa6e7560f493596484a249b91ac8c`.
 - The bookmark closes the dialog after verified Owner sign-in. Owner view loading errors receive a separate notice. Card Details → More offers the Facebook, Carousell and eBay generators for the current card using the same Owner and eligibility rules as the card grid.
-- The homepage tab and sharing title read “One Piece Cards in Malaysia & Singapore | Collect TCG.” No SQL required. See the release manifest and Actions for deployment and validation.
+- The homepage tab and sharing title read “One Piece Cards in Malaysia & Singapore | Collect TCG.” No SQL required.
+- Production checks and both ZIP integrity checks passed. Pages served the new homepage title and the release workflow verified deployed files. The last-known-good ref advanced to `2e7bbed971a4cdd8e592d96f1630db5db1b48aab`. Interactive Production browser checks were not performed. [Release and packages](https://github.com/collecttcg/Collect_TCG/actions/runs/45524875837) · [Pages deployment](https://github.com/collecttcg/Collect_TCG/actions/runs/45524932504).
 
 ## Production Owner sign-in bookmark — 2026-11-24-v02
 
