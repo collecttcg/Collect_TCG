@@ -1,0 +1,14 @@
+Version: 2026-11-25-v01
+Previous Production: 2026-11-24-v02
+Development promoted from: 2026-11-25-v03 (source c0470767362fa6e7560f493596484a249b91ac8c).
+Purpose: Close sign-in after Owner verification, add Owner Card Details post actions and update the homepage title.
+Source commit: 127c1b9366a69b6205f66653c988f0ba7bf7d6ef
+Full ZIP: Collect-TCG-Production-2026-11-25-v01-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-24-v02-to-2026-11-25-v01-patch.zip
+Changed files: Owner authentication, Card Details, home page metadata, cache references, regression fixtures, baseline and release workflow.
+SQL required: No.
+Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+87d16f100715e11d117c432e480f41511e6a800a78a728d698a9ec68967aa961  release/Collect-TCG-Production-2026-11-25-v01-full.zip
+7d9bb0178b8c3db72519146cd740d40020c03bbe03a194c2d27e4022c6f6da2f  release/Collect-TCG-Production-2026-11-24-v02-to-2026-11-25-v01-patch.zip
