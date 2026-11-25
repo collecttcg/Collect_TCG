@@ -15,6 +15,7 @@ This section records GitHub state. The release manifest and workflow results det
 ## Production eBay account labels — 2026-11-25-v05
 
 - Replaces `2026-11-25-v04`. Promoted Development `2026-11-25-v12` at `a44fd73a7af5117423fe66ab090a854c58247794`. About and Contact show Collect TCG 1–5 with the existing eBay wordmark and remove repeated subtitles. Platform logos are also shown for Facebook, Messenger, Instagram and Carousell. Seller destinations and external-link arrows are retained. No SQL required.
+- Production tests and both ZIP integrity checks passed. Deployed files, including both logo assets, matched the release, and the rollback reference advanced to `dada2282760f853723212520d603168b801dc6b1`. Interactive desktop, mobile and Safari rendering were not tested. [Release and ZIPs](https://github.com/collecttcg/Collect_TCG/actions/runs/45549982018).
 
 ## Production US eBay seller links — 2026-11-25-v04
 
