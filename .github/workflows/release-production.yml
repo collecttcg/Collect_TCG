@@ -1,5 +1,5 @@
 name: Production Release
-# Production 2026-11-25-v04 — Use US eBay seller links.
+# 2026-11-25-v05 — Polish eBay account labels.
 on:
   workflow_dispatch:
   push:
@@ -209,9 +209,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-25-v04
-          PREVIOUS_VERSION: 2026-11-25-v03
-          PREVIOUS_COMMIT: 5f6e5afd5488c07e95dbf0ef743b4db49acf79db
+          RELEASE_VERSION: 2026-11-25-v05
+          PREVIOUS_VERSION: 2026-11-25-v04
+          PREVIOUS_COMMIT: 9834ea798f6de47e59add5d16304b221365ba80b
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -228,10 +228,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-25-v04-packages
+          name: Collect-TCG-Production-2026-11-25-v05-packages
           path: |
-            release/Collect-TCG-Production-2026-11-25-v04-full.zip
-            release/Collect-TCG-Production-2026-11-25-v03-to-2026-11-25-v04-patch.zip
+            release/Collect-TCG-Production-2026-11-25-v05-full.zip
+            release/Collect-TCG-Production-2026-11-25-v04-to-2026-11-25-v05-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -239,17 +239,17 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-25-v04.txt'
+          MANIFEST='release-manifests/2026-11-25-v05.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-25-v04'
-            echo 'Previous Production: 2026-11-25-v03'
-            echo 'Development promoted from: 2026-11-25-v10 (source a4838537e0a63f2773f7f273c81583ca358b7d81).'
-            echo 'Purpose: Use ebay.com for Collect TCG seller profiles 3 through 5.'
+            echo 'Version: 2026-11-25-v05'
+            echo 'Previous Production: 2026-11-25-v04'
+            echo 'Development promoted from: 2026-11-25-v12 (source a44fd73a7af5117423fe66ab090a854c58247794).'
+            echo 'Purpose: Show readable eBay account names and platform logos on About and Contact.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-25-v04-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-25-v03-to-2026-11-25-v04-patch.zip'
-            echo 'Changed files: Site shell, About and Contact, Facebook post footer, cache references, baseline and release workflow.'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-25-v05-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-25-v04-to-2026-11-25-v05-patch.zip'
+            echo 'Changed files: About and Contact markup, platform assets, cache references, baseline and release workflow.'
             echo 'SQL required: No.'
             echo 'Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: Interactive desktop, mobile and Safari checks were not performed.'
@@ -259,7 +259,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-25-v04: record package validation'
+          git commit -m 'Production 2026-11-25-v05: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm deployed website files and advance last-known-good
@@ -271,7 +271,7 @@ jobs:
           CHECK_DIR="$(mktemp -d)"
           for attempt in $(seq 1 30); do
             MATCH=true
-            for FILE in assets/ebay-post-generator.svg assets/facebook-post-generator.svg assets/carousell-post-generator.png src/features/inventory/page-shell.js src/app/routing.js index.html reviews/index.html sitemap.xml collections/one-piece-carddass-hyper-battle/index.html src/main.js src/app/register-features.js assets/sold-download-ribbon.png src/features/inventory/page.js src/features/inventory/pagination.js src/features/social/posts-ebay-link.js src/features/owner/forms.js src/features/owner/editor.js src/services/auth.js src/features/cards/details.js src/app/startup.js src/app/initialize.js src/services/catalogue.js src/features/media/images.js src/features/core/utilities.js src/features/social/posts.js src/features/social/posts-giveaway.js src/features/social/posts-marketplace.js src/features/social/posts-facebook-ebay.js src/features/social/posts-card-list.js src/features/content/information.js src/features/owner/card-scanner.js src/features/owner/add.js src/styles/01-foundation.css src/styles/02-components.css; do
+            for FILE in assets/instagram-contact.svg assets/messenger-contact.svg assets/ebay-post-generator.svg assets/facebook-post-generator.svg assets/carousell-post-generator.png src/features/inventory/page-shell.js src/app/routing.js index.html reviews/index.html sitemap.xml collections/one-piece-carddass-hyper-battle/index.html src/main.js src/app/register-features.js assets/sold-download-ribbon.png src/features/inventory/page.js src/features/inventory/pagination.js src/features/social/posts-ebay-link.js src/features/owner/forms.js src/features/owner/editor.js src/services/auth.js src/features/cards/details.js src/app/startup.js src/app/initialize.js src/services/catalogue.js src/features/media/images.js src/features/core/utilities.js src/features/social/posts.js src/features/social/posts-giveaway.js src/features/social/posts-marketplace.js src/features/social/posts-facebook-ebay.js src/features/social/posts-card-list.js src/features/content/information.js src/features/owner/card-scanner.js src/features/owner/add.js src/styles/01-foundation.css src/styles/02-components.css; do
               if ! curl -fsSL --max-time 10 "$BASE/$FILE?release=$GITHUB_SHA" -o "$CHECK_DIR/file" || ! cmp -s "$FILE" "$CHECK_DIR/file"; then
                 MATCH=false
                 break

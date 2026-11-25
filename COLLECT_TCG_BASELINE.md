@@ -12,6 +12,10 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production eBay account labels — 2026-11-25-v05
+
+- Replaces `2026-11-25-v04`. Promoted Development `2026-11-25-v12` at `a44fd73a7af5117423fe66ab090a854c58247794`. About and Contact show Collect TCG 1–5 with the existing eBay wordmark and remove repeated subtitles. Platform logos are also shown for Facebook, Messenger, Instagram and Carousell. Seller destinations and external-link arrows are retained. No SQL required.
+
 ## Production US eBay seller links — 2026-11-25-v04
 
 - Replaces Production `2026-11-25-v03`. Promoted Development `2026-11-25-v10` at `a4838537e0a63f2773f7f273c81583ca358b7d81`.
