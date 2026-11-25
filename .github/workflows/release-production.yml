@@ -1,5 +1,5 @@
 name: Production Release
-# 2026-11-25-v06 — Explain eBay and direct purchase options.
+# 2026-11-25-v07 — Update About buying tiers and center the example.
 on:
   workflow_dispatch:
   push:
@@ -209,9 +209,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-25-v06
-          PREVIOUS_VERSION: 2026-11-25-v05
-          PREVIOUS_COMMIT: 336e24fdc0fa0e3a77481c6f857180bcde5b698a
+          RELEASE_VERSION: 2026-11-25-v07
+          PREVIOUS_VERSION: 2026-11-25-v06
+          PREVIOUS_COMMIT: 1a43ac17d96dd15e06562a6ff241ee99527e6b41
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -228,10 +228,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-25-v06-packages
+          name: Collect-TCG-Production-2026-11-25-v07-packages
           path: |
-            release/Collect-TCG-Production-2026-11-25-v06-full.zip
-            release/Collect-TCG-Production-2026-11-25-v05-to-2026-11-25-v06-patch.zip
+            release/Collect-TCG-Production-2026-11-25-v07-full.zip
+            release/Collect-TCG-Production-2026-11-25-v06-to-2026-11-25-v07-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -239,17 +239,17 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-25-v06.txt'
+          MANIFEST='release-manifests/2026-11-25-v07.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-25-v06'
-            echo 'Previous Production: 2026-11-25-v05'
-            echo 'Development promoted from: 2026-11-25-v13 (source 69813bc9e1ddcffdb6c919a2a233d49765bd0ff5).'
-            echo 'Purpose: Add eBay and direct buying options, discount tiers and a worked example to About.'
+            echo 'Version: 2026-11-25-v07'
+            echo 'Previous Production: 2026-11-25-v06'
+            echo 'Development promoted from: 2026-11-25-v15 (source 5f7a2410998d2be3629661c57a262d4d8c515900).'
+            echo 'Purpose: Use the revised direct-buy tiers and center the buying example table.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-25-v06-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-25-v05-to-2026-11-25-v06-patch.zip'
-            echo 'Changed files: About markup, cache references, baseline and release workflow.'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-25-v07-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-25-v06-to-2026-11-25-v07-patch.zip'
+            echo 'Changed files: About markup and styles, cache references, baseline and release workflow.'
             echo 'SQL required: No.'
             echo 'Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: Interactive desktop, mobile and Safari checks were not performed.'
@@ -259,7 +259,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-25-v06: record package validation'
+          git commit -m 'Production 2026-11-25-v07: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm deployed website files and advance last-known-good
@@ -271,7 +271,7 @@ jobs:
           CHECK_DIR="$(mktemp -d)"
           for attempt in $(seq 1 30); do
             MATCH=true
-            for FILE in assets/instagram-contact.svg assets/messenger-contact.svg assets/ebay-post-generator.svg assets/facebook-post-generator.svg assets/carousell-post-generator.png src/features/inventory/page-shell.js src/app/routing.js index.html reviews/index.html sitemap.xml collections/one-piece-carddass-hyper-battle/index.html src/main.js src/app/register-features.js assets/sold-download-ribbon.png src/features/inventory/page.js src/features/inventory/pagination.js src/features/social/posts-ebay-link.js src/features/owner/forms.js src/features/owner/editor.js src/services/auth.js src/features/cards/details.js src/app/startup.js src/app/initialize.js src/services/catalogue.js src/features/media/images.js src/features/core/utilities.js src/features/social/posts.js src/features/social/posts-giveaway.js src/features/social/posts-marketplace.js src/features/social/posts-facebook-ebay.js src/features/social/posts-card-list.js src/features/content/information.js src/features/owner/card-scanner.js src/features/owner/add.js src/styles/01-foundation.css src/styles/02-components.css; do
+            for FILE in assets/about-buying.css assets/instagram-contact.svg assets/messenger-contact.svg assets/ebay-post-generator.svg assets/facebook-post-generator.svg assets/carousell-post-generator.png src/features/inventory/page-shell.js src/app/routing.js index.html reviews/index.html sitemap.xml collections/one-piece-carddass-hyper-battle/index.html src/main.js src/app/register-features.js assets/sold-download-ribbon.png src/features/inventory/page.js src/features/inventory/pagination.js src/features/social/posts-ebay-link.js src/features/owner/forms.js src/features/owner/editor.js src/services/auth.js src/features/cards/details.js src/app/startup.js src/app/initialize.js src/services/catalogue.js src/features/media/images.js src/features/core/utilities.js src/features/social/posts.js src/features/social/posts-giveaway.js src/features/social/posts-marketplace.js src/features/social/posts-facebook-ebay.js src/features/social/posts-card-list.js src/features/content/information.js src/features/owner/card-scanner.js src/features/owner/add.js src/styles/01-foundation.css src/styles/02-components.css; do
               if ! curl -fsSL --max-time 10 "$BASE/$FILE?release=$GITHUB_SHA" -o "$CHECK_DIR/file" || ! cmp -s "$FILE" "$CHECK_DIR/file"; then
                 MATCH=false
                 break
