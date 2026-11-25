@@ -15,6 +15,7 @@ This section records GitHub state. The release manifest and workflow results det
 ## Production About buying options — 2026-11-25-v06
 
 - Replaces `2026-11-25-v05`. Promoted Development `2026-11-25-v13` at `69813bc9e1ddcffdb6c919a2a233d49765bd0ff5`. About explains buying on eBay and buying directly, including 12% below US$2,500, 8% at or above US$2,500, and US$5 off each additional item. The two-card example totals US$6,355 before shipping. No SQL required.
+- Production tests, rendered-markup checks and both ZIP integrity checks passed. Deployed files matched the release, and the rollback reference advanced to `76fbb480912ce07a045e9835be102086fdd687eb`. Interactive browser rendering was not tested. [Release and ZIPs](https://github.com/collecttcg/Collect_TCG/actions/runs/45551238282).
 
 ## Production eBay account labels — 2026-11-25-v05
 
