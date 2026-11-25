@@ -16,6 +16,7 @@ This section records GitHub state. The release manifest and workflow results det
 
 - Replaces Production `2026-11-25-v03`. Promoted Development `2026-11-25-v10` at `a4838537e0a63f2773f7f273c81583ca358b7d81`.
 - Seller profiles 3–5 use ebay.com in navigation, About and Contact, and Facebook card list and card drop posts. No SQL required.
+- Production tests and both ZIP integrity checks passed. Deployed website files matched the release, and the rollback reference advanced to `3dd47ee48af2bd050dc6452a75cbf2e3366c0f46`. The external seller profiles were not opened interactively. [Release and ZIPs](https://github.com/collecttcg/Collect_TCG/actions/runs/45546432077).
 
 ## Production Post Generator tile logos and sort note — 2026-11-25-v03
 
