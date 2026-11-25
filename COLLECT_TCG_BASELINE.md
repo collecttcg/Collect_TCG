@@ -16,6 +16,7 @@ This section records GitHub state. The release manifest and workflow results det
 
 - Replaces Production `2026-11-25-v02`. Promoted Development `2026-11-25-v09` at `6e98e627743323607838bc33149a4cfb2920ba98`.
 - Single Card Post and Card List Post use the Facebook logo. The eBay sharing tile displays both brands, eBay Listing uses the eBay wordmark, and Carousell Post uses the Carousell icon. The generated Facebook post states that listings are sorted by year, oldest first. No SQL required.
+- Production validation and both ZIP integrity checks passed. The deployment matched the validated files, including the three logo assets, and the rollback reference advanced to `be8e8b5135df2c2d165d3ceb0d1b4138881ee46e`. Interactive browser rendering was not tested. [Release and ZIPs](https://github.com/collecttcg/Collect_TCG/actions/runs/45545099994).
 
 ## Production Post Generator consolidation — 2026-11-25-v02
 
