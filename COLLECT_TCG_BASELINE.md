@@ -3,11 +3,11 @@
 <!-- BEGIN AUTOMATED BASELINE STATE -->
 ## GitHub state
 
-- Development latest non-baseline commit: `35df10b72e23beb013c124034608fb96ddce4373`.
-- Production latest non-baseline commit: `2e7bbed971a4cdd8e592d96f1630db5db1b48aab`.
+- Development latest non-baseline commit: `9eea827062fb4898056f758ec5661fdde174ea78`.
+- Production latest non-baseline commit: `9f22c945b4016a64d94cdd6976512f2a611debfb`.
 - Production rollback ref: `2e7bbed971a4cdd8e592d96f1630db5db1b48aab`.
 - Latest local release manifest: [`2026-11-25-v01`](release-manifests/2026-11-25-v01.txt) from `127c1b9366a69b6205f66653c988f0ba7bf7d6ef`.
-- Latest local change: `2e7bbed971a4cdd8e592d96f1630db5db1b48aab` · Production 2026-11-25-v01: record package validation.
+- Latest local change: `9f22c945b4016a64d94cdd6976512f2a611debfb` · Production 2026-11-25-v02: consolidate Post Generators and switch Giveaway panels in place.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
