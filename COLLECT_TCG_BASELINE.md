@@ -12,6 +12,12 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production Owner sign-in, Card Details post actions and homepage title — 2026-11-25-v01
+
+- Replaces Production `2026-11-24-v02`. Promoted approved changes from Development `2026-11-25-v03` at `c0470767362fa6e7560f493596484a249b91ac8c`.
+- The bookmark closes the dialog after verified Owner sign-in. Owner view loading errors receive a separate notice. Card Details → More offers the Facebook, Carousell and eBay generators for the current card using the same Owner and eligibility rules as the card grid.
+- The homepage tab and sharing title read “One Piece Cards in Malaysia & Singapore | Collect TCG.” No SQL required. See the release manifest and Actions for deployment and validation.
+
 ## Production Owner sign-in bookmark — 2026-11-24-v02
 
 - Replaces `2026-11-24-v01`. The direct Owner sign-in URL opens a password-masked dialog. The existing Supabase login and Owner verification apply, including the mobile Collection ordering limit. No public navigation or sitemap link was added. No SQL or backend change.

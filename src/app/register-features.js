@@ -1,7 +1,7 @@
 import * as module0 from '../features/core/utilities.js?v=2026-11-22-v02';
 import * as module1 from '../features/cards/favorites.js?v=2026-09-29-v09';
 import * as module2 from '../features/inventory/ordering.js?v=2026-09-29-v09';
-import * as module3 from '../services/auth.js?v=2026-11-24-v02';
+import * as module3 from '../services/auth.js?v=2026-11-25-v01';
 import * as module4 from '../features/media/collage.js?v=2026-09-29-v09';
 import * as module5 from '../features/cards/repository.js?v=2026-11-12-v02';
 import * as module6 from '../app/navigation.js?v=2026-11-15-v04';
@@ -43,7 +43,7 @@ import * as module40 from '../features/owner/bulk-metadata.js?v=2026-09-29-v09';
 import * as module41 from '../features/owner/history.js?v=2026-09-29-v09';
 import * as module42 from '../features/owner/export.js?v=2026-09-29-v09';
 import * as module43 from '../features/owner/add.js?v=2026-11-22-v05';
-import * as module44 from '../features/cards/details.js?v=2026-11-10-v03';
+import * as module44 from '../features/cards/details.js?v=2026-11-25-v01';
 import * as module45 from '../features/owner/editor.js?v=2026-11-23-v03';
 import * as module46 from '../app/theme.js?v=2026-09-29-v09';
 import * as module47 from '../app/startup.js?v=2026-11-24-v02';
