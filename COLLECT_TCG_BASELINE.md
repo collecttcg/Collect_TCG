@@ -12,6 +12,12 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production Owner-only invoice generator — 2026-11-26-v01
+
+- Replaces `2026-11-25-v07`. Promotes the invoice generator from Development `2026-11-26-v02` at `0f5dced49386a1bda75a61c3028b650691d5c58e`. The form has clearer field borders and keyboard focus, and optional multiline addresses for both parties. The printed invoice includes addresses when entered.
+- Access follows the existing verified desktop Owner gate. Invoice details are processed in the browser. No SQL required. Local Production syntax, Owner access fixtures, and invoice output fixtures passed. Interactive browser and Safari testing were unavailable.
+
+
 ## Production direct purchase tiers and centered example — 2026-11-25-v07
 
 - Replaces `2026-11-25-v06`. Promoted Development `2026-11-25-v15` at `5f7a2410998d2be3629661c57a262d4d8c515900`.
