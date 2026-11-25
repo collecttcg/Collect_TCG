@@ -16,6 +16,7 @@ This section records GitHub state. The release manifest and workflow results det
 
 - Replaces `2026-11-25-v06`. Promoted Development `2026-11-25-v15` at `5f7a2410998d2be3629661c57a262d4d8c515900`.
 - About uses 12% off the first US$2,500 per item and 3% on the portion above that. The centered table shows US$6,380 before shipping and US$620 saved, including the extra-item discount. No SQL required.
+- Production validation and both ZIP integrity checks passed. The deployment matched the validated files, including the page-specific stylesheet, and the rollback reference advanced to `b212c7e0334a026f1e116bfdf267bc43afab7d25`. Interactive browser testing was not performed. [Release and ZIPs](https://github.com/collecttcg/Collect_TCG/actions/runs/45552771723).
 
 ## Production About buying options — 2026-11-25-v06
 
