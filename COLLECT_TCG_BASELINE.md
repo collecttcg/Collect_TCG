@@ -12,6 +12,10 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production About buying options — 2026-11-25-v06
+
+- Replaces `2026-11-25-v05`. Promoted Development `2026-11-25-v13` at `69813bc9e1ddcffdb6c919a2a233d49765bd0ff5`. About explains buying on eBay and buying directly, including 12% below US$2,500, 8% at or above US$2,500, and US$5 off each additional item. The two-card example totals US$6,355 before shipping. No SQL required.
+
 ## Production eBay account labels — 2026-11-25-v05
 
 - Replaces `2026-11-25-v04`. Promoted Development `2026-11-25-v12` at `a44fd73a7af5117423fe66ab090a854c58247794`. About and Contact show Collect TCG 1–5 with the existing eBay wordmark and remove repeated subtitles. Platform logos are also shown for Facebook, Messenger, Instagram and Carousell. Seller destinations and external-link arrows are retained. No SQL required.
