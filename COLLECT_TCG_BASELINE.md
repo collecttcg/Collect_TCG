@@ -14,7 +14,7 @@ This section records GitHub state. The release manifest and workflow results det
 
 ## Production private invoice archive — 2026-11-26-v02
 
-- Replaces Production `2026-11-26-v01`. Promotes the invoice workflow from Development `2026-11-26-v09` at `8435a60b808fe1f9aef2779404dc5f2ac2bd743b`. The premium invoice preview supports manual PDF upload, a searchable list, viewing and downloads. Production uses its own private bucket and browser storage namespace. The approved SQL migration was applied and verified. Production repository checks and Chromium fixtures covered Owner access, PDF upload and byte-exact download, viewing, search, duplicate handling, deletion, offline behavior and mobile layout. Live signed-in upload and Safari were not tested.
+- Replaces Production `2026-11-26-v01`. Promotes the invoice workflow from Development `2026-11-26-v09` at `8435a60b808fe1f9aef2779404dc5f2ac2bd743b`. The premium invoice preview supports manual PDF upload, a searchable list, viewing and downloads. Production uses its own private bucket and browser storage namespace. The approved SQL migration was applied and verified. Production repository checks and Chromium fixtures covered Owner access, PDF upload and byte-exact download, viewing, search, duplicate handling, deletion, offline behavior and mobile layout. Live signed-in upload and Safari were not tested. The Production release passed on retry after an SEO branch update collision. The live deployment and both ZIP checks passed, and the rollback reference advanced to `0b3416de8a9573a4c37174a221d407b888263191`. [Release and packages](https://github.com/collecttcg/Collect_TCG/actions/runs/45663193590).
 
 
 ## Production Owner-only invoice generator — 2026-11-26-v01
