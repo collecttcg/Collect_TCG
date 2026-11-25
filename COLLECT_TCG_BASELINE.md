@@ -12,6 +12,11 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production US eBay seller links — 2026-11-25-v04
+
+- Replaces Production `2026-11-25-v03`. Promoted Development `2026-11-25-v10` at `a4838537e0a63f2773f7f273c81583ca358b7d81`.
+- Seller profiles 3–5 use ebay.com in navigation, About and Contact, and Facebook card list and card drop posts. No SQL required.
+
 ## Production Post Generator tile logos and sort note — 2026-11-25-v03
 
 - Replaces Production `2026-11-25-v02`. Promoted Development `2026-11-25-v09` at `6e98e627743323607838bc33149a4cfb2920ba98`.
