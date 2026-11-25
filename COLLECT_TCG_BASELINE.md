@@ -12,6 +12,11 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production Post Generator consolidation — 2026-11-25-v02
+
+- Replaces `2026-11-25-v01`. Promoted Development `2026-11-25-v05` at `9b92b144a97b4453c7b7f507213616c08137f36d`.
+- Single Card Post uses the Collection Showcase template for NFS cards. Giveaway switches the form and preview in place under shared tabs and fixes initialization of the Winners form. Existing links remain supported. “Share eBay Listings on Facebook” distinguishes that tool from eBay Listing. No SQL required.
+
 ## Production Owner sign-in, Card Details post actions and homepage title — 2026-11-25-v01
 
 - Replaces Production `2026-11-24-v02`. Promoted approved changes from Development `2026-11-25-v03` at `c0470767362fa6e7560f493596484a249b91ac8c`.

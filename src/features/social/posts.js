@@ -1,5 +1,5 @@
 /** 2026-09-29-v10: Post Generator coordinator. */
-import { registerGiveawayPosts } from './posts-giveaway.js?v=2026-09-29-v09';
+import { registerGiveawayPosts } from './posts-giveaway.js?v=2026-11-25-v02';
 import { registerMarketplacePosts } from './posts-marketplace.js?v=2026-11-22-v03';
 import { registerCardListPosts } from './posts-card-list.js?v=2026-11-24-v01';
 import { registerFacebookEbayPosts } from './posts-facebook-ebay.js?v=2026-11-23-v01';
@@ -480,12 +480,13 @@ function currentFacebookToolMode(){
   }
 
 function facebookToolsHeaderHTML(mode){
+    const singleActive=mode==="single" || mode==="nfs";
+    const giveawayActive=mode==="giveaway" || mode==="winner";
     const descriptions={
-      single:"Create a ready-to-post Facebook listing for one card.",
+      single:"Create a Facebook post for a listing or a card from your personal collection.",
       nfs:"Create a showcase post for one Not For Sale card from your personal collection.",
       list:"Create a complete Facebook sales list from your available inventory.",
-      giveaway:"Create a reusable Facebook giveaway post from your giveaway template.",
-      winner:"Create a winner-announcement post from your saved Past Winners.",
+      giveaway:"Create a Facebook post for a giveaway or announce its winners.",
       carousell:"Create a ready-to-copy Carousell listing description from your card inventory.",
       "facebook-ebay":"Create a Facebook post from selected cards listed on eBay.",
       ebay:"Create an eBay-ready title, item specifics and listing description from one inventory card, with its listing photos ready to download."
@@ -496,29 +497,18 @@ function facebookToolsHeaderHTML(mode){
         <div>
           <div class="eyebrow">Owner Tools</div>
           <h2>Post Generator Tools</h2>
-          <p>${appContext.escapeHtml(descriptions[mode]||descriptions.single)}</p>
+          <p>${appContext.escapeHtml(descriptions[giveawayActive ? "giveaway" : mode]||descriptions.single)}</p>
         </div>
       </div>
       <div class="fb-tools-switcher" role="tablist" aria-label="Post generator type">
         <a href="#/fb-tools?mode=single"
-           class="fb-tools-switch ${mode==="single" ? "active" : ""}"
+           class="fb-tools-switch ${singleActive ? "active" : ""}"
            role="tab"
-           aria-selected="${mode==="single" ? "true" : "false"}">
+           aria-selected="${singleActive ? "true" : "false"}">
           <span class="fb-tools-switch-icon">▣</span>
           <span>
             <strong>Single Card Post</strong>
-            <small>Choose one card · copy post · download all images as ZIP (Sold listings get a SOLD marker automatically)</small>
-          </span>
-        </a>
-
-        <a href="#/fb-tools?mode=nfs"
-           class="fb-tools-switch ${mode==="nfs" ? "active" : ""}"
-           role="tab"
-           aria-selected="${mode==="nfs" ? "true" : "false"}">
-          <span class="fb-tools-switch-icon">◇</span>
-          <span>
-            <strong>Single Card NFS Post</strong>
-            <small>Choose one Collection (NFS) card · showcase it · invite visitors to see more of the collection</small>
+            <small>Sales, sold and collection showcase posts · download images as ZIP</small>
           </span>
         </a>
 
@@ -534,24 +524,13 @@ function facebookToolsHeaderHTML(mode){
         </a>
 
         <a href="#/fb-tools?mode=giveaway"
-           class="fb-tools-switch ${mode==="giveaway" ? "active" : ""}"
+           class="fb-tools-switch ${giveawayActive ? "active" : ""}"
            role="tab"
-           aria-selected="${mode==="giveaway" ? "true" : "false"}">
+           aria-selected="${giveawayActive ? "true" : "false"}">
           <span class="fb-tools-switch-icon">🎁</span>
           <span>
-            <strong>Giveaway Post</strong>
-            <small>Load a giveaway · edit entry links · copy ready-to-post text</small>
-          </span>
-        </a>
-
-        <a href="#/fb-tools?mode=winner"
-           class="fb-tools-switch ${mode==="winner" ? "active" : ""}"
-           role="tab"
-           aria-selected="${mode==="winner" ? "true" : "false"}">
-          <span class="fb-tools-switch-icon">🏆</span>
-          <span>
-            <strong>Giveaway Winners</strong>
-            <small>Select from Past Winners · matched prizes · Facebook links</small>
+            <strong>Giveaway</strong>
+            <small>Announce a giveaway or its winners</small>
           </span>
         </a>
 
@@ -559,7 +538,7 @@ function facebookToolsHeaderHTML(mode){
 
         <a href="#/fb-tools?mode=facebook-ebay" class="fb-tools-switch ${mode==="facebook-ebay" ? "active" : ""}" role="tab" aria-selected="${mode==="facebook-ebay" ? "true" : "false"}">
           <span class="fb-tools-switch-icon">f</span>
-          <span><strong>Facebook Post · eBay Listings</strong><small>Owner and era filters · Facebook photo ZIP</small></span>
+          <span><strong>Share eBay Listings on Facebook</strong><small>Owner and era filters · Facebook photo ZIP</small></span>
         </a>
 
         <a href="#/fb-tools?mode=carousell"
@@ -573,7 +552,41 @@ function facebookToolsHeaderHTML(mode){
           </span>
         </a>
       </div>
+      ${giveawayActive ? `
+        <nav aria-label="Giveaway post type" class="fb-post-copy-actions">
+          <a data-giveaway-post-mode="giveaway" class="${mode==="giveaway" ? "btn-primary" : "btn-ghost"}" href="#/fb-tools?mode=giveaway"${mode==="giveaway" ? ' aria-current="page"' : ''}>Announce Giveaway</a>
+          <a data-giveaway-post-mode="winner" class="${mode==="winner" ? "btn-primary" : "btn-ghost"}" href="#/fb-tools?mode=winner"${mode==="winner" ? ' aria-current="page"' : ''}>Announce Winners</a>
+        </nav>` : ""}
     `);
+  }
+
+function renderGiveawayToolsPanel(mode){
+    const view=appContext.view;
+    let panel=view.querySelector("[data-giveaway-post-panel]");
+    if(!panel){
+      view.innerHTML=`${appContext.facebookToolsHeaderHTML(mode)}<div data-giveaway-post-panel></div>`;
+      panel=view.querySelector("[data-giveaway-post-panel]");
+      view.querySelectorAll("[data-giveaway-post-mode]").forEach(tab=>{
+        tab.addEventListener("click",event=>{
+          if(event.button!==0 || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+          if(!appContext.requireOwner("open giveaway post tools")) return;
+          event.preventDefault();
+          const next=tab.dataset.giveawayPostMode;
+          if(next===appContext.currentFacebookToolMode()) return;
+          history.pushState(history.state,"",tab.getAttribute("href"));
+          renderGiveawayToolsPanel(next);
+        });
+      });
+    }
+    view.querySelectorAll("[data-giveaway-post-mode]").forEach(tab=>{
+      const active=tab.dataset.giveawayPostMode===mode;
+      tab.classList.toggle("btn-primary",active);
+      tab.classList.toggle("btn-ghost",!active);
+      if(active) tab.setAttribute("aria-current","page");
+      else tab.removeAttribute("aria-current");
+    });
+    if(mode==="winner") appContext.renderGiveawayWinnerPostGeneratorPage(panel);
+    else appContext.renderFbGiveawayPostGeneratorPage(panel);
   }
 
 function renderFacebookToolsPage(){
@@ -583,12 +596,9 @@ function renderFacebookToolsPage(){
 
     if(mode==="list"){
       appContext.renderFbCardListGeneratorPage();
-    }else if(mode==="nfs"){
-      appContext.renderFbPostGeneratorPage(true);
-    }else if(mode==="giveaway"){
-      appContext.renderFbGiveawayPostGeneratorPage();
-    }else if(mode==="winner"){
-      appContext.renderGiveawayWinnerPostGeneratorPage();
+    }else if(mode==="giveaway" || mode==="winner"){
+      renderGiveawayToolsPanel(mode);
+      return;
     }else if(mode==="carousell"){
       appContext.renderCarousellPostGeneratorPage();
     }else if(mode==="facebook-ebay"){
@@ -596,7 +606,7 @@ function renderFacebookToolsPage(){
     }else if(mode==="ebay"){
       appContext.renderEbayListingGeneratorPage();
     }else{
-      appContext.renderFbPostGeneratorPage();
+      appContext.renderFbPostGeneratorPage(mode==="nfs");
     }
 
     const existingHead = appContext.view.querySelector(".page-head");
@@ -607,14 +617,13 @@ function renderFacebookToolsPage(){
     }
   }
 
-function renderFbPostGeneratorPage(nfsMode=false){
+function renderFbPostGeneratorPage(startOnNfs=false){
     if(!appContext.requireOwner("open FB post generator")) return;
 
     const prefs = appContext.getFbPostPrefs();
     const perCardMeta = appContext.getFbCardMeta();
     const selectableCards = appContext.cards
       .filter(card=>appContext.isLiveLifecycle(card))
-      .filter(card=>!nfsMode || appContext.canonicalAvailability(card.availability)==="Collection (NFS)")
       .slice()
       .sort((a,b)=>{
         const aSold = appContext.normalizeFilterValue(a.availability) === "sold" ? 1 : 0;
@@ -627,17 +636,16 @@ function renderFbPostGeneratorPage(nfsMode=false){
     )].sort((a,b)=>a.localeCompare(b));
 
     const fbSingleStatusOptions=[...new Set(
-      selectableCards.map(card=>String(card.availability||"Available").trim()).filter(Boolean)
+      [...selectableCards.map(card=>appContext.canonicalAvailability(card.availability)),
+        ...(startOnNfs ? ["Collection (NFS)"] : [])].filter(Boolean)
     )].sort((a,b)=>a.localeCompare(b));
 
     appContext.view.innerHTML = `
       <div class="page-head fb-post-page-head">
         <div>
           <div class="eyebrow">Owner Tool</div>
-          <h2>${nfsMode ? "Facebook NFS Post Generator" : "Facebook Post Generator"}</h2>
-          <p>${nfsMode
-            ? "Select a Collection (NFS) card and create a showcase post with no sales or pricing language."
-            : "Select a card and copy a ready-to-post Facebook sales template."}</p>
+          <h2>Facebook Post Generator</h2>
+          <p>Select a card to generate a sales, sold, or Collection showcase post.</p>
         </div>
       </div>
 
@@ -666,10 +674,9 @@ function renderFbPostGeneratorPage(nfsMode=false){
               </div>
               <div class="field">
                 <label for="fbPostStatusFilter">Status</label>
-                <select id="fbPostStatusFilter" ${nfsMode ? "disabled" : ""}>
-                  ${nfsMode
-                    ? `<option value="Collection (NFS)">Collection (NFS)</option>`
-                    : `<option value="">All statuses</option>${fbSingleStatusOptions.map(v=>`<option value="${appContext.escapeHtml(v)}">${appContext.escapeHtml(v)}</option>`).join("")}`}
+                <select id="fbPostStatusFilter">
+                  <option value="">All statuses</option>
+                  ${fbSingleStatusOptions.map(v=>`<option value="${appContext.escapeHtml(v)}">${appContext.escapeHtml(v)}</option>`).join("")}
                 </select>
               </div>
               <div class="field">
@@ -702,7 +709,6 @@ function renderFbPostGeneratorPage(nfsMode=false){
 
           ${appContext.postLanguageSelectHTML("fbPostLanguage",appContext.getPostGeneratorLanguage())}
 
-          ${nfsMode ? "" : `
             <div class="field">
               <label for="fbPostTemplateMode">Facebook template</label>
               <select id="fbPostTemplateMode">
@@ -710,7 +716,7 @@ function renderFbPostGeneratorPage(nfsMode=false){
                 <option value="detailed" selected>Detailed listing</option>
               </select>
               <div class="hint">Group-friendly keeps the card link, COD / meetup, worldwide shipping and DM contact while leaving detailed shipping terms on the website.</div>
-            </div>`}
+            </div>
 
           <details class="fb-post-settings">
             <summary>Template links & hashtags</summary>
@@ -779,6 +785,8 @@ function renderFbPostGeneratorPage(nfsMode=false){
     const openCardBtn = appContext.$("fbOpenCardBtn");
 
     let selectedCard = null;
+    const isNfs=card=>!!card && appContext.canonicalAvailability(card.availability)==="Collection (NFS)";
+    if(startOnNfs) statusFilter.value="Collection (NFS)";
 
     function fbSingleMatchesFilters(card){
       const q=appContext.normalizeFilterValue(searchInput.value);
@@ -787,7 +795,7 @@ function renderFbPostGeneratorPage(nfsMode=false){
       const type=appContext.normalizeFilterValue(typeFilter.value);
 
       if(game && appContext.normalizeFilterValue(card.game)!==game) return false;
-      if(status && appContext.normalizeFilterValue(card.availability||"Available")!==status) return false;
+      if(status && appContext.normalizeFilterValue(appContext.canonicalAvailability(card.availability))!==status) return false;
       if(type && appContext.cardListFormat(card)!==type) return false;
 
       if(q){
@@ -821,11 +829,11 @@ function renderFbPostGeneratorPage(nfsMode=false){
 
       if(selectedId && visible.some(card=>String(card.id)===selectedId)){
         select.value=selectedId;
+      }else if(selectedCard){
+        selectCard("");
       }
 
-      filterCount.textContent=nfsMode
-        ? `${visible.length} Collection (NFS) card${visible.length===1?"":"s"} shown`
-        : `${visible.length} of ${selectableCards.length} cards shown`;
+      filterCount.textContent=`${visible.length} of ${selectableCards.length} cards shown`;
     }
 
     function currentValues(){
@@ -846,14 +854,16 @@ function renderFbPostGeneratorPage(nfsMode=false){
 
       if(selectedCard){
         const meta = appContext.getFbCardMeta();
-        meta[selectedCard.id] = {
-          title:String(titleInput.value || "").trim().slice(0,300),
-        };
+        const cardMeta=meta[selectedCard.id] || {};
+        cardMeta[isNfs(selectedCard) ? "nfsTitle" : "title"]=titleInput.value.trim().slice(0,300);
+        meta[selectedCard.id]=cardMeta;
+        perCardMeta[selectedCard.id]=cardMeta;
         appContext.saveFbCardMeta(meta);
       }
     }
 
     function updateOutput(){
+      templateModeInput.disabled=isNfs(selectedCard);
       if(!selectedCard){
         listingTitleOutput.value = "";
         output.value = "";
@@ -867,7 +877,7 @@ function renderFbPostGeneratorPage(nfsMode=false){
 
       const values = currentValues();
       listingTitleOutput.value = appContext.singleCardCopyTitle(selectedCard);
-      output.value = nfsMode
+      output.value = isNfs(selectedCard)
         ? appContext.buildFbNfsPostText(selectedCard,values)
         : appContext.buildFbPostText(selectedCard,values);
       copyListingTitleBtn.disabled = !listingTitleOutput.value.trim();
@@ -898,7 +908,7 @@ function renderFbPostGeneratorPage(nfsMode=false){
             selectedCard.series
           ].filter(Boolean).join(" · "))}</span>
           <small>${appContext.escapeHtml(selectedCard.availability || "Available")} · ${appContext.getImages(selectedCard).length} image${appContext.getImages(selectedCard).length === 1 ? "" : "s"}</small>
-          ${nfsMode ? "" : `<small class="fb-post-card-price">Price · ${appContext.escapeHtml(appContext.postGeneratorCardPricePreview(selectedCard))}</small>`}
+          ${isNfs(selectedCard) ? "" : `<small class="fb-post-card-price">Price · ${appContext.escapeHtml(appContext.postGeneratorCardPricePreview(selectedCard))}</small>`}
         </div>
       `;
     }
@@ -917,8 +927,11 @@ function renderFbPostGeneratorPage(nfsMode=false){
       const meta = perCardMeta[selectedCard.id] || {};
       const normalDefaultTitle=appContext.defaultFbPostTitle(selectedCard);
       const nfsDefaultTitle=`${appContext.fbGameLabel(selectedCard)} COLLECTION SHOWCASE【NFS】${String(selectedCard.name||"").toUpperCase()}${selectedCard.card_code ? ` · ${String(selectedCard.card_code).toUpperCase()}` : ""}`.trim();
-      const savedTitle=meta.title || (nfsMode ? nfsDefaultTitle : normalDefaultTitle);
-      titleInput.value=(nfsMode ? String(savedTitle) : facebookTitleForStatus(selectedCard,savedTitle)).slice(0,300);
+      const legacyNfsTitle=String(meta.title||"").includes("【NFS】") ? meta.title : "";
+      const savedTitle=isNfs(selectedCard)
+        ? meta.nfsTitle || legacyNfsTitle || nfsDefaultTitle
+        : (legacyNfsTitle ? "" : meta.title) || normalDefaultTitle;
+      titleInput.value=(isNfs(selectedCard) ? String(savedTitle) : facebookTitleForStatus(selectedCard,savedTitle)).slice(0,300);
 
       hashtagsInput.value = prefs.hashtags === appContext.FB_POST_DEFAULTS.hashtags
         ? appContext.defaultFbHashtags(selectedCard)
@@ -951,7 +964,7 @@ function renderFbPostGeneratorPage(nfsMode=false){
       if(requestedCard){
         searchInput.value="";
         gameFilter.value="";
-        if(!nfsMode) statusFilter.value="";
+        if(!startOnNfs || !isNfs(requestedCard)) statusFilter.value="";
         typeFilter.value="";
         renderFbSingleCardOptions();
         select.value=requestedCardId;
@@ -975,15 +988,16 @@ function renderFbPostGeneratorPage(nfsMode=false){
     });
 
     copyTitleBtn.addEventListener("click", ()=>{
-      appContext.copyPlainText(nfsMode || !selectedCard ? titleInput.value : facebookTitleForStatus(selectedCard,titleInput.value), "Facebook title copied");
+      appContext.copyPlainText(isNfs(selectedCard) || !selectedCard ? titleInput.value : facebookTitleForStatus(selectedCard,titleInput.value), "Facebook title copied");
     });
 
     copyPostBtn.addEventListener("click", ()=>{
-      appContext.copyPlainText(output.value, nfsMode ? "NFS showcase post copied" : "Facebook post copied");
+      appContext.copyPlainText(output.value, isNfs(selectedCard) ? "NFS showcase post copied" : "Facebook post copied");
     });
 
     prepareBtn.addEventListener("click", async ()=>{
-      if(!selectedCard) return;
+      const card=selectedCard;
+      if(!card) return;
       if(!appContext.requireOwner("prepare single-card Facebook post")) return;
       if(!output.value.trim()){
         appContext.showToast("No Facebook post to prepare");
@@ -999,11 +1013,11 @@ function renderFbPostGeneratorPage(nfsMode=false){
       try{
         const copied=await appContext.copyPlainText(
           output.value,
-          nfsMode ? "NFS showcase post copied" : "Facebook post copied"
+          isNfs(card) ? "NFS showcase post copied" : "Facebook post copied"
         );
         if(!copied) throw new Error("Could not copy Facebook post");
 
-        const images=appContext.getImages(selectedCard);
+        const images=appContext.getImages(card);
         if(!images.length){
           appContext.showToast("Post copied · no card images to download");
           return;
@@ -1011,7 +1025,7 @@ function renderFbPostGeneratorPage(nfsMode=false){
 
         prepareBtn.textContent="Creating image ZIP…";
         const result=await appContext.downloadSingleCardImagesZip(
-          selectedCard,
+          card,
           (done,total,added,failed)=>{
             prepareBtn.textContent=failed
               ? `ZIP ${done}/${total} · ${failed} skipped`

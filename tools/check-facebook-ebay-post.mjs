@@ -31,7 +31,7 @@ assert.deepEqual(
 assert.equal(a.buildFacebookEbayListingsPost([]),'');
 a.currentHashParams=()=>new URLSearchParams('mode=facebook-ebay');
 assert.equal(a.currentFacebookToolMode(),'facebook-ebay');
-assert.match(a.facebookToolsHeaderHTML('facebook-ebay'),/Facebook Post · eBay Listings/);
+assert.match(a.facebookToolsHeaderHTML('facebook-ebay'),/Share eBay Listings on Facebook/);
 
 const elements=new Map();
 const element=selector=>{
@@ -146,3 +146,76 @@ selectOwners();
 assert.match(picker.innerHTML,/UNASSIGNED CARD/);
 assert.match(picker.innerHTML,/THIRD OWNER CARD/);
 console.log('Facebook eBay mode, Owner gate, eligibility, filters, selection, output, copy and ordered first-photo ZIP fixtures passed.');
+
+const nfs={...zoro,id:'nfs-card',availability:'Collection (NFS)'};
+const sale={...zoro,id:'sale-card',availability:'Available'};
+const fields=new Map();
+const field=id=>{
+  if(!fields.has(id)) fields.set(id,{value:'',addEventListener(event,fn){this[event]=fn;}});
+  return fields.get(id);
+};
+const singleApp={};
+delete globalThis.document;
+registerFeatures(singleApp);
+Object.assign(singleApp,{
+  requireOwner:()=>true,
+  escapeHtml:a.escapeHtml,
+  localStorage:{getItem:()=>null},
+  cards:[nfs,sale],
+  view:{},
+  $:field,
+  currentHashParams:()=>new URLSearchParams('mode=single&card=nfs-card'),
+  safeCardId:id=>id||"",
+  getCardById:id=>singleApp.cards.find(item=>item.id===id),
+  getImages:()=>[],
+  FB_POST_DEFAULTS:{},
+});
+globalThis.location=new URL('https://example.test/dev/#/fb-tools');
+singleApp.renderFbPostGeneratorPage();
+assert.match(field('fbPostTitle').value,/COLLECTION SHOWCASE/);
+assert.match(field('fbPostOutput').value,/NOT FOR SALE — PERSONAL COLLECTION/);
+assert.match(field('fbPostOutput').value,/#\/collection/);
+assert.equal(field('fbPostTemplateMode').disabled,true);
+const panel={};
+const tabs=['giveaway','winner'].map(mode=>({
+  dataset:{giveawayPostMode:mode},
+  classList:{toggle(){}},
+  addEventListener(_event,fn){this.click=fn;},
+  getAttribute:()=>"#/fb-tools?mode="+mode,
+  setAttribute(_key,value){this.current=value;},
+  removeAttribute(){delete this.current;}
+}));
+let mode='giveaway';
+let shellRenders=0;
+Object.assign(singleApp.view,{
+  querySelector:selector=>selector==="[data-giveaway-post-panel]" && shellRenders ? panel : null,
+  querySelectorAll:()=>tabs,
+  insertAdjacentHTML(_position,html){this.header=html;}
+});
+Object.defineProperty(singleApp.view,"innerHTML",{set(html){this.header=html;shellRenders++;}});
+singleApp.currentHashParams=()=>new URLSearchParams('mode='+mode);
+globalThis.history={pushState(_state,_title,hash){mode=hash.split('mode=')[1];}};
+singleApp.renderFbGiveawayPostGeneratorPage=mount=>{assert.equal(mount,panel);mount.rendered='giveaway';};
+singleApp.sortedPastGiveawayWinners=()=>[];
+field('winnerPostSelectionList').querySelectorAll=()=>[];
+singleApp.renderFacebookToolsPage();
+assert.equal(panel.rendered,'giveaway');
+assert.equal((singleApp.view.header.match(/role="tab"/g)||[]).length,6);
+assert.match(singleApp.view.header,/Announce Giveaway/);
+assert.match(singleApp.view.header,/Announce Winners/);
+tabs[1].click({button:0,preventDefault(){}});
+assert.equal(mode,'winner');
+assert.equal(shellRenders,1);
+assert.equal(tabs[1].current,'page');
+assert.match(panel.innerHTML,/Winner Announcement/);
+assert.match(field('winnerPostSelectionList').innerHTML,/No Past Winners/);
+tabs[0].click({button:0,preventDefault(){}});
+assert.equal(mode,'giveaway');
+assert.equal(shellRenders,1);
+assert.equal(tabs[0].current,'page');
+delete globalThis.history;
+singleApp.currentHashParams=()=>new URLSearchParams('mode=nfs');
+singleApp.renderFacebookToolsPage();
+assert.equal(field('fbPostStatusFilter').value,'Collection (NFS)');
+assert.match(singleApp.view.header,/class="fb-tools-switch active"[\s\S]*?<strong>Single Card Post/);
+delete globalThis.location;
