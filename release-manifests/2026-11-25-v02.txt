@@ -1,0 +1,14 @@
+Version: 2026-11-25-v02
+Previous Production: 2026-11-25-v01
+Development promoted from: 2026-11-25-v05 (source 9b92b144a97b4453c7b7f507213616c08137f36d).
+Purpose: Unify single-card and NFS posts, switch giveaway panels in place and clarify the eBay sharing label.
+Source commit: 05bc9470beb0cb8a1bfba5868f73d81703f323b0
+Full ZIP: Collect-TCG-Production-2026-11-25-v02-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-25-v01-to-2026-11-25-v02-patch.zip
+Changed files: Post Generator, cache references, regression fixture, baseline and release workflow.
+SQL required: No.
+Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+8a12be0ca3e264eebb3257586549bf512e0ccae8fcd2c5513f3b2a089f251ca0  release/Collect-TCG-Production-2026-11-25-v02-full.zip
+eb9465907a872eb4a3b5d1fcc5493032827a5da114576075b9651fa2bf9035e1  release/Collect-TCG-Production-2026-11-25-v01-to-2026-11-25-v02-patch.zip
