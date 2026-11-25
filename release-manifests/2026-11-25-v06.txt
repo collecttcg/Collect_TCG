@@ -1,0 +1,14 @@
+Version: 2026-11-25-v06
+Previous Production: 2026-11-25-v05
+Development promoted from: 2026-11-25-v13 (source 69813bc9e1ddcffdb6c919a2a233d49765bd0ff5).
+Purpose: Add eBay and direct buying options, discount tiers and a worked example to About.
+Source commit: 1a43ac17d96dd15e06562a6ff241ee99527e6b41
+Full ZIP: Collect-TCG-Production-2026-11-25-v06-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-25-v05-to-2026-11-25-v06-patch.zip
+Changed files: About markup, cache references, baseline and release workflow.
+SQL required: No.
+Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+8a291080a2a85509359fe4b3fa8223dfca2df2f2f921b944bfcc239ababb23a5  release/Collect-TCG-Production-2026-11-25-v06-full.zip
+b185f958636189320622b574a0039a80ed22d700427afb79e646374c291e1033  release/Collect-TCG-Production-2026-11-25-v05-to-2026-11-25-v06-patch.zip
