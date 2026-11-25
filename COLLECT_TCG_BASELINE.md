@@ -4,10 +4,10 @@
 ## GitHub state
 
 - Development latest non-baseline commit: `7fb54031fb183640cdbed4ea4760d2f403ca6726`.
-- Production latest non-baseline commit: `59aaf809596ac1c368e31698a04aa4567b097c55`.
-- Production rollback ref: `dada2282760f853723212520d603168b801dc6b1`.
-- Latest local release manifest: [`2026-11-25-v05`](release-manifests/2026-11-25-v05.txt) from `336e24fdc0fa0e3a77481c6f857180bcde5b698a`.
-- Latest local change: `59aaf809596ac1c368e31698a04aa4567b097c55` · Production 2026-11-25-v06: promote About buying options.
+- Production latest non-baseline commit: `76fbb480912ce07a045e9835be102086fdd687eb`.
+- Production rollback ref: `76fbb480912ce07a045e9835be102086fdd687eb`.
+- Latest local release manifest: [`2026-11-25-v06`](release-manifests/2026-11-25-v06.txt) from `1a43ac17d96dd15e06562a6ff241ee99527e6b41`.
+- Latest local change: `76fbb480912ce07a045e9835be102086fdd687eb` · Production 2026-11-25-v06: record package validation.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
