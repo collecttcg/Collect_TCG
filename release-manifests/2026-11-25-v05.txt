@@ -1,0 +1,14 @@
+Version: 2026-11-25-v05
+Previous Production: 2026-11-25-v04
+Development promoted from: 2026-11-25-v12 (source a44fd73a7af5117423fe66ab090a854c58247794).
+Purpose: Show readable eBay account names and platform logos on About and Contact.
+Source commit: 336e24fdc0fa0e3a77481c6f857180bcde5b698a
+Full ZIP: Collect-TCG-Production-2026-11-25-v05-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-25-v04-to-2026-11-25-v05-patch.zip
+Changed files: About and Contact markup, platform assets, cache references, baseline and release workflow.
+SQL required: No.
+Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+9073876ba8b1d15ea5951f5f1a5732ed2c2982ba2877412a001198b83efbd116  release/Collect-TCG-Production-2026-11-25-v05-full.zip
+8774157345a3a3323873735089a6657b88ab75c67f3a343de1d37cce0f16af19  release/Collect-TCG-Production-2026-11-25-v04-to-2026-11-25-v05-patch.zip
