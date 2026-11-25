@@ -1,0 +1,14 @@
+Version: 2026-11-26-v01
+Previous Production: 2026-11-25-v07
+Development promoted from: 2026-11-26-v02 (source 0f5dced49386a1bda75a61c3028b650691d5c58e).
+Purpose: Promote the Owner-only invoice generator with high-contrast fields and optional seller and buyer addresses.
+Source commit: a8606305f707bf04881a0ee735df35ac4034914b
+Full ZIP: Collect-TCG-Production-2026-11-26-v01-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-25-v07-to-2026-11-26-v01-patch.zip
+Changed files: Invoice module, Owner navigation, module cache references, baseline and release workflow.
+SQL required: No.
+Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+b5a0256c13e540bbe02c332f471abe867b17d39abc10c95da8c427e417930db6  release/Collect-TCG-Production-2026-11-26-v01-full.zip
+b9c98b90719b84a919a7e98abf734945baf1bce4eb9f88380cc9be593439ce40  release/Collect-TCG-Production-2026-11-25-v07-to-2026-11-26-v01-patch.zip
