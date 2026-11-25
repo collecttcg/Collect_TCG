@@ -12,6 +12,11 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production private invoice archive — 2026-11-26-v02
+
+- Replaces Production `2026-11-26-v01`. Promotes the invoice workflow from Development `2026-11-26-v09` at `8435a60b808fe1f9aef2779404dc5f2ac2bd743b`. The premium invoice preview supports manual PDF upload, a searchable list, viewing and downloads. Production uses its own private bucket and browser storage namespace. The approved SQL migration was applied and verified. Production repository checks and Chromium fixtures covered Owner access, PDF upload and byte-exact download, viewing, search, duplicate handling, deletion, offline behavior and mobile layout. Live signed-in upload and Safari were not tested.
+
+
 ## Production Owner-only invoice generator — 2026-11-26-v01
 
 - Replaces `2026-11-25-v07`. Promotes the invoice generator from Development `2026-11-26-v02` at `0f5dced49386a1bda75a61c3028b650691d5c58e`. The form has clearer field borders and keyboard focus, and optional multiline addresses for both parties. The printed invoice includes addresses when entered.
