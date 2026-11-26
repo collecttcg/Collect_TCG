@@ -14,7 +14,7 @@ This section records GitHub state. The release manifest and workflow results det
 
 ## Production count-based invoice suggestions — 2026-11-27-v01
 
-- Replaces `2026-11-26-v06` and promotes Dev `2026-11-27-v01` at `ee3cd9fa5dbb0d226d17a2fb15dab71cbdbf54cf`. The suggested number equals the count of PDFs in the shared archive plus one. Owners can override it. Numbers already in the shared archive are flagged and cannot be overwritten. No SQL required.
+- Replaces `2026-11-26-v06` and promotes Dev `2026-11-27-v01` at `ee3cd9fa5dbb0d226d17a2fb15dab71cbdbf54cf`. The suggested number equals the count of PDFs in the shared archive plus one. Owners can override it. Numbers already in the shared archive are flagged and cannot be overwritten. No SQL required. Production repository and Chromium checks passed for empty, two- and five-PDF archives, collision hints, manual preview and saves, duplicate protection, mobile layout and Owner gating. The Production release and both ZIP checks passed. All six changed live files matched and rollback advanced to `ef71e7219ef08c6a59ca9081860b0738f715c296`. Safari and signed-in live saves were not tested. [Release and packages](https://github.com/collecttcg/Collect_TCG/actions/runs/45845156855).
 
 
 ## Production manual invoice numbers — 2026-11-26-v06
