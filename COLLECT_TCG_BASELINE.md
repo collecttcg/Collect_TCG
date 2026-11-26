@@ -12,6 +12,11 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production automatic invoice PDF saving — 2026-11-26-v05
+
+- Replaces v04. Promotes Dev `2026-11-26-v11` at `35d0da77fb2662560e691b199c2cb2dbc240e360`. Create and Save PDF generates an A4 invoice in the browser and uploads it to the existing shared private archive. Previewing still makes no upload, manual uploads remain available and existing invoice numbers cannot be overwritten. No SQL required.
+
+
 ## Production invoice details and navigation — 2026-11-26-v04
 
 - Replaces Production `2026-11-26-v03`. Promotes Development `2026-11-26-v10` at `5f0cf8d27d9daf1b6d4418f03fbf970887c44064`. Owner Tools has a dedicated Invoices tile and accepts the old Activity link. Archived PDFs supply seller, description and transaction date. The existing private shared archive and Production browser namespace are retained. Production repository checks and a Chromium fixture verified dedicated and legacy navigation, the shared bucket target, printed seller, description and transaction date, unreadable PDFs, search, mobile fit and Owner gating. Safari and signed-in live invoice viewing were not tested. No SQL required. Production release and both ZIP integrity checks passed. All eight changed live files matched the validated source, and the rollback reference advanced to `5ca75b6853393b4fe9f3d2234ae4353c1412e183`. [Release and packages](https://github.com/collecttcg/Collect_TCG/actions/runs/45812560127).
