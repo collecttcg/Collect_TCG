@@ -1,0 +1,14 @@
+Version: 2026-11-27-v02
+Previous Production: 2026-11-27-v01
+Development promoted from: 2026-11-27-v02 (source 955de2969c17563d5ba58f4699cafa441193f262).
+Purpose: Align invoice form controls and refine the saved-invoice archive.
+Source commit: a51f4998e5db4e2b5d29b96eecffd6f8bf062a74
+Full ZIP: Collect-TCG-Production-2026-11-27-v02-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-27-v01-to-2026-11-27-v02-patch.zip
+Changed files: Invoice workspace, module cache references, baseline and release workflow.
+SQL required: No.
+Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+78cd2aed13d901aed8ccaa3e9c0550e2fb43934785baae7a34cfc9b66ca4b539  release/Collect-TCG-Production-2026-11-27-v02-full.zip
+897a55d15dbd89f45cac9750931bbbbf8928500f765813e968094207d3937797  release/Collect-TCG-Production-2026-11-27-v01-to-2026-11-27-v02-patch.zip
