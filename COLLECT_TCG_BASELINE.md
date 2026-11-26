@@ -15,6 +15,7 @@ This section records GitHub state. The release manifest and workflow results det
 ## Production invoice workspace styling — 2026-11-27-v02
 
 - Replaces `2026-11-27-v01` and promotes Dev `2026-11-27-v02` at `955de2969c17563d5ba58f4699cafa441193f262`. Single-line entry, upload and search controls share a height. Duplicate feedback sits below its field, and the create form and saved archive use coordinated spacing, headings and buttons. The existing private shared archive and Production browser history are retained. No SQL required.
+- Production CI and both ZIP integrity checks passed. A Chromium fixture verified desktop/mobile alignment, duplicate-number feedback, light theme, invoice preview, mock PDF save and download, and Owner gating. Safari and signed-in live saves were not tested. Pages deployed successfully, all six changed live app files matched, and `production-last-known-good` advanced to `37f033c019cff67e46c25ceb1f85716ea2b906a2`. [Release and packages](https://github.com/collecttcg/Collect_TCG/actions/runs/45852590476). [Production deployment](https://github.com/collecttcg/Collect_TCG/actions/runs/45852678522).
 
 ## Production count-based invoice suggestions — 2026-11-27-v01
 
