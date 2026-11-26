@@ -15,6 +15,7 @@ This section records GitHub state. The release manifest and workflow results det
 ## Production sold listings in invoice descriptions — 2026-11-27-v03
 
 - Replaces `2026-11-27-v02` and promotes Dev `2026-11-27-v03` at `c93db649c42a6266e33e1f86330c83b3b1181ad2`. Owners can search Sold Listings by name, card code, set and other listing details, then append selections as editable description lines. The picker uses the catalogue's existing Sold Listings scope and search. The private archive and Production browser history are retained. No SQL required.
+- Production CI and both ZIP integrity checks passed. A Chromium fixture verified sold-only filtering, multi-term and code search, empty/no-match states, multiple editable lines, description limits, desktop/mobile layout, PDF preview, mock save and download, and Owner access. Safari and signed-in live saves were not tested. Pages deployed successfully, all six changed live app files matched, and `production-last-known-good` advanced to `9c63677b9b3aec5a543b0aaa90cd8ae2afe3d476`. [Release and packages](https://github.com/collecttcg/Collect_TCG/actions/runs/45853891758). [Production deployment](https://github.com/collecttcg/Collect_TCG/actions/runs/45853973869).
 
 ## Production invoice workspace styling — 2026-11-27-v02
 
