@@ -1,0 +1,14 @@
+Version: 2026-11-27-v03
+Previous Production: 2026-11-27-v02
+Development promoted from: 2026-11-27-v03 (source c93db649c42a6266e33e1f86330c83b3b1181ad2).
+Purpose: Add searchable sold listings to invoice descriptions.
+Source commit: 732b2062297207e854d9816e61bef5730f279a55
+Full ZIP: Collect-TCG-Production-2026-11-27-v03-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-27-v02-to-2026-11-27-v03-patch.zip
+Changed files: Invoice sold-listing picker, module cache references, baseline and release workflow.
+SQL required: No.
+Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not exercised by CI.
+
+5ee106b0c86c60217bb3ee0d0bf93e434383e2a32f40ce79c8e738144a509dfe  release/Collect-TCG-Production-2026-11-27-v03-full.zip
+3f1f88a5b7c082ffb87f1e590144a0a2d1e29cb487b54381b3eec0c51ecbf5af  release/Collect-TCG-Production-2026-11-27-v02-to-2026-11-27-v03-patch.zip
