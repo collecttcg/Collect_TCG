@@ -3,11 +3,11 @@
 <!-- BEGIN AUTOMATED BASELINE STATE -->
 ## GitHub state
 
-- Development latest non-baseline commit: `a62aa68a42c89fdb5a61b52c8d2ac2222f3a45f6`.
-- Production latest non-baseline commit: `37f033c019cff67e46c25ceb1f85716ea2b906a2`.
+- Development latest non-baseline commit: `a3ebea3d422b72288dc56cc3dba19f9203f61aae`.
+- Production latest non-baseline commit: `423374c563a01e0fa99f0598fff21d48d9265527`.
 - Production rollback ref: `37f033c019cff67e46c25ceb1f85716ea2b906a2`.
 - Latest local release manifest: [`2026-11-27-v02`](release-manifests/2026-11-27-v02.txt) from `a51f4998e5db4e2b5d29b96eecffd6f8bf062a74`.
-- Latest local change: `37f033c019cff67e46c25ceb1f85716ea2b906a2` · Production 2026-11-27-v02: record package validation.
+- Latest local change: `423374c563a01e0fa99f0598fff21d48d9265527` · Production 2026-11-27-v03: promote searchable sold listings for invoices.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
