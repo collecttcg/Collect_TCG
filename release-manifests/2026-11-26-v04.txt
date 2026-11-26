@@ -1,0 +1,14 @@
+Version: 2026-11-26-v04
+Previous Production: 2026-11-26-v03
+Development promoted from: 2026-11-26-v10 (source 5f0cf8d27d9daf1b6d4418f03fbf970887c44064).
+Purpose: Promote PDF-derived seller, description and transaction date, and dedicated Invoices navigation.
+Source commit: e9f074d96cfb52f2ecc8f38a2c873110d363c90c
+Full ZIP: Collect-TCG-Production-2026-11-26-v04-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-26-v03-to-2026-11-26-v04-patch.zip
+Changed files: Invoice details, PDF reader, Owner navigation, module cache references, baseline and release workflow.
+SQL required: No.
+Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+951509758e1b2f22d7f32e06aef99fbf1be15e2d3e94e48d394885f248d49a82  release/Collect-TCG-Production-2026-11-26-v04-full.zip
+44932144f757ce77f534eea4ba0acda21d19aab64081a5e130d87d666515275c  release/Collect-TCG-Production-2026-11-26-v03-to-2026-11-26-v04-patch.zip
