@@ -12,6 +12,11 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production manual invoice numbers — 2026-11-26-v06
+
+- Replaces v05 and promotes Dev `2026-11-26-v12` at `73ead33e3a586f188d1ec5a75b93100c7acf1af7`. The seller dropdown now uses Lim Poh Yeap. The invoice form accepts a manual number of 1 to 10 digits and still suggests the next number. Preview, saved PDF and archive use the same normalized number. Existing invoices cannot be overwritten. No SQL required.
+
+
 ## Production automatic invoice PDF saving — 2026-11-26-v05
 
 - Replaces v04. Promotes Dev `2026-11-26-v11` at `35d0da77fb2662560e691b199c2cb2dbc240e360`. Create and Save PDF generates an A4 invoice in the browser and uploads it to the existing shared private archive. Previewing still makes no upload, manual uploads remain available and existing invoice numbers cannot be overwritten. No SQL required. Chromium fixtures verified preview, duplicate rejection and retry, A4 PDF creation, archive details, byte-exact downloads, and mobile list fit. The release workflow and both ZIP integrity checks passed. Eight live files matched and the rollback reference advanced to `608d6f58a4fdfccd8db8c4dc7b3eba6f7d55e774`. Safari and signed-in live upload were not tested. [Release and packages](https://github.com/collecttcg/Collect_TCG/actions/runs/45814647744).
