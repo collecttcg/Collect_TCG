@@ -1,0 +1,14 @@
+Version: 2026-11-26-v06
+Previous Production: 2026-11-26-v05
+Development promoted from: 2026-11-26-v12 (source 73ead33e3a586f188d1ec5a75b93100c7acf1af7).
+Purpose: Allow manual invoice numbers and use the seller name Lim Poh Yeap.
+Source commit: f19bd026449eed29c6e85e846bfee979755937c4
+Full ZIP: Collect-TCG-Production-2026-11-26-v06-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-26-v05-to-2026-11-26-v06-patch.zip
+Changed files: Invoice form and seller list, module cache references, baseline and release workflow.
+SQL required: No.
+Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+3f405e5077570fc2c7f0a36e2c216d8e1222f8e0b3618ab97390d5984a0a0268  release/Collect-TCG-Production-2026-11-26-v06-full.zip
+02baddc04c003a17f1b507d64e3afb6551050d3eaa63e730c5c0d35c9d171883  release/Collect-TCG-Production-2026-11-26-v05-to-2026-11-26-v06-patch.zip
