@@ -1,0 +1,14 @@
+Version: 2026-11-26-v05
+Previous Production: 2026-11-26-v04
+Development promoted from: 2026-11-26-v11 (source 35d0da77fb2662560e691b199c2cb2dbc240e360).
+Purpose: Generate invoice PDFs in the browser and save them to the private shared archive.
+Source commit: c06342eb180e9a2743cd539fc58657fa29d63148
+Full ZIP: Collect-TCG-Production-2026-11-26-v05-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-26-v04-to-2026-11-26-v05-patch.zip
+Changed files: Invoice generator, PDF export, archive metadata, module cache references, baseline and release workflow.
+SQL required: No.
+Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+fbf33ee26498de8dd4199ea421efccfcdef144bc56f42818b612eb85d9912dfc  release/Collect-TCG-Production-2026-11-26-v05-full.zip
+f9b4da5d9cfdaeb5af381d3700cefd71753aafbb00b8d0f7dfbba5d67e8cfc8a  release/Collect-TCG-Production-2026-11-26-v04-to-2026-11-26-v05-patch.zip
