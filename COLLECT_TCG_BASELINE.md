@@ -12,6 +12,10 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production sold listings in invoice descriptions — 2026-11-27-v03
+
+- Replaces `2026-11-27-v02` and promotes Dev `2026-11-27-v03` at `c93db649c42a6266e33e1f86330c83b3b1181ad2`. Owners can search Sold Listings by name, card code, set and other listing details, then append selections as editable description lines. The picker uses the catalogue's existing Sold Listings scope and search. The private archive and Production browser history are retained. No SQL required.
+
 ## Production invoice workspace styling — 2026-11-27-v02
 
 - Replaces `2026-11-27-v01` and promotes Dev `2026-11-27-v02` at `955de2969c17563d5ba58f4699cafa441193f262`. Single-line entry, upload and search controls share a height. Duplicate feedback sits below its field, and the create form and saved archive use coordinated spacing, headings and buttons. The existing private shared archive and Production browser history are retained. No SQL required.
