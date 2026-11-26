@@ -1,5 +1,5 @@
 name: Production Release
-# 2026-11-27-v01 — Promote count-based invoice suggestions.
+# 2026-11-27-v02 — Promote the aligned invoice form and saved archive styling.
 on:
   workflow_dispatch:
   push:
@@ -209,9 +209,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-27-v01
-          PREVIOUS_VERSION: 2026-11-26-v06
-          PREVIOUS_COMMIT: f19bd026449eed29c6e85e846bfee979755937c4
+          RELEASE_VERSION: 2026-11-27-v02
+          PREVIOUS_VERSION: 2026-11-27-v01
+          PREVIOUS_COMMIT: 4f93d1124498a71ce5b29669400792a987a42ac4
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -228,10 +228,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-27-v01-packages
+          name: Collect-TCG-Production-2026-11-27-v02-packages
           path: |
-            release/Collect-TCG-Production-2026-11-27-v01-full.zip
-            release/Collect-TCG-Production-2026-11-26-v06-to-2026-11-27-v01-patch.zip
+            release/Collect-TCG-Production-2026-11-27-v02-full.zip
+            release/Collect-TCG-Production-2026-11-27-v01-to-2026-11-27-v02-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -239,17 +239,17 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-27-v01.txt'
+          MANIFEST='release-manifests/2026-11-27-v02.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-27-v01'
-            echo 'Previous Production: 2026-11-26-v06'
-            echo 'Development promoted from: 2026-11-27-v01 (source ee3cd9fa5dbb0d226d17a2fb15dab71cbdbf54cf).'
-            echo 'Purpose: Suggest the count of PDFs in the shared invoice archive plus one.'
+            echo 'Version: 2026-11-27-v02'
+            echo 'Previous Production: 2026-11-27-v01'
+            echo 'Development promoted from: 2026-11-27-v02 (source 955de2969c17563d5ba58f4699cafa441193f262).'
+            echo 'Purpose: Align invoice form controls and refine the saved-invoice archive.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-27-v01-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-26-v06-to-2026-11-27-v01-patch.zip'
-            echo 'Changed files: Invoice numbering, module cache references, baseline and release workflow.'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-27-v02-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-27-v01-to-2026-11-27-v02-patch.zip'
+            echo 'Changed files: Invoice workspace, module cache references, baseline and release workflow.'
             echo 'SQL required: No.'
             echo 'Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: Interactive desktop, mobile and Safari checks were not performed.'
@@ -259,7 +259,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-27-v01: record package validation'
+          git commit -m 'Production 2026-11-27-v02: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm deployed website files and advance last-known-good

@@ -12,6 +12,10 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production invoice workspace styling — 2026-11-27-v02
+
+- Replaces `2026-11-27-v01` and promotes Dev `2026-11-27-v02` at `955de2969c17563d5ba58f4699cafa441193f262`. Single-line entry, upload and search controls share a height. Duplicate feedback sits below its field, and the create form and saved archive use coordinated spacing, headings and buttons. The existing private shared archive and Production browser history are retained. No SQL required.
+
 ## Production count-based invoice suggestions — 2026-11-27-v01
 
 - Replaces `2026-11-26-v06` and promotes Dev `2026-11-27-v01` at `ee3cd9fa5dbb0d226d17a2fb15dab71cbdbf54cf`. The suggested number equals the count of PDFs in the shared archive plus one. Owners can override it. Numbers already in the shared archive are flagged and cannot be overwritten. No SQL required. Production repository and Chromium checks passed for empty, two- and five-PDF archives, collision hints, manual preview and saves, duplicate protection, mobile layout and Owner gating. The Production release and both ZIP checks passed. All six changed live files matched and rollback advanced to `ef71e7219ef08c6a59ca9081860b0738f715c296`. Safari and signed-in live saves were not tested. [Release and packages](https://github.com/collecttcg/Collect_TCG/actions/runs/45845156855).
