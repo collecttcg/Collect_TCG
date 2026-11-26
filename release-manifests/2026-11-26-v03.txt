@@ -1,0 +1,14 @@
+Version: 2026-11-26-v03
+Previous Production: 2026-11-26-v02
+Development promoted from: 2026-11-26-v09 (source 8435a60b808fe1f9aef2779404dc5f2ac2bd743b).
+Purpose: Use the existing private Development invoice bucket in Production as the shared invoice archive.
+Source commit: 116ff40cf06ea648001f43727f80d4c482f99fb4
+Full ZIP: Collect-TCG-Production-2026-11-26-v03-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-26-v02-to-2026-11-26-v03-patch.zip
+Changed files: Invoice bucket and help text, module cache references, baseline and release workflow.
+SQL required: No.
+Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+d3fd328ee79322f032522b0c1d5fc0f582afd1938c157b74181c62205abf797f  release/Collect-TCG-Production-2026-11-26-v03-full.zip
+11e175fd2335c585cce0fc9325606bbf68867aaccef685023cd6bea53a11d625  release/Collect-TCG-Production-2026-11-26-v02-to-2026-11-26-v03-patch.zip
