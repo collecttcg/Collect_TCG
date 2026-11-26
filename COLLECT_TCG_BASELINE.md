@@ -4,10 +4,10 @@
 ## GitHub state
 
 - Development latest non-baseline commit: `6bfb83c38d4b4bdcc18ddd2cec760b548b7cc0a8`.
-- Production latest non-baseline commit: `444c223d985002526f40323698f0e87afeef6dbc`.
-- Production rollback ref: `608d6f58a4fdfccd8db8c4dc7b3eba6f7d55e774`.
-- Latest local release manifest: [`2026-11-26-v05`](release-manifests/2026-11-26-v05.txt) from `c06342eb180e9a2743cd539fc58657fa29d63148`.
-- Latest local change: `444c223d985002526f40323698f0e87afeef6dbc` · Production 2026-11-26-v06: promote editable invoice numbers and seller rename.
+- Production latest non-baseline commit: `163fe4b2f91161b93b607ed6bcec614e6889b86c`.
+- Production rollback ref: `163fe4b2f91161b93b607ed6bcec614e6889b86c`.
+- Latest local release manifest: [`2026-11-26-v06`](release-manifests/2026-11-26-v06.txt) from `f19bd026449eed29c6e85e846bfee979755937c4`.
+- Latest local change: `163fe4b2f91161b93b607ed6bcec614e6889b86c` · Production 2026-11-26-v06: record package validation.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
