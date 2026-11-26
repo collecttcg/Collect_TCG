@@ -1,0 +1,14 @@
+Version: 2026-11-27-v01
+Previous Production: 2026-11-26-v06
+Development promoted from: 2026-11-27-v01 (source ee3cd9fa5dbb0d226d17a2fb15dab71cbdbf54cf).
+Purpose: Suggest the count of PDFs in the shared invoice archive plus one.
+Source commit: 4f93d1124498a71ce5b29669400792a987a42ac4
+Full ZIP: Collect-TCG-Production-2026-11-27-v01-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-26-v06-to-2026-11-27-v01-patch.zip
+Changed files: Invoice numbering, module cache references, baseline and release workflow.
+SQL required: No.
+Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not performed.
+
+83e71a9cb16045bf5b4ef5e07cc2a505be02164bcca9ebd2a5daf6d3c05a1342  release/Collect-TCG-Production-2026-11-27-v01-full.zip
+1073bbb2deed0eda10792dd318a326b89564cf2bf46c6f7a3c13a4429e151cdc  release/Collect-TCG-Production-2026-11-26-v06-to-2026-11-27-v01-patch.zip
