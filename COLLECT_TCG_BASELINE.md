@@ -12,6 +12,11 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production count-based invoice suggestions — 2026-11-27-v01
+
+- Replaces `2026-11-26-v06` and promotes Dev `2026-11-27-v01` at `ee3cd9fa5dbb0d226d17a2fb15dab71cbdbf54cf`. The suggested number equals the count of PDFs in the shared archive plus one. Owners can override it. Numbers already in the shared archive are flagged and cannot be overwritten. No SQL required.
+
+
 ## Production manual invoice numbers — 2026-11-26-v06
 
 - Replaces v05 and promotes Dev `2026-11-26-v12` at `73ead33e3a586f188d1ec5a75b93100c7acf1af7`. The seller dropdown now uses Lim Poh Yeap. The invoice form accepts a manual number of 1 to 10 digits and still suggests the next number. Preview, saved PDF and archive use the same normalized number. Existing invoices cannot be overwritten. No SQL required. Production repository and Chromium fixture checks passed for manual, invalid and duplicate numbers, preview, PDF, download, next number, archived seller names, mobile layout and Owner gating. The release and both ZIP checks passed. All six changed live files matched and the rollback reference advanced to `163fe4b2f91161b93b607ed6bcec614e6889b86c`. Safari and signed-in live saves were not tested. [Release and packages](https://github.com/collecttcg/Collect_TCG/actions/runs/45842364608).
