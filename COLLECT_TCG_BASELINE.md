@@ -12,6 +12,11 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production shared invoice archive — 2026-11-26-v03
+
+- Replaces Production `2026-11-26-v02`. The invoice workflow from Development `2026-11-26-v09` at `8435a60b808fe1f9aef2779404dc5f2ac2bd743b` now uses the same private `owner-invoices-dev` bucket in both environments. Invoice uploads remain manual. Uploads and deletions are reflected in both lists when refreshed. The former Production bucket was empty before the switch. No migration is required. Repository and Chromium fixture checks covered Owner gating, both sites seeing the same invoice, upload, download, deletion and mobile list fit. Live signed-in upload and Safari were not tested.
+
+
 ## Production private invoice archive — 2026-11-26-v02
 
 - Replaces Production `2026-11-26-v01`. Promotes the invoice workflow from Development `2026-11-26-v09` at `8435a60b808fe1f9aef2779404dc5f2ac2bd743b`. The premium invoice preview supports manual PDF upload, a searchable list, viewing and downloads. Production uses its own private bucket and browser storage namespace. The approved SQL migration was applied and verified. Production repository checks and Chromium fixtures covered Owner access, PDF upload and byte-exact download, viewing, search, duplicate handling, deletion, offline behavior and mobile layout. Live signed-in upload and Safari were not tested. The Production release passed on retry after an SEO branch update collision. The live deployment and both ZIP checks passed, and the rollback reference advanced to `0b3416de8a9573a4c37174a221d407b888263191`. [Release and packages](https://github.com/collecttcg/Collect_TCG/actions/runs/45663193590).

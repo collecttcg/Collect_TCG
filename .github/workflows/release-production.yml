@@ -1,5 +1,5 @@
 name: Production Release
-# 2026-11-26-v02 — Promote the private Supabase invoice archive.
+# 2026-11-26-v03 — Share the private invoice archive with Development.
 on:
   workflow_dispatch:
   push:
@@ -209,9 +209,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-26-v02
-          PREVIOUS_VERSION: 2026-11-26-v01
-          PREVIOUS_COMMIT: a8606305f707bf04881a0ee735df35ac4034914b
+          RELEASE_VERSION: 2026-11-26-v03
+          PREVIOUS_VERSION: 2026-11-26-v02
+          PREVIOUS_COMMIT: 07bcd386b7cdec0196d359e97a224dcd0eeaaa00
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -228,10 +228,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-26-v02-packages
+          name: Collect-TCG-Production-2026-11-26-v03-packages
           path: |
-            release/Collect-TCG-Production-2026-11-26-v02-full.zip
-            release/Collect-TCG-Production-2026-11-26-v01-to-2026-11-26-v02-patch.zip
+            release/Collect-TCG-Production-2026-11-26-v03-full.zip
+            release/Collect-TCG-Production-2026-11-26-v02-to-2026-11-26-v03-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -239,18 +239,18 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-26-v02.txt'
+          MANIFEST='release-manifests/2026-11-26-v03.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-26-v02'
-            echo 'Previous Production: 2026-11-26-v01'
+            echo 'Version: 2026-11-26-v03'
+            echo 'Previous Production: 2026-11-26-v02'
             echo 'Development promoted from: 2026-11-26-v09 (source 8435a60b808fe1f9aef2779404dc5f2ac2bd743b).'
-            echo 'Purpose: Promote the premium invoice layout and manual PDF archive backed by private Supabase Storage.'
+            echo 'Purpose: Use the existing private Development invoice bucket in Production as the shared invoice archive.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-26-v02-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-26-v01-to-2026-11-26-v02-patch.zip'
-            echo 'Changed files: Invoice module, private Storage migration, module cache references, baseline and release workflow.'
-            echo 'SQL required: 2026-11-26-v02-OWNER-INVOICES-PROD.sql.'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-26-v03-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-26-v02-to-2026-11-26-v03-patch.zip'
+            echo 'Changed files: Invoice bucket and help text, module cache references, baseline and release workflow.'
+            echo 'SQL required: No.'
             echo 'Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: Interactive desktop, mobile and Safari checks were not performed.'
             echo
@@ -259,7 +259,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-26-v02: record package validation'
+          git commit -m 'Production 2026-11-26-v03: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm deployed website files and advance last-known-good

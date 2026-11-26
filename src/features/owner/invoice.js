@@ -2,7 +2,8 @@ const currencies = ["USD", "MYR", "SGD", "JPY"];
 
 const sellers = ["Zakwan Zahid", "Daniel Lim Poh Yeap", "Jack Wong Tiong Kiat", "Foo Xiang Yen", "Shue"];
 const invoiceFields = ["seller", "client", "date", "currency", "amount", "sellerAddress", "buyerAddress", "description"];
-const invoiceBucket = "owner-invoices-prod";
+// Dev and Production share this private archive. Keep the existing bucket ID.
+const invoiceBucket = "owner-invoices-dev";
 const maxPDFBytes = 20 * 1024 * 1024;
 const lastIssuedNumber = 1; // The supplied invoice, 0000000001, was issued before local history existed.
 
@@ -113,7 +114,7 @@ export function renderInvoiceGenerator(appContext) {
       </form>
       <section class="panel" id="ownerInvoiceHistory" aria-label="Saved invoices" style="max-width:780px;margin-top:20px;padding:20px">
         <h3>Saved invoices</h3>
-        <p class="muted">Save the preview as a PDF, then upload it here to access it on your other devices.</p>
+        <p class="muted">Upload the PDF to make it available in both Dev and Production.</p>
         <form id="ownerInvoiceUpload" class="invoice-fields">
           <label>Invoice PDF <input name="pdf" type="file" accept=".pdf,application/pdf" required></label>
           <label>Invoice number on PDF <input name="sequence" inputmode="numeric" pattern="[0-9]{1,10}" maxlength="10" required></label>
@@ -236,7 +237,7 @@ export function renderInvoiceGenerator(appContext) {
   async function removeSavedInvoice(invoice) {
     if (!appContext.requireOwner("delete a saved invoice") || writing) return;
     const number = invoiceNumber(invoice.sequence);
-    const location = invoice.path ? "Supabase for all devices" : "this browser";
+    const location = invoice.path ? "the shared Dev and Production archive" : "this browser";
     if (!window.confirm(`Delete invoice ${number} from ${location}?`)) return;
     await updateHistory(async () => {
       if (invoice.path) {
