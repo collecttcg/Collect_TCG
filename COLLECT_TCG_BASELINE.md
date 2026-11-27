@@ -3,11 +3,11 @@
 <!-- BEGIN AUTOMATED BASELINE STATE -->
 ## GitHub state
 
-- Development latest non-baseline commit: `5a9bc8814d715eb975cf103c7f5506b9be9dd453`.
-- Production latest non-baseline commit: `81a9db7be44269ae672cfd1a28a47aa0f63784df`.
+- Development latest non-baseline commit: `5085e13da08cb615689e60aec54e40dae53ae8f0`.
+- Production latest non-baseline commit: `9267db8bd0e23a735824309efbe0f9e0513db48f`.
 - Production rollback ref: `81a9db7be44269ae672cfd1a28a47aa0f63784df`.
 - Latest local release manifest: [`2026-11-27-v05`](release-manifests/2026-11-27-v05.txt) from `039368db1c0607ed55ee8a91548da886e37d0fae`.
-- Latest local change: `81a9db7be44269ae672cfd1a28a47aa0f63784df` · Production 2026-11-27-v05: record package validation.
+- Latest local change: `9267db8bd0e23a735824309efbe0f9e0513db48f` · Production 2026-11-27-v06: promote private Card Details strategy and layout.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
