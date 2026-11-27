@@ -4,10 +4,10 @@
 ## GitHub state
 
 - Development latest non-baseline commit: `5a9bc8814d715eb975cf103c7f5506b9be9dd453`.
-- Production latest non-baseline commit: `baad03d06530bed08ab36f5718666e7d156e3083`.
-- Production rollback ref: `37dda387f7f5ec674263ad69a16e4e6d7ee9826b`.
-- Latest local release manifest: [`2026-11-27-v04`](release-manifests/2026-11-27-v04.txt) from `94449460e49875cc981202d5f0769386e3edd00c`.
-- Latest local change: `baad03d06530bed08ab36f5718666e7d156e3083` · Production 2026-11-27-v05: promote owner-only Holding Strategy.
+- Production latest non-baseline commit: `81a9db7be44269ae672cfd1a28a47aa0f63784df`.
+- Production rollback ref: `81a9db7be44269ae672cfd1a28a47aa0f63784df`.
+- Latest local release manifest: [`2026-11-27-v05`](release-manifests/2026-11-27-v05.txt) from `039368db1c0607ed55ee8a91548da886e37d0fae`.
+- Latest local change: `81a9db7be44269ae672cfd1a28a47aa0f63784df` · Production 2026-11-27-v05: record package validation.
 
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
