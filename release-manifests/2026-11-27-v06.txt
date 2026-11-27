@@ -1,0 +1,14 @@
+Version: 2026-11-27-v06
+Previous Production: 2026-11-27-v05
+Development promoted from: 2026-11-27-v07 (source 9d679e6a15d6019f8b8265dba8a42b50a83e2080).
+Purpose: Show Holding Strategy in the corrected Private Owner Info panel.
+Source commit: bfedfe075c4cf5e95cb802a00581a00bac56c6be
+Full ZIP: Collect-TCG-Production-2026-11-27-v06-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-27-v05-to-2026-11-27-v06-patch.zip
+Changed files: Card Details, foundation CSS, cache references, baseline and release workflow.
+SQL required: No new migration.
+Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not exercised by CI.
+
+e1553a04a2b8e42951c2010ace3c41777309cd3d464241a4454ed785de846513  release/Collect-TCG-Production-2026-11-27-v06-full.zip
+06ae1d00b02497e6555991affb36cfa145f9b4fcd68cf8cc66b866b111d3af75  release/Collect-TCG-Production-2026-11-27-v05-to-2026-11-27-v06-patch.zip
