@@ -12,6 +12,10 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production eBay buyer messages — 2026-11-27-v04
+
+- Replaces `2026-11-27-v03` and promotes Dev `2026-11-27-v04` at `6e35e1df4995c9531eec921eea7c585788d6da00`. Owner Tools → eBay Messages offers separate copyable After Shipment and After Delivery templates. The old buyer-message URL opens the same page. No SQL required.
+
 ## Production sold listings in invoice descriptions — 2026-11-27-v03
 
 - Replaces `2026-11-27-v02` and promotes Dev `2026-11-27-v03` at `c93db649c42a6266e33e1f86330c83b3b1181ad2`. Owners can search Sold Listings by name, card code, set and other listing details, then append selections as editable description lines. The picker uses the catalogue's existing Sold Listings scope and search. The private archive and Production browser history are retained. No SQL required.
