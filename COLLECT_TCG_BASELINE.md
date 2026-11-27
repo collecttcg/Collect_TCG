@@ -12,6 +12,10 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production Holding Strategy on Card Details — 2026-11-27-v06
+
+- Replaces Production `2026-11-27-v05` and promotes Dev `2026-11-27-v07` at `9d679e6a15d6019f8b8265dba8a42b50a83e2080`. The private panel shows Holding Strategy and stacks its heading, strategy, tags and notes. Long URLs wrap. The Owner gate, Buyer Preview and previously applied migration are reused. No new SQL required.
+
 ## Production Holding Strategy — 2026-11-27-v05
 
 - Replaces Production `2026-11-27-v04` and promotes Dev `2026-11-27-v05` at `738fb6362c1a845757d217b88b5029617f8a5475`. Owner Add/Edit offers Trading, Long Term and Unassigned below Card Owner. The shared private table migration was applied and verified with the existing Owner policies and anonymous SELECT disabled.

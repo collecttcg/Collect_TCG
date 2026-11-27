@@ -1,5 +1,5 @@
 name: Production Release
-# 2026-11-27-v05 — Promote private card Holding Strategy.
+# 2026-11-27-v06 — Promote private Holding Strategy and panel layout.
 on:
   workflow_dispatch:
   push:
@@ -211,9 +211,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-27-v05
-          PREVIOUS_VERSION: 2026-11-27-v04
-          PREVIOUS_COMMIT: 94449460e49875cc981202d5f0769386e3edd00c
+          RELEASE_VERSION: 2026-11-27-v06
+          PREVIOUS_VERSION: 2026-11-27-v05
+          PREVIOUS_COMMIT: 039368db1c0607ed55ee8a91548da886e37d0fae
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -230,10 +230,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-27-v05-packages
+          name: Collect-TCG-Production-2026-11-27-v06-packages
           path: |
-            release/Collect-TCG-Production-2026-11-27-v05-full.zip
-            release/Collect-TCG-Production-2026-11-27-v04-to-2026-11-27-v05-patch.zip
+            release/Collect-TCG-Production-2026-11-27-v06-full.zip
+            release/Collect-TCG-Production-2026-11-27-v05-to-2026-11-27-v06-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -241,18 +241,18 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-27-v05.txt'
+          MANIFEST='release-manifests/2026-11-27-v06.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-27-v05'
-            echo 'Previous Production: 2026-11-27-v04'
-            echo 'Development promoted from: 2026-11-27-v05 (source 738fb6362c1a845757d217b88b5029617f8a5475).'
-            echo 'Purpose: Add private card Holding Strategy.'
+            echo 'Version: 2026-11-27-v06'
+            echo 'Previous Production: 2026-11-27-v05'
+            echo 'Development promoted from: 2026-11-27-v07 (source 9d679e6a15d6019f8b8265dba8a42b50a83e2080).'
+            echo 'Purpose: Show Holding Strategy in the corrected Private Owner Info panel.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-27-v05-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-27-v04-to-2026-11-27-v05-patch.zip'
-            echo 'Changed files: Owner card forms and saves, private catalogue metadata, migration, cache references, baseline and release workflow.'
-            echo 'SQL required: 2026-11-27-v05-OWNER-HOLDING-STRATEGY.sql applied and verified on shared Supabase.'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-27-v06-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-27-v05-to-2026-11-27-v06-patch.zip'
+            echo 'Changed files: Card Details, foundation CSS, cache references, baseline and release workflow.'
+            echo 'SQL required: No new migration.'
             echo 'Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: Interactive desktop, mobile and Safari checks were not exercised by CI.'
             echo
@@ -261,7 +261,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-27-v05: record package validation'
+          git commit -m 'Production 2026-11-27-v06: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm deployed website files and advance last-known-good
