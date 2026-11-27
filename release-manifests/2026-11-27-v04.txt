@@ -1,0 +1,14 @@
+Version: 2026-11-27-v04
+Previous Production: 2026-11-27-v03
+Development promoted from: 2026-11-27-v04 (source 6e35e1df4995c9531eec921eea7c585788d6da00).
+Purpose: Split eBay shipment and delivery messages.
+Source commit: 94449460e49875cc981202d5f0769386e3edd00c
+Full ZIP: Collect-TCG-Production-2026-11-27-v04-full.zip
+Patch ZIP: Collect-TCG-Production-2026-11-27-v03-to-2026-11-27-v04-patch.zip
+Changed files: Owner eBay messages, module cache references, baseline and release workflow.
+SQL required: No.
+Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.
+Validation limitations: Interactive desktop, mobile and Safari checks were not exercised by CI.
+
+c103e51c1865978a81f40a25c1049b73aabd999b9c202baea020339a443c44bf  release/Collect-TCG-Production-2026-11-27-v04-full.zip
+1857fdd64e8ac070dc45fdaac9c1b7ae3ae83f925f3d086e80242c7c3bc36530  release/Collect-TCG-Production-2026-11-27-v03-to-2026-11-27-v04-patch.zip
