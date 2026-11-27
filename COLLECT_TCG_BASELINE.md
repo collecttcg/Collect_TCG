@@ -12,6 +12,10 @@
 This section records GitHub state. The release manifest and workflow results determine validation and deployment status.
 <!-- END AUTOMATED BASELINE STATE -->
 
+## Production Holding Strategy — 2026-11-27-v05
+
+- Replaces Production `2026-11-27-v04` and promotes Dev `2026-11-27-v05` at `738fb6362c1a845757d217b88b5029617f8a5475`. Owner Add/Edit offers Trading, Long Term and Unassigned below Card Owner. The shared private table migration was applied and verified with the existing Owner policies and anonymous SELECT disabled.
+
 ## Production eBay buyer messages — 2026-11-27-v04
 
 - Replaces `2026-11-27-v03` and promotes Dev `2026-11-27-v04` at `6e35e1df4995c9531eec921eea7c585788d6da00`. Owner Tools → eBay Messages offers separate copyable After Shipment and After Delivery templates. The old buyer-message URL opens the same page. No SQL required.

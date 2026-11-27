@@ -1,5 +1,5 @@
 name: Production Release
-# 2026-11-27-v04 — Promote separate eBay shipment and delivery messages.
+# 2026-11-27-v05 — Promote private card Holding Strategy.
 on:
   workflow_dispatch:
   push:
@@ -211,9 +211,9 @@ jobs:
           fi
       - name: Create and verify packages
         env:
-          RELEASE_VERSION: 2026-11-27-v04
-          PREVIOUS_VERSION: 2026-11-27-v03
-          PREVIOUS_COMMIT: 732b2062297207e854d9816e61bef5730f279a55
+          RELEASE_VERSION: 2026-11-27-v05
+          PREVIOUS_VERSION: 2026-11-27-v04
+          PREVIOUS_COMMIT: 94449460e49875cc981202d5f0769386e3edd00c
         run: |
           set -euo pipefail
           rm -rf .release-patch release
@@ -230,10 +230,10 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: Collect-TCG-Production-2026-11-27-v04-packages
+          name: Collect-TCG-Production-2026-11-27-v05-packages
           path: |
-            release/Collect-TCG-Production-2026-11-27-v04-full.zip
-            release/Collect-TCG-Production-2026-11-27-v03-to-2026-11-27-v04-patch.zip
+            release/Collect-TCG-Production-2026-11-27-v05-full.zip
+            release/Collect-TCG-Production-2026-11-27-v04-to-2026-11-27-v05-patch.zip
             release/checksums.txt
           if-no-files-found: error
           retention-days: 30
@@ -241,18 +241,18 @@ jobs:
         run: |
           set -euo pipefail
           git pull --rebase origin main
-          MANIFEST='release-manifests/2026-11-27-v04.txt'
+          MANIFEST='release-manifests/2026-11-27-v05.txt'
           test ! -e "$MANIFEST"
           {
-            echo 'Version: 2026-11-27-v04'
-            echo 'Previous Production: 2026-11-27-v03'
-            echo 'Development promoted from: 2026-11-27-v04 (source 6e35e1df4995c9531eec921eea7c585788d6da00).'
-            echo 'Purpose: Split eBay shipment and delivery messages.'
+            echo 'Version: 2026-11-27-v05'
+            echo 'Previous Production: 2026-11-27-v04'
+            echo 'Development promoted from: 2026-11-27-v05 (source 738fb6362c1a845757d217b88b5029617f8a5475).'
+            echo 'Purpose: Add private card Holding Strategy.'
             echo "Source commit: $(git rev-parse HEAD)"
-            echo 'Full ZIP: Collect-TCG-Production-2026-11-27-v04-full.zip'
-            echo 'Patch ZIP: Collect-TCG-Production-2026-11-27-v03-to-2026-11-27-v04-patch.zip'
-            echo 'Changed files: Owner eBay messages, module cache references, baseline and release workflow.'
-            echo 'SQL required: No.'
+            echo 'Full ZIP: Collect-TCG-Production-2026-11-27-v05-full.zip'
+            echo 'Patch ZIP: Collect-TCG-Production-2026-11-27-v04-to-2026-11-27-v05-patch.zip'
+            echo 'Changed files: Owner card forms and saves, private catalogue metadata, migration, cache references, baseline and release workflow.'
+            echo 'SQL required: 2026-11-27-v05-OWNER-HOLDING-STRATEGY.sql applied and verified on shared Supabase.'
             echo 'Validation: Card Details post action and Owner sign-in fixtures; rollback anchor; Production JavaScript syntax; Production/retained contracts; generated eBay title fixtures; direct eBay card-detail CTA, compact mobile action, and desktop-only all-listing-images ZIP download contracts; Insights country attribution contract; Facebook/eBay and snapshot contracts; SEO workflow guard and SEO self-test/regeneration/output; package integrity.'
             echo 'Validation limitations: Interactive desktop, mobile and Safari checks were not exercised by CI.'
             echo
@@ -261,7 +261,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$MANIFEST"
-          git commit -m 'Production 2026-11-27-v04: record package validation'
+          git commit -m 'Production 2026-11-27-v05: record package validation'
           git pull --rebase origin main
           git push
       - name: Confirm deployed website files and advance last-known-good
@@ -273,7 +273,7 @@ jobs:
           CHECK_DIR="$(mktemp -d)"
           for attempt in $(seq 1 30); do
             MATCH=true
-            for FILE in src/features/owner/ebay-messages.js src/features/owner/invoice-export.js src/features/owner/invoice-pdf.js src/features/owner/invoice.js src/features/owner/dashboard.js src/features/owner/tools.js assets/shop-logo.png assets/about-buying.css assets/instagram-contact.svg assets/messenger-contact.svg assets/ebay-post-generator.svg assets/facebook-post-generator.svg assets/carousell-post-generator.png src/features/inventory/page-shell.js src/app/routing.js index.html reviews/index.html sitemap.xml collections/one-piece-carddass-hyper-battle/index.html src/main.js src/app/register-features.js assets/sold-download-ribbon.png src/features/inventory/page.js src/features/inventory/pagination.js src/features/social/posts-ebay-link.js src/features/owner/forms.js src/features/owner/editor.js src/services/auth.js src/features/cards/details.js src/app/startup.js src/app/initialize.js src/services/catalogue.js src/features/media/images.js src/features/core/utilities.js src/features/social/posts.js src/features/social/posts-giveaway.js src/features/social/posts-marketplace.js src/features/social/posts-facebook-ebay.js src/features/social/posts-card-list.js src/features/content/information.js src/features/owner/card-scanner.js src/features/owner/add.js src/styles/01-foundation.css src/styles/02-components.css; do
+            for FILE in src/features/owner/card-owner-category.js src/features/owner/ebay-messages.js src/features/owner/invoice-export.js src/features/owner/invoice-pdf.js src/features/owner/invoice.js src/features/owner/dashboard.js src/features/owner/tools.js assets/shop-logo.png assets/about-buying.css assets/instagram-contact.svg assets/messenger-contact.svg assets/ebay-post-generator.svg assets/facebook-post-generator.svg assets/carousell-post-generator.png src/features/inventory/page-shell.js src/app/routing.js index.html reviews/index.html sitemap.xml collections/one-piece-carddass-hyper-battle/index.html src/main.js src/app/register-features.js assets/sold-download-ribbon.png src/features/inventory/page.js src/features/inventory/pagination.js src/features/social/posts-ebay-link.js src/features/owner/forms.js src/features/owner/editor.js src/services/auth.js src/features/cards/details.js src/app/startup.js src/app/initialize.js src/services/catalogue.js src/features/media/images.js src/features/core/utilities.js src/features/social/posts.js src/features/social/posts-giveaway.js src/features/social/posts-marketplace.js src/features/social/posts-facebook-ebay.js src/features/social/posts-card-list.js src/features/content/information.js src/features/owner/card-scanner.js src/features/owner/add.js src/styles/01-foundation.css src/styles/02-components.css; do
               if ! curl -fsSL --max-time 10 "$BASE/$FILE?release=$GITHUB_SHA" -o "$CHECK_DIR/file" || ! cmp -s "$FILE" "$CHECK_DIR/file"; then
                 MATCH=false
                 break
