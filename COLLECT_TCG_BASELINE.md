@@ -15,6 +15,7 @@ This section records GitHub state. The release manifest and workflow results det
 ## Production Holding Strategy — 2026-11-27-v05
 
 - Replaces Production `2026-11-27-v04` and promotes Dev `2026-11-27-v05` at `738fb6362c1a845757d217b88b5029617f8a5475`. Owner Add/Edit offers Trading, Long Term and Unassigned below Card Owner. The shared private table migration was applied and verified with the existing Owner policies and anonymous SELECT disabled.
+- Production CI and both ZIP integrity checks passed. A local fixture verified private save, reload, clear, old-schema handling and Owner access. All changed app files matched in the deployment check, and `production-last-known-good` advanced to `81a9db7be44269ae672cfd1a28a47aa0f63784df`. Interactive desktop, mobile, Safari, and signed-in live saves were not tested. [Release, packages and deployment verification](https://github.com/collecttcg/Collect_TCG/actions/runs/46001580539).
 
 ## Production eBay buyer messages — 2026-11-27-v04
 
