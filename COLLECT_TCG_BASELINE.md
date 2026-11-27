@@ -15,6 +15,7 @@ This section records GitHub state. The release manifest and workflow results det
 ## Production Holding Strategy on Card Details — 2026-11-27-v06
 
 - Replaces Production `2026-11-27-v05` and promotes Dev `2026-11-27-v07` at `9d679e6a15d6019f8b8265dba8a42b50a83e2080`. The private panel shows Holding Strategy and stacks its heading, strategy, tags and notes. Long URLs wrap. The Owner gate, Buyer Preview and previously applied migration are reused. No new SQL required.
+- Production CI, ZIP integrity and deployed file checks passed. A local fixture verified Owner rendering and Buyer Preview suppression. Interactive desktop, mobile and Safari rendering were not tested. The last-known-good ref advanced to `acf1918292208228bba30796af7c8cd055357a65`. [Release and packages](https://github.com/collecttcg/Collect_TCG/actions/runs/46003256058).
 
 ## Production Holding Strategy — 2026-11-27-v05
 
