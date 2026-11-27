@@ -15,6 +15,7 @@ This section records GitHub state. The release manifest and workflow results det
 ## Production eBay buyer messages — 2026-11-27-v04
 
 - Replaces `2026-11-27-v03` and promotes Dev `2026-11-27-v04` at `6e35e1df4995c9531eec921eea7c585788d6da00`. Owner Tools → eBay Messages offers separate copyable After Shipment and After Delivery templates. The old buyer-message URL opens the same page. No SQL required.
+- Production CI and both ZIP integrity checks passed. A local fixture verified the copy buttons, Owner gate, and legacy URL. Desktop, mobile, and Safari browser rendering were not tested. All five changed live app files matched, and `production-last-known-good` advanced to `37dda387f7f5ec674263ad69a16e4e6d7ee9826b`. [Release, packages, and deployment verification](https://github.com/collecttcg/Collect_TCG/actions/runs/45929526488).
 
 ## Production sold listings in invoice descriptions — 2026-11-27-v03
 
